@@ -112,10 +112,10 @@
                           </div>
                         </transition>
                       </div>
-                      <div class="ai-greet-title text-center">สวัสดี 👋 {{ botPronoun }}ชื่อ {{ botName }} <br> ผู้ช่วย AI ของ PCRU ค่ะ</div>
-                      <div class="ai-greet-sub">ยินดีที่ได้ช่วยคุณ! มาหาคำตอบที่คุณต้องการกันเลยค่ะ ✨</div>
+                      <div class="ai-greet-title text-center" v-html="welcomeTitle"></div>
+                      <div class="ai-greet-sub" v-html="welcomeSub"></div>
                     </div>
-                    <div class="message-text text-center">เลือกหมวดหมู่ด้านล่าง <br> หรือพิมพ์คำถามได้เลยค่ะ 😊</div>
+                    <div class="message-text text-center" v-html="welcomeInstruction"></div>
                     
                     <!-- Categories inside bot message -->
                     <div class="category-section">
@@ -644,7 +644,11 @@ export default {
       inputTooltipShowProbability: 0.5,
       // 🗣️ Gating for playful bot nudge
       lastBotNudgeAt: 0,
-      botNudgeMinIntervalMs: 45000
+      botNudgeMinIntervalMs: 45000,
+      // Welcome message typing
+      welcomeTitle: '',
+      welcomeSub: '',
+      welcomeInstruction: ''
     }
   },
   computed: {
@@ -1129,11 +1133,22 @@ export default {
   watch: {
     visible(newVal) {
       if (newVal) {
-        // Show welcome content on first open (skip typing placeholder for immediate UX)
-        if (this.messages.length === 0 && !this.welcomeTypingShown) {
-          // Directly show the welcome categories instead of the typing animation
+        // Initialize welcome text
+        if (this.messages.length > 0 || this.welcomeTypingShown) {
+          // If history exists or already shown, show immediately
+          this.welcomeTitle = `สวัสดี 👋 ${this.botPronoun}ชื่อ ${this.botName} <br> ผู้ช่วย AI ของ PCRU ค่ะ`
+          this.welcomeSub = `ยินดีที่ได้ช่วยคุณ! มาหาคำตอบที่คุณต้องการกันเลยค่ะ ✨`
+          this.welcomeInstruction = `เลือกหมวดหมู่ด้านล่าง <br> หรือพิมพ์คำถามได้เลยค่ะ 😊`
+          this.welcomeTyping = false
+          if (this.welcomeTypingTimer) {
+            clearTimeout(this.welcomeTypingTimer)
+            this.welcomeTypingTimer = null
+          }
+        } else {
+          // First open, no history -> Type it
           this.welcomeTyping = false
           this.welcomeTypingShown = true
+          this.typeWelcomeMessage()
 
           // Show Thai notice bubble and auto-hide after 5 seconds
           this.showThaiNotice = true
@@ -1142,13 +1157,6 @@ export default {
             this.showThaiNotice = false
             this.thaiNoticeTimer = null
           }, 5000)
-        } else {
-          // Ensure any pending welcome typing timer is cleared and typing is off.
-          if (this.welcomeTypingTimer) {
-            clearTimeout(this.welcomeTypingTimer)
-            this.welcomeTypingTimer = null
-          }
-          this.welcomeTyping = false
         }
 
         // After opening, ensure the panel shows the latest messages
@@ -1284,6 +1292,35 @@ export default {
             if (i % 5 === 0) {
               this.scrollToBottom();
             }
+          }
+        }
+      }
+    },
+    async typeWelcomeMessage() {
+      // Construct text with current bot settings
+      const title = `สวัสดี 👋 ${this.botPronoun}ชื่อ ${this.botName} <br> ผู้ช่วย AI ของ PCRU ค่ะ`
+      const sub = `ยินดีที่ได้ช่วยคุณ! มาหาคำตอบที่คุณต้องการกันเลยค่ะ ✨`
+      const instr = `เลือกหมวดหมู่ด้านล่าง <br> หรือพิมพ์คำถามได้เลยค่ะ 😊`
+      
+      // Reset
+      this.welcomeTitle = ''
+      this.welcomeSub = ''
+      this.welcomeInstruction = ''
+      
+      // Type sequentially
+      await this.streamToVariable('welcomeTitle', title)
+      await this.streamToVariable('welcomeSub', sub)
+      await this.streamToVariable('welcomeInstruction', instr)
+    },
+    async streamToVariable(key, text) {
+      const parts = text.split(/(<[^>]+>)/g)
+      for (const part of parts) {
+        if (part.match(/<[^>]+>/)) {
+          this[key] += part
+        } else {
+          for (const char of part) {
+            this[key] += char
+            await new Promise(r => setTimeout(r, 25)) // Typing speed
           }
         }
       }
@@ -1713,6 +1750,7 @@ export default {
     closeHelpModal() { 
       // Close help modal and return to chat
       this.showHelpModal = false
+      this.showAiIntro = false
       // Ensure chat drawer is open and input is focused
       this.$nextTick(() => {
         if (!this.visible) {
@@ -2253,10 +2291,10 @@ export default {
               if ((!visibleContacts || visibleContacts.length === 0) && (botText.includes('ขออภัยจริงๆ ฉันไม่มีข้อมูลเกี่ยวกับคำถามนี้') || botText.includes('ยังเหนือความสามารถของฉันเลย'))) {
                 visibleContacts = (universityContacts || []).filter(c => c.phone);
               }
-              msg.visibleContacts = visibleContacts;
+              // msg.visibleContacts = visibleContacts; // Delay showing contacts until text finishes
 
-              if (results) msg.results = results;
-              if (multipleResults) msg.multipleResults = true;
+              // if (results) msg.results = results; // Delay showing results until text finishes
+              // if (multipleResults) msg.multipleResults = true;
               if (resQuestionId) msg.questionId = resQuestionId;
               if (typeof resFound !== 'undefined') msg.found = resFound;
               
@@ -2297,6 +2335,27 @@ export default {
               // Now, stream the text content
               if (botText) {
                 await this.streamText(botIndex, botText);
+              }
+
+              // Show suggestions after typing finishes (sequentially)
+              if (results && results.length > 0) {
+                if (multipleResults) msg.multipleResults = true;
+                msg.results = [];
+                for (const result of results) {
+                  msg.results.push(result);
+                  // Delay for animation effect (only for first few)
+                  if (msg.results.length <= 5) {
+                    await new Promise(resolve => setTimeout(resolve, 150));
+                    this.scrollToBottom();
+                  }
+                }
+                this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring(); });
+              }
+
+              // Show contacts after typing finishes
+              if (visibleContacts && visibleContacts.length > 0) {
+                msg.visibleContacts = visibleContacts;
+                this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring(); });
               }
               
               // Final save and UI update
@@ -3339,6 +3398,15 @@ export default {
 
 @media (max-width: 600px) {
   div[role="dialog"] { width: 100% !important; }
+}
+
+.contact-list {
+  animation: slideUpFade 0.5s ease-out forwards;
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>
 
