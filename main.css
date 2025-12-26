@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100..900&display=swap');
+
+/* ใช้ Selector 'body' เพื่อกำหนดฟอนต์นี้ให้เป็นมาตรฐานสำหรับทั้งเว็บไซต์ */
+* {
+  font-family: "Noto Sans Thai", sans-serif;
+  
+  /* กำหนดน้ำหนักเริ่มต้น (Regular) */
+  font-weight: 400; 
+  
+  /* **ลบ** ค่าที่เกินความจำเป็น (เช่น font-optical-sizing และ font-variation-settings)
+     ออกไปเพื่อความเรียบง่าย เพราะคุณได้ import น้ำหนัก 100-900 มาทั้งหมดแล้ว
+  */
+  font-style: normal; 
+}
+
+
+.no-underline {
+    /* เอาขีดเส้นใต้ในสถานะปกติออก */
+    text-decoration: none !important; 
+}
+
+.no-underline:hover {
+    /* เอาขีดเส้นใต้เมื่อ Hover ออก */
+    text-decoration: none !important;
+}
+
+/* Fade-in animation for tables and main cards */
+.fade-in-table {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s cubic-bezier(.4,0,.2,1), transform 0.5s cubic-bezier(.4,0,.2,1);
+}
+
+.fade-in-table.show {
+  opacity: 1;
+  transform: none;
+}

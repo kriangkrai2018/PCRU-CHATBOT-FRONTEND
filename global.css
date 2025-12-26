@@ -1,0 +1,53 @@
+/* Make scrollbars transparent when content overflows */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+/* WebKit-based browsers */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: transparent; /* remove thumb background */
+  border-radius: 8px;
+  border: 2px solid transparent; /* creates padding, keeps track invisible */
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: transparent;
+}
+
+/* Ensure message bubbles don't show a track background when text wraps/overflows */
+.message-bubble, .chat-message, .bubble, .msg {
+  overflow: auto;
+  background-clip: padding-box; /* prevent scrollbar track artifacts */
+  scrollbar-color: transparent transparent;
+}
+.search-input-group {
+  width: 250px; /* Adjust width as needed */
+  position: relative;
+}
+
+.search-input-group .form-control {
+  background-color: #e9ecef; /* Light grey background */
+  padding-right: 2.5rem; /* Make space for the icon */
+}
+
+.search-input-group .form-control::placeholder {
+  color: #6c757d; /* Darker placeholder text */
+}
+
+.search-input-group .input-group-text {
+  color: #6c757d; /* Icon color */
+}
+
+/* Override SweetAlert2 top-right toast to appear bottom-right instead */
+.swal2-container.swal2-top-end {
+  top: auto !important;
+  bottom: 20px !important;
+  right: 20px !important;
+}

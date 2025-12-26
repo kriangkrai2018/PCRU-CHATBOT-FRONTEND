@@ -1,0 +1,1073 @@
+/* ============================================ */
+/* MANAGE SYNONYMS - APPLE STYLE CSS           */
+/* ============================================ */
+/* สไตล์สำหรับหน้าจัดการคำพ้อง/คำสนับสนุน      */
+/* Apple Design System 100%                    */
+/* ============================================ */
+
+/* ============================================ */
+/* BASE LAYOUT                                  */
+/* ============================================ */
+.synonyms-container {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+}
+
+.synonyms-main-content {
+  flex: 1;
+  padding: 1rem;
+  overflow-x: hidden;
+}
+
+.synonyms-page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  animation: slideInTitle 0.6s ease-out;
+}
+
+@keyframes slideInTitle {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================ */
+/* APPLE-STYLE CARDS                           */
+/* ============================================ */
+.synonyms-apple-card {
+  background: #ffffff;
+  border: none;
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.synonyms-apple-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12) !important;
+}
+
+.synonyms-shadow-apple {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* ============================================ */
+/* INFO CARD - GRADIENT STYLE                  */
+/* ============================================ */
+.synonyms-info-card {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-left: 4px solid #ff9500;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================ */
+/* STAT CARDS                                   */
+/* ============================================ */
+.synonyms-stat-card {
+  background: #ffffff;
+  border-radius: 16px;
+  transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.synonyms-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s;
+}
+
+.synonyms-stat-card:hover::before {
+  left: 100%;
+}
+
+.synonyms-stat-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+}
+
+.synonyms-stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  line-height: 1;
+}
+
+.synonyms-stat-label {
+  font-size: 0.875rem;
+  color: #86868b;
+  margin-top: 0.5rem;
+}
+
+/* ============================================ */
+/* ADD BUTTON - APPLE STYLE                    */
+/* ============================================ */
+.synonyms-btn-add-apple {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.synonyms-btn-add-apple:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(255, 149, 0, 0.4);
+}
+
+/* ============================================ */
+/* SEARCH CONTAINER                             */
+/* ============================================ */
+.synonyms-search-container {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+}
+
+.synonyms-search-container-table {
+  position: relative;
+  min-width: 260px;
+  max-width: 420px;
+  width: 40%;
+}
+
+.synonyms-search-container-table .synonyms-search-icon-svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.synonyms-search-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  padding-left: 2.75rem;
+  border: 2px solid rgba(255, 149, 0, 0.2);
+  border-radius: 16px;
+  outline: none;
+  font-size: 0.9rem;
+  background: #ffffff;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.synonyms-search-input:focus {
+  box-shadow: 0 0 0 4px rgba(255, 149, 0, 0.2);
+  border-color: #ff9500;
+}
+
+.synonyms-search-input::placeholder {
+  color: #86868b;
+}
+
+.synonyms-search-clear {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.synonyms-search-clear:hover {
+  color: #ff3b30;
+}
+
+/* ============================================ */
+/* TABLE STYLES - APPLE DESIGN                 */
+/* ============================================ */
+.synonyms-apple-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.synonyms-apple-table thead th {
+  background: #f5f5f7;
+  color: #1d1d1f;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1rem;
+  border: none;
+}
+
+.synonyms-apple-row {
+  transition: all 0.2s ease;
+  animation: synonymRowSlideIn 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.synonyms-apple-row:nth-child(1) { animation-delay: 0.1s; }
+.synonyms-apple-row:nth-child(2) { animation-delay: 0.15s; }
+.synonyms-apple-row:nth-child(3) { animation-delay: 0.2s; }
+.synonyms-apple-row:nth-child(4) { animation-delay: 0.25s; }
+.synonyms-apple-row:nth-child(5) { animation-delay: 0.3s; }
+.synonyms-apple-row:nth-child(6) { animation-delay: 0.35s; }
+.synonyms-apple-row:nth-child(7) { animation-delay: 0.4s; }
+.synonyms-apple-row:nth-child(8) { animation-delay: 0.45s; }
+.synonyms-apple-row:nth-child(9) { animation-delay: 0.5s; }
+.synonyms-apple-row:nth-child(10) { animation-delay: 0.55s; }
+
+@keyframes synonymRowSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.synonyms-apple-row:hover {
+  background: #f5f5f7;
+}
+
+/* ============================================ */
+/* ACTION BUTTONS                               */
+/* ============================================ */
+.synonyms-btn-action {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.synonyms-btn-action::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.synonyms-btn-action:hover::before {
+  opacity: 0.3;
+}
+
+.synonyms-btn-edit {
+  background: #fff3e0;
+  color: #ff9500;
+}
+
+.synonyms-btn-edit::before {
+  background: radial-gradient(circle, #ff9500 0%, transparent 70%);
+}
+
+.synonyms-btn-edit:hover {
+  background: #ff9500;
+  color: white;
+  transform: scale(1.1);
+}
+
+.synonyms-btn-delete {
+  background: #ffebee;
+  color: #ff3b30;
+}
+
+.synonyms-btn-delete::before {
+  background: radial-gradient(circle, #ff3b30 0%, transparent 70%);
+}
+
+.synonyms-btn-delete:hover {
+  background: #ff3b30;
+  color: white;
+  transform: scale(1.1);
+}
+
+.synonyms-btn-toggle {
+  background: #e8f5e9;
+  color: #34c759;
+}
+
+.synonyms-btn-toggle.inactive {
+  background: #f5f5f5;
+  color: #86868b;
+}
+
+.synonyms-btn-toggle:hover {
+  transform: scale(1.1);
+}
+
+/* ============================================ */
+/* SCORE BADGE                                  */
+/* ============================================ */
+.synonyms-score-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.synonyms-score-badge.score-high {
+  background: linear-gradient(135deg, #d1f5d3 0%, #b8f0bb 100%);
+  color: #1b7a24;
+}
+
+.synonyms-score-badge.score-medium {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffe8a1 100%);
+  color: #856404;
+}
+
+.synonyms-score-badge.score-low {
+  background: linear-gradient(135deg, #ffd7d7 0%, #ffb8b8 100%);
+  color: #c41e3a;
+}
+
+.synonyms-score-badge:hover {
+  transform: scale(1.05);
+}
+
+/* ============================================ */
+/* STATUS BADGE                                 */
+/* ============================================ */
+.synonyms-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.synonyms-status-badge.active {
+  background: linear-gradient(135deg, #34c759 0%, #30b350 100%);
+  color: white;
+}
+
+.synonyms-status-badge.inactive {
+  background: linear-gradient(135deg, #ff3b30 0%, #e63529 100%);
+  color: white;
+}
+
+/* ============================================ */
+/* ROLE TAG                                     */
+/* ============================================ */
+.synonyms-role-tag {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #007AFF 0%, #0056CC 100%);
+  color: white;
+}
+
+/* ============================================ */
+/* KEYWORD LINK ARROW                           */
+/* ============================================ */
+.synonyms-keyword-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.synonyms-keyword-link .input-word {
+  color: #1d1d1f;
+  font-weight: 600;
+}
+
+.synonyms-keyword-link .arrow-icon {
+  color: #ff9500;
+  animation: arrowPulse 2s ease-in-out infinite;
+}
+
+.synonyms-keyword-link .target-word {
+  color: #007aff;
+  font-weight: 600;
+}
+
+@keyframes arrowPulse {
+  0%, 100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(3px);
+    opacity: 0.7;
+  }
+}
+
+/* ============================================ */
+/* EMPTY STATE                                  */
+/* ============================================ */
+.synonyms-empty-state {
+  padding: 3rem;
+  text-align: center;
+}
+
+.synonyms-empty-svg {
+  animation: synonymFloat 3s ease-in-out infinite;
+}
+
+@keyframes synonymFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+/* ============================================ */
+/* MODAL STYLES - APPLE DESIGN                 */
+/* ============================================ */
+.synonyms-apple-modal {
+  border: none;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.synonyms-apple-modal .modal-header {
+  border-bottom: none;
+  padding: 1.5rem 1.5rem 0;
+}
+
+.synonyms-apple-modal .modal-body {
+  padding: 1.5rem;
+}
+
+.synonyms-apple-modal .modal-footer {
+  border-top: none;
+  padding: 0 1.5rem 1.5rem;
+}
+
+.synonyms-btn-close-custom {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: #f5f5f7;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.synonyms-btn-close-custom:hover {
+  background: #e5e5ea;
+  transform: rotate(90deg);
+}
+
+/* ============================================ */
+/* FORM STYLES                                  */
+/* ============================================ */
+.synonyms-form-control {
+  border: 2px solid #e5e5ea;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.synonyms-form-control:focus {
+  border-color: #ff9500;
+  box-shadow: 0 0 0 4px rgba(255, 149, 0, 0.15);
+  outline: none;
+}
+
+.synonyms-form-select {
+  border: 2px solid #e5e5ea;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ff9500' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  transition: all 0.2s ease;
+}
+
+.synonyms-form-select:focus {
+  border-color: #ff9500;
+  box-shadow: 0 0 0 4px rgba(255, 149, 0, 0.15);
+  outline: none;
+}
+
+/* ============================================ */
+/* SCORE SLIDER                                 */
+/* ============================================ */
+.synonyms-score-slider-container {
+  position: relative;
+  padding: 0.5rem 0;
+}
+
+.synonyms-score-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #ff3b30 0%, #ff9500 50%, #34c759 100%);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.synonyms-score-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  border: 3px solid #ff9500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.synonyms-score-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3);
+}
+
+.synonyms-score-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  border: 3px solid #ff9500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.synonyms-score-value {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ff9500;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.synonyms-score-slider-container:hover .synonyms-score-value {
+  opacity: 1;
+}
+
+/* ============================================ */
+/* PAGINATION                                   */
+/* ============================================ */
+.synonyms-pagination .page-link {
+  border: none;
+  color: #ff9500;
+  padding: 0.5rem 0.75rem;
+  margin: 0 2px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.synonyms-pagination .page-link:hover {
+  background: #fff3e0;
+}
+
+.synonyms-pagination .page-item.active .page-link {
+  background: #ff9500;
+  color: white;
+}
+
+.synonyms-pagination .page-item.disabled .page-link {
+  color: #86868b;
+}
+
+/* ============================================ */
+/* ROW TRANSITION - SMOOTH DELETE              */
+/* ============================================ */
+.synonyms-row-fade-enter-active {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.synonyms-row-fade-leave-active {
+  transition: all 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53);
+}
+
+.synonyms-row-fade-enter-from {
+  opacity: 0;
+  transform: translateX(-30px) scale(0.95);
+}
+
+.synonyms-row-fade-leave-to {
+  opacity: 0;
+  transform: translateX(30px) scale(0.9);
+}
+
+.synonyms-row-fade-move {
+  transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* ============================================ */
+/* NUMBER CHANGE ANIMATION                      */
+/* ============================================ */
+.synonyms-number-change-enter-active,
+.synonyms-number-change-leave-active {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.synonyms-number-change-enter-from {
+  opacity: 0;
+  transform: translateY(-20px) scale(0.8);
+}
+
+.synonyms-number-change-leave-to {
+  opacity: 0;
+  transform: translateY(20px) scale(0.8);
+}
+
+/* ============================================ */
+/* SVG ICON ANIMATIONS                          */
+/* ============================================ */
+
+/* Main Link Icon Animation */
+.synonyms-link-icon {
+  animation: synonymFloat 3s ease-in-out infinite;
+  filter: drop-shadow(0 4px 20px rgba(255, 149, 0, 0.3));
+}
+
+/* Link Chain Animation */
+.synonyms-link-chain {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: drawChain 2s ease-out forwards;
+}
+
+@keyframes drawChain {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Link Dots */
+.synonyms-link-dot {
+  animation: dotBounce 1.5s ease-in-out infinite;
+}
+
+.synonyms-link-dot-1 { animation-delay: 0s; }
+.synonyms-link-dot-2 { animation-delay: 0.3s; }
+.synonyms-link-dot-3 { animation-delay: 0.6s; }
+
+@keyframes dotBounce {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+}
+
+/* Stat SVG Animations */
+.synonyms-stat-svg {
+  animation: statScaleIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  opacity: 0;
+}
+
+@keyframes statScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.synonyms-stat-circle {
+  stroke-dasharray: 126;
+  stroke-dashoffset: 126;
+  animation: drawStatCircle 1s ease-out forwards;
+}
+
+@keyframes drawStatCircle {
+  to { stroke-dashoffset: 0; }
+}
+
+.synonyms-stat-circle-bg {
+  animation: expandStatCircle 0.8s ease-out forwards;
+  transform: scale(0);
+  transform-origin: center;
+}
+
+@keyframes expandStatCircle {
+  to { transform: scale(1); }
+}
+
+.synonyms-stat-checkmark {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: drawStatCheck 0.6s ease-out 0.4s forwards;
+}
+
+@keyframes drawStatCheck {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Wave Animation for Total */
+.synonyms-stat-wave {
+  stroke-dasharray: 80;
+  animation: waveAnimate 2s ease-in-out infinite;
+}
+
+@keyframes waveAnimate {
+  0%, 100% { stroke-dashoffset: 0; }
+  50% { stroke-dashoffset: 40; }
+}
+
+/* Score Meter Animation */
+.synonyms-score-meter {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: fillMeter 1.5s ease-out forwards;
+}
+
+@keyframes fillMeter {
+  to { stroke-dashoffset: 20; }
+}
+
+/* Link Pulse Animation */
+.synonyms-link-pulse {
+  animation: linkPulse 2s ease-in-out infinite;
+}
+
+@keyframes linkPulse {
+  0%, 100% { 
+    opacity: 0.3;
+    r: 6;
+  }
+  50% { 
+    opacity: 0.6;
+    r: 10;
+  }
+}
+
+/* Stat Card Hover Effect */
+.synonyms-stat-card:hover .synonyms-stat-svg {
+  animation: statBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes statBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* Info Card Book Animation */
+.synonyms-book-icon {
+  animation: synonymFloat 3s ease-in-out infinite 0.5s;
+  filter: drop-shadow(0 2px 8px rgba(255, 149, 0, 0.12));
+}
+
+.synonyms-book-page {
+  stroke-dasharray: 32;
+  stroke-dashoffset: 32;
+  animation: writeBookLine 0.6s ease-out forwards;
+}
+
+.synonyms-book-page-1 { animation-delay: 0.4s; }
+.synonyms-book-page-2 { animation-delay: 0.6s; }
+.synonyms-book-page-3 { animation-delay: 0.8s; }
+.synonyms-book-page-4 { animation-delay: 1s; }
+
+@keyframes writeBookLine {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Empty State Animations */
+.synonyms-empty-circle {
+  stroke-dasharray: 314;
+  stroke-dashoffset: 314;
+  animation: drawEmptyCircle 1.5s ease-out forwards;
+}
+
+@keyframes drawEmptyCircle {
+  to { stroke-dashoffset: 0; }
+}
+
+.synonyms-empty-link {
+  stroke-dasharray: 70;
+  stroke-dashoffset: 70;
+  animation: drawEmptyLink 0.8s ease-out 1s forwards;
+}
+
+@keyframes drawEmptyLink {
+  to { stroke-dashoffset: 0; }
+}
+
+.synonyms-empty-sparkle {
+  animation: sparkleAnimate 2s ease-in-out infinite;
+}
+
+.synonyms-empty-sparkle-1 { animation-delay: 0s; }
+.synonyms-empty-sparkle-2 { animation-delay: 0.4s; }
+.synonyms-empty-sparkle-3 { animation-delay: 0.8s; }
+
+@keyframes sparkleAnimate {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
+}
+
+/* ============================================ */
+/* BUTTON RIPPLE EFFECT                        */
+/* ============================================ */
+.synonyms-btn-apple {
+  position: relative;
+  overflow: hidden;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.synonyms-btn-apple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.synonyms-btn-apple:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+.synonyms-btn-apple:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.synonyms-btn-apple-primary {
+  background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
+  color: white;
+}
+
+.synonyms-btn-apple-primary:hover:not(:disabled) {
+  transform: scale(1.02);
+  box-shadow: 0 4px 15px rgba(255, 149, 0, 0.4);
+}
+
+.synonyms-btn-apple-secondary {
+  background: #f5f5f7;
+  color: #1d1d1f;
+}
+
+.synonyms-btn-apple-secondary:hover:not(:disabled) {
+  background: #e5e5ea;
+}
+
+/* ============================================ */
+/* LOADING SPINNER                              */
+/* ============================================ */
+.synonyms-spinner {
+  animation: synonymSpinner 0.8s linear infinite;
+}
+
+@keyframes synonymSpinner {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ============================================ */
+/* TOOLTIP                                      */
+/* ============================================ */
+.synonyms-tooltip {
+  position: relative;
+}
+
+.synonyms-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: #1d1d1f;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 1000;
+}
+
+.synonyms-tooltip:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+/* ============================================ */
+/* RESPONSIVE                                   */
+/* ============================================ */
+@media (max-width: 768px) {
+  .synonyms-stat-number {
+    font-size: 1.75rem;
+  }
+  
+  .synonyms-btn-apple {
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+  }
+  
+  .synonyms-link-icon,
+  .synonyms-book-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .synonyms-stat-svg {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .synonyms-search-container-table {
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .synonyms-keyword-link {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+/* ============================================ */
+/* REDUCED MOTION                               */
+/* ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================ */
+/* ACTION BUTTONS (btn-action)                  */
+/* ============================================ */
+.btn-action {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  background: #e8f5e9;
+  color: #34c759;
+}
+
+.btn-action:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+}
+
+.btn-action.inactive {
+  background: #f5f5f5;
+  color: #86868b;
+}
+
+.btn-action.inactive:hover {
+  background: #e5e5ea;
+  color: #1d1d1f;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-action.btn-edit {
+  background: #fff3e0;
+  color: #ff9500;
+}
+
+.btn-action.btn-edit:hover {
+  background: #ff9500;
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 149, 0, 0.4);
+}
+
+.btn-action.btn-reject {
+  background: #ffebee;
+  color: #ff3b30;
+}
+
+.btn-action.btn-reject:hover {
+  background: #ff3b30;
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.4);
+}
+
+/* ============================================ */
+/* FORCE LIGHT MODE (Override system dark)     */
+/* ============================================ */
+/* ไม่ใช้ Dark Mode - บังคับ Light Theme เสมอ */

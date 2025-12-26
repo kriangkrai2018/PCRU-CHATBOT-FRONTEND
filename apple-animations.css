@@ -1,0 +1,302 @@
+/* ============================================
+   Apple-Style Animations CSS
+   Smooth, bouncy, professional animations
+   ============================================ */
+
+/* Spring Easing Curves */
+:root {
+  --apple-ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --apple-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --apple-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --apple-smooth: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Fade Animations */
+@keyframes apple-fade-in {
+  from { 
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes apple-fade-out {
+  from { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  to { 
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* Slide Animations */
+@keyframes apple-slide-in-down {
+  from { 
+    opacity: 0;
+    transform: translateY(-30px) scale(0.96);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes apple-slide-in-up {
+  from { 
+    opacity: 0;
+    transform: translateY(30px) scale(0.96);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes apple-slide-in-left {
+  from { 
+    opacity: 0;
+    transform: translateX(-40px) scale(0.96);
+  }
+  to { 
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes apple-slide-in-right {
+  from { 
+    opacity: 0;
+    transform: translateX(40px) scale(0.96);
+  }
+  to { 
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Pop Animation */
+@keyframes apple-pop-in {
+  0% { 
+    opacity: 0;
+    transform: scale(0.7) rotate(-3deg);
+  }
+  50% { 
+    transform: scale(1.05) rotate(1deg);
+  }
+  100% { 
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+/* Bounce Animation */
+@keyframes apple-bounce {
+  0%, 100% { 
+    transform: translateY(0);
+  }
+  50% { 
+    transform: translateY(-10px);
+  }
+}
+
+/* Pulse Animation */
+@keyframes apple-pulse {
+  0%, 100% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+/* Shake Animation */
+@keyframes apple-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px) rotate(-2deg); }
+  75% { transform: translateX(5px) rotate(2deg); }
+}
+
+/* Wiggle Animation */
+@keyframes apple-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+
+/* Spin Animation */
+@keyframes apple-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Glow Animation */
+@keyframes apple-glow {
+  0%, 100% { 
+    box-shadow: 0 0 5px rgba(0, 122, 255, 0.5);
+  }
+  50% { 
+    box-shadow: 0 0 20px rgba(0, 122, 255, 0.8);
+  }
+}
+
+/* Toast Slide In */
+@keyframes apple-toast-in {
+  0% {
+    opacity: 0;
+    transform: translateX(100px) scale(0.8);
+  }
+  60% {
+    transform: translateX(-10px) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Modal Animations */
+@keyframes apple-modal-overlay {
+  from { 
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to { 
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+}
+
+@keyframes apple-modal-bounce {
+  0% {
+    opacity: 0;
+    transform: scale(0.7) translateY(-50px);
+  }
+  60% {
+    transform: scale(1.05) translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Icon Animations */
+@keyframes apple-icon-bounce {
+  0% { 
+    opacity: 0;
+    transform: scale(0.5) translateY(-20px);
+  }
+  60% { 
+    transform: scale(1.15) translateY(0);
+  }
+  100% { 
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Ripple Effect */
+@keyframes apple-ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Utility Classes */
+.apple-fade-in { 
+  animation: apple-fade-in 0.5s var(--apple-ease-out) forwards;
+}
+
+.apple-fade-out { 
+  animation: apple-fade-out 0.3s var(--apple-ease-in-out) forwards;
+}
+
+.apple-slide-down { 
+  animation: apple-slide-in-down 0.6s var(--apple-bounce) forwards;
+}
+
+.apple-slide-up { 
+  animation: apple-slide-in-up 0.6s var(--apple-bounce) forwards;
+}
+
+.apple-slide-left { 
+  animation: apple-slide-in-left 0.6s var(--apple-bounce) forwards;
+}
+
+.apple-slide-right { 
+  animation: apple-slide-in-right 0.6s var(--apple-bounce) forwards;
+}
+
+.apple-pop { 
+  animation: apple-pop-in 0.6s var(--apple-bounce) forwards;
+  opacity: 0;
+}
+
+.apple-bounce { 
+  animation: apple-bounce 2s ease-in-out infinite;
+}
+
+.apple-pulse { 
+  animation: apple-pulse 2s ease-in-out infinite;
+}
+
+.apple-shake { 
+  animation: apple-shake 0.5s ease-in-out;
+}
+
+.apple-wiggle { 
+  animation: apple-wiggle 0.6s ease-in-out;
+}
+
+.apple-spin { 
+  animation: apple-spin 1s linear infinite;
+}
+
+.apple-glow { 
+  animation: apple-glow 2s ease-in-out infinite;
+}
+
+/* Hover Effects */
+.apple-hover-lift {
+  transition: transform 0.3s var(--apple-bounce), box-shadow 0.3s ease;
+}
+
+.apple-hover-lift:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.apple-hover-scale {
+  transition: transform 0.3s var(--apple-bounce);
+}
+
+.apple-hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.apple-hover-glow {
+  transition: box-shadow 0.3s ease;
+}
+
+.apple-hover-glow:hover {
+  box-shadow: 0 0 20px rgba(0, 122, 255, 0.5);
+}
+
+/* Stagger Delays */
+.apple-delay-1 { animation-delay: 0.1s; }
+.apple-delay-2 { animation-delay: 0.2s; }
+.apple-delay-3 { animation-delay: 0.3s; }
+.apple-delay-4 { animation-delay: 0.4s; }
+.apple-delay-5 { animation-delay: 0.5s; }

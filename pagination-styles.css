@@ -1,0 +1,117 @@
+/* Pagination controls - ensure numbers are centered and visible */
+.pagination .page-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.35rem 0.6rem !important;
+  line-height: 1.2 !important;
+  min-width: 2.25rem !important;
+  height: 2.25rem !important;
+  box-sizing: border-box !important;
+  color: #007AFF !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  text-align: center !important;
+  font-size: inherit !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Numbered page buttons: no border and no background by default */
+.page-num {
+  border: none !important;
+  background-color: transparent !important;
+  color: #007AFF !important;
+  padding: 0.35rem 0.6rem;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  visibility: visible;
+  opacity: 1;
+}
+
+.page-num:hover {
+  border: none !important;
+  color: #5856D6 !important;
+  background-color: rgba(0, 122, 255, 0.08) !important;
+  border-radius: 8px;
+}
+
+/* Active page item styling - high specificity to override Bootstrap */
+.pagination .page-item.active {
+  background: transparent !important;
+}
+
+/* Active page link - show white text on gradient */
+.pagination .page-item.active .page-link {
+  border: none !important;
+  background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%) !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  padding: 0.35rem 0.6rem !important;
+  min-width: 2.25rem !important;
+  height: 2.25rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1.2 !important;
+  text-decoration: none !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  font-size: inherit !important;
+}
+
+.pagination .page-item.active .page-num {
+  border: none !important;
+  background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%) !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  padding: 0.35rem 0.6rem !important;
+  min-width: 2.25rem !important;
+  height: 2.25rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Ensure chevrons remain visible */
+.pagination .page-link[aria-label="First"],
+.pagination .page-link[aria-label="Previous"],
+.pagination .page-link[aria-label="Next"],
+.pagination .page-link[aria-label="Last"] {
+  border: none !important;
+  background: transparent !important;
+  color: #007AFF !important;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.pagination .page-link[aria-label="First"]:hover,
+.pagination .page-link[aria-label="Previous"]:hover,
+.pagination .page-link[aria-label="Next"]:hover,
+.pagination .page-link[aria-label="Last"]:hover {
+  color: #5856D6 !important;
+  background: rgba(0, 122, 255, 0.08) !important;
+  border-radius: 8px;
+}
+
+/* Disabled pagination items */
+.pagination .page-item.disabled .page-link {
+  color: #D0D0D0 !important;
+  cursor: not-allowed;
+  pointer-events: none;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  opacity: 0.5;
+}

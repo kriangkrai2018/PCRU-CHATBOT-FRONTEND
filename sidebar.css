@@ -1,0 +1,40 @@
+/* Visual styles for sidebar used across pages */
+.sidebar {
+  background-color: #E3E3E3;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar.collapsed {
+  width: 70px !important;
+}
+
+.sidebar .sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0;
+}
+
+.sidebar .nav-link {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  color: rgba(0,0,0,0.75);
+}
+
+.sidebar .nav-link i {
+  width: 1.6rem;
+  text-align: center;
+}
+
+.sidebar .nav-link .d-none {
+  display: none !important;
+}
+
+.sidebar .user-profile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem;
+  margin-top: auto;
+}
