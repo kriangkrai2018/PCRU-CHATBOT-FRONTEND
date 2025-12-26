@@ -382,8 +382,7 @@
                   <!-- Contact list: show when backend returned contacts OR when we provided fallback universityContacts -->
                     <div v-if="msg.showContacts || (msg.visibleContacts && msg.visibleContacts.length > 0)" class="contact-list">
                       <div class="contact-notice">
-                        <div class="contact-notice-title">ไม่เจอคำตอบที่ต้องการใช่ไหมคะ</div>
-                        <div class="contact-notice-sub">โปรดติดต่อเจ้าหน้าที่</div>
+                        <div class="contact-notice-sub">ไม่เจอคำตอบที่ต้องการใช่ไหมคะโปรดติดต่อเจ้าหน้าที่</div>
                       </div>
                       <hr class="contact-divider" />
                       <ol class="contact-ol">
@@ -1259,6 +1258,36 @@ export default {
       return processedText;
     },
     // Generate snowflake styles once to prevent jank during typing
+    async streamText(messageIndex, textToStream) {
+      if (!textToStream || !this.messages[messageIndex]) return;
+
+      this.messages[messageIndex].text = ''; // Clear existing text
+      const typingSpeed = parseInt(import.meta.env.VITE_BOT_TYPING_SPEED);
+
+      // Split by HTML tags and newlines to preserve them
+      const parts = textToStream.split(/(<[^>]+>|\n)/g);
+      
+      for (const part of parts) {
+        if (!part) continue; // Skip empty parts from split
+
+        if (part.match(/<[^>]+>/) || part === '\n') {
+          // It's a tag or a newline, append it instantly
+          this.messages[messageIndex].text += part;
+        } else {
+          // It's text, type it out character by character
+          for (let i = 0; i < part.length; i++) {
+            await new Promise(resolve => setTimeout(resolve, typingSpeed));
+            if (!this.messages[messageIndex]) return; // Stop if message was cleared
+            this.messages[messageIndex].text += part[i];
+            
+            // Scroll to bottom every few characters to keep it in view
+            if (i % 5 === 0) {
+              this.scrollToBottom();
+            }
+          }
+        }
+      }
+    },
     generateSnowflakeStyles() {
       const styles = []
       const windMax = 150;
@@ -2207,81 +2236,72 @@ export default {
             await new Promise(resolve => setTimeout(resolve, 750))
 
             if (this.messages[botIndex] && this.messages[botIndex].type === 'bot') {
-              console.log('🔧 Setting message properties:', { botText, pdf, results, multipleResults, resQuestionId, resFound })
-              console.log('📄 Full res.data for PDF debug:', JSON.stringify(res.data, null, 2))
-              this.messages[botIndex].typing = false
-              this.messages[botIndex].text = botText
-              if (pdf) this.messages[botIndex].pdf = pdf
-              if (contacts) this.messages[botIndex].contacts = contacts
+              console.log('🔧 Setting message properties:', { botText, pdf, results, multipleResults, resQuestionId, resFound });
+              console.log('📄 Full res.data for PDF debug:', JSON.stringify(res.data, null, 2));
+              
+              const msg = this.messages[botIndex];
+              msg.typing = false;
+              // Set all non-text properties first
+              if (pdf) msg.pdf = pdf;
+              if (contacts) msg.contacts = contacts;
 
-              // Compute visibleContacts: prefer entries that have officer AND phone; if none, fall back to any with phone.
+              // Compute visibleContacts
               let visibleContacts = (contacts || []).filter(c => c.officer && c.phone);
               if (!visibleContacts || visibleContacts.length === 0) {
                 visibleContacts = (contacts || []).filter(c => c.phone);
               }
-              // If still empty and this is the generic fallback response, use the configured university contacts that have phone numbers
               if ((!visibleContacts || visibleContacts.length === 0) && (botText.includes('ขออภัยจริงๆ ฉันไม่มีข้อมูลเกี่ยวกับคำถามนี้') || botText.includes('ยังเหนือความสามารถของฉันเลย'))) {
                 visibleContacts = (universityContacts || []).filter(c => c.phone);
               }
-              this.messages[botIndex].visibleContacts = visibleContacts
+              msg.visibleContacts = visibleContacts;
 
-              // attach results only when present and allowed (we already filtered above)
-              if (results) this.messages[botIndex].results = results
-              if (multipleResults) this.messages[botIndex].multipleResults = true
-              if (resQuestionId) this.messages[botIndex].questionId = resQuestionId
-              if (typeof resFound !== 'undefined') this.messages[botIndex].found = resFound
+              if (results) msg.results = results;
+              if (multipleResults) msg.multipleResults = true;
+              if (resQuestionId) msg.questionId = resQuestionId;
+              if (typeof resFound !== 'undefined') msg.found = resFound;
               
               // 🛡️ Quality Guard: Store confidence info
-              if (lowConfidence) this.messages[botIndex].lowConfidence = true
-              if (needsClarification) this.messages[botIndex].needsClarification = true
-              if (confidenceLevel) this.messages[botIndex].confidenceLevel = confidenceLevel
-              if (verificationWarnings.length) this.messages[botIndex].verificationWarnings = verificationWarnings
-              if (suggestions) this.messages[botIndex].suggestions = suggestions
+              if (lowConfidence) msg.lowConfidence = true;
+              if (needsClarification) msg.needsClarification = true;
+              if (confidenceLevel) msg.confidenceLevel = confidenceLevel;
+              if (verificationWarnings.length) msg.verificationWarnings = verificationWarnings;
+              if (suggestions) msg.suggestions = suggestions;
               
-              // ensure feedback state exists
-              if (!this.messages[botIndex].feedback) this.messages[botIndex].feedback = null
-              this.messages[botIndex].timestamp = new Date().toISOString()
+              if (!msg.feedback) msg.feedback = null;
+              msg.timestamp = new Date().toISOString();
               
               // Send log FIRST before any feedback or auto-like
               if (resFound === false) {
-                const noAnswerLogId = await this.sendNoAnswerLog(userMessage)
+                const noAnswerLogId = await this.sendNoAnswerLog(userMessage);
                 if (noAnswerLogId) {
-                  this.messages[botIndex].chatLogId = noAnswerLogId
+                  msg.chatLogId = noAnswerLogId;
                 }
-                this.saveChatHistory()
               } else if (resFound === true && !multipleResults) {
-                // Only send has-answer log when there's a direct answer (not when showing multiple results to choose from)
-                const chatLogId = await this.sendHasAnswerLog(userMessage, resQuestionId)
-                
-                // Store chatLogId in message for feedback
+                const chatLogId = await this.sendHasAnswerLog(userMessage, resQuestionId);
                 if (chatLogId) {
-                  this.messages[botIndex].chatLogId = chatLogId
+                  msg.chatLogId = chatLogId;
                 }
-                
-                // Save after log is sent
-                this.saveChatHistory()
-                
-                // Auto-like any direct found answer (after has-answer log) so feedback is recorded without user action
                 try {
-                  if (this.messages[botIndex].found === true && !this.messages[botIndex].feedback) {
-                    this.messages[botIndex].feedback = 'like'
-                    this.saveChatHistory()
-                    // send feedback to backend AFTER has-answer log using chatLogId
+                  if (msg.found === true && !msg.feedback) {
+                    msg.feedback = 'like';
                     if (this.$axios && chatLogId) {
-                      const payloadFb = { chatLogId: chatLogId, liked: true }
-                      await this.$axios.post('/chat/feedback', payloadFb).catch(err => console.warn('Failed to send auto-like feedback', err))
+                      const payloadFb = { chatLogId: chatLogId, liked: true };
+                      await this.$axios.post('/chat/feedback', payloadFb).catch(err => console.warn('Failed to send auto-like feedback', err));
                     }
                   }
                 } catch (e) {
                   // ignore
                 }
-              } else {
-                // Multiple results case - just save without sending has-answer log yet
-                this.saveChatHistory()
-                // Contacts from respond endpoint should already be in msg.contacts
+              }
+
+              // Now, stream the text content
+              if (botText) {
+                await this.streamText(botIndex, botText);
               }
               
-              this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
+              // Final save and UI update
+              this.saveChatHistory();
+              this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring(); });
             }
           } catch (err) {
             console.error('Chat API error', err)
