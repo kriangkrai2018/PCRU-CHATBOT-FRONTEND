@@ -12,6 +12,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import { isSidebarCollapsed } from '@/stores/sidebarState';
 import { useRouter } from 'vue-router';
 import Sidebar from '@/components/Sidebar.vue';
 import AppleDashboardHome from '@/views/dashboards/AppleDashboardHome.vue';
@@ -39,6 +40,12 @@ onMounted(() => {
   if (userInfoString) {
     try { userInfoObject.value = JSON.parse(userInfoString); } catch(e){ console.error(e); }
   }
+  // On large desktop screens, ensure sidebar is expanded by default
+  try {
+    if (window.innerWidth >= 1024) {
+      isSidebarCollapsed.value = false;
+    }
+  } catch (e) {}
 });
 
 onUnmounted(() => {
@@ -57,35 +64,41 @@ onUnmounted(() => {
   min-height: 100vh;
   display: flex;
   gap: 0;
-  align-items: stretch;
+  align-items: flex-start;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-x: hidden;
   box-sizing: border-box;
   background: linear-gradient(180deg, #f5f5f7 0%, #ffffff 100%);
 }
 
+
 :deep(.sidebar) {
-  position: relative !important;
+  position: sticky !important;
+  top: 0 !important;
   width: 250px !important;
   min-width: 250px !important;
   height: 100vh !important;
   overflow: auto !important;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  flex: 0 0 250px !important;
+  z-index: 2 !important;
 }
+
+/* keep sidebar collapsed widths consistent */
 
 :deep(.sidebar.collapsed) {
   width: 70px !important;
   min-width: 70px !important;
+  flex: 0 0 70px !important;
 }
 
-.main-content {
+  .main-content {
   flex: 1 1 auto;
   min-width: 0;
   background: transparent;
   overflow: auto;
-  /* remove horizontal padding so cards can be flush with viewport */
-  /* add comfortable horizontal gutter to content */
-  padding: 32px 16px;
+  /* force top flush with sidebar */
+  padding: 0 16px !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-x: hidden;
   box-sizing: border-box;
@@ -120,14 +133,16 @@ onUnmounted(() => {
     padding: 20px 16px;
   }
   
+  /* Keep flex layout even on small screens so sidebar and content stay side-by-side */
   .dashboard-container {
-    display: block;
+    display: flex !important;
+    flex-direction: row !important;
   }
   
   :deep(.sidebar) {
-    width: 100% !important;
-    min-width: 100% !important;
-    height: auto !important;
+    width: 70px !important;
+    min-width: 70px !important;
+    height: 100vh !important;
   }
 }
 

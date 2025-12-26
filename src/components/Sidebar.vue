@@ -378,14 +378,16 @@ const handleLogout = () => { logout(router); };
 
 <style scoped>
 .sidebar { 
-  width: 250px; 
-  transition: width 0.3s ease; 
-  background-color: #E3E3E3; 
-  box-sizing: border-box; 
+  width: 250px;
+  transition: width 340ms cubic-bezier(0.22, 0.9, 0.28, 1), background-color 180ms ease-in-out;
+  background-color: #E3E3E3;
+  box-sizing: border-box;
   position: sticky; /* keep sidebar fixed while main scrolls */
   top: 0;
   height: 100vh;
   overflow-y: auto;
+  will-change: width, transform;
+  overflow: hidden; /* prevent content overflow during width animation */
 }
 .sidebar.collapsed { 
   width: 70px !important;        /* force collapsed width to take precedence */
@@ -418,8 +420,8 @@ const handleLogout = () => { logout(router); };
   margin-right: -0.75rem;
 }
 .nav-link { 
-  color: rgba(0,0,0,0.65); 
-  transition: all 0.2s ease;
+  color: rgba(0,0,0,0.65);
+  transition: color 220ms ease, background-color 220ms ease, padding 260ms cubic-bezier(0.22, 0.9, 0.28, 1);
   padding-left: 0; /* remove left padding so items align flush */
 }
 .nav-link:hover { background-color: rgba(0,0,0,0.03); }
@@ -510,11 +512,11 @@ const handleLogout = () => { logout(router); };
   display: inline-block;
   vertical-align: middle;
   overflow: hidden;
-  transition: opacity 180ms ease, transform 180ms ease, max-width 200ms ease;
+  transition: opacity 260ms cubic-bezier(0.22, 0.9, 0.28, 1), transform 260ms cubic-bezier(0.22, 0.9, 0.28, 1), max-width 260ms cubic-bezier(0.22, 0.9, 0.28, 1);
 }
 .sidebar .nav-link span,
 .sidebar .pcru-text {
-  transition: opacity 180ms ease, transform 180ms ease, max-width 200ms ease;
+  transition: opacity 260ms cubic-bezier(0.22, 0.9, 0.28, 1), transform 260ms cubic-bezier(0.22, 0.9, 0.28, 1), max-width 260ms cubic-bezier(0.22, 0.9, 0.28, 1);
   display: inline-block;
   opacity: 1;
   transform: translateX(0);
@@ -535,6 +537,14 @@ const handleLogout = () => { logout(router); };
 }
 .sidebar.collapsed .toggle-btn i {
   transform: rotate(180deg);
+}
+
+/* Smooth icon movement when collapsing */
+.nav-link i {
+  transition: margin 260ms cubic-bezier(0.22, 0.9, 0.28, 1), transform 260ms cubic-bezier(0.22, 0.9, 0.28, 1);
+}
+.sidebar.collapsed .nav-link i {
+  margin-left: 0 !important;
 }
 
 /* Smoothly reveal dropdown when sidebar expands */

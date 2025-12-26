@@ -1,8 +1,10 @@
 import { ref, watch } from 'vue';
 
+// Default: if user previously set a preference (in localStorage) use it.
+// Otherwise default to expanded (not collapsed) so the sidebar opens wide.
 const initial = localStorage.getItem('sidebarCollapsed') !== null
   ? JSON.parse(localStorage.getItem('sidebarCollapsed'))
-  : window.innerWidth < 768;
+  : false;
 
 export const isSidebarCollapsed = ref(initial);
 

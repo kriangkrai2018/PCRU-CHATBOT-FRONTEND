@@ -1,5 +1,5 @@
 <template>
-  <div class="apple-home">
+  <div class="apple-dashboard container-fluid">
     <!-- Hero Section with Role-based greeting -->
     <transition name="fade-slide" appear>
       <div class="apple-hero">
@@ -681,12 +681,30 @@ onMounted(() => { fetchAll(); });
 
 </script>
 
+<script>
+// Add sidebar resize binding when used standalone (defensive)
+import { onMounted, onUnmounted } from 'vue';
+import { bindSidebarResize } from '@/stores/sidebarState';
+import '@/assets/sidebar.css';
+
+let _unbindSidebarResize = null;
+onMounted(() => {
+  try {
+    _unbindSidebarResize = bindSidebarResize();
+  } catch (e) {
+    // ignore if called in a context where store isn't available
+  }
+});
+
+onUnmounted(() => {
+  if (typeof _unbindSidebarResize === 'function') _unbindSidebarResize();
+});
+</script>
+
 <style scoped>
-.apple-home {
+.apple-dashboard {
   font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  padding: 0 16px;
-  /* allow dashboard cards to use full width of main content */
-  max-width: 100%;
+  padding: 0; /* let parent .main-content provide gutter */
   width: 100%;
   box-sizing: border-box;
 }
@@ -697,7 +715,8 @@ onMounted(() => { fetchAll(); });
 
 /* Hero Section */
 .apple-hero {
-  margin-bottom: 32px;
+  margin: 0 0 32px 0;
+  padding-top: 0; /* remove extra top padding so content aligns with sidebar */
 }
 
 .apple-title {
