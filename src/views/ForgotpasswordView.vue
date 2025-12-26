@@ -94,10 +94,13 @@
           }
           
       } catch (error) {
+          console.error('Forgot Password API Error:', error);
+          if (error.response) console.error('Server Response:', error.response.data);
+          if (error.response?.data?.stack) console.error('Server Stack:', error.response.data.stack);
           $swal.fire({
             icon: 'error',
             title: 'API Error',
-            text: error.response?.data?.message || 'Could not connect to the server.',
+            text: (error.response?.data?.message || 'Could not connect to the server.') + (error.response?.data?.error ? ' (' + error.response.data.error + ')' : ''),
             position: 'bottom-end', // เปลี่ยนเป็น 'bottom-end'
             timerProgressBar: true // คงไว้
           });
