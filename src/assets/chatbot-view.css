@@ -3133,7 +3133,6 @@ body.no-effects .apple-help-button::after { display: none !important; }
   height: 100%;
   overflow: hidden;
   pointer-events: none;
-  z-index: 1000;
   /* 🍎 Contain paint to this layer */
   contain: strict;
 }

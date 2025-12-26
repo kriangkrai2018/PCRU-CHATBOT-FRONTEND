@@ -7,7 +7,7 @@
 
         <aside class="chat-panel" :style="{width: drawerWidth}">
           <!-- Snowflakes (only in winter season: Nov-Feb) and if enabled -->
-          <div v-if="isWinterSeason && snowEnabled" class="snowflakes" aria-hidden="true">
+          <div v-if="isWinterSeason && snowEnabled" class="snowflakes" aria-hidden="true" :style="{ zIndex: snowZIndex }">
             <div 
               v-for="(flake, i) in snowflakeStyles" 
               :key="i" 
@@ -652,6 +652,9 @@ export default {
     }
   },
   computed: {
+    snowZIndex() {
+      return parseInt(import.meta.env.VITE_SNOW_Z_INDEX || '1000');
+    },
     displayedCategories() {
       if (!this.categories || !Array.isArray(this.categories)) return []
       const result = this.showAllCategories ? this.categories : this.categories.slice(0, 3)
@@ -1042,6 +1045,13 @@ export default {
     }, 0)
 
     // embedding removed; no persisted embed settings
+
+    // Auto-open chatbot if enabled in env
+    if (import.meta.env.VITE_AUTO_OPEN_CHATBOT === 'true') {
+      setTimeout(() => {
+        this.visible = true
+      }, 500)
+    }
   },
 
   beforeDestroy() {
