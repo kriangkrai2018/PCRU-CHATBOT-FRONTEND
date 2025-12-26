@@ -8,7 +8,7 @@
                     
                     <div class="mb-3 position-relative pt-2 pe-xl-5">
                         <input ref="emailInput" type="email" class="form-control border-dark border-2 rounded-3 pt-3" id="floatingInput" 
-                              placeholder="" v-model="email" required @input="emailInput.value.classList.remove('is-invalid')">
+                              placeholder="" v-model="email" required @input="emailInput.classList.remove('is-invalid')">
                         <label class="fw-bold position-absolute top-0 ms-2 bg-light rounded-3 px-2 mb-0" for="floatingInput">Email</label>
                         <div class="invalid-feedback">
                             {{ emailErrorMsg }}
