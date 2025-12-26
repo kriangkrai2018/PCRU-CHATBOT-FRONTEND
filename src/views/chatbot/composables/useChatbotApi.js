@@ -13,7 +13,7 @@ export function useChatbotApi(axios) {
    */
   async function sendFeedback(payload) {
     try {
-      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:36145';
       const response = await fetch(`${baseURL}chat/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -26,7 +26,7 @@ const app = createApp(App)
 
 // กำหนด Global Properties
 app.config.globalProperties.$axios = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL
+  baseURL: 'http://localhost:36145'
 });
 app.config.globalProperties.$swal = Swal;
 app.config.devtools = false;
