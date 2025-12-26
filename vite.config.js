@@ -58,6 +58,7 @@ export default defineConfig(({ mode }) => {
       host: devHost,
       port: devPort,
       strictPort: true,
+      allowedHosts: ['project.3bbddns.com'],
       // Warm up frequently used files
       warmup: {
         clientFiles: [
