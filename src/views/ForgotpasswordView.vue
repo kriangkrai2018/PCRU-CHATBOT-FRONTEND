@@ -65,7 +65,7 @@
               email: email.value,
           };
           
-          const response = await $axios.post('/forgotpassword', payload);
+          const response = await $axios.post('/forgotpassword', payload, { timeout: 10000 });
           const { success, maskedEmail } = response.data;
           
           if (success && maskedEmail) {
