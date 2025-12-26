@@ -26,7 +26,7 @@ const app = createApp(App)
 
 // กำหนด Global Properties
 app.config.globalProperties.$axios = axios.create({
-  baseURL: 'http://localhost:36145'
+  baseURL: 'http://project.3bbddns.com:36145'
 });
 app.config.globalProperties.$swal = Swal;
 app.config.devtools = false;

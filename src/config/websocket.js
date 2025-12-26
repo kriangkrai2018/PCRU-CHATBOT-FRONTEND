@@ -9,7 +9,7 @@
  * @returns {string} WebSocket base URL
  */
 export function getWebSocketBaseUrl(axios = null) {
-  const baseURL = axios?.defaults?.baseURL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:36145';
+  const baseURL = axios?.defaults?.baseURL || import.meta.env.VITE_API_BASE_URL || 'http://project.3bbddns.com:36145';
   // Remove trailing slash if present before converting to ws protocol
   const cleanUrl = baseURL.replace(/\/$/, '');
   return cleanUrl.replace(/^http/, 'ws');

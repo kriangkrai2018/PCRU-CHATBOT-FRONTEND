@@ -3086,7 +3086,7 @@ export default {
       console.log('📤 Sending feedback payload:', payload)
 
       // Always use fetch API for reliability
-      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:36145';
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://project.3bbddns.com:36145';
       fetch(`${baseURL}chat/feedback`, {
         method: 'POST',
         headers: {

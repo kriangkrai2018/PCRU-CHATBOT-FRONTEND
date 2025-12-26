@@ -6,7 +6,7 @@ let swalInstance = null;
 // สร้าง Axios instance
 const axiosInstance = axios.create({
   // กำหนด Base URL ของ Backend API
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:36145', // ตรวจสอบให้แน่ใจว่าเป็น URL ของ Backend ของคุณ
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://project.3bbddns.com:36145', // ตรวจสอบให้แน่ใจว่าเป็น URL ของ Backend ของคุณ
   timeout: parseInt(import.meta.env.VITE_AXIOS_TIMEOUT || '3000'), // 🕒 short timeout to prevent slow reload
   headers: {
     'Content-Type': 'application/json',
