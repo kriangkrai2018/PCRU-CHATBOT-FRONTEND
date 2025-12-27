@@ -26,12 +26,12 @@
         <div class="row mb-4">
           <div class="col-md-6">
             <div class="chart-container">
-              <canvas ref="pieCanvas"></canvas>
+              <canvas id="feedbacks-pie-chart" ref="pieCanvas"></canvas>
             </div>
           </div>
           <div class="col-md-6">
             <div class="chart-container">
-              <canvas ref="barCanvas"></canvas>
+              <canvas id="feedbacks-bar-chart" ref="barCanvas"></canvas>
             </div>
           </div>
         </div>
@@ -384,10 +384,6 @@ const filteredFeedbacks = computed(() => {
 });
 
 watch(feedbackTypeFilter, () => { currentPage.value = 1; });
-// When filter/search changes, re-render charts to reflect new dataset
-watch(filteredFeedbacks, () => {
-  nextTick(() => initCharts());
-});
 
 // pagination
 const currentPage = ref(1);
@@ -660,6 +656,7 @@ const barCanvas = ref(null);
 
 // Added: Chart instances
 let pieChart, barChart;
+let chartsInitializing = false;
 
 // WebSocket connection for real-time updates (optional, graceful degradation)
 function connectWebSocket() {
@@ -734,6 +731,9 @@ function disconnectWebSocket() {
 
 // Added: Initialize charts
 function initCharts() {
+  if (chartsInitializing) return; // Prevent concurrent calls
+  chartsInitializing = true;
+
   // Destroy existing charts first
   if (pieChart) {
     pieChart.destroy();
@@ -763,6 +763,7 @@ function initCharts() {
         options: lineOptions
       });
     }
+    chartsInitializing = false;
   });
 }
 
@@ -775,20 +776,9 @@ onMounted(() => {
 });
 
 // Watch for data changes and reinitialize charts
-watch(() => props.feedbacks, () => {
-  if (!props.feedbacksLoading && !props.feedbacksError) {
-    initCharts();
-  }
+watch([pieData, lineData], () => {
+  initCharts();
 }, { deep: true });
-
-// Also watch for loading state change
-watch(() => props.feedbacksLoading, (newVal) => {
-  if (!newVal && !props.feedbacksError && props.feedbacks.length > 0) {
-    nextTick(() => {
-      initCharts();
-    });
-  }
-});
 
 // Added: destroy charts on unmount
 onBeforeUnmount(() => {

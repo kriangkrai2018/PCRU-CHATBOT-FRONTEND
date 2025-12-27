@@ -68,8 +68,16 @@ const fetchFeedbacks = async () => {
   feedbacksLoading.value = true;
   try {
     const response = await $axios.get('/feedbacks');
-    feedbacks.value = response.data;
+    console.log('📊 fetchFeedbacks response:', response.data);
+    feedbacks.value = response.data?.data || response.data || [];
+    console.log('📊 feedbacks.value set to:', feedbacks.value, 'length:', Array.isArray(feedbacks.value) ? feedbacks.value.length : 'not array');
   } catch (err) {
+    console.error('❌ fetchFeedbacks error:', err);
+    if (err.response?.status === 401) {
+      // Token invalid or expired, redirect to login
+      router.replace('/login');
+      return;
+    }
     feedbacksError.value = err.response?.data?.message || 'Failed to load feedbacks.';
   } finally {
     feedbacksLoading.value = false;
@@ -77,8 +85,9 @@ const fetchFeedbacks = async () => {
 };
 
 const feedbacksPieChartData = computed(() => {
-  const likes = feedbacks.value.filter(f => f.FeedbackValue === 1).length;
-  const dislikes = feedbacks.value.filter(f => f.FeedbackValue === 0).length;
+  const data = Array.isArray(feedbacks.value) ? feedbacks.value : [];
+  const likes = data.filter(f => f.FeedbackValue === 1).length;
+  const dislikes = data.filter(f => f.FeedbackValue === 0).length;
   return {
     labels: ['Like', 'Unlike'],
     datasets: [{ data: [likes, dislikes], backgroundColor: ['#34C759', '#FF3B30'] }]
@@ -86,8 +95,9 @@ const feedbacksPieChartData = computed(() => {
 });
 
 const feedbacksBarChartData = computed(() => {
-  const likes = feedbacks.value.filter(f => f.FeedbackValue === 1).length;
-  const dislikes = feedbacks.value.filter(f => f.FeedbackValue === 0).length;
+  const data = Array.isArray(feedbacks.value) ? feedbacks.value : [];
+  const likes = data.filter(f => f.FeedbackValue === 1).length;
+  const dislikes = data.filter(f => f.FeedbackValue === 0).length;
   return {
     labels: ['Like', 'Unlike'],
     datasets: [{ label: 'Feedbacks', data: [likes, dislikes], backgroundColor: ['#34C759', '#FF3B30'] }]
