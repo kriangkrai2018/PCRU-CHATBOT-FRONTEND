@@ -435,7 +435,7 @@ const fetchOrgs = async () => {
   error.value = null;
   try {
     const response = await $axios.get('/organizations');
-    organizations.value = response.data;
+    organizations.value = response.data?.data || response.data || [];
   } catch (err) {
     console.error('Failed to fetch organizations:', err);
     error.value = err.response?.data?.message || 'Failed to load organization data.';

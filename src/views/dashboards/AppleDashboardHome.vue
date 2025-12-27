@@ -495,8 +495,8 @@ const fetchAll = async () => {
       $axios.get('/feedbacks').catch(() => ({ data: [] })),
       $axios.get('/getChatLogHasAnswers').catch(() => ({ data: [] })),
       $axios.get('/getChatLogNoAnswers').catch(() => ({ data: [] })),
-      $axios.get('/organizations').catch(() => ({ data: [] })),
-      $axios.get('/officers').catch(() => ({ data: [] })),
+      $axios.get('/organizations').then(r => r.data?.data || r.data || []).catch(() => ([])),
+      $axios.get('/officers').then(r => r.data?.data || r.data || []).catch(() => ([])),
       $axios.get('/feedbacks/handled').catch(() => ({ data: [] })),
       $axios.get('/adminusers').catch(() => ({ data: [] })),
     ]);

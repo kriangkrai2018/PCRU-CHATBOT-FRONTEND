@@ -264,7 +264,7 @@ const fetchOrganizations = async () => {
   organizationError.value = null;
   try {
     const response = await $axios.get('/organizations');
-    organizations.value = response.data;
+    organizations.value = response.data?.data || response.data || [];
   } catch (err) {
     console.error('Failed to fetch organization data:', err);
     organizationError.value = err.response?.data?.message || 'Failed to load organization data.';
@@ -368,7 +368,7 @@ const fetchOfficers = async () => {
   officerError.value = null;
   try {
     const response = await $axios.get('/officers');
-    officers.value = response.data;
+    officers.value = response.data?.data || response.data || [];
     // Debug: log officers length and data
     console.log('officers.value.length:', officers.value?.length);
     console.log('officers.value:', officers.value);

@@ -127,7 +127,7 @@ const fetchOfficers = async () => {
   officerError.value = null;
   try {
     const response = await $axios.get('/officers');
-    officers.value = response.data;
+    officers.value = response.data?.data || response.data || [];
   } catch (err) {
     console.error('Failed to fetch officer data:', err);
     officerError.value = err.response?.data?.message || 'Failed to load officer data.';
