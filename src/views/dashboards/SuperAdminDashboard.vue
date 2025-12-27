@@ -206,7 +206,8 @@ const fetchAdmins = async () => {
   adminError.value = null;
   try {
     const response = await $axios.get('/adminusers');
-    admins.value = response.data;
+    // API returns { success: true, data: [...] } — keep backward compatibility
+    admins.value = response.data?.data || response.data || [];
   } catch (err) {
     console.error('Failed to fetch admin data:', err);
     adminError.value = err.response?.data?.message || 'Failed to load admin data.';
