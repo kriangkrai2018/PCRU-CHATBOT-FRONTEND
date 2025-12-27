@@ -3174,25 +3174,30 @@ export default {
       
       console.log('📤 Sending feedback payload:', payload)
 
-      // Always use fetch API for reliability
-      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://project.3bbddns.com:36145';
-      fetch(`${baseURL}chat/feedback`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      })
-      .then(res => {
-        console.log('📥 Fetch response status:', res.status)
-        return res.json()
-      })
-      .then(data => {
-        console.log('✅ Feedback sent successfully:', data)
-      })
-      .catch(err => {
-        console.error('❌ Fetch error:', err)
-      })
+      // Prefer axios so Authorization header and baseURL are applied
+      if (this.$axios && typeof this.$axios.post === 'function') {
+        this.$axios.post('/chat/feedback', payload)
+          .then(res => {
+            console.log('📥 Feedback response (axios):', res.data)
+          })
+          .catch(err => {
+            console.error('❌ Feedback axios error:', err)
+          })
+      } else {
+        // Fallback to fetch (ensure leading slash)
+        const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://project.3bbddns.com:36145';
+        fetch(`${baseURL}/chat/feedback`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': (localStorage.getItem('userToken') ? `Bearer ${localStorage.getItem('userToken')}` : '')
+          },
+          body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => console.log('✅ Feedback sent successfully (fetch fallback):', data))
+        .catch(err => console.error('❌ Fetch error (fallback):', err))
+      }
     },
     checkWinterSeason() {
       const currentDate = new Date()

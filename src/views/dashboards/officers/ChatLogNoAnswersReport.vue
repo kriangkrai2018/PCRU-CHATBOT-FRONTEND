@@ -148,9 +148,30 @@ const fetchData = async () => {
   loading.value = true; error.value = null;
   try {
     const res = await $axios.get('/getChatLogNoAnswers');
-    console.log('📥 getChatLogNoAnswers response:', res.data);
+    console.log('📥 getChatLogNoAnswers response (raw):', res.data);
     // Normalize responses that may be either an array or an object { success, data }
-    items.value = Array.isArray(res.data) ? res.data : (res.data?.data || res.data || []);
+    let rows = Array.isArray(res.data) ? res.data : (res.data?.data || res.data || []);
+
+    // Defensive: map/normalize field names so template always finds expected keys
+    const normalized = rows.map(r => {
+      const row = r || {};
+      const ChatLogID = row.ChatLogID ?? row.chatLogID ?? row.chatlogid ?? row.chat_log_id ?? row.id ?? null;
+      const Timestamp = row.Timestamp ?? row.timestamp ?? row.time ?? row.created_at ?? null;
+      const UserQuery = row.UserQuery ?? row.userQuery ?? row.user_query ?? row.query ?? row.message ?? '';
+      return { ...row, ChatLogID, Timestamp, UserQuery };
+    });
+
+    // Extra debug: log first item keys and types to help diagnose missing fields
+    if (normalized.length > 0) {
+      try {
+        console.log('📥 getChatLogNoAnswers first item (normalized):', normalized[0]);
+        console.log('📥 getChatLogNoAnswers first item keys:', Object.keys(normalized[0]));
+      } catch (e) {
+        console.log('📥 getChatLogNoAnswers cannot stringify first item', e);
+      }
+    }
+
+    items.value = normalized;
   } catch (err) {
     error.value = err.response?.data?.message || err.message || 'Failed to load data.';
   } finally {

@@ -13,10 +13,17 @@ export function useChatbotApi(axios) {
    */
   async function sendFeedback(payload) {
     try {
+      // Prefer axios (it attaches Authorization header and baseURL)
+      if (axios && typeof axios.post === 'function') {
+        const res = await axios.post('/chat/feedback', payload)
+        return res.data
+      }
+
+      // Fallback to fetch if axios not provided
       const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://project.3bbddns.com:36145';
-      const response = await fetch(`${baseURL}chat/feedback`, {
+      const response = await fetch(`${baseURL}/chat/feedback`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': (localStorage.getItem('userToken') ? `Bearer ${localStorage.getItem('userToken')}` : '') },
         body: JSON.stringify(payload)
       })
       const data = await response.json()

@@ -140,6 +140,7 @@
                     </button>
 
                     <button
+                      v-if="fb.FeedbackValue !== 1"
                       class="delete-btn"
                       @click="handleFeedback(fb)"
                       :disabled="deletingFeedbackId === fb.FeedbackID"
@@ -924,10 +925,19 @@ async function saveInlineEdit() {
 // Directly mark a feedback as handled (moves it to handled feedbacks)
 async function handleFeedback(fb) {
   if (!fb?.FeedbackID) return;
+  // Prevent handling feedback that is not of the expected type (server expects FeedbackValue === 0)
+  if (fb.FeedbackValue != null && Number(fb.FeedbackValue) !== 0) {
+    const msg = 'Feedback cannot be marked as handled (already handled or unsupported feedback type).';
+    console.warn('handleFeedback prevented for unsupported FeedbackValue:', fb.FeedbackValue, fb);
+    showErrorToast(msg);
+    await openAlert({ message: msg, type: 'error' });
+    return;
+  }
   const ok = await openConfirm({ message: 'ยืนยันย้าย Feedback นี้ไปยังรายการที่จัดการแล้ว?' });
   if (!ok) return;
   deletingFeedbackId.value = fb.FeedbackID;
   try {
+    console.log('🔧 handleFeedback called for:', fb);
     await $axios.put(`/feedbacks/${fb.FeedbackID}/handle`);
     showSuccessToast('ย้าย Feedback ไปยังรายการที่จัดการแล้ว');
     emit('refresh');
