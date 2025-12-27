@@ -62,42 +62,71 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    // ตรวจสอบว่า Error มี Response จาก Server และเป็น Status 403 (Forbidden)
+    // Handle Forbidden due to invalid/expired tokens (403)
     if (error.response && error.response.status === 403) {
-      // ตรวจสอบข้อความ Error เพื่อให้แน่ใจว่าเป็น "Invalid or expired token."
-      // (อาจจะต้องปรับ string ให้ตรงกับข้อความจริงที่ Backend ส่งมา)
       if (error.response.data?.message === 'Forbidden: Invalid or expired token.') {
-        // ล้างข้อมูล Session ทั้งหมด
+        // Clear session and redirect to login
         localStorage.removeItem('userToken');
         localStorage.removeItem('userType');
         localStorage.removeItem('userInfo');
 
-        // แสดง SweetAlert2 Toast Alert (ไม่ใช่ Modal) กลางจอพร้อม Progress Bar
         if (swalInstance) {
           swalInstance.fire({
-            toast: true, // เปลี่ยนกลับเป็น true เพื่อให้แสดงเป็น Toast
+            toast: true,
             icon: 'error',
             title: 'Session หมดอายุ',
             text: 'โปรดเข้าสู่ระบบใหม่อีกครั้ง',
-            position: 'bottom-end', // changed: show at top-right
+            position: 'bottom-end',
             showConfirmButton: false,
             timer: 2000,
             timerProgressBar: true
           });
         } else {
-          // Fallback ถ้า $swal ไม่พร้อมใช้งาน
           console.error('Session หมดอายุ: Invalid or expired token, redirecting to login...');
           alert('Session หมดอายุ: โปรดเข้าสู่ระบบใหม่อีกครั้ง');
         }
-        
-        // พาผู้ใช้ไปหน้า Login ทันที
-        router.push({ name: 'login' });
 
-        // หยุดการทำงานของ Error นี้ ไม่ให้ส่งต่อไปยัง catch block ใน Component
-        return new Promise(() => {}); // Return a pending promise to halt further error propagation
+        router.push({ name: 'login' });
+        return new Promise(() => {});
       }
     }
-    // สำหรับ Error อื่นๆ หรือ 403 ที่ไม่ใช่ token error ให้ส่ง Error ต่อไป
+
+    // NEW: Handle 401 responses indicating session timeout or idle timeout
+    if (error.response && error.response.status === 401) {
+      const code = error.response.data?.code;
+      const msg = error.response.data?.message || '';
+
+      const isIdle = code === 'IDLE_TIMEOUT' || msg.toLowerCase().includes('inactivity') || msg.toLowerCase().includes('idle');
+      const isSession = code === 'SESSION_TIMEOUT' || msg.toLowerCase().includes('session expired');
+
+      if (isIdle || isSession) {
+        // Clear session and show message
+        localStorage.removeItem('userToken');
+        localStorage.removeItem('userType');
+        localStorage.removeItem('userInfo');
+
+        if (swalInstance) {
+          swalInstance.fire({
+            toast: true,
+            icon: 'error',
+            title: 'Session หมดอายุ',
+            text: 'เซสชันหมดอายุหรือไม่มีกิจกรรมล่าสุด โปรดเข้าสู่ระบบใหม่',
+            position: 'bottom-end',
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true
+          });
+        } else {
+          console.error('Session expired due to inactivity or session timeout. Redirecting to login...');
+          alert('Session หมดอายุ: โปรดเข้าสู่ระบบใหม่อีกครั้ง');
+        }
+
+        router.push({ name: 'login' });
+        return new Promise(() => {});
+      }
+    }
+
+    // For other errors, propagate
     return Promise.reject(error);
   }
 );
