@@ -501,15 +501,16 @@ const fetchAll = async () => {
       $axios.get('/adminusers').catch(() => ({ data: [] })),
     ]);
 
-    categories.value = cRes.data?.categories || [];
-    questionsAnswers.value = qRes.data || [];
-    keywords.value = kRes.data || [];
-    feedbacks.value = fRes.data || [];
-    chatHas.value = chRes.data || [];
-    chatNo.value = cnRes.data || [];
-    organizations.value = orgRes.data || [];
-    officers.value = offRes.data || [];
-    admins.value = Array.isArray(adminsRes.data) ? adminsRes.data : (Array.isArray(adminsRes) ? adminsRes : []);
+    categories.value = cRes.data?.categories || cRes.data || [];
+    questionsAnswers.value = qRes.data?.data || qRes.data || [];
+    keywords.value = kRes.data?.data || kRes.data || [];
+    feedbacks.value = fRes.data?.data || fRes.data || [];
+    chatHas.value = chRes.data?.data || chRes.data || [];
+    chatNo.value = cnRes.data?.data || cnRes.data || [];
+    organizations.value = orgRes.data?.data || orgRes.data || [];
+    officers.value = offRes.data?.data || offRes.data || [];
+    handledFeedbacks.value = handledRes.data?.data || handledRes.data || [];
+    admins.value = adminsRes.data?.data || adminsRes.data || adminsRes || [];
 
     // Normalize responses: some endpoints return object wrappers
     const normalize = (v) => {
