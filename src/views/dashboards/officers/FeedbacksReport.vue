@@ -344,7 +344,7 @@ watch(localSearch, () => { currentPage.value = 1; });
 
 const all = computed(() => Array.isArray(props.feedbacks) ? props.feedbacks : []);
 
-const feedbackTypeFilter = ref('unlike'); // 'all' | 'like' | 'unlike' (default unlike)
+const feedbackTypeFilter = ref('all'); // 'all' | 'like' | 'unlike' (default all)
 
 function isLikeValue(v) {
   const s = (v ?? '').toString().toLowerCase().trim();
