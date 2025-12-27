@@ -6,7 +6,7 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const devHost = env.VITE_DEV_HOST || 'project.3bbddns.com'
-  const devPort = Number(env.VITE_DEV_PORT || '5173')
+  const devPort = Number(env.VITE_DEV_PORT || '3000')
  
   return {
     plugins: [

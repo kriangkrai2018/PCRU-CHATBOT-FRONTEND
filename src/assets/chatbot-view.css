@@ -489,10 +489,11 @@ html.keyboard-open .clear-chat-btn {
   align-items: center;
   width: 100%;
 }
-
-.input-row .input-pill {
-  flex: 1 1 auto;
-  padding-right: 64px; /* Ensure text does not go under the send button */
+@media (max-width: 1024px) {
+  .input-row {
+    margin-right: 1rem;
+  }
+  
 }
 
 .panel-footer { 
@@ -650,15 +651,9 @@ html.keyboard-open .panel-footer {
 
   /* On mobile, use flow layout so the input fills to the button; when focused/keyboard-open we pin the button again. */
   .panel-footer .btn-send {
-    position: static !important; /* keep in flow so input naturally fills available space */
-    margin-left: 12px !important;
+    position: fixed !important; /* keep in flow so input naturally fills available space */
     width: 48px;
     height: 48px;
-    border-radius: 24px;
-    z-index: 1622; /* raised so it sits above tooltips and FAB on mobile */
-    pointer-events: auto;
-    flex: 0 0 auto;
-    align-self: center;
   }
 
   /* When keyboard is open on mobile, nudge the input and send button up */
@@ -713,58 +708,15 @@ html.keyboard-open .panel-footer {
     margin-right: 0 !important;
   }
 
-  /* Input row: allow the input area to fill edge-to-edge so the pill sits flush with the send button */
-  .input-row {
-    position: static; /* allow .btn-send to be positioned against the parent .panel-footer's right edge */
-    width: 100%;
-    max-width: 100%;
-    margin: 0; /* fill full width in the footer */
-    display: flex;
-    align-items: center; /* vertically center input */
-    min-height: 56px; /* fixed row height to match input and borders */
-    /* ensure input row sits above floating FAB */
-    z-index: 2147483646;
-  }
-  .input-row .input-pill { width: auto; padding-right: 12px; box-sizing: border-box; margin-right: 0 !important; flex: 1 1 auto; }
 
-  /* Center the input row again on large desktop widths */
-  @media (min-width: 1024px) {
-    /* allow input to expand on wider screens while keeping a small right gap for the button */
-    .input-row { max-width: calc(100% - 24px); margin: 0; }
-  }
 
-  /* More specific positioning to guarantee center alignment */
-  /* Panel-specific rule kept for backward compatibility but we will override in .input-row */
-  .panel-footer .input-row .btn-send {
-    position: absolute !important; /* keep it out of flow and stable */
-    right: 8px !important;
-    top: calc(50% - 26px) !important;
-    margin-left: 0 !important;
-    margin-top: 0 !important;
-    z-index: 2147483647;
-    width: 52px;
-    height: 52px;
-  }
 
-  /* Backwards-compatible fallback (less specific) */
-  .input-row .btn-send {
-    position: absolute !important;
-    right: 8px !important;
-    top: calc(50% - 26px) !important;
-    margin-left: 0 !important;
-    margin-top: 0 !important;
-    z-index: 2147483647;
-  }
 
-  /* Keep the button vertically aligned when the input is nudged on focus */
-  .input-row .input-pill:focus ~ .btn-send,
-  .input-row .input-pill:active ~ .btn-send {
-    margin-left: 0; /* do not shift the button; keep it flush-right */
-  }
+
+
+ 
 
   /* On small screens, let the input fill the row so the pill reaches the send button */
-  .input-row { max-width: 100%; margin: 0; }
-  .input-row .input-pill { padding-right: 12px; width: auto; margin-right: 0; flex: 1 1 auto; }
 
   /* Ensure input keeps above bottom typing bubble visually */
   .panel-footer .input-pill { position: relative; }
@@ -1022,8 +974,6 @@ html.keyboard-open .panel-footer {
   transform: none !important;
 }
 
-.btn-send:active {
-}
 
 /* Transitions - Apple-style smooth animation */
 .fade-enter-active, .fade-leave-active {

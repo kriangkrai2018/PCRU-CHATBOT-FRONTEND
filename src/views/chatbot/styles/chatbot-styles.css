@@ -835,9 +835,7 @@ html.keyboard-open .panel-footer {
 }
 /* hover animation removed to keep icon stable */
 
-.btn-send:active {
-  /* no transform on active */
-}
+
 
 /* Transitions - Apple-style smooth animation */
 .fade-enter-active, .fade-leave-active {
@@ -2975,10 +2973,7 @@ html.keyboard-open .message-wrapper {
     font-size: 15px;
   }
   
-  .btn-send {
-    width: 48px;
-    height: 48px;
-  }
+
 }
 
 /* Global shadow disable when toggled off */
