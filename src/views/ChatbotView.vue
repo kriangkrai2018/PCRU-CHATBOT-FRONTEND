@@ -648,7 +648,10 @@ export default {
       // Welcome message typing
       welcomeTitle: '',
       welcomeSub: '',
-      welcomeInstruction: ''
+      welcomeInstruction: '',
+      stopwords: [],
+      protectedKeywords: new Set(),
+      segmenter: null,
     }
   },
   computed: {
@@ -757,6 +760,14 @@ export default {
   },
   
   async mounted() {
+    // Initialize Intl.Segmenter for frontend stopword removal.
+    if ('Segmenter' in Intl) {
+      this.segmenter = new Intl.Segmenter('th', { granularity: 'word' });
+    } else {
+      console.warn('Intl.Segmenter not supported, frontend stopword filtering will be disabled.');
+    }
+    this.fetchStopwordsAndKeywords();
+
     // Generate snowflake styles once to prevent jank on re-render
     this.generateSnowflakeStyles()
     
@@ -1198,6 +1209,30 @@ export default {
     }
   },
   methods: {
+    async fetchStopwordsAndKeywords() {
+      try {
+        const [stopwordsRes, keywordsRes] = await Promise.all([
+          this.$axios.get('/stopwords/public'),
+          this.$axios.get('/keywords/public')
+        ]);
+        
+        const stopwordsData = stopwordsRes.data?.data || stopwordsRes.data || [];
+        const keywordsData = keywordsRes.data?.data || keywordsRes.data || [];
+
+        if (Array.isArray(keywordsData)) {
+          this.protectedKeywords = new Set(keywordsData.map(k => (k.KeywordText || '').toLowerCase()));
+        }
+
+        if (Array.isArray(stopwordsData)) {
+          // An "active" stopword is one that is in the stopwords list but NOT in the protected keywords list.
+          this.stopwords = stopwordsData
+            .map(s => (s.StopwordText || '').toLowerCase())
+            .filter(sw => sw && !this.protectedKeywords.has(sw));
+        }
+      } catch (error) {
+        console.warn('Could not fetch stopwords/keywords for frontend filtering. This is not critical.', error);
+      }
+    },
     linkifyText(text) {
       if (!text) return '';
 
@@ -2031,11 +2066,27 @@ export default {
     async onSend(options = {}) {
       if (!this.query || !this.query.trim()) return
       
-      const userMessage = this.query.trim()
+      const originalUserMessage = this.query.trim()
+      let processedUserMessage = originalUserMessage;
+
+      // Frontend stopword removal as a workaround for backend inconsistency.
+      if (this.segmenter && this.stopwords && this.stopwords.length > 0) {
+        try {
+          const segments = Array.from(this.segmenter.segment(originalUserMessage));
+          const filteredSegments = segments.filter(seg => {
+            // Keep non-word segments (spaces, punctuation) and words that are NOT active stopwords.
+            return !seg.isWordLike || !this.stopwords.includes(seg.segment.toLowerCase());
+          });
+          processedUserMessage = filteredSegments.map(s => s.segment).join('').replace(/\s+/g, ' ').trim();
+        } catch (e) {
+          console.error('Error during frontend word segmentation:', e);
+          processedUserMessage = originalUserMessage; // Fallback to original on error
+        }
+      }
       
       // Trigger flying text animation (only if animations enabled)
       if (this.animationEnabled) {
-        this.flyingText = userMessage
+        this.flyingText = originalUserMessage
         this.showFlyingText = true
         
         // Hide flying text after animation completes
@@ -2059,12 +2110,12 @@ export default {
       this.messages.push({
         id: ++this.messageIdCounter,
         type: 'user',
-        text: userMessage,
+        text: originalUserMessage,
         timestamp: new Date().toISOString()
       })
 
       // If the user typed the name of a category item, disable it so it can't be selected again
-      try { this.disableCategoryItemByLabel(userMessage) } catch (e) { /* ignore */ }
+      try { this.disableCategoryItemByLabel(originalUserMessage) } catch (e) { /* ignore */ }
       
       // Save to localStorage
       this.saveChatHistory()
@@ -2083,7 +2134,7 @@ export default {
           if (!m || !m.results || !Array.isArray(m.results)) continue
           for (const r of m.results) {
             const title = (typeof r === 'string') ? r : (r.title || r.name || r.question || '')
-            if (title && title.trim() === userMessage) {
+            if (title && title.trim() === originalUserMessage) {
               matchedSuggestion = r
               break
             }
@@ -2105,7 +2156,7 @@ export default {
             let payload
             if (explicitPayload) payload = explicitPayload
             else if (matchedSuggestion && matchedSuggestion.id) payload = { id: matchedSuggestion.id }
-            else payload = { message: userMessage }
+            else payload = { message: processedUserMessage }
 
             const res = await this.$axios.post('/chat/respond', payload)
             let botText = ''
@@ -2320,12 +2371,12 @@ export default {
               
               // Send log FIRST before any feedback or auto-like
               if (resFound === false) {
-                const noAnswerLogId = await this.sendNoAnswerLog(userMessage);
+                const noAnswerLogId = await this.sendNoAnswerLog(originalUserMessage);
                 if (noAnswerLogId) {
                   msg.chatLogId = noAnswerLogId;
                 }
               } else if (resFound === true && !multipleResults) {
-                const chatLogId = await this.sendHasAnswerLog(userMessage, resQuestionId);
+                const chatLogId = await this.sendHasAnswerLog(originalUserMessage, resQuestionId);
                 if (chatLogId) {
                   msg.chatLogId = chatLogId;
                 }
@@ -2381,7 +2432,7 @@ export default {
               this.saveChatHistory()
               this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
             }
-            this.sendNoAnswerLog(userMessage)
+            this.sendNoAnswerLog(originalUserMessage)
           }
         } else {
           // No backend available: show a polite error from bot (still recorded as backend-only policy)
@@ -2397,7 +2448,7 @@ export default {
               this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
             }
           }, 600)
-          this.sendNoAnswerLog(userMessage)
+          this.sendNoAnswerLog(originalUserMessage)
         }
     },
     scrollToBottom() {
