@@ -386,13 +386,14 @@ const handleLogout = () => { logout(router); };
   top: 0;
   height: 100vh;
   overflow-y: auto;
+  overflow-x: hidden; /* hide horizontal overflow but allow vertical scrolling */
   will-change: width, transform;
-  overflow: hidden; /* prevent content overflow during width animation */
 }
 .sidebar.collapsed { 
   width: 70px !important;        /* force collapsed width to take precedence */
   min-width: 70px !important;
-  overflow: hidden !important;
+  overflow-x: hidden !important; /* keep horizontal overflow hidden when collapsed */
+  overflow-y: auto !important;   /* still allow vertical scrolling when collapsed */
 }
 .sidebar-header { 
   min-height: 50px; 
