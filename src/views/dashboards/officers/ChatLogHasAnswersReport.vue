@@ -158,7 +158,7 @@ const fetchData = async () => {
   loading.value = true; error.value = null;
   try {
     const res = await $axios.get('/getChatLogHasAnswers');
-    items.value = res.data || [];
+    items.value = res.data?.data || res.data || [];
   } catch (err) {
     error.value = err.response?.data?.message || err.message || 'Failed to load data.';
   } finally {
@@ -205,8 +205,9 @@ watch(paginated, () => {
 
 // chart grouped by QuestionsAnswers (use provided questionsTitleMap)
 const byQuestionsChartData = computed(() => {
+  const logs = Array.isArray(items.value) ? items.value : [];
   const counts = {};
-  (items.value || []).forEach(log => {
+  logs.forEach(log => {
     const qaId = log.QuestionsAnswersID;
     const title = (props.questionsTitleMap && props.questionsTitleMap[qaId]) ? props.questionsTitleMap[qaId] : (qaId != null ? String(qaId) : 'Unknown');
     counts[title] = (counts[title] || 0) + 1;

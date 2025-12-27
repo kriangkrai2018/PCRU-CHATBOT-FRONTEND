@@ -72,7 +72,7 @@ const fetchQuestionsAnswers = async () => {
   questionsAnswersLoading.value = true;
   try {
     const response = await $axios.get('/questionsanswers');
-    questionsAnswers.value = response.data;
+    questionsAnswers.value = Array.isArray(response.data) ? response.data : (response.data?.data || []);
   } catch (err) {
     questionsAnswersError.value = err.response?.data?.message || 'Failed to load.';
   } finally {

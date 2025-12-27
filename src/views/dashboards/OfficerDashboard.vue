@@ -602,6 +602,8 @@ const fetchQuestionsAnswers = async () => {
   questionsAnswersError.value = null;
   try {
     const response = await $axios.get('/questionsanswers');
+    const _qa_data = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+    questionsAnswers.value = normalize(_qa_data);
     questionsAnswers.value = response.data;
   } catch (err) {
     questionsAnswersError.value = err.response?.data?.message || 'Failed to load questions-answers data.';

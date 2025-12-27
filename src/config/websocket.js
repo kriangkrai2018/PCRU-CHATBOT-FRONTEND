@@ -78,7 +78,20 @@ export function createWebSocketConnection(endpoint, options = {}) {
   let heartbeatInterval = null;
   let isIntentionallyClosed = false;
 
-  const url = getWebSocketUrl(endpoint, axios);
+  let url = getWebSocketUrl(endpoint, axios);
+
+  // Defensive scheme handling: if page is not secure but URL uses wss, downgrade to ws to avoid blocking.
+  if (typeof window !== 'undefined') {
+    if (url.startsWith('wss://') && window.location.protocol !== 'https:') {
+      console.warn('WebSocket URL uses wss but page is not secure; downgrading to ws://', url);
+      url = url.replace(/^wss:\/\//i, 'ws://');
+    }
+    // If page is secure but URL uses ws, try to upgrade to wss to match the page
+    if (url.startsWith('ws://') && window.location.protocol === 'https:') {
+      console.warn('WebSocket URL uses ws but page is secure; upgrading to wss://', url);
+      url = url.replace(/^ws:\/\//i, 'wss://');
+    }
+  }
 
   function connect() {
     try {

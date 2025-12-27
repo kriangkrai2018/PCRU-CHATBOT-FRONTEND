@@ -56,7 +56,7 @@ const barChartOptions = ref({
 const fetchQuestionsAnswers = async () => {
   try {
     const response = await $axios.get('/questionsanswers');
-    questionsAnswers.value = response.data;
+    questionsAnswers.value = Array.isArray(response.data) ? response.data : (response.data?.data || []);
   } catch (err) { console.error(err); }
 };
 

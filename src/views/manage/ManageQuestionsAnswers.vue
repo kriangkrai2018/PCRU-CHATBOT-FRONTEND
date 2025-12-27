@@ -1012,7 +1012,7 @@ const fetchQuestionsAnswers = async () => {
   error.value = null;
   try {
     const response = await $axios.get('/questionsanswers');
-    questionsAnswers.value = response.data;
+    questionsAnswers.value = Array.isArray(response.data) ? response.data : (response.data?.data || []);
   } catch (err) {
     console.error('Failed to fetch questionsanswers:', err);
     // Build a detailed error message for the UI alert

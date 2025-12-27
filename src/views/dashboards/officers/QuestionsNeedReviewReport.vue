@@ -449,13 +449,30 @@ const fetchData = async () => {
   error.value = null;
   try {
     const res = await $axios.get('/getQuestionsAnswers');
-    let data = res.data || [];
-    
+
+    // Debug logs to help understand response shape during runtime
+    console.log('QuestionsNeedReview: fetchData response status:', res.status, 'type:', typeof res.data);
+    if (Array.isArray(res.data)) {
+      console.log('QuestionsNeedReview: fetched array count =', res.data.length);
+    } else if (res.data && Array.isArray(res.data.data)) {
+      console.log('QuestionsNeedReview: fetched wrapper.data count =', res.data.data.length);
+    } else {
+      console.log('QuestionsNeedReview: fetched unexpected response:', res.data);
+    }
+
+    // Support both direct-array responses and { success: true, data: [...] } wrappers
+    let data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+
+    // If backend sent an error object (e.g., unauthorized), surface it as a friendly message
+    if (!Array.isArray(data) && res.data && res.data.success === false) {
+      throw new Error(res.data.message || 'Failed to load questions');
+    }
+
     // Filter questions that need review (ReviewDate within threshold or overdue)
     const today = new Date();
     const thresholdDate = new Date();
     thresholdDate.setDate(today.getDate() + props.daysThreshold);
-    
+
     items.value = data.filter(qa => {
       if (!qa.ReviewDate) return false;
       const reviewDate = new Date(qa.ReviewDate);
@@ -466,8 +483,27 @@ const fetchData = async () => {
       if (!b.ReviewDate) return -1;
       return new Date(a.ReviewDate) - new Date(b.ReviewDate);
     });
+
+    // Additional debug: if no items, log a sample of incoming data to help diagnose
+    if (items.value.length === 0) {
+      console.warn('QuestionsNeedReview: No items matched threshold. sample incoming count:', data.length);
+      console.warn('QuestionsNeedReview: sample item[0]:', data[0] || null);
+    }
   } catch (err) {
-    error.value = err.response?.data?.message || err.message || 'Failed to load data.';
+    console.error('QuestionsNeedReview fetchData error:', err);
+    // Network error (no response) vs HTTP error
+    if (!err.response) {
+      try {
+        // Try a quick health check to give a clearer debug hint
+        const health = await $axios.get('/health');
+        error.value = 'Network Error: API request failed, but backend /health responded: ' + JSON.stringify(health.data);
+      } catch (hErr) {
+        console.error('Health check failed:', hErr);
+        error.value = 'Network Error: Unable to reach backend. Health check also failed: ' + (hErr.message || JSON.stringify(hErr));
+      }
+    } else {
+      error.value = err.response?.data?.message || err.message || 'Failed to load data.';
+    }
   } finally {
     loading.value = false;
   }

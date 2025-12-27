@@ -69,7 +69,7 @@ const fetchKeywords = async () => {
   keywordsLoading.value = true;
   try {
     const response = await $axios.get('/keywords');
-    keywords.value = response.data;
+    keywords.value = response.data?.data || response.data || [];
   } catch (err) {
     keywordsError.value = err.response?.data?.message || 'Failed to load keywords.';
   } finally {
@@ -77,15 +77,21 @@ const fetchKeywords = async () => {
   }
 };
 
-const keywordsPieChartData = computed(() => ({
-  labels: keywords.value.slice(0, 10).map(k => k.KeywordText),
-  datasets: [{ data: keywords.value.slice(0, 10).map(k => k.HitCount || 1), backgroundColor: appleColors }]
-}));
+const keywordsPieChartData = computed(() => {
+  const kw = Array.isArray(keywords.value) ? keywords.value : [];
+  return {
+    labels: kw.slice(0, 10).map(k => k.KeywordText),
+    datasets: [{ data: kw.slice(0, 10).map(k => k.HitCount || 1), backgroundColor: appleColors }]
+  };
+});
 
-const keywordsBarChartData = computed(() => ({
-  labels: keywords.value.slice(0, 10).map(k => k.KeywordText),
-  datasets: [{ label: 'Hit Count', data: keywords.value.slice(0, 10).map(k => k.HitCount || 1), backgroundColor: appleColors }]
-}));
+const keywordsBarChartData = computed(() => {
+  const kw = Array.isArray(keywords.value) ? keywords.value : [];
+  return {
+    labels: kw.slice(0, 10).map(k => k.KeywordText),
+    datasets: [{ label: 'Hit Count', data: kw.slice(0, 10).map(k => k.HitCount || 1), backgroundColor: appleColors }]
+  };
+});
 
 let unbindSidebarResize = null;
 

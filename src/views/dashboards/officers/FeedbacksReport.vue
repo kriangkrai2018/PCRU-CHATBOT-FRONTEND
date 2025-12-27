@@ -857,6 +857,7 @@ async function fetchInlineCategories() {
 
 async function fetchInlineQuestion(questionId) {
   const resp = await $axios.get('/questionsanswers');
+  const qaList = Array.isArray(resp.data) ? resp.data : (resp.data?.data || []);
   const list = Array.isArray(resp.data) ? resp.data : (resp.data?.data || []);
   const item = list.find(it => String(it.QuestionsAnswersID) === String(questionId));
   return item || null;
