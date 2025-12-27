@@ -148,7 +148,9 @@ const fetchData = async () => {
   loading.value = true; error.value = null;
   try {
     const res = await $axios.get('/getChatLogNoAnswers');
-    items.value = res.data || [];
+    console.log('📥 getChatLogNoAnswers response:', res.data);
+    // Normalize responses that may be either an array or an object { success, data }
+    items.value = Array.isArray(res.data) ? res.data : (res.data?.data || res.data || []);
   } catch (err) {
     error.value = err.response?.data?.message || err.message || 'Failed to load data.';
   } finally {
@@ -201,7 +203,8 @@ watch(paginated, () => {
 // New: counts grouped by day (YYYY-MM-DD) for bar chart
 const timeCountsByDay = computed(() => {
   const map = {};
-  (items.value || []).forEach(log => {
+  const arr = Array.isArray(items.value) ? items.value : [];
+  arr.forEach(log => {
     const t = log.Timestamp;
     if (!t) return;
     const d = new Date(t);
@@ -223,7 +226,8 @@ const timeOfDayCounts = computed(() => {
     'บ่าย - เย็น': 0,
     'ค่ำ - กลางคืน': 0,
   };
-  (items.value || []).forEach(log => {
+  const arr2 = Array.isArray(items.value) ? items.value : [];
+  arr2.forEach(log => {
     const t = log.Timestamp;
     if (!t) return;
     const d = new Date(t);
