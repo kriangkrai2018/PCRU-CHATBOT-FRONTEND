@@ -397,17 +397,54 @@
                       <hr class="contact-divider" />
                       <div class="contact-notice">
                         <div class="contact-notice-sub">&nbsp;&nbsp;&nbsp;หากต้องการความช่วยเหลือเพิ่มเติม โปรดติดต่อเจ้าหน้าที่ตามข้อมูลด้านล่าง</div>
-                        <ol class="contact-ol" style="margin-top: 1rem;">
-                          <li 
-                            v-for="(c, ci) in (msg.visibleContacts && msg.visibleContacts.length ? msg.visibleContacts.slice(0,2) : universityContacts.filter(c => c.phone).slice(0,2))" :key="ci" 
-                            class="contact-item">
-                            <div class="contact-org">{{ c.name || c.organization }}</div>
-                            <div class="contact-officer" v-if="c.officer">{{ c.officer }}</div>
-                            <div class="contact-phone-wrap">
-                                <a :href="`tel:${c.phone}`" class="contact-phone">{{ c.phone }}</a>
+                        <div class="org-cards" style="margin-top: 1rem;">
+                        <div
+                          v-for="(group, gi) in getVisibleContactGroups(msg)"
+                          :key="gi"
+                          class="org-card"
+                          role="group"
+                          aria-label="contact-organization"
+                        >
+                          <div class="org-card-inner">
+                            <div class="org-card-title">{{ group.organization }}</div>
+
+                            <div v-for="(cat, k) in group.categories" :key="k">
+                              <div v-if="cat.category" class="org-card-sub">
+                                <span class="category-badge">{{ cat.category }}</span>
+                              </div>
+                              <div v-if="cat.contact" class="org-card-phone contact-detail">
+                                <div v-for="(part,pi) in parseContactParts(cat.contact)" :key="pi">
+                                  <div v-if="/^(https?:|www\.|facebook\.|ลิงค์)/i.test(part)">
+                                    <span v-if="!/^ลิงค์/i.test(part)">ลิงค์ : </span>
+                                    <span v-html="linkifyText(part)"></span>
+                                  </div>
+                                  <div v-else>
+                                    <span>ติดต่อ: </span><span v-html="linkifyText(part)"></span>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                          </li>
-                        </ol>
+
+                          </div>
+                        </div>
+
+                        <transition name="readmore-fade">
+                          <button
+                            v-if="((msg.groupedContacts && msg.groupedContacts.length) ? msg.groupedContacts.length : (universityContacts || []).length) > getContactVisibleCount(msg)"
+                            class="read-more-btn"
+                            @click="toggleLoadMoreContacts(msg)"
+                            type="button"
+                          >
+                            <span v-if="getContactVisibleCount(msg) < ((msg.groupedContacts && msg.groupedContacts.length) ? msg.groupedContacts.length : (universityContacts || []).length)" class="read-more-text">ดูเพิ่มเติม</span>
+                            <span v-else class="read-more-text">ย่อ</span>
+                            <svg class="read-more-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span class="read-more-count">เหลืออีก {{ ((msg.groupedContacts && msg.groupedContacts.length) ? msg.groupedContacts.length : (universityContacts || []).length) - getContactVisibleCount(msg) }} หน่วยงาน</span>
+                          </button>
+                        </transition>
+
+                      </div>
                       </div>
                     </div>
 
@@ -641,6 +678,8 @@ export default {
       ],
       // Suggestions pagination: track visible count per message
       suggestionVisibleCounts: {}, // { messageIndex: visibleCount }
+      // Contacts pagination / collapse: track visible org count per message
+      contactVisibleCounts: {}, // { messageIndex: visibleOrgCount }
       // Keyboard detection
       isKeyboardOpen: false,
       initialViewportHeight: window.innerHeight,
@@ -1247,6 +1286,104 @@ export default {
       } catch (error) {
         console.warn('Could not fetch stopwords/keywords for frontend filtering. This is not critical.', error);
       }
+    },
+
+    formatTel(raw) {
+      if (!raw) return '';
+      const m = String(raw).match(/\b(0[- \d]{8,15}\d)(?:\s*(?:ต่อ|ext\.?|x)\s*([\d, ]+))?\b/i);
+      if (m) {
+        const phoneDigits = m[1].replace(/\D/g, '');
+        let tel = phoneDigits;
+        if (m[2]) {
+          const firstExt = m[2].split(',')[0].replace(/\D/g, '');
+          if (firstExt) tel += ',' + firstExt;
+        }
+        return tel;
+      }
+      return String(raw).replace(/\D/g, '');
+    },
+
+    parseContactParts(contactStr) {
+      if (!contactStr) return [];
+      // Remove common prefix and split on commas, 'หรือ', semicolons and newlines (not '/').
+      let cleaned = String(contactStr).replace(/^(?:เบอร์โทรศัพท์|ติดต่อ)\s*:\s*/i, '').trim();
+      const rawParts = cleaned.split(/(?:,|\sหรือ\s|;|\r?\n)/i).map(p => p.trim()).filter(Boolean);
+      const parts = [];
+      for (let i = 0; i < rawParts.length; i++) {
+        let p = rawParts[i];
+        // Merge broken URL fragments like 'https:' + 'www.facebook.com...'
+        if (/^https?:$/i.test(p) && rawParts[i+1]) {
+          p = p + rawParts[i+1];
+          i++;
+        }
+        // Merge fragments where next piece looks like URL continuation
+        if (/(facebook\.com|www\.|https?:)/i.test(p) && i+1 < rawParts.length) {
+          // if next fragment starts with '?' or contains '=' or looks like domain, append it
+          while (i+1 < rawParts.length && (/^[\?=&]/.test(rawParts[i+1]) || /facebook\.com|www\.|\./i.test(rawParts[i+1]))) {
+            p += rawParts[i+1];
+            i++;
+          }
+        }
+
+        // If this part is just 'ต่อ' and previous part is a phone, attach 'ต่อ' to previous
+        if (/^ต่อ\s*$/i.test(p) && parts.length > 0) {
+          const lastIdx = parts.length - 1;
+          const last = parts[lastIdx];
+          if (/\b0[- \d]{8,15}\d\b/.test(last)) {
+            parts[lastIdx] = `${last} ต่อ`;
+            continue;
+          }
+        }
+
+        // If this part contains a phone followed by space/comma-separated extensions (e.g., '056-717-100 1121 1122'), split them into separate parts
+        // If format is 'PHONE ext1 ext2' (space separated), handle it robustly using tokenization
+        const tokens = p.split(/\s+/).filter(Boolean);
+        if (tokens.length > 1 && /^0[0-9\-\s]{6,}$/.test(tokens[0])) {
+          const phoneCandidate = tokens[0];
+          const extTokens = tokens.slice(1);
+          if (extTokens.every(t => /^[0-9,]+$/.test(t))) {
+            p = phoneCandidate;
+            // expand comma-separated pieces inside tokens
+            const exts = extTokens.flatMap(t => t.split(/[,\s]+/).filter(Boolean));
+            if (exts.length) rawParts.splice(i+1, 0, ...exts);
+          }
+        } else {
+          const phoneMatch = p.match(/\b0[- \d]{8,15}\d\b(?!\s+\d)/);
+          if (phoneMatch) {
+            const phone = phoneMatch[0];
+            const rest = p.slice(p.indexOf(phone) + phone.length).trim();
+            if (/^[0-9][0-9,\s]*$/.test(rest)) {
+              const exts = rest.split(/[,\s]+/).filter(Boolean);
+              p = phone;
+              if (exts.length) rawParts.splice(i+1, 0, ...exts);
+            }
+          }
+        }
+
+        // If this part is just numeric extensions (e.g., '1122'), try to attach it logically to the previous part.
+        if (/^[0-9\s,]+$/.test(p) && parts.length > 0) {
+          const lastIdx = parts.length - 1;
+          const last = parts[lastIdx];
+          const cleanedExt = p.replace(/\s+/g, '').replace(/(^,|,$)/g, '');
+          // 1) If previous part already ends with 'ต่อ' or has 'ต่อ digits', append or comma-separate.
+          if (/ต่อ\s*(?:\d+)?$/i.test(last) || /ต่อ\s*\d+/i.test(last)) {
+            if (/ต่อ\s*$/.test(last)) {
+              parts[lastIdx] = `${last} ${cleanedExt}`;
+            } else {
+              parts[lastIdx] = `${last}, ${cleanedExt}`;
+            }
+            continue; // consumed this numeric part
+          }
+          // 2) If previous part looks like a phone number but doesn't have 'ต่อ', attach as 'ต่อ X'
+          if (/\b0[- \d]{8,15}\d\b/.test(last)) {
+            parts[lastIdx] = `${last} ต่อ ${cleanedExt}`;
+            continue;
+          }
+        }
+
+        parts.push(p);
+      }
+      return parts;
     },
     linkifyText(text) {
       if (!text) return '';
@@ -2364,12 +2501,15 @@ export default {
                 }
                 // accept contacts array
                 if (Array.isArray(res.data.contacts) && res.data.contacts.length) {
-                  // normalize contact objects - provide consistent keys for template
+                  // normalize contact objects - support new shape { organization, category, contact } and legacy fields
                   contacts = res.data.contacts.map(c => ({
                     name: c.name || c.organization || c.org || c.department || '',
                     organization: c.organization || c.org || c.department || '',
+                    category: c.category || c.CategoriesName || null,
+                    contact: c.contact || c.Contact || null,
                     officer: c.officer || c.name || c.person || '',
                     phone: c.phone || c.tel || c.phoneNumber || '',
+                    phones: Array.isArray(c.phones) ? c.phones : (c.phone ? [c.phone] : []),
                     unit: c.unit || c.ext || c.extension || c.phoneExtension || c.departmentUnit || '',
                     url: c.url || c.website || '',
                     facebook: c.facebook || c.fb || '',
@@ -2397,7 +2537,12 @@ export default {
 
             // Only use fallback universityContacts when no contacts were returned by the backend
             if ((botText.includes('ขออภัยจริงๆ ฉันไม่มีข้อมูลเกี่ยวกับคำถามนี้') || botText.includes('ยังเหนือความสามารถของฉันเลย')) && (!contacts || !contacts.length)) {
-                contacts = universityContacts;
+                // Map old universityContacts shape to new { organization, category, contact }
+                contacts = (universityContacts || []).map(c => ({
+                  organization: c.name || c.organization || c.OrgName || c.title || '',
+                  category: null,
+                  contact: c.phone ? `เบอร์โทรศัพท์ : ${c.phone}` : (Array.isArray(c.phones) && c.phones.length ? `เบอร์โทรศัพท์ : ${c.phones.join(', ')}` : null)
+                }));
                 console.log('ℹ️ fallback contacts assigned (no backend contacts):', contacts && contacts.length);
             }
 
@@ -2419,13 +2564,16 @@ export default {
               if (pdf) msg.pdf = pdf;
               if (contacts) msg.contacts = contacts;
 
-              // Compute visibleContacts
-              let visibleContacts = (contacts || []).filter(c => c.officer && c.phone);
-              if (!visibleContacts || visibleContacts.length === 0) {
-                visibleContacts = (contacts || []).filter(c => c.phone);
-              }
+              // Compute visibleContacts based on new contact shape (organization, category, contact)
+              let visibleContacts = (contacts || []).filter(c => c.contact && String(c.contact).trim());
+
+              // If no contacts from backend and the bot responded with the generic apology, use universityContacts fallback
               if ((!visibleContacts || visibleContacts.length === 0) && (botText.includes('ขออภัยจริงๆ ฉันไม่มีข้อมูลเกี่ยวกับคำถามนี้') || botText.includes('ยังเหนือความสามารถของฉันเลย'))) {
-                visibleContacts = (universityContacts || []).filter(c => c.phone);
+                visibleContacts = (universityContacts || []).map(c => ({
+                  organization: c.name || c.organization || c.OrgName || c.title || '',
+                  category: null,
+                  contact: c.phone ? `เบอร์โทรศัพท์ : ${c.phone}` : (Array.isArray(c.phones) && c.phones.length ? `เบอร์โทรศัพท์ : ${c.phones.join(', ')}` : null)
+                }));
               }
               // msg.visibleContacts = visibleContacts; // Delay showing contacts until text finishes
 
@@ -2468,6 +2616,7 @@ export default {
                 }
               }
 
+
               // Now, stream the text content
               if (botText) {
                 await this.streamText(botIndex, botText);
@@ -2490,7 +2639,60 @@ export default {
 
               // Show contacts after typing finishes
               if (visibleContacts && visibleContacts.length > 0) {
-                msg.visibleContacts = visibleContacts;
+                // Normalize visibleContacts to merge URL fragments and skip empty link entries
+                const normalizedContacts = [];
+                for (const c of visibleContacts) {
+                  const org = c.organization || 'อื่นๆ';
+                  let rawContact = (c.contact || '').trim();
+                  // capture label (if any) and stripped value for heuristics
+                  const labelMatch = String(rawContact || '').match(/^(เบอร์โทรศัพท์|ติดต่อ|ลิงค์)\s*:/i);
+                  const isLinkLabel = labelMatch && /ลิงค์/i.test(labelMatch[1]);
+                  const stripped = String(rawContact || '').replace(/^(?:เบอร์โทรศัพท์|ติดต่อ|ลิงค์)\s*:\s*/i, '').trim();
+
+                  // If stripped is empty (e.g., 'ลิงค์ :'), skip it entirely (do not render a null placeholder)
+                  if (!stripped) {
+                    continue;
+                  }
+
+                  const isUrl = /https?:\/\/|www\./i.test(stripped);
+                  const currLooksLikeUrlContinuation = /^[\?&]/.test(stripped) || (/[=&]/.test(stripped) && stripped.length < 120);
+
+                  // If this looks like a URL continuation, try to attach it to the nearest previous link in the same org
+                  if (currLooksLikeUrlContinuation) {
+                    let attached = false;
+                    for (let j = normalizedContacts.length - 1; j >= 0; j--) {
+                      const prev = normalizedContacts[j];
+                      if (!prev || !prev.contact) continue;
+                      if (prev.organization !== org) break; // stop if organization differs
+                      if (/https?:\/\/|www\./i.test(prev.contact)) {
+                        prev.contact = String(prev.contact).trim() + stripped;
+                        attached = true;
+                        break;
+                      }
+                    }
+                    if (attached) continue; // merged into previous link
+                    // If we couldn't attach, fall through to handle normally below
+                  }
+
+                  // If labeled as link but does not contain a URL, skip it (don't show placeholder text)
+                  if (isLinkLabel && !isUrl) {
+                    continue;
+                  }
+
+                  // Otherwise preserve original rawContact
+                  normalizedContacts.push({ organization: org, category: c.category || null, contact: rawContact || null });
+                }
+
+                // Group contacts by organization so each organization has a single card
+                const groupsMap = new Map();
+                for (const c of normalizedContacts) {
+                  const org = c.organization;
+                  if (!groupsMap.has(org)) groupsMap.set(org, { organization: org, categories: [] });
+                  groupsMap.get(org).categories.push({ category: c.category || null, contact: c.contact || null });
+                }
+                const groupedContacts = Array.from(groupsMap.values());
+                msg.groupedContacts = groupedContacts;
+                msg.visibleContacts = visibleContacts; // keep for backwards compatibility if needed
                 this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring(); });
               }
               
@@ -2522,9 +2724,9 @@ export default {
 
               // Show contacts immediately
               let visibleContacts = (contacts || []).filter(c => c.officer && c.phone);
-              if (!visibleContacts || visibleContacts.length === 0) visibleContacts = (contacts || []).filter(c => c.phone);
+              if (!visibleContacts || visibleContacts.length === 0) visibleContacts = (contacts || []).filter(c => (c.phone && c.phone.trim()) || (Array.isArray(c.phones) && c.phones.length > 0));
               if ((!visibleContacts || visibleContacts.length === 0) && (botText.includes('ขออภัยจริงๆ ฉันไม่มีข้อมูลเกี่ยวกับคำถามนี้') || botText.includes('ยังเหนือความสามารถของฉันเลย'))) {
-                visibleContacts = (universityContacts || []).filter(c => c.phone);
+                visibleContacts = (universityContacts || []).filter(c => (c.phone && c.phone.trim()) || (Array.isArray(c.phones) && c.phones.length > 0));
               }
               if (visibleContacts && visibleContacts.length > 0) msg.visibleContacts = visibleContacts
 
@@ -2644,7 +2846,7 @@ export default {
       // Show contact list when user clicks Read More
       try {
         const existing = this.messages[msgIndex] || {}
-        const visible = (existing.visibleContacts && existing.visibleContacts.length) ? existing.visibleContacts : ((universityContacts || []).filter(c => c.phone))
+        const visible = (existing.visibleContacts && existing.visibleContacts.length) ? existing.visibleContacts : ((universityContacts || []).filter(c => (c.phone && c.phone.trim()) || (Array.isArray(c.phones) && c.phones.length > 0)))
         const updated = Object.assign({}, existing, { showContacts: true, visibleContacts: visible })
         // Use splice to replace the message object so Vue reactivity picks up property additions
         this.messages.splice(msgIndex, 1, updated)
@@ -2653,6 +2855,34 @@ export default {
       } catch (e) {
         /* ignore */
       }
+    },
+
+    // Contacts pagination / Read More helpers
+    getContactVisibleCount(msg) {
+      const msgIndex = this.messages.indexOf(msg)
+      return this.contactVisibleCounts[msgIndex] || 3
+    },
+
+    getVisibleContactGroups(msg) {
+      const groups = (msg.groupedContacts && msg.groupedContacts.length) ? msg.groupedContacts : (universityContacts || [])
+      const visibleCount = this.getContactVisibleCount(msg)
+      return groups.slice(0, visibleCount)
+    },
+
+    toggleLoadMoreContacts(msg) {
+      const msgIndex = this.messages.indexOf(msg)
+      if (msgIndex === -1) return
+      const groups = (msg.groupedContacts && msg.groupedContacts.length) ? msg.groupedContacts : (universityContacts || [])
+      const total = groups.length
+      const current = this.contactVisibleCounts[msgIndex] || 3
+      const newCount = (current >= total) ? 3 : total
+      if (this.$set) {
+        this.$set(this.contactVisibleCounts, msgIndex, newCount)
+      } else {
+        this.contactVisibleCounts[msgIndex] = newCount
+      }
+      // persist preference
+      this.saveChatHistory()
     },
 
     // Disable a category sub-item by its label so the user cannot pick it again.
@@ -3607,6 +3837,33 @@ export default {
 @keyframes slideUpFade {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Organization cards (Apple-like) */
+.org-cards {
+  display: grid;
+  grid-template-columns: 1fr; /* show as rows */
+  gap: 12px;
+  margin-top: 12px;
+}
+.org-card {
+  background: rgba(255,255,255,0.95);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 8px 18px rgba(20,20,20,0.06);
+  border: 1px solid rgba(0,0,0,0.06);
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+.org-card:hover { transform: translateY(-4px); box-shadow: 0 16px 30px rgba(20,20,20,0.08); }
+.org-card-inner { display: flex; flex-direction: column; gap: 6px; }
+.org-card-title { font-weight: 600; font-size: 14px; color: #111; }
+.org-card-sub { font-size: 12px; color: #6b6b6b; }
+.org-card-phone { font-size: 13px; color: #0a66c2; margin-top: 6px; }
+  .category-badge { display: inline-block; background-color: #e0f2fe; color: #0369a1; font-size: 0.8rem; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+  .contact-detail { white-space: pre-wrap; word-break: break-word; font-size: 0.9rem; color: #374151; margin-top: 0.5rem; }
+  .contact-empty { color: #9ca3af; font-style: italic; font-size: 0.85rem; margin-top: 0.5rem; }
+@media (max-width: 520px) {
+  .org-cards { grid-template-columns: 1fr; }
 }
 
 /* Welcome card accessibility and help button */

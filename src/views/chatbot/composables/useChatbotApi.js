@@ -205,10 +205,11 @@ export function useChatbotApi(axios) {
       if (!result.pdf && Array.isArray(data.attachments)) result.pdf = data.attachments.map(a => a && (a.pdf || a.url || a.link || a.href || a.file || a.path)).find(Boolean)
     }
     if (Array.isArray(data.contacts) && data.contacts.length) {
+      // Map backend contact shape { organization, category, contact }
       result.contacts = data.contacts.map(c => ({
         organization: c.organization || c.org || c.department || '',
-        officer: c.officer || c.name || c.person || '',
-        phone: c.phone || c.tel || c.phoneNumber || ''
+        category: c.category || c.CategoriesName || null,
+        contact: c.contact || c.Contact || null
       }))
     }
     if (typeof data.found !== 'undefined') result.found = !!data.found

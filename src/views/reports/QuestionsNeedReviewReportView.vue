@@ -43,7 +43,7 @@ const categories = ref([]);
 
 const fetchCategories = async () => {
   try {
-    const response = await $axios.get('/categories');
+    const response = await $axios.get('/getcategories');
     let data = response.data;
     // Handle API response structure: { success: true, categories: [...], count: ... }
     if (data && !Array.isArray(data) && Array.isArray(data.categories)) {
