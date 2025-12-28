@@ -100,7 +100,7 @@
                   </div>
                   <div class="message-bubble bot bot-with-categories">
                     <div class="ai-greeting">
-                      <div class="ai-greet-img-wrapper">
+                      <div class="ai-greet-img-wrapper" role="button" tabindex="0" @click.stop="openAiIntro" @keydown.enter.stop="openAiIntro" @keydown.space.prevent.stop="openAiIntro" title="เปิด AI: ดูรายละเอียดและวิธีใช้งาน" aria-label="เปิด AI">
                         <img :src="botAvatar" alt="PCRU AI" class="ai-greet-img" />
                         <!-- Floating speech bubble on avatar -->
                         <transition name="bubble-fade">
@@ -114,6 +114,19 @@
                       </div>
                       <div class="ai-greet-title text-center" v-html="welcomeTitle"></div>
                       <div class="ai-greet-sub" v-html="welcomeSub"></div>
+
+                      <!-- Direct help button: opens help modal without opening AI Intro -->
+                      <div class="ai-help-link-wrapper text-center">
+                        <button ref="miniHelpBtn" class="ai-help-link apple-help-mini" @click.stop="triggerMiniHelp" @keydown.enter.prevent.stop="triggerMiniHelp" @keydown.space.prevent.stop="triggerMiniHelp" aria-label="ดูวิธีใช้งาน Bot">
+                          <div class="help-btn-ripple"></div>
+                          <svg class="help-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                            <circle class="help-circle" cx="12" cy="12" r="9" />
+                            <path class="help-question" d="M9.5 9.2a2.5 2.5 0 1 1 4 1.8c0 2-2 2.6-2 2.6" />
+                            <line class="help-dot" x1="12" y1="16" x2="12" y2="16" />
+                          </svg>
+                          <span class="help-btn-text">ดูวิธีใช้งาน</span>
+                        </button>
+                      </div>
                     </div>
                     <div class="message-text text-center" v-html="welcomeInstruction"></div>
                     
@@ -1315,7 +1328,12 @@ export default {
       if (!textToStream || !this.messages[messageIndex]) return;
 
       this.messages[messageIndex].text = ''; // Clear existing text
-      const typingSpeed = parseInt(import.meta.env.VITE_BOT_TYPING_SPEED);
+      // Determine typing delay (ms per character). Prefer explicit VITE_BOT_TYPING_DELAY_MS, fallback to legacy VITE_BOT_TYPING_SPEED.
+      const envDelay = import.meta.env.VITE_BOT_TYPING_DELAY_MS ?? import.meta.env.VITE_BOT_TYPING_SPEED
+      let typingDelay = parseInt(envDelay || '12', 10)
+      // Clamp to reasonable bounds
+      if (Number.isNaN(typingDelay) || typingDelay < 0) typingDelay = 0
+      typingDelay = Math.min(Math.max(typingDelay, 0), 200)
 
       // Split by HTML tags and newlines to preserve them
       const parts = textToStream.split(/(<[^>]+>|\n)/g);
@@ -1329,7 +1347,7 @@ export default {
         } else {
           // It's text, type it out character by character
           for (let i = 0; i < part.length; i++) {
-            await new Promise(resolve => setTimeout(resolve, typingSpeed));
+            await new Promise(resolve => setTimeout(resolve, typingDelay));
             if (!this.messages[messageIndex]) return; // Stop if message was cleared
             this.messages[messageIndex].text += part[i];
             
@@ -1358,6 +1376,12 @@ export default {
       await this.streamToVariable('welcomeInstruction', instr)
     },
     async streamToVariable(key, text) {
+      // Use the same typed delay config as streamText
+      const envDelay = import.meta.env.VITE_BOT_TYPING_DELAY_MS ?? import.meta.env.VITE_BOT_TYPING_SPEED
+      let typingDelay = parseInt(envDelay || '12', 10)
+      if (Number.isNaN(typingDelay) || typingDelay < 0) typingDelay = 0
+      typingDelay = Math.min(Math.max(typingDelay, 0), 200)
+
       const parts = text.split(/(<[^>]+>)/g)
       for (const part of parts) {
         if (part.match(/<[^>]+>/)) {
@@ -1365,11 +1389,12 @@ export default {
         } else {
           for (const char of part) {
             this[key] += char
-            await new Promise(r => setTimeout(r, 25)) // Typing speed
+            await new Promise(r => setTimeout(r, typingDelay)) // Typing speed
           }
         }
       }
     },
+
     generateSnowflakeStyles() {
       const styles = []
       const windMax = 150;
@@ -1792,6 +1817,21 @@ export default {
     closeAiIntro() { this.showAiIntro = false },
     // Help modal controls
     openHelpModal() { this.showHelpModal = true },
+    // Trigger mini help press animation and open modal (supports keyboard activation)
+    triggerMiniHelp() {
+      try {
+        const el = this.$refs.miniHelpBtn
+        if (el) {
+          el.classList.remove('pressed')
+          // Force reflow to restart animation
+          void el.offsetWidth
+          el.classList.add('pressed')
+          setTimeout(() => { el.classList.remove('pressed') }, 450)
+        }
+      } catch (e) { /* ignore */ }
+      // Slight delay so the press animation/ripple is visible before opening the modal
+      setTimeout(() => { this.openHelpModal() }, 180)
+    },
     closeHelpModal() { 
       // Close help modal and return to chat
       this.showHelpModal = false
@@ -1840,6 +1880,24 @@ export default {
     // Show bot typing animation then reveal the reply text
     sendBotReply(text, delay = 1200) {
       if (!text) return
+
+      // Determine configured typing delay preference
+      const envDelay = import.meta.env.VITE_BOT_TYPING_DELAY_MS ?? import.meta.env.VITE_BOT_TYPING_SPEED
+      let typingDelay = parseInt(envDelay || '12', 10)
+      if (Number.isNaN(typingDelay) || typingDelay < 0) typingDelay = 0
+
+      // If in instant mode (typingDelay === 0) then skip showing a typing placeholder
+      if (typingDelay === 0) {
+        const idx = this.messages.length
+        this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text, typing: false, timestamp: new Date().toISOString() })
+        this.saveChatHistory()
+        this.$nextTick(() => {
+          this.scrollToBottom()
+          this.updateAnchoring()
+        })
+        return
+      }
+
       const idx = this.messages.length
       // push placeholder bot message with typing indicator
       this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: '', typing: true })
@@ -2670,8 +2728,19 @@ export default {
         this.welcomeTypingTimer = null
       }
 
-      // Show a bottom-anchored temporary typing indicator (do NOT add it to messages array)
-      this.tempTyping = true
+      // Respect typing delay setting: if zero (instant), don't show the temporary typing bubble
+      const welcomeEnvDelay = import.meta.env.VITE_BOT_TYPING_DELAY_MS ?? import.meta.env.VITE_BOT_TYPING_SPEED
+      const welcomeTypingDelay = parseInt(welcomeEnvDelay || '12', 10)
+      if (Number.isNaN(welcomeTypingDelay) || welcomeTypingDelay < 0) {
+        // Fallback behavior: show briefly
+        this.tempTyping = true
+      } else if (welcomeTypingDelay === 0) {
+        // Instant mode - do not show a temporary typing indicator
+        this.tempTyping = false
+      } else {
+        this.tempTyping = true
+      }
+
       // mark as shown so reopening won't retrigger the welcome typing
       this.welcomeTypingShown = true
 
@@ -2684,12 +2753,16 @@ export default {
         this.updateAnchoring()
       })
 
-      // After a short delay, hide the temporary typing indicator
-      this.welcomeTypingTimer = setTimeout(() => {
-        this.tempTyping = false
+      // After a short delay, hide the temporary typing indicator (only if it was shown)
+      if (this.tempTyping) {
+        this.welcomeTypingTimer = setTimeout(() => {
+          this.tempTyping = false
+          this.welcomeTypingTimer = null
+          this.$nextTick(() => this.updateAnchoring())
+        }, 1200)
+      } else {
         this.welcomeTypingTimer = null
-        this.$nextTick(() => this.updateAnchoring())
-      }, 1200)
+      }
     },
     saveCategoryState() {
       try {
@@ -3474,6 +3547,37 @@ export default {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Welcome card accessibility and help button */
+.ai-greet-img-wrapper[role="button"] { cursor: pointer; }
+.ai-greet-img-wrapper[role="button"]:focus { box-shadow: 0 0 0 3px rgba(139,76,184,0.12); outline: none; }
+.ai-help-link-wrapper { margin-top: 8px; }
+.ai-help-link { all: unset; display:inline-flex; align-items:center; gap:8px; padding: 6px 10px; border-radius: 8px; background: rgba(107,44,145,0.08); color: #6B2C91; font-weight: 600; font-size: 13px; cursor: pointer; border: 1px solid rgba(107,44,145,0.12); }
+.ai-help-link:hover { background: rgba(107,44,145,0.12); box-shadow: 0 4px 12px rgba(107,44,145,0.08); }
+.ai-help-link:focus { box-shadow: 0 0 0 3px rgba(139,76,184,0.12); outline: none; }
+
+/* Compact Apple-style helper for welcome card (restored purple theme) */
+.apple-help-mini { padding: 8px 12px; border-radius: 12px; background: rgba(107,44,145,0.08); border: 1px solid rgba(107,44,145,0.12); color: #6B2C91; box-shadow: 0 4px 12px rgba(107,44,145,0.06); transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease; }
+.apple-help-mini .help-btn-icon { width: 18px; height: 18px; }
+.apple-help-mini .help-circle { stroke-width: 1.2; stroke: currentColor; fill: transparent; }
+.apple-help-mini .help-question, .apple-help-mini .help-dot { stroke: currentColor; }
+.apple-help-mini:hover { transform: translateY(-2px) scale(1.02); background: rgba(107,44,145,0.12); box-shadow: 0 8px 24px rgba(107,44,145,0.12); }
+.apple-help-mini:active { transform: translateY(0) scale(0.98); }
+
+/* Small ripple support (uses existing .help-btn-ripple rules) */
+.apple-help-mini .help-btn-ripple::before { transition: width 0.5s ease, height 0.5s ease; }
+
+/* Respect no-effects toggle */
+body.no-effects .apple-help-mini { transform: none !important; animation: none !important; }
+body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::after { display: none !important; }
+
+/* Press animation for mini help button */
+.apple-help-mini.pressed .help-btn-ripple::before { width: 220px; height: 220px; transition: width 0.35s ease, height 0.35s ease; }
+.apple-help-mini.pressed .help-btn-icon { transform: rotate(-10deg) scale(0.95); transition: transform 0.18s ease; }
+.apple-help-mini.pressed .help-btn-text { transform: translateY(1px) scale(0.98); transition: transform 0.18s ease; }
+
+/* Keyboard focus visual */
+.apple-help-mini:focus-visible { box-shadow: 0 0 0 4px rgba(107,44,145,0.12); outline: none; transform: translateY(-1px); }
 </style>
 
 

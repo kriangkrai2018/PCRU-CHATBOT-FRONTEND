@@ -1575,6 +1575,8 @@ html.keyboard-open .message-wrapper {
   height: 200%;
   background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
   animation: shimmer 3s ease-in-out infinite;
+  /* Prevent decorative overlay from intercepting clicks */
+  pointer-events: none;
 }
 
 @keyframes shimmer {
