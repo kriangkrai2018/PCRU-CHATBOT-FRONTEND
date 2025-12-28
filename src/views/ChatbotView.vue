@@ -119,7 +119,7 @@
                     
                     <!-- Categories inside bot message -->
                     <div class="category-section">
-                      <div class="category-title">Category</div>
+                      <div class="category-title">หมวดหมู่</div>
 
                       <div v-if="loading" class="py-5 text-center">
                         <div class="spinner-border text-secondary" role="status"><span class="visually-hidden">Loading...</span></div>
