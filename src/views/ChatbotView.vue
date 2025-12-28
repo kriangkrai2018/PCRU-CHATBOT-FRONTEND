@@ -2017,8 +2017,11 @@ export default {
       }
     },
     // Show bot typing animation then reveal the reply text
-    sendBotReply(text, delay = 1200) {
+    // sendBotReply now supports inserting at top when `options.insertAtTop` is true.
+    // This keeps behavior backward-compatible: when `options` is omitted, it appends as before.
+    sendBotReply(text, delay = 1200, options = {}) {
       if (!text) return
+      const insertAtTop = !!options.insertAtTop
 
       // Determine configured typing delay preference (ms per char) and minimal indicator (ms)
       const envDelay = import.meta.env.VITE_BOT_TYPING_DELAY_MS ?? import.meta.env.VITE_BOT_TYPING_SPEED
@@ -2026,24 +2029,58 @@ export default {
       if (Number.isNaN(typingDelay) || typingDelay < 0) typingDelay = 0
       const indicatorMs = parseInt(import.meta.env.VITE_BOT_TYPING_INDICATOR_MS || '0', 10) || 0
 
+      // Helper to add message placeholder at specific index
+      const insertMessageAt = (index, msgObj) => {
+        if (index >= this.messages.length) {
+          this.messages.push(msgObj)
+        } else {
+          this.messages.splice(index, 0, msgObj)
+        }
+      }
+
       // If in instant mode and no indicator requested, skip showing a typing placeholder
       if (typingDelay === 0 && indicatorMs === 0) {
-        const idx = this.messages.length
-        this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text, typing: false, timestamp: new Date().toISOString() })
+        const idx = insertAtTop ? 0 : this.messages.length
+        insertMessageAt(idx, { id: ++this.messageIdCounter, type: 'bot', text, typing: false, timestamp: new Date().toISOString() })
         this.saveChatHistory()
         this.$nextTick(() => {
-          this.scrollToBottom()
+          if (insertAtTop) this.scrollToTop()
+          else this.scrollToBottom()
           this.updateAnchoring()
         })
         return
       }
 
       // Otherwise, show a typing placeholder (either because typingDelay > 0 or indicatorMs > 0)
-      const idx = this.messages.length
-      this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: '', typing: true })
+      // Determine where to insert the typing placeholder
+      let idx
+      if (options.insertAfterUser) {
+        // find last user message
+        let lastUserIndex = -1
+        for (let i = this.messages.length - 1; i >= 0; i--) {
+          if (this.messages[i] && this.messages[i].type === 'user') { lastUserIndex = i; break }
+        }
+        idx = lastUserIndex >= 0 ? lastUserIndex + 1 : this.messages.length
+      } else {
+        idx = insertAtTop ? 0 : this.messages.length
+      }
+
+      insertMessageAt(idx, { id: ++this.messageIdCounter, type: 'bot', text: '', typing: true })
       this.saveChatHistory()
       this.$nextTick(() => {
-        this.scrollToBottom()
+        // Scroll behavior depends on insertion point: prefer to show the inserted bot message
+        const panelBody = this.$refs.panelBody
+        if (panelBody) {
+          const botEls = panelBody.querySelectorAll('.message-wrapper.bot')
+          const lastBot = botEls && botEls.length ? botEls[botEls.length - 1] : null
+          if (lastBot && typeof lastBot.scrollIntoView === 'function') {
+            try { lastBot.scrollIntoView({ behavior: 'smooth', block: 'center' }) } catch (e) { if (insertAtTop) this.scrollToTop(); else this.scrollToBottom() }
+          } else {
+            if (insertAtTop) this.scrollToTop(); else this.scrollToBottom()
+          }
+        } else {
+          if (insertAtTop) this.scrollToTop(); else this.scrollToBottom()
+        }
         this.updateAnchoring()
       })
 
@@ -2052,11 +2089,13 @@ export default {
         // If message index still exists, set text and clear typing
         if (this.messages[idx] && this.messages[idx].type === 'bot') {
           this.messages[idx].typing = false
+          this.messages[idx]._temp = false
           this.messages[idx].text = text
           this.messages[idx].timestamp = new Date().toISOString()
           this.saveChatHistory()
           this.$nextTick(() => {
-            this.scrollToBottom()
+            if (insertAtTop) this.scrollToTop()
+            else this.scrollToBottom()
             this.updateAnchoring()
           })
         }
@@ -2325,10 +2364,86 @@ export default {
         this.updateAnchoring()
       })
 
+      // If the user explicitly asked for the menu ("เมนู"), reuse the existing bot reply
+      // helper to render a bot message below the menu. We avoid duplicating logic
+      // and do not call the backend for this simple local reply.
+      if (originalUserMessage && originalUserMessage.trim() === 'เมนู') {
+        const replyText = this.welcomeInstruction ? String(this.welcomeInstruction).replace(/<br\s*\/?>/ig, ' ') : 'เลือกหมวดหมู่ด้านล่าง หรือพิมพ์คำถามได้เลยค่ะ 😊'
+
+        // Open chat drawer (in case the user typed from the minimized view)
+        this.visible = true
+
+        // Force-show the top categories: clear any temporary typing state and ensure welcome is visible
+        this.tempTyping = false
+        this.welcomeTyping = false
+        this.welcomeTypingShown = true
+        this.showAllCategories = false
+        this.openIndexes = []
+
+        // If categories are not loaded yet, attempt to fetch them
+        if (!this.categories || !Array.isArray(this.categories) || this.categories.length === 0) {
+          try {
+            if (typeof this.fetchCategories === 'function') {
+              this.fetchCategories().then(cats => {
+                // no-op; categories will be assigned by fetchCategories
+              }).catch(() => {})
+            }
+          } catch (e) { /* ignore */ }
+        }
+
+        // Insert the reply after the user's last message so it appears immediately after the user bubble
+        this.sendBotReply(replyText, 1200, { insertAfterUser: true })
+
+        // Ensure the user's message and the menu (welcome message) are visible together
+        // Prefer showing the welcome message (menu) and keep the bot reply in view below it.
+        this.$nextTick(() => {
+          const panelBody = this.$refs.panelBody
+          if (panelBody) {
+            const welcomeEl = panelBody.querySelector('.welcome-message')
+            const botEls = panelBody.querySelectorAll('.message-wrapper.bot')
+            const lastBot = botEls && botEls.length ? botEls[botEls.length - 1] : null
+
+            if (welcomeEl) {
+              // Compute a scrollTop that shows the welcome area and also keeps the bot reply visible if possible
+              try {
+                const panelHeight = panelBody.clientHeight || 0
+                const welcomeTop = welcomeEl.offsetTop
+                const welcomeHeight = welcomeEl.offsetHeight || 0
+                let desiredTop = welcomeTop
+
+                if (lastBot) {
+                  // want lastBot to be visible somewhere below welcome; try to position so both fit
+                  const lastBotTop = lastBot.offsetTop
+                  // If both fit, keep welcome at top; otherwise shift upward so lastBot is visible
+                  if ((lastBotTop + lastBot.offsetHeight) > (desiredTop + panelHeight)) {
+                    // shift up so lastBot is within view (leave some space)
+                    desiredTop = Math.max(0, lastBotTop - Math.round(panelHeight * 0.6))
+                    // but don't push welcome out of view if it's above desiredTop
+                    desiredTop = Math.min(desiredTop, welcomeTop)
+                  }
+                }
+
+                panelBody.scrollTo({ top: desiredTop, behavior: 'smooth' })
+              } catch (e) {
+                // fallback: ensure welcome element is visible
+                try { welcomeEl.scrollIntoView({ behavior: 'smooth', block: 'start' }) } catch (err) { this.scrollToTop() }
+              }
+            } else if (lastBot && typeof lastBot.scrollIntoView === 'function') {
+              try { lastBot.scrollIntoView({ behavior: 'smooth', block: 'center' }) } catch (e) { this.scrollToBottom() }
+            }
+          }
+          // update anchoring after scroll settles
+          setTimeout(() => this.updateAnchoring(), 350)
+        })
+
+        // nothing more to do for this command
+        return
+      }
+
       // Always delegate answering to backend; no local canned replies
       
         // If the user typed exactly one of the previously shown suggestion titles, prefer sending that suggestion's id
-        let matchedSuggestion = null
+        let matchedSuggestion = null  
         for (const m of this.messages) {
           if (!m || !m.results || !Array.isArray(m.results)) continue
           for (const r of m.results) {
