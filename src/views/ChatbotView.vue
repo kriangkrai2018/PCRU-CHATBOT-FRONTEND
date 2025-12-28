@@ -2567,14 +2567,8 @@ export default {
               // Compute visibleContacts based on new contact shape (organization, category, contact)
               let visibleContacts = (contacts || []).filter(c => c.contact && String(c.contact).trim());
 
-              // If no contacts from backend and the bot responded with the generic apology, use universityContacts fallback
-              if ((!visibleContacts || visibleContacts.length === 0) && (botText.includes('ขออภัยจริงๆ ฉันไม่มีข้อมูลเกี่ยวกับคำถามนี้') || botText.includes('ยังเหนือความสามารถของฉันเลย'))) {
-                visibleContacts = (universityContacts || []).map(c => ({
-                  organization: c.name || c.organization || c.OrgName || c.title || '',
-                  category: null,
-                  contact: c.phone ? `เบอร์โทรศัพท์ : ${c.phone}` : (Array.isArray(c.phones) && c.phones.length ? `เบอร์โทรศัพท์ : ${c.phones.join(', ')}` : null)
-                }));
-              }
+              // Do not auto-inject global university contacts when there's no explicit contact returned.
+              // Show only contacts explicitly returned by the backend (question-specific/staff-added contacts).
               // msg.visibleContacts = visibleContacts; // Delay showing contacts until text finishes
 
               // if (results) msg.results = results; // Delay showing results until text finishes
@@ -2725,9 +2719,7 @@ export default {
               // Show contacts immediately
               let visibleContacts = (contacts || []).filter(c => c.officer && c.phone);
               if (!visibleContacts || visibleContacts.length === 0) visibleContacts = (contacts || []).filter(c => (c.phone && c.phone.trim()) || (Array.isArray(c.phones) && c.phones.length > 0));
-              if ((!visibleContacts || visibleContacts.length === 0) && (botText.includes('ขออภัยจริงๆ ฉันไม่มีข้อมูลเกี่ยวกับคำถามนี้') || botText.includes('ยังเหนือความสามารถของฉันเลย'))) {
-                visibleContacts = (universityContacts || []).filter(c => (c.phone && c.phone.trim()) || (Array.isArray(c.phones) && c.phones.length > 0));
-              }
+              // Do not auto-fill with global contacts — display only contacts returned by the backend for this query.
               if (visibleContacts && visibleContacts.length > 0) msg.visibleContacts = visibleContacts
 
               this.saveChatHistory()
