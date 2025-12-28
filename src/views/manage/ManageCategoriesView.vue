@@ -49,6 +49,7 @@
                     <th class="fw-bold py-3">CategoriesID</th>
                     <th class="fw-bold py-3">CategoriesName</th>
                     <th class="fw-bold py-3">Parent</th>
+                    <th class="fw-bold py-3">Contact</th>
                     <th class="fw-bold py-3">CategoriesPDF</th>
                     <th class="fw-bold py-3 text-center">Actions</th>
                   </tr>
@@ -77,6 +78,12 @@
                         <span :class="isMain(cat) ? 'badge bg-primary' : 'badge bg-info'">
                           {{ isMain(cat) ? 'main' : 'sub' }}
                         </span>
+                      </td>
+                      <td class="py-3 contact-cell">
+                        <div v-if="cat.Contact">
+                          <div v-for="(cc, i) in parseContacts(cat.Contact)" :key="i" class="small text-muted">{{ cc }}</div>
+                        </div>
+                        <span v-else class="text-muted">-</span>
                       </td>
                       <td class="py-3">
                         <template v-if="cat.CategoriesPDF">
@@ -115,6 +122,12 @@
                       </td>
                       <td class="py-3">{{ sub.CategoriesName }}</td>
                       <td class="py-3"><span class="badge bg-info">sub</span></td>
+                      <td class="py-3 contact-cell">
+                        <div v-if="sub.Contact">
+                          <div v-for="(cc, i) in parseContacts(sub.Contact)" :key="i" class="small text-muted">{{ cc }}</div>
+                        </div>
+                        <span v-else class="text-muted">-</span>
+                      </td>
                       <td class="py-3">
                         <template v-if="sub.CategoriesPDF">
                           <a href="#" @click.prevent="openFile(sub.CategoriesPDF, sub.CategoriesName)" class="d-inline-flex align-items-center text-decoration-none">
@@ -138,7 +151,7 @@
                   </template>
 
                   <tr v-if="visibleParents.length === 0">
-                    <td colspan="6" class="text-center text-muted py-3">No categories data found</td>
+                    <td colspan="7" class="text-center text-muted py-3">No categories data found</td>
                   </tr>
                 </tbody>
               </table>
@@ -337,6 +350,12 @@
                 <input type="url" class="form-control" v-model="crudFormData.CategoriesPDF" placeholder="https://example.com/document.pdf">
                 <small class="text-muted">ใส่ URL ของไฟล์ PDF ที่เกี่ยวข้องกับหมวดหมู่นี้</small>
               </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Contact (เบอร์/ลิงก์/หมายเหตุ)</label>
+                <textarea rows="3" class="form-control" v-model="crudFormData.Contact" placeholder="เช่น เบอร์โทรศัพท์: 056-717-119 หรือ https://..." />
+                <small class="text-muted">กรอกข้อมูลติดต่อที่ต้องการแสดงใต้หมวดหมู่ (สามารถรวมหลายบรรทัด)</small>
+              </div>
             </form>
           </div>
           <div class="modal-footer border-0">
@@ -522,7 +541,8 @@ function resetCrudForm() {
   crudFormData.value = {
     CategoriesName: '',
     ParentCategoriesID: '',
-    CategoriesPDF: ''
+    CategoriesPDF: '',
+    Contact: ''
   };
   isEditing.value = false;
   editingId.value = null;
@@ -538,14 +558,39 @@ function openCrudModal() {
   });
 }
 
-function openEditModal(cat) {
+async function openEditModal(cat) {
   isEditing.value = true;
   editingId.value = cat.CategoriesID;
-  crudFormData.value = {
-    CategoriesName: cat.CategoriesName || '',
-    ParentCategoriesID: cat.ParentCategoriesID || '',
-    CategoriesPDF: cat.CategoriesPDF || ''
-  };
+
+  // Fetch fresh single category (to ensure Contact is included)
+  try {
+    const resp = await $axios.get(`/categories/crud/single/${encodeURIComponent(cat.CategoriesID)}`);
+    if (resp && resp.data && resp.data.success && resp.data.data) {
+      const d = resp.data.data;
+      crudFormData.value = {
+        CategoriesName: d.CategoriesName || cat.CategoriesName || '',
+        ParentCategoriesID: d.ParentCategoriesID || cat.ParentCategoriesID || '',
+        CategoriesPDF: d.CategoriesPDF || cat.CategoriesPDF || '',
+        Contact: d.Contact || ''
+      };
+    } else {
+      crudFormData.value = {
+        CategoriesName: cat.CategoriesName || '',
+        ParentCategoriesID: cat.ParentCategoriesID || '',
+        CategoriesPDF: cat.CategoriesPDF || '',
+        Contact: cat.Contact || ''
+      };
+    }
+  } catch (err) {
+    console.warn('Failed to fetch single category for edit, falling back to provided data:', err && (err.message || err));
+    crudFormData.value = {
+      CategoriesName: cat.CategoriesName || '',
+      ParentCategoriesID: cat.ParentCategoriesID || '',
+      CategoriesPDF: cat.CategoriesPDF || '',
+      Contact: cat.Contact || ''
+    };
+  }
+
   nextTick(() => {
     if (!crudModalInstance && crudModalRef.value) {
       crudModalInstance = new Modal(crudModalRef.value, { backdrop: true, keyboard: true });
@@ -569,7 +614,8 @@ const saveCrudForm = async () => {
     const payload = {
       categoriesName: crudFormData.value.CategoriesName.trim(),
       parentCategoriesID: crudFormData.value.ParentCategoriesID || null,
-      categoriesPDF: crudFormData.value.CategoriesPDF?.trim() || null
+      categoriesPDF: crudFormData.value.CategoriesPDF?.trim() || null,
+      contact: crudFormData.value.Contact?.trim() || null
     };
 
     if (isEditing.value && editingId.value) {
@@ -709,7 +755,13 @@ function itemMatchesQuery(item, q) {
   const name = String(item.CategoriesName ?? '').toLowerCase().trim().normalize('NFC');
   const parent = String(item.ParentCategoriesID ?? '').toLowerCase().trim().normalize('NFC');
   const pdf = String(item.CategoriesPDF ?? '').toLowerCase().trim().normalize('NFC');
-  return id.includes(s) || name.includes(s) || parent.includes(s) || pdf.includes(s);
+  const contact = String(item.Contact ?? '').toLowerCase().trim().normalize('NFC');
+  return id.includes(s) || name.includes(s) || parent.includes(s) || pdf.includes(s) || contact.includes(s);
+}
+
+function parseContacts(contactStr) {
+  if (!contactStr) return [];
+  return String(contactStr).split(' ||| ').map(s => s.trim()).filter(Boolean);
 }
 
 function findParentIdsForItem(item) {
