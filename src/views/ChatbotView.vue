@@ -394,9 +394,6 @@
 
                   <!-- Contact list: show when backend returned contacts OR when we provided fallback universityContacts -->
                     <div v-if="msg.showContacts || (msg.visibleContacts && msg.visibleContacts.length > 0)" class="contact-list">
-                      <div class="contact-notice">
-                        <div class="contact-notice-sub">ไม่เจอคำตอบที่ต้องการใช่ไหมคะโปรดติดต่อเจ้าหน้าที่</div>
-                      </div>
                       <hr class="contact-divider" />
                       <ol class="contact-ol">
                         <li v-for="(c, ci) in (msg.visibleContacts && msg.visibleContacts.length ? msg.visibleContacts.slice(0,2) : universityContacts.filter(c => c.phone).slice(0,2))" :key="ci" class="contact-item">
