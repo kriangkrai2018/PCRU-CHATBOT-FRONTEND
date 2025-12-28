@@ -1881,13 +1881,14 @@ export default {
     sendBotReply(text, delay = 1200) {
       if (!text) return
 
-      // Determine configured typing delay preference
+      // Determine configured typing delay preference (ms per char) and minimal indicator (ms)
       const envDelay = import.meta.env.VITE_BOT_TYPING_DELAY_MS ?? import.meta.env.VITE_BOT_TYPING_SPEED
       let typingDelay = parseInt(envDelay || '12', 10)
       if (Number.isNaN(typingDelay) || typingDelay < 0) typingDelay = 0
+      const indicatorMs = parseInt(import.meta.env.VITE_BOT_TYPING_INDICATOR_MS || '0', 10) || 0
 
-      // If in instant mode (typingDelay === 0) then skip showing a typing placeholder
-      if (typingDelay === 0) {
+      // If in instant mode and no indicator requested, skip showing a typing placeholder
+      if (typingDelay === 0 && indicatorMs === 0) {
         const idx = this.messages.length
         this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text, typing: false, timestamp: new Date().toISOString() })
         this.saveChatHistory()
@@ -1898,8 +1899,8 @@ export default {
         return
       }
 
+      // Otherwise, show a typing placeholder (either because typingDelay > 0 or indicatorMs > 0)
       const idx = this.messages.length
-      // push placeholder bot message with typing indicator
       this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: '', typing: true })
       this.saveChatHistory()
       this.$nextTick(() => {
@@ -1907,6 +1908,7 @@ export default {
         this.updateAnchoring()
       })
 
+      // When we later reveal the message, ensure we wait at least indicatorMs (if set) or use provided delay
       const timerId = setTimeout(() => {
         // If message index still exists, set text and clear typing
         if (this.messages[idx] && this.messages[idx].type === 'bot') {
@@ -1922,7 +1924,7 @@ export default {
         // remove timer id from array
         const i = this.botTypingTimers.indexOf(timerId)
         if (i !== -1) this.botTypingTimers.splice(i, 1)
-      }, delay)
+      }, delay || (indicatorMs || 0))
 
       // store timer so it can be cancelled if chat closes/unmounts
       this.botTypingTimers.push(timerId)
@@ -2202,11 +2204,23 @@ export default {
 
         // Send to backend API if available, otherwise show polite backend-only error
         if (this.$axios && typeof this.$axios.post === 'function') {
-          // add bot typing placeholder (ALWAYS show typing, no text)
-          const botIndex = this.messages.length
-          this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: '', typing: true })
-          this.saveChatHistory()
-          this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
+          // Determine typingDelay and indicator duration for this session
+          const envDelayForSend = import.meta.env.VITE_BOT_TYPING_DELAY_MS ?? import.meta.env.VITE_BOT_TYPING_SPEED
+          let typingDelayForSend = parseInt(envDelayForSend || '12', 10)
+          if (Number.isNaN(typingDelayForSend) || typingDelayForSend < 0) typingDelayForSend = 0
+          const indicatorMsForSend = parseInt(import.meta.env.VITE_BOT_TYPING_INDICATOR_MS || '0', 10) || 0
+
+          // Add bot typing placeholder only if we have a non-zero typing delay OR a requested minimal indicator duration
+          let botIndex = null
+          if (typingDelayForSend > 0 || indicatorMsForSend > 0) {
+            botIndex = this.messages.length
+            this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: '', typing: true })
+            this.saveChatHistory()
+            this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
+          } else {
+            // Instant mode with no indicator: do not show a placeholder — we'll render response directly when available
+            botIndex = null
+          }
 
             try {
             const explicitPayload = options.payload || null
@@ -2389,8 +2403,9 @@ export default {
                 botText = botText.replace(' (', '\n(');
             }
 
-            // Add a minimum delay to show typing indicator (1 second)
-            await new Promise(resolve => setTimeout(resolve, 750))
+            // Add a minimum delay to show typing indicator (use indicatorMs if provided, otherwise fallback to 750 when we showed a placeholder)
+            const indicatorMsFinal = indicatorMsForSend || ((typingDelayForSend > 0) ? 750 : 0)
+            await new Promise(resolve => setTimeout(resolve, indicatorMsFinal))
 
             if (this.messages[botIndex] && this.messages[botIndex].type === 'bot') {
               console.log('🔧 Setting message properties:', { botText, pdf, results, multipleResults, resQuestionId, resFound });
@@ -2480,32 +2495,80 @@ export default {
               // Final save and UI update
               this.saveChatHistory();
               this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring(); });
+            } else {
+              // Instant mode: render the message immediately without a placeholder
+              const idxNew = this.messages.length
+              this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: botText || '', typing: false, timestamp: new Date().toISOString() })
+              const msg = this.messages[idxNew]
+              // Set non-text properties
+              if (pdf) msg.pdf = pdf;
+              if (contacts) msg.contacts = contacts;
+              if (resQuestionId) msg.questionId = resQuestionId;
+              if (typeof resFound !== 'undefined') msg.found = resFound;
+              if (lowConfidence) msg.lowConfidence = true;
+              if (needsClarification) msg.needsClarification = true;
+              if (confidenceLevel) msg.confidenceLevel = confidenceLevel;
+              if (verificationWarnings.length) msg.verificationWarnings = verificationWarnings;
+              if (suggestions) msg.suggestions = suggestions;
+              if (!msg.feedback) msg.feedback = null;
+
+              // Attach results immediately
+              if (results && results.length > 0) {
+                if (multipleResults) msg.multipleResults = true;
+                msg.results = results
+              }
+
+              // Show contacts immediately
+              let visibleContacts = (contacts || []).filter(c => c.officer && c.phone);
+              if (!visibleContacts || visibleContacts.length === 0) visibleContacts = (contacts || []).filter(c => c.phone);
+              if ((!visibleContacts || visibleContacts.length === 0) && (botText.includes('ขออภัยจริงๆ ฉันไม่มีข้อมูลเกี่ยวกับคำถามนี้') || botText.includes('ยังเหนือความสามารถของฉันเลย'))) {
+                visibleContacts = (universityContacts || []).filter(c => c.phone);
+              }
+              if (visibleContacts && visibleContacts.length > 0) msg.visibleContacts = visibleContacts
+
+              this.saveChatHistory()
+              this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring(); })
             }
           } catch (err) {
             console.error('Chat API error', err)
-            if (this.messages[botIndex]) {
+            if (botIndex !== null && this.messages[botIndex]) {
               this.messages[botIndex].typing = false
               this.messages[botIndex].text = 'อุ๊ะ 😭 ฉันเหนื่อยไปหน่อย ลองอีกครั้งได้ไหมคะ?'
               this.messages[botIndex].timestamp = new Date().toISOString()
+              this.saveChatHistory()
+              this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
+            } else {
+              // If we were in instant mode (no placeholder), add an error message directly
+              this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: 'อุ๊ะ 😭 ฉันเหนื่อยไปหน่อย ลองอีกครั้งได้ไหมคะ?', typing: false, timestamp: new Date().toISOString() })
               this.saveChatHistory()
               this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
             }
             this.sendNoAnswerLog(originalUserMessage)
           }
         } else {
-          // No backend available: show a polite error from bot (still recorded as backend-only policy)
-          const botIndex = this.messages.length
-          this.messages.push({ type: 'bot', text: '', typing: true })
-          this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
-          setTimeout(() => {
-            if (this.messages[botIndex]) {
-              this.messages[botIndex].typing = false
-              this.messages[botIndex].text = 'ค่ะ 💔 ฉันไม่สามารถติดต่อเซิร์ฟเวอร์ได้ขณะนี้ ลองใหม่ทีหลัง!'
-              this.messages[botIndex].timestamp = new Date().toISOString()
-              this.saveChatHistory()
-              this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
-            }
-          }, 600)
+          // No backend available: show a polite error from bot (respect typing delay)
+          const envDelayFallback = import.meta.env.VITE_BOT_TYPING_DELAY_MS ?? import.meta.env.VITE_BOT_TYPING_SPEED
+          let typingDelayFallback = parseInt(envDelayFallback || '12', 10)
+          if (Number.isNaN(typingDelayFallback) || typingDelayFallback < 0) typingDelayFallback = 0
+
+          if (typingDelayFallback === 0) {
+            // Instant mode: push the message immediately
+            this.messages.push({ type: 'bot', text: 'ค่ะ 💔 ฉันไม่สามารถติดต่อเซิร์ฟเวอร์ได้ขณะนี้ ลองใหม่ทีหลัง!', typing: false, timestamp: new Date().toISOString() })
+            this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
+          } else {
+            const botIndex = this.messages.length
+            this.messages.push({ type: 'bot', text: '', typing: true })
+            this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
+            setTimeout(() => {
+              if (this.messages[botIndex]) {
+                this.messages[botIndex].typing = false
+                this.messages[botIndex].text = 'ค่ะ 💔 ฉันไม่สามารถติดต่อเซิร์ฟเวอร์ได้ขณะนี้ ลองใหม่ทีหลัง!'
+                this.messages[botIndex].timestamp = new Date().toISOString()
+                this.saveChatHistory()
+                this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
+              }
+            }, 600)
+          }
           this.sendNoAnswerLog(originalUserMessage)
         }
     },
@@ -2728,18 +2791,13 @@ export default {
         this.welcomeTypingTimer = null
       }
 
-      // Respect typing delay setting: if zero (instant), don't show the temporary typing bubble
+      // Respect typing delay and indicator settings: if both zero, don't show the temporary typing bubble
       const welcomeEnvDelay = import.meta.env.VITE_BOT_TYPING_DELAY_MS ?? import.meta.env.VITE_BOT_TYPING_SPEED
       const welcomeTypingDelay = parseInt(welcomeEnvDelay || '12', 10)
-      if (Number.isNaN(welcomeTypingDelay) || welcomeTypingDelay < 0) {
-        // Fallback behavior: show briefly
-        this.tempTyping = true
-      } else if (welcomeTypingDelay === 0) {
-        // Instant mode - do not show a temporary typing indicator
-        this.tempTyping = false
-      } else {
-        this.tempTyping = true
-      }
+      const welcomeIndicatorMs = parseInt(import.meta.env.VITE_BOT_TYPING_INDICATOR_MS || '0', 10) || 0
+
+      // Show temp typing if we have per-char delay OR a configured minimal indicator duration
+      this.tempTyping = (welcomeTypingDelay > 0) || (welcomeIndicatorMs > 0)
 
       // mark as shown so reopening won't retrigger the welcome typing
       this.welcomeTypingShown = true
@@ -2755,11 +2813,12 @@ export default {
 
       // After a short delay, hide the temporary typing indicator (only if it was shown)
       if (this.tempTyping) {
+        const welcomeHideMs = welcomeIndicatorMs || 1200
         this.welcomeTypingTimer = setTimeout(() => {
           this.tempTyping = false
           this.welcomeTypingTimer = null
           this.$nextTick(() => this.updateAnchoring())
-        }, 1200)
+        }, welcomeHideMs)
       } else {
         this.welcomeTypingTimer = null
       }
