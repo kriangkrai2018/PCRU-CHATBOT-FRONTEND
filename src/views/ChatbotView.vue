@@ -244,7 +244,7 @@
                     </div>
                   </transition>
                 </div>
-                <div class="message-bubble" :class="msg.type">
+                <div class="message-bubble" :class="[msg.type, { 'has-contacts': msg.showContacts || (msg.visibleContacts && msg.visibleContacts.length > 0) }]">
                   <div v-if="!(msg.multipleResults && msg.text && msg.text.trim().startsWith('พบหลายคำถาม'))" class="message-text" v-html="linkifyText(msg.text)"></div>
                   <div v-if="msg.pdf" class="pdf-attachment">
                     <a :href="msg.pdf" target="_blank" rel="noopener" class="pdf-link" @click.prevent="openPdf(msg, msg.pdf)">
@@ -395,15 +395,20 @@
                   <!-- Contact list: show when backend returned contacts OR when we provided fallback universityContacts -->
                     <div v-if="msg.showContacts || (msg.visibleContacts && msg.visibleContacts.length > 0)" class="contact-list">
                       <hr class="contact-divider" />
-                      <ol class="contact-ol">
-                        <li v-for="(c, ci) in (msg.visibleContacts && msg.visibleContacts.length ? msg.visibleContacts.slice(0,2) : universityContacts.filter(c => c.phone).slice(0,2))" :key="ci" class="contact-item">
-                          <div class="contact-org">{{ c.name || c.organization }}</div>
-                          <div class="contact-officer" v-if="c.officer">{{ c.officer }}</div>
-                          <div class="contact-phone-wrap">
-                              <a :href="`tel:${c.phone}`" class="contact-phone">{{ c.phone }}</a>
-                          </div>
-                        </li>
-                      </ol>
+                      <div class="contact-notice">
+                        <div class="contact-notice-sub">&nbsp;&nbsp;&nbsp;หากต้องการความช่วยเหลือเพิ่มเติม โปรดติดต่อเจ้าหน้าที่ตามข้อมูลด้านล่าง</div>
+                        <ol class="contact-ol" style="margin-top: 1rem;">
+                          <li 
+                            v-for="(c, ci) in (msg.visibleContacts && msg.visibleContacts.length ? msg.visibleContacts.slice(0,2) : universityContacts.filter(c => c.phone).slice(0,2))" :key="ci" 
+                            class="contact-item">
+                            <div class="contact-org">{{ c.name || c.organization }}</div>
+                            <div class="contact-officer" v-if="c.officer">{{ c.officer }}</div>
+                            <div class="contact-phone-wrap">
+                                <a :href="`tel:${c.phone}`" class="contact-phone">{{ c.phone }}</a>
+                            </div>
+                          </li>
+                        </ol>
+                      </div>
                     </div>
 
                   <div v-if="msg.type === 'bot' && msg.typing" class="typing-indicator">

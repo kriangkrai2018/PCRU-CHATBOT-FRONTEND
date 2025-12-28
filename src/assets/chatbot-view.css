@@ -2940,22 +2940,15 @@ body.no-effects .apple-help-button::after { display: none !important; }
 }
 
 .contact-notice {
-  background: rgba(249,249,251,0.95);
-  border: 0.5px solid rgba(0,0,0,0.06);
-  border-radius: 12px;
-  padding: 12px 14px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
 }
 
 .contact-notice-title {
   font-weight: 700;
-  color: #1d1d1f;
   margin-bottom: 4px;
   letter-spacing: -0.2px;
 }
 
 .contact-notice-sub {
-  color: #6e6e73;
   font-size: 14px;
 }
 
