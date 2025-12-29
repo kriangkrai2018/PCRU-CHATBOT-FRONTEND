@@ -3185,7 +3185,13 @@ body.no-effects .apple-help-button::after { display: none !important; }
 @media (max-width: 640px) {
   .chat-panel { 
     width: 100% !important; 
+    max-width: none !important;
+    margin: 0 !important;
     border-left: none;
+    border-radius: 0 !important;
+    /* remove side gutter while keeping safe-area padding on notch devices */
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
   }
   
   .category-card { margin: 8px; }
@@ -3202,7 +3208,7 @@ body.no-effects .apple-help-button::after { display: none !important; }
   }
   
   .scroll-to-top-btn {
-    bottom: 20px;
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
     width: 44px;
     height: 44px;
   }
