@@ -5,6 +5,8 @@
 .chat-panel { 
   position: relative; 
   width: 100%;
+  max-width: 370px;
+  margin: 0 auto;
   height: 100vh;
   /* iOS safe area support */
   height: -webkit-fill-available;
@@ -376,6 +378,7 @@ html.keyboard-open .clear-chat-btn {
   margin-bottom:16px; 
   color: #6B2C91; 
   letter-spacing: -0.4px;
+  text-decoration: none;
 }
 
 .cat-item { margin-bottom:14px; }
@@ -427,6 +430,7 @@ html.keyboard-open .clear-chat-btn {
   flex: 1;
   position: relative;
   z-index: 1;
+  text-decoration: none;
 }
 .chev { 
   opacity:0.95; 
@@ -474,7 +478,7 @@ html.keyboard-open .clear-chat-btn {
   outline: 3px solid rgba(107,44,145,0.14); 
   outline-offset: 2px;
 }
-.cat-sub-text { display:block; }
+.cat-sub-text { display:block; text-decoration: none; }
 .cat-sub-icon { color: rgba(0,0,0,0.45); transition: transform .12s ease, color .12s ease; }
 .cat-sub-btn:hover .cat-sub-icon { transform: translateX(3px); color: #6B2C91; }
 
@@ -1178,7 +1182,7 @@ html.keyboard-open .panel-footer {
 .category-section {
   margin-top: 18px;
   padding-top: 18px;
-  border-top: 1px solid rgba(0,0,0,0.06);
+  /* border-top removed to eliminate the line above หมวดหมู่ */
   animation: fadeIn 0.5s cubic-bezier(.2,.9,.2,1);
 }
 

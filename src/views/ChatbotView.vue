@@ -132,7 +132,7 @@
                     
                     <!-- Categories inside bot message -->
                     <div class="category-section">
-                      <div class="category-title">หมวดหมู่</div>
+                      <div class="category-title no-underline">หมวดหมู่</div>
 
                       <div v-if="loading" class="py-5 text-center">
                         <div class="spinner-border text-secondary" role="status"><span class="visually-hidden">Loading...</span></div>
@@ -154,7 +154,7 @@
                             @click="cat.items && cat.items.length > 0 ? toggle(idx, $event) : selectCategoryItem(cat.title, idx, null, $event)"
                             :aria-expanded="cat.items && cat.items.length > 0 ? openIndexes.includes(idx) : false"
                           >
-                            <span class="cat-text">{{ cat.title }}</span>
+                            <span class="cat-text no-underline">{{ cat.title }}</span>
                             <svg
                               v-if="cat.items && cat.items.length"
                               class="chev"
@@ -177,7 +177,7 @@
                                   @click="selectCategoryItem(item, idx, j, $event)"
                                   :aria-label="`เลือก ${ typeof item === 'string' ? item : (item.label || item.text || '') }`"
                                 >
-                                  <span class="cat-sub-text">{{ j+1 }}. {{ typeof item === 'string' ? item : (item.label || item.text || '') }}</span>
+                                  <span class="cat-sub-text no-underline">{{ j+1 }}. {{ typeof item === 'string' ? item : (item.label || item.text || '') }}</span>
                                   <!-- small chevron to indicate clickability -->
                                   <svg class="cat-sub-icon" width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
                                     <path d="M8 5l8 7-8 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -246,6 +246,63 @@
                 </div>
                 <div class="message-bubble" :class="[msg.type, { 'has-contacts': msg.showContacts || (msg.visibleContacts && msg.visibleContacts.length > 0) }]">
                   <div v-if="!(msg.multipleResults && msg.text && msg.text.trim().startsWith('พบหลายคำถาม'))" class="message-text" v-html="linkifyText(msg.text)"></div>
+                  <div v-if="msg.showCategories" class="category-section" style="margin-top: 15px;">
+                    <div class="category-title no-underline">หมวดหมู่</div>
+                    
+                    <div v-if="loading" class="py-3 text-center">
+                      <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+                    </div>
+                    <div v-else>
+                      <div v-if="!displayedCategories || displayedCategories.length === 0" class="py-2 text-center text-muted">
+                        ไม่พบหมวดหมู่
+                      </div>
+                      
+                      <transition name="cat-pop" v-for="(cat, catIdx) in (displayedCategories || [])" :key="catIdx">
+                        <div class="cat-item">
+                          <button
+                            class="cat-toggle"
+                            @click="cat.items && cat.items.length > 0 ? toggle(catIdx, $event) : selectCategoryItem(cat.title, catIdx, null, $event)"
+                            :aria-expanded="cat.items && cat.items.length > 0 ? openIndexes.includes(catIdx) : false"
+                          >
+                            <span class="cat-text no-underline">{{ cat.title }}</span>
+                            <svg v-if="cat.items && cat.items.length" class="chev" width="14" height="14" viewBox="0 0 24 24">
+                              <path d="M6 9l6 6 6-6" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                          </button>
+
+                          <transition name="collapse">
+                            <ul v-show="openIndexes.includes(catIdx)" class="cat-list">
+                              <li v-for="(item, subIdx) in cat.items" :key="subIdx" class="cat-sub">
+                                <button
+                                  type="button"
+                                  class="cat-sub-btn"
+                                  :class="{ disabled: (typeof item === 'object' && item._disabled) }"
+                                  :disabled="typeof item === 'object' && item._disabled"
+                                  @click="selectCategoryItem(item, catIdx, subIdx, $event)"
+                                >
+                                  <span class="cat-sub-text no-underline">{{ subIdx+1 }}. {{ typeof item === 'string' ? item : (item.label || item.text || '') }}</span>
+                                  <svg class="cat-sub-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5l8 7-8 7" /></svg>
+                                </button>
+                              </li>
+                            </ul>
+                          </transition>
+                        </div>
+                      </transition>
+
+                      <transition name="expandButton">
+                        <button
+                          v-if="!showAllCategories && categories && categories.length > 3"
+                          class="read-more-btn"
+                          @click="showAllCategories = true"
+                        >
+                          <span class="read-more-text">ดูเพิ่มเติม</span>
+                          <svg class="read-more-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                        </button>
+                      </transition>
+                    </div>
+                  </div>
                   <div v-if="msg.pdf" class="pdf-attachment">
                     <a :href="msg.pdf" target="_blank" rel="noopener" class="pdf-link" @click.prevent="openPdf(msg, msg.pdf)">
                       <svg class="pdf-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -670,12 +727,7 @@ export default {
       snowOpacity: parseFloat(import.meta.env.VITE_SNOW_OPACITY || '0.7'),
       // Pre-generated snowflake styles to prevent re-render jank
       snowflakeStyles: [],
-      categories: [
-        // initial placeholders (will be replaced by backend data)
-        { title: 'ทุนการศึกษา', items: ['ทุนเรียนดี', 'ทุนความสามารถพิเศษ', 'ทุนสร้างชื่อเสียง'] },
-        { title: 'หอพักนักศึกษา', items: ['ข้อมูลหอพัก', 'การสมัคร', 'กฎระเบียบ'] },
-        { title: 'บริการนักศึกษา', items: ['แนะแนว', 'บริการสุขภาพ', 'บริการ IT'] }
-      ],
+      categories: [],
       // Suggestions pagination: track visible count per message
       suggestionVisibleCounts: {}, // { messageIndex: visibleCount }
       // Contacts pagination / collapse: track visible org count per message
@@ -2302,6 +2354,52 @@ export default {
       }, 600)
     },
     async onSend(options = {}) {
+      // --- แก้ไข Logic ปุ่มเมนู ---
+      if (this.query && (this.query.trim() === 'เมนู' || this.query.trim() === 'menu')) {
+        const originalUserMessage = this.query.trim();
+        
+        // 1. เพิ่มข้อความฝั่ง User ว่า "เมนู"
+        this.messages.push({
+          id: ++this.messageIdCounter,
+          type: 'user',
+          text: originalUserMessage,
+          timestamp: new Date().toISOString()
+        });
+        
+        this.query = ''; // เคลียร์ช่องพิมพ์
+        this.welcomeTyping = false;
+
+        // 2. เตรียมข้อความตอบกลับ (ไม่ต้องแสดงข้อความยาวๆ)
+        const replyText = '';
+
+        // 3. แสดง Typing Indicator เล็กน้อยเพื่อความสมจริง
+        this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: '', typing: true });
+        this.$nextTick(() => this.scrollToBottom());
+
+        setTimeout(() => {
+          // ลบ Typing Indicator ตัวล่าสุดออก
+          this.messages.pop();
+
+          // 4. เพิ่มข้อความ Bot พร้อมเซ็ตค่า showCategories: true
+          this.messages.push({
+            id: ++this.messageIdCounter,
+            type: 'bot',
+            text: replyText,
+            showCategories: true, // <--- คีย์สำคัญที่ทำให้เมนูแสดงในแชท
+            timestamp: new Date().toISOString()
+          });
+
+          this.saveChatHistory();
+          this.$nextTick(() => {
+            this.scrollToBottom();
+            this.updateAnchoring();
+          });
+        }, 600); // ดีเลย์ 0.6 วินาที
+
+        return; // จบการทำงาน ไม่ต้องส่งไป Backend
+      }
+      // ----------------------------
+
       if (!this.query || !this.query.trim()) return
       
       const originalUserMessage = this.query.trim()
@@ -2363,82 +2461,6 @@ export default {
         this.scrollToBottom()
         this.updateAnchoring()
       })
-
-      // If the user explicitly asked for the menu ("เมนู"), reuse the existing bot reply
-      // helper to render a bot message below the menu. We avoid duplicating logic
-      // and do not call the backend for this simple local reply.
-      if (originalUserMessage && originalUserMessage.trim() === 'เมนู') {
-        const replyText = this.welcomeInstruction ? String(this.welcomeInstruction).replace(/<br\s*\/?>/ig, ' ') : 'เลือกหมวดหมู่ด้านล่าง หรือพิมพ์คำถามได้เลยค่ะ 😊'
-
-        // Open chat drawer (in case the user typed from the minimized view)
-        this.visible = true
-
-        // Force-show the top categories: clear any temporary typing state and ensure welcome is visible
-        this.tempTyping = false
-        this.welcomeTyping = false
-        this.welcomeTypingShown = true
-        this.showAllCategories = false
-        this.openIndexes = []
-
-        // If categories are not loaded yet, attempt to fetch them
-        if (!this.categories || !Array.isArray(this.categories) || this.categories.length === 0) {
-          try {
-            if (typeof this.fetchCategories === 'function') {
-              this.fetchCategories().then(cats => {
-                // no-op; categories will be assigned by fetchCategories
-              }).catch(() => {})
-            }
-          } catch (e) { /* ignore */ }
-        }
-
-        // Insert the reply after the user's last message so it appears immediately after the user bubble
-        this.sendBotReply(replyText, 1200, { insertAfterUser: true })
-
-        // Ensure the user's message and the menu (welcome message) are visible together
-        // Prefer showing the welcome message (menu) and keep the bot reply in view below it.
-        this.$nextTick(() => {
-          const panelBody = this.$refs.panelBody
-          if (panelBody) {
-            const welcomeEl = panelBody.querySelector('.welcome-message')
-            const botEls = panelBody.querySelectorAll('.message-wrapper.bot')
-            const lastBot = botEls && botEls.length ? botEls[botEls.length - 1] : null
-
-            if (welcomeEl) {
-              // Compute a scrollTop that shows the welcome area and also keeps the bot reply visible if possible
-              try {
-                const panelHeight = panelBody.clientHeight || 0
-                const welcomeTop = welcomeEl.offsetTop
-                const welcomeHeight = welcomeEl.offsetHeight || 0
-                let desiredTop = welcomeTop
-
-                if (lastBot) {
-                  // want lastBot to be visible somewhere below welcome; try to position so both fit
-                  const lastBotTop = lastBot.offsetTop
-                  // If both fit, keep welcome at top; otherwise shift upward so lastBot is visible
-                  if ((lastBotTop + lastBot.offsetHeight) > (desiredTop + panelHeight)) {
-                    // shift up so lastBot is within view (leave some space)
-                    desiredTop = Math.max(0, lastBotTop - Math.round(panelHeight * 0.6))
-                    // but don't push welcome out of view if it's above desiredTop
-                    desiredTop = Math.min(desiredTop, welcomeTop)
-                  }
-                }
-
-                panelBody.scrollTo({ top: desiredTop, behavior: 'smooth' })
-              } catch (e) {
-                // fallback: ensure welcome element is visible
-                try { welcomeEl.scrollIntoView({ behavior: 'smooth', block: 'start' }) } catch (err) { this.scrollToTop() }
-              }
-            } else if (lastBot && typeof lastBot.scrollIntoView === 'function') {
-              try { lastBot.scrollIntoView({ behavior: 'smooth', block: 'center' }) } catch (e) { this.scrollToBottom() }
-            }
-          }
-          // update anchoring after scroll settles
-          setTimeout(() => this.updateAnchoring(), 350)
-        })
-
-        // nothing more to do for this command
-        return
-      }
 
       // Always delegate answering to backend; no local canned replies
       
