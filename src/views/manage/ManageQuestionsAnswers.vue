@@ -1169,9 +1169,9 @@ const exportCurrentDataAsCsv = () => {
       const title = `"${(item.QuestionTitle || '').replace(/"/g, '""')}"`;
       const text = `"${(item.QuestionText || '').replace(/"/g, '""')}"`;
       const reviewDate = item.ReviewDate ? new Date(item.ReviewDate).toISOString().split('T')[0] : '';
-      const categoryId = item.CategoriesID || '';
+      const categoryName = categoriesNameMapSafe.value[item.CategoriesID] || item.CategoriesID || '';
       const keywords = (item.keywords || []).map(k => k.KeywordText).join(',');
-      return [title, text, reviewDate, categoryId, `"${keywords}"`].join(',');
+      return [title, text, reviewDate, categoryName, `"${keywords}"`].join(',');
     });
 
     const csvContent = [headers.join(','), ...rows].join('\n');
