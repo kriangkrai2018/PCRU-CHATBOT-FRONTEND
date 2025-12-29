@@ -369,7 +369,8 @@
                     v-for="cat in sortedCategoriesForDropdown" 
                     :key="cat.CategoriesID" 
                     :value="cat.CategoriesID"
-                    :class="cat.isMain ? 'fw-bold' : ''"
+                    :class="cat.isMain ? 'fw-bold bg-light text-muted' : ''"
+                    :disabled="cat.isMain"
                   >
                     {{ cat.isMain ? '▸ ' : '  └ ' }}{{ cat.CategoriesName }}
                   </option>
