@@ -1275,8 +1275,8 @@ html.keyboard-open .panel-footer {
 }
 
 .category-section {
-  margin-top: 18px;
-  padding-top: 18px;
+  margin-top: 0px;
+  padding-top: 0px;
   /* border-top removed to eliminate the line above หมวดหมู่ */
   animation: fadeIn 0.5s cubic-bezier(.2,.9,.2,1);
 }

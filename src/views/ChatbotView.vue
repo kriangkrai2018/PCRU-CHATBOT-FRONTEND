@@ -98,7 +98,7 @@
                       </transition>
                     </div>
                   </div>
-                  <div class="message-bubble bot bot-with-categories">
+                  <div class="message-bubble bot bot-with-categories" style="margin-top: 3rem !important;">
                     <div class="ai-greeting">
                       <div class="ai-greet-img-wrapper" role="button" tabindex="0" @click.stop="openAiIntro" @keydown.enter.stop="openAiIntro" @keydown.space.prevent.stop="openAiIntro" title="เปิด AI: ดูรายละเอียดและวิธีใช้งาน" aria-label="เปิด AI">
                         <img :src="botAvatar" alt="PCRU AI" class="ai-greet-img" />
@@ -117,7 +117,7 @@
 
                       <!-- Direct help button: opens help modal without opening AI Intro -->
                       <div class="ai-help-link-wrapper text-center">
-                        <button ref="miniHelpBtn" class="ai-help-link apple-help-mini" @click.stop="triggerMiniHelp" @keydown.enter.prevent.stop="triggerMiniHelp" @keydown.space.prevent.stop="triggerMiniHelp" aria-label="ดูวิธีใช้งาน Bot">
+                        <button v-if="!miniHelpDismissed" ref="miniHelpBtn" class="ai-help-link apple-help-mini" @click.stop="triggerMiniHelp" @keydown.enter.prevent.stop="triggerMiniHelp" @keydown.space.prevent.stop="triggerMiniHelp" aria-label="ดูวิธีใช้งาน Bot">
                           <div class="help-btn-ripple"></div>
                           <svg class="help-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
                             <circle class="help-circle" cx="12" cy="12" r="9" />
@@ -125,10 +125,22 @@
                             <line class="help-dot" x1="12" y1="16" x2="12" y2="16" />
                           </svg>
                           <span class="help-btn-text">ดูวิธีใช้งาน</span>
+                          <!-- interactive close badge placed inside button so it moves with it; handlers stop propagation -->
+                          <span
+                            class="mini-help-close"
+                            role="button"
+                            tabindex="0"
+                            aria-label="ปิดปุ่มดูวิธีใช้งาน"
+                            @click.stop="dismissMiniHelp"
+                            @keydown.enter.prevent.stop="dismissMiniHelp"
+                            @keydown.space.prevent.stop="dismissMiniHelp"
+                          >
+                            ×
+                          </span>
                         </button>
                       </div>
                     </div>
-                    <div class="message-text text-center" v-html="welcomeInstruction"></div>
+                    <div class="message-text text-center" style="margin-bottom: 1.5rem" v-html="welcomeInstruction"></div>
                     
                     <!-- Categories inside bot message -->
                     <div class="category-section">
@@ -743,6 +755,8 @@ export default {
       sendBtnFixedStyle: null,
       // One-time simulation to stabilize mobile layout
       hasSimulatedKeyboardCycle: false,
+      // Mini help dismissed state (persist until clear chat)
+      miniHelpDismissed: false,
       // 🕵️‍♀️ Rapid input-focus detection
       inputFocusTimestamps: [],
       inputFocusCooldownUntil: 0,
@@ -970,6 +984,14 @@ export default {
     
     // Check if it's winter season (November - February in Thailand)
     this.checkWinterSeason()
+
+    // Load persisted mini help dismissed state (persists until user clears chat)
+    try {
+      const dismissed = localStorage.getItem('chatbot_mini_help_dismissed')
+      this.miniHelpDismissed = !!dismissed
+    } catch (e) {
+      this.miniHelpDismissed = false
+    }
 
     // Load visual effects settings
     try {
@@ -2069,6 +2091,11 @@ export default {
       } catch (e) { /* ignore */ }
       // Slight delay so the press animation/ripple is visible before opening the modal
       setTimeout(() => { this.openHelpModal() }, 180)
+    },
+    // Dismiss the mini help button until chat is cleared
+    dismissMiniHelp() {
+      try { localStorage.setItem('chatbot_mini_help_dismissed', '1') } catch (e) {}
+      this.miniHelpDismissed = true
     },
     closeHelpModal() { 
       // Close help modal and return to chat
@@ -3203,6 +3230,11 @@ export default {
       // Clear messages and persisted history
       this.messages = []
       localStorage.removeItem('chatbot_messages')
+      // Reset mini help dismissed state when chat is cleared
+      try {
+        localStorage.removeItem('chatbot_mini_help_dismissed')
+      } catch (e) {}
+      this.miniHelpDismissed = false
 
       // Also clear persisted category disabled state so items become selectable again
       try {
@@ -4085,8 +4117,8 @@ export default {
 /* Welcome card accessibility and help button */
 .ai-greet-img-wrapper[role="button"] { cursor: pointer; }
 .ai-greet-img-wrapper[role="button"]:focus { box-shadow: 0 0 0 3px rgba(139,76,184,0.12); outline: none; }
-.ai-help-link-wrapper { margin-top: 8px; }
-.ai-help-link { all: unset; display:inline-flex; align-items:center; gap:8px; padding: 6px 10px; border-radius: 8px; background: rgba(107,44,145,0.08); color: #6B2C91; font-weight: 600; font-size: 13px; cursor: pointer; border: 1px solid rgba(107,44,145,0.12); }
+.ai-help-link-wrapper { margin-top: 8px; position: relative; }
+.ai-help-link { all: unset; display:inline-flex; align-items:center; gap:8px; padding: 6px 10px; border-radius: 8px; background: rgba(107,44,145,0.08); color: #6B2C91; font-weight: 600; font-size: 13px; cursor: pointer; border: 1px solid rgba(107,44,145,0.12); position: relative; }
 .ai-help-link:hover { background: rgba(107,44,145,0.12); box-shadow: 0 4px 12px rgba(107,44,145,0.08); }
 .ai-help-link:focus { box-shadow: 0 0 0 3px rgba(139,76,184,0.12); outline: none; }
 
@@ -4106,6 +4138,31 @@ body.no-effects .apple-help-mini { transform: none !important; animation: none !
 body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::after { display: none !important; }
 
 /* Press animation for mini help button */
+
+/* Decorative mini close on the help button (top-left) */
+.ai-help-link.apple-help-mini .mini-help-close {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #6B2C91; /* match button color */
+  color: #ffffff; /* white × */
+  border-radius: 50%;
+  font-size: 12px;
+  line-height: 1;
+  box-shadow: 0 6px 14px rgba(107,44,145,0.14);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.ai-help-link.apple-help-mini .mini-help-close:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139,76,184,0.18);
+}
 .apple-help-mini.pressed .help-btn-ripple::before { width: 220px; height: 220px; transition: width 0.35s ease, height 0.35s ease; }
 .apple-help-mini.pressed .help-btn-icon { transform: rotate(-10deg) scale(0.95); transition: transform 0.18s ease; }
 .apple-help-mini.pressed .help-btn-text { transform: translateY(1px) scale(0.98); transition: transform 0.18s ease; }
