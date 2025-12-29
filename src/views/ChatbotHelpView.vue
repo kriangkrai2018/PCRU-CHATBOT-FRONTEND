@@ -1,262 +1,539 @@
 <template>
-  <div class="chatbot-help-root" v-if="visible">
-    <!-- Backdrop overlay -->
-    <transition name="backdrop-fade">
-      <div v-if="visible" class="help-backdrop" @click="closeHelp"></div>
-    </transition>
+  <teleport to="body">
+    <div class="apple-help-overlay" v-if="visible">
+      <!-- Backdrop with Blur -->
+      <transition name="apple-fade" appear>
+        <div v-if="visible" class="backdrop" @click="closeHelp"></div>
+      </transition>
 
-    <!-- Help panel - sized to match chatbot drawer -->
-    <transition name="help-panel-slide">
-      <div v-if="visible" class="help-panel">
-        <!-- Header -->
-        <div class="help-header">
-          <h1 class="help-title">ช่วยเหลือ</h1>
-          <button class="help-close" @click="closeHelp" aria-label="close help">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </div>
-
-        <!-- Scrollable content -->
-        <div class="help-content">
-          <!-- Section 1: What can the bot do -->
-          <section class="help-section">
-            <div class="section-icon">🤖</div>
-            <h2 class="section-title">Bot นี้ทำอะไรได้?</h2>
-            <p class="section-text">Bot ของ PCRU ช่วยตอบคำถามเกี่ยวกับ:</p>
-            <ul class="feature-list">
-              <li class="feature-item">
-                <span class="feature-icon">💰</span>
-                <div><strong>ทุนการศึกษา</strong> - ข้อมูลทุน เงื่อนไข วิธีสมัคร</div>
-              </li>
-              <li class="feature-item">
-                <span class="feature-icon">🏠</span>
-                <div><strong>หอพักนักศึกษา</strong> - ห้อง ราคา กฎระเบียบ</div>
-              </li>
-              <li class="feature-item">
-                <span class="feature-icon">🎓</span>
-                <div><strong>บริการนักศึกษา</strong> - แนะแนว สุขภาพ IT</div>
-              </li>
-              <li class="feature-item">
-                <span class="feature-icon">📋</span>
-                <div><strong>การสมัครและวิธีการ</strong> - ลิงก์ เอกสาร ขั้นตอน</div>
-              </li>
-            </ul>
-          </section>
-
-          <!-- Section 2: How to ask -->
-          <section class="help-section">
-            <div class="section-icon">❓</div>
-            <h2 class="section-title">ถามอย่างไร?</h2>
-            <p class="section-text">พิมพ์คำถามเป็นภาษาไทยธรรมชาติ ไม่ต้องใช้คำศัพท์พิเศษ</p>
-            <div class="example-group">
-              <h3 class="example-title">✅ คำถามที่ดี:</h3>
-              <div class="example-card good">"ต้องทำอะไรเพื่อขอทุนเรียนดี"</div>
-              <div class="example-card good">"หอพักเท่าไหร่ต่อเดือน"</div>
-            </div>
-            <div class="example-group">
-              <h3 class="example-title">❌ หลีกเลี่ยง:</h3>
-              <div class="example-card bad">"ทุน" (สั้นเกินไป)</div>
-            </div>
-          </section>
-
-          <!-- Section 3: Tips -->
-          <section class="help-section">
-            <div class="section-icon">💡</div>
-            <h2 class="section-title">เคล็ดลับ</h2>
-            <ul class="tips-list">
-              <li class="tip-item"><div class="tip-number">1</div><div><strong>ระบุชัดเจน</strong> - "ทุนเรียนดี" ดีกว่า "ทุน"</div></li>
-              <li class="tip-item"><div class="tip-number">2</div><div><strong>ถามเฉพาะเรื่อง</strong> - เจาะจงสิ่งที่ต้องการ</div></li>
-              <li class="tip-item"><div class="tip-number">3</div><div><strong>ลองหลายคำ</strong> - ถ้าผลไม่ตรง ลองใหม่</div></li>
-            </ul>
-          </section>
-
-          <!-- Section 4: FAQ -->
-          <section class="help-section">
-            <div class="section-icon">🙋</div>
-            <h2 class="section-title">คำถามที่พบบ่อย</h2>
-            <div class="faq-item" v-for="(faq, idx) in faqs" :key="idx">
-              <button class="faq-question" @click="toggleFaq(idx)">
-                <span>{{ faq.q }}</span>
-                <svg class="faq-chevron" :class="{ open: openFaqIndex === idx }" width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Main Panel (Slide Over) -->
+      <transition name="apple-slide" appear>
+        <div v-if="visible" class="apple-panel">
+          
+          <!-- Header with Glass Effect -->
+          <header class="panel-header">
+            <div class="header-content">
+              <h1 class="title">ช่วยเหลือ</h1>
+              <button class="close-btn" @click="closeHelp">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M1 1L13 13M13 1L1 13" stroke="#86868b" stroke-width="2" stroke-linecap="round"/>
                 </svg>
               </button>
-              <div v-show="openFaqIndex === idx" class="faq-answer">{{ faq.a }}</div>
             </div>
-          </section>
-        </div>
+          </header>
 
-        <!-- Footer -->
-        <div class="help-footer">
-          <button class="help-close-btn" @click="closeHelp">เข้าใจแล้ว</button>
+          <!-- Scrollable Content -->
+          <div class="panel-content custom-scrollbar">
+            
+            <!-- Section 1: Features -->
+            <section class="apple-section fade-in-stagger" style="--delay: 0.1s">
+              <div class="section-icon-wrapper blue-gradient">
+                <svg class="animated-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="10" rx="2" class="draw-path" style="--duration: 1s"/>
+                  <circle cx="12" cy="5" r="2" class="draw-path" style="--duration: 0.5s; --delay: 0.5s"/>
+                  <path d="M12 7v4" class="draw-path" style="--duration: 0.3s; --delay: 0.8s"/>
+                  <line x1="8" y1="16" x2="8" y2="16" class="pop-in" style="--delay: 1.1s"/>
+                  <line x1="16" y1="16" x2="16" y2="16" class="pop-in" style="--delay: 1.2s"/>
+                </svg>
+              </div>
+              <h2 class="section-heading">ความสามารถของ Bot</h2>
+              <p class="section-desc">ผู้ช่วยอัจฉริยะที่พร้อมตอบทุกข้อสงสัยเกี่ยวกับ PCRU</p>
+              
+              <div class="feature-grid">
+                <div class="feature-card">
+                  <div class="icon-circle purple">
+                    <i class="bi bi-mortarboard-fill"></i>
+                  </div>
+                  <span>ทุนการศึกษา</span>
+                </div>
+                <div class="feature-card">
+                  <div class="icon-circle orange">
+                    <i class="bi bi-house-door-fill"></i>
+                  </div>
+                  <span>หอพัก</span>
+                </div>
+                <div class="feature-card">
+                  <div class="icon-circle green">
+                    <i class="bi bi-calendar-event-fill"></i>
+                  </div>
+                  <span>กิจกรรม</span>
+                </div>
+                <div class="feature-card">
+                  <div class="icon-circle blue">
+                    <i class="bi bi-file-earmark-text-fill"></i>
+                  </div>
+                  <span>เอกสาร</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Section 2: How to Ask -->
+            <section class="apple-section fade-in-stagger" style="--delay: 0.2s">
+              <div class="section-header">
+                <div class="mini-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" class="draw-loop"/>
+                  </svg>
+                </div>
+                <h3>เคล็ดลับการถาม</h3>
+              </div>
+              
+              <div class="example-container">
+                <div class="example-row good">
+                  <div class="indicator">
+                    <i class="bi bi-check-circle-fill"></i>
+                  </div>
+                  <div class="text">
+                    <strong>แนะนำ:</strong> "ขอรายละเอียดทุนเรียนดีปีล่าสุด"
+                  </div>
+                </div>
+                <div class="example-row bad">
+                  <div class="indicator">
+                    <i class="bi bi-x-circle-fill"></i>
+                  </div>
+                  <div class="text">
+                    <strong>ไม่แนะนำ:</strong> "ทุน" (กว้างเกินไป)
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Section 3: FAQ Accordion -->
+            <section class="apple-section fade-in-stagger" style="--delay: 0.3s">
+               <div class="section-header">
+                <div class="mini-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" class="draw-loop"/>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                </div>
+                <h3>คำถามที่พบบ่อย</h3>
+              </div>
+
+              <div class="faq-list">
+                <div 
+                  v-for="(item, index) in faqs" 
+                  :key="index"
+                  class="faq-item"
+                  :class="{ 'is-active': openFaq === index }"
+                >
+                  <button class="faq-toggle" @click="toggleFaq(index)">
+                    <span>{{ item.q }}</span>
+                    <span class="chevron">
+                      <svg width="12" height="7" viewBox="0 0 12 7" fill="none">
+                        <path d="M1 1L6 6L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </span>
+                  </button>
+                  <div class="faq-body" :style="{ maxHeight: openFaq === index ? '200px' : '0' }">
+                    <div class="faq-content">
+                      {{ item.a }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+          </div>
+
+          <!-- Footer -->
+          <footer class="panel-footer">
+            <button class="apple-btn-primary" @click="closeHelp">
+              เข้าใจแล้ว
+            </button>
+          </footer>
+
         </div>
-      </div>
-    </transition>
-  </div>
+      </transition>
+    </div>
+  </teleport>
 </template>
 
 <script>
 export default {
   name: 'ChatbotHelpView',
   props: {
-    visible: { type: Boolean, default: false }
+    visible: {
+      type: Boolean,
+      default: false
+    }
   },
+  emits: ['close'],
   data() {
     return {
-      openFaqIndex: null,
+      openFaq: 0,
       faqs: [
-        { q: 'Bot จำประวัติการสนทนาได้ไหม?', a: 'ใช่ค่ะ Bot จำประวัติในเซสชันนี้ได้' },
-        { q: 'ถ้า Bot ตอบไม่ถูก ทำอย่างไร?', a: 'ลองถามใหม่ด้วยคำอื่น หรือติดต่อเจ้าหน้าที่' },
-        { q: 'Bot ตอบได้ทุกเรื่องไหม?', a: 'Bot เชี่ยวชาญเรื่องทุน หอพัก บริการนักศึกษา และปฏิทินวิชาการ' }
+        { q: 'Bot ตอบคำถามเรื่องอะไรได้บ้าง?', a: 'สามารถตอบข้อมูลเกี่ยวกับทุนการศึกษา, หอพัก, การลงทะเบียนเรียน และบริการต่างๆ สำหรับนักศึกษา PCRU' },
+        { q: 'ต้องพิมพ์ภาษาทางการไหม?', a: 'ไม่จำเป็นครับ สามารถพิมพ์ภาษาพูดปกติได้เลย เช่น "อยากรู้เรื่องหอพัก", "สมัครทุนยังไง"' },
+        { q: 'ข้อมูลเชื่อถือได้หรือไม่?', a: 'ข้อมูลทั้งหมดถูกดึงมาจากฐานข้อมูลของมหาวิทยาลัยโดยตรง และมีการอัปเดตอย่างสม่ำเสมอ' }
       ]
     }
   },
   methods: {
-    closeHelp() { this.$emit('close') },
-    toggleFaq(idx) { this.openFaqIndex = this.openFaqIndex === idx ? null : idx }
+    closeHelp() {
+      this.$emit('close');
+    },
+    toggleFaq(index) {
+      this.openFaq = this.openFaq === index ? null : index;
+    }
   }
 }
 </script>
 
 <style scoped>
-.chatbot-help-root {
+/* Base Font & Variables */
+.apple-help-overlay {
+  --apple-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --panel-width: 400px;
+  --bg-color: rgba(255, 255, 255, 0.88);
+  --blur-amt: 25px;
+  --primary-color: #0071e3;
+  --text-primary: #1d1d1f;
+  --text-secondary: #86868b;
+  
   position: fixed;
   inset: 0;
-  z-index: 2000;
-  pointer-events: none;
+  z-index: 9999;
+  display: flex;
+  justify-content: flex-end;
+  font-family: var(--apple-font);
 }
 
-.help-backdrop {
-  position: fixed;
+/* Backdrop */
+.backdrop {
+  position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  pointer-events: auto;
-  z-index: 2001;
+  z-index: 1;
 }
 
-/* Panel sized to match chatbot drawer - 400px width, right side */
-.help-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 400px;
-  max-width: 100vw;
-  z-index: 2002;
+/* Main Panel */
+.apple-panel {
+  position: relative;
+  z-index: 2;
+  width: var(--panel-width);
+  height: 100%;
+  background: var(--bg-color);
+  backdrop-filter: blur(var(--blur-amt));
+  -webkit-backdrop-filter: blur(var(--blur-amt));
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  background: #fff;
-  pointer-events: auto;
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
 }
 
-.help-header {
+/* Header */
+.panel-header {
+  padding: 24px 28px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+.header-content {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  background: #fff;
-  flex-shrink: 0;
+  align-items: center;
 }
-
-.help-title {
-  font-size: 20px;
+.title {
+  font-size: 24px;
   font-weight: 700;
-  color: #1d1d1f;
   margin: 0;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
 }
-
-.help-close {
-  all: unset;
-  width: 36px;
-  height: 36px;
+/* Close Button with Animation */
+.close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(118, 118, 128, 0.12);
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
   cursor: pointer;
-  color: #1d1d1f;
-  transition: background 0.2s;
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
-.help-close:hover { background: rgba(0, 0, 0, 0.06); }
+/* Animation for Icon inside */
+.close-btn svg {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.close-btn:hover {
+  background: rgba(118, 118, 128, 0.24);
+  transform: scale(1.05);
+}
+.close-btn:hover svg {
+  transform: rotate(90deg);
+}
+.close-btn:active {
+  transform: scale(0.95);
+}
+.close-btn:active svg {
+  transform: rotate(180deg);
+}
 
-.help-content {
+/* Content Area */
+.panel-content {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
-  overscroll-behavior: contain;
+  padding: 28px;
+  /* Hide scrollbar but keep functionality */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.1) transparent;
+}
+.panel-content::-webkit-scrollbar {
+  width: 6px;
+}
+.panel-content::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.1);
+  border-radius: 3px;
 }
 
-.help-section { margin-bottom: 24px; }
-.section-icon { font-size: 32px; margin-bottom: 8px; }
-.section-title { font-size: 16px; font-weight: 700; color: #1d1d1f; margin: 0 0 8px 0; }
-.section-text { color: #6e6e73; font-size: 14px; line-height: 1.5; margin: 0 0 12px 0; }
-
-.feature-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
-.feature-item { display: flex; gap: 10px; padding: 10px; background: rgba(107, 44, 145, 0.04); border-radius: 10px; border: 1px solid rgba(107, 44, 145, 0.08); }
-.feature-icon { font-size: 20px; flex-shrink: 0; }
-.feature-item strong { color: #6B2C91; font-weight: 600; font-size: 13px; }
-.feature-item div { font-size: 13px; color: #6e6e73; line-height: 1.4; }
-
-.example-group { margin-top: 12px; }
-.example-title { font-size: 12px; font-weight: 600; color: #1d1d1f; margin: 0 0 8px 0; }
-.example-card { padding: 10px 12px; margin-bottom: 6px; border-radius: 8px; font-size: 13px; }
-.example-card.good { background: rgba(76, 175, 80, 0.08); color: #2e7d32; border: 1px solid rgba(76, 175, 80, 0.15); }
-.example-card.bad { background: rgba(244, 67, 54, 0.08); color: #c62828; border: 1px solid rgba(244, 67, 54, 0.15); }
-
-.tips-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
-.tip-item { display: flex; gap: 10px; padding: 10px; background: rgba(139, 76, 184, 0.04); border-radius: 10px; }
-.tip-number { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #8B4CB8, #6B2C91); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px; flex-shrink: 0; }
-.tip-item div { font-size: 13px; color: #6e6e73; line-height: 1.4; }
-.tip-item strong { color: #6B2C91; font-weight: 600; }
-
-.faq-item { margin-bottom: 6px; }
-.faq-question { all: unset; width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 12px; background: rgba(107, 44, 145, 0.04); border: 1px solid rgba(107, 44, 145, 0.08); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: #1d1d1f; text-align: left; }
-.faq-question:hover { background: rgba(107, 44, 145, 0.08); }
-.faq-chevron { flex-shrink: 0; color: #6B2C91; transition: transform 0.2s; }
-.faq-chevron.open { transform: rotate(180deg); }
-.faq-answer { padding: 10px 12px; background: rgba(107, 44, 145, 0.02); border-left: 2px solid rgba(107, 44, 145, 0.2); font-size: 13px; color: #6e6e73; line-height: 1.5; margin-top: 4px; }
-
-.help-footer {
-  padding: 16px 20px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  background: #fff;
-  flex-shrink: 0;
+/* Sections */
+.apple-section {
+  margin-bottom: 40px;
 }
+.section-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 24px rgba(0, 113, 227, 0.25);
+}
+.blue-gradient { background: linear-gradient(135deg, #0071e3, #42a1ff); }
 
-.help-close-btn {
-  all: unset;
-  display: block;
-  width: 100%;
-  padding: 12px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #8B4CB8, #6B2C91);
-  color: white;
+.section-heading {
+  font-size: 20px;
   font-weight: 600;
-  font-size: 15px;
-  text-align: center;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 12px rgba(107, 44, 145, 0.25);
+  margin: 0 0 6px 0;
+  color: var(--text-primary);
 }
-.help-close-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(107, 44, 145, 0.35); }
-.help-close-btn:active { transform: translateY(0); }
+.section-desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin: 0 0 24px 0;
+  line-height: 1.4;
+}
 
-/* Transitions */
-.backdrop-fade-enter-active, .backdrop-fade-leave-active { transition: opacity 0.3s; }
-.backdrop-fade-enter-from, .backdrop-fade-leave-to { opacity: 0; }
+/* Feature Grid */
+.feature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.feature-card {
+  background: white;
+  padding: 16px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  transition: transform 0.2s ease;
+  border: 1px solid rgba(0,0,0,0.02);
+}
+.feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+.icon-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.purple { background: rgba(175, 82, 222, 0.1); color: #AF52DE; }
+.orange { background: rgba(255, 149, 0, 0.1); color: #FF9500; }
+.green { background: rgba(52, 199, 89, 0.1); color: #34C759; }
+.blue { background: rgba(0, 113, 227, 0.1); color: #0071e3; }
 
-.help-panel-slide-enter-active { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.help-panel-slide-leave-active { transition: transform 0.2s ease-in; }
-.help-panel-slide-enter-from, .help-panel-slide-leave-to { transform: translateX(100%); }
+.feature-card span {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
 
-/* Mobile */
+/* Example Rows */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.mini-icon {
+  color: var(--text-secondary);
+  display: flex;
+}
+.section-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.example-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.example-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 14px;
+}
+.example-row.good {
+  background: rgba(52, 199, 89, 0.08);
+  border: 1px solid rgba(52, 199, 89, 0.1);
+}
+.example-row.bad {
+  background: rgba(255, 59, 48, 0.08);
+  border: 1px solid rgba(255, 59, 48, 0.1);
+}
+.example-row.good .indicator { color: #34C759; font-size: 16px; }
+.example-row.bad .indicator { color: #FF3B30; font-size: 16px; }
+.example-row .text { color: var(--text-primary); }
+
+/* FAQ Accordion */
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.faq-item {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  transition: box-shadow 0.2s;
+}
+.faq-item.is-active {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.faq-toggle {
+  width: 100%;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+.faq-toggle .chevron {
+  color: var(--text-secondary);
+  transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.faq-item.is-active .chevron {
+  transform: rotate(180deg);
+}
+.faq-body {
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.faq-content {
+  padding: 0 16px 16px 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* Footer */
+.panel-footer {
+  padding: 20px 28px 28px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+.apple-btn-primary {
+  width: 100%;
+  background: #0071e3;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.25);
+}
+.apple-btn-primary:hover {
+  background: #0077ED;
+  transform: scale(1.02);
+}
+.apple-btn-primary:active {
+  transform: scale(0.98);
+}
+
+/* --- SVG Animations --- */
+.draw-path {
+  stroke-dasharray: 50;
+  stroke-dashoffset: 50;
+  animation: dash var(--duration) ease-out forwards;
+  animation-delay: var(--delay, 0s);
+}
+.pop-in {
+  opacity: 0;
+  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation-delay: var(--delay, 0s);
+}
+.draw-loop {
+  stroke-dasharray: 100;
+  animation: dash 3s ease-in-out infinite alternate;
+}
+
+@keyframes dash {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0); transform-origin: center; }
+  100% { opacity: 1; transform: scale(1); transform-origin: center; }
+}
+
+/* --- Vue Transitions (Apple Style) --- */
+.apple-fade-enter-active, .apple-fade-leave-active {
+  transition: opacity 0.4s ease;
+}
+.apple-fade-enter-from, .apple-fade-leave-to {
+  opacity: 0;
+}
+
+.apple-slide-enter-active {
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); /* Apple's spring curve */
+}
+.apple-slide-leave-active {
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.apple-slide-enter-from, .apple-slide-leave-to {
+  transform: translateX(100%);
+}
+
+.fade-in-stagger {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeUp 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  animation-delay: var(--delay);
+}
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile Responsive */
 @media (max-width: 480px) {
-  .help-panel { width: 100%; }
+  .apple-panel {
+    width: 100%;
+  }
 }
 </style>
