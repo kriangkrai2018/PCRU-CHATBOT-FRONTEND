@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <div class="panel-footer">
     <canvas ref="particleCanvas" class="particle-canvas"></canvas>
     <transition name="fly-to-message" @before-enter="beforeFlyEnter" @enter="flyEnter">
@@ -81,4 +81,4 @@ export default {
     getCanvas() { return this.$refs.particleCanvas }
   }
 }
-</script>
+</script> -->

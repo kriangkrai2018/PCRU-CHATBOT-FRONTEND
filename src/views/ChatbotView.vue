@@ -5,7 +5,7 @@
       <div v-if="visible" class="chat-overlay" role="dialog" aria-label="Chat drawer">
         <div class="overlay-backdrop" @click="visible = false"></div>
 
-        <aside class="chat-panel" :style="{width: drawerWidth}">
+        <aside class="chat-panel" :style="{ width: drawerWidth, height: viewportHeight }">
           <!-- Snowflakes (only in winter season: Nov-Feb) and if enabled -->
           <div v-if="isWinterSeason && snowEnabled" class="snowflakes" aria-hidden="true" :style="{ zIndex: snowZIndex }">
             <div 
@@ -261,8 +261,8 @@
                         <div class="cat-item">
                           <button
                             class="cat-toggle"
-                            @click="cat.items && cat.items.length > 0 ? toggle(catIdx, $event) : selectCategoryItem(cat.title, catIdx, null, $event)"
-                            :aria-expanded="cat.items && cat.items.length > 0 ? openIndexes.includes(catIdx) : false"
+                            @click="cat.items && cat.items.length > 0 ? toggle(catIdx, $event, msg) : selectCategoryItem(cat.title, catIdx, null, $event)"
+                            :aria-expanded="cat.items && cat.items.length > 0 ? (msg.openIndexes && msg.openIndexes.includes(catIdx)) : false"
                           >
                             <span class="cat-text no-underline">{{ cat.title }}</span>
                             <svg v-if="cat.items && cat.items.length" class="chev" width="14" height="14" viewBox="0 0 24 24">
@@ -270,8 +270,8 @@
                             </svg>
                           </button>
 
-                          <transition name="collapse">
-                            <ul v-show="openIndexes.includes(catIdx)" class="cat-list">
+                            <transition name="collapse">
+                            <ul v-show="msg.openIndexes && msg.openIndexes.includes(catIdx)" class="cat-list">
                               <li v-for="(item, subIdx) in cat.items" :key="subIdx" class="cat-sub">
                                 <button
                                   type="button"
@@ -735,6 +735,8 @@ export default {
       // Keyboard detection
       isKeyboardOpen: false,
       initialViewportHeight: window.innerHeight,
+      // True viewport height to account for virtual keyboard (updated via Visual Viewport API)
+      viewportHeight: '100%',
       // Footer focus fallback to reliably move send button on mobile
       panelFocused: false,
       // Inline style object for fixed-position send button when focused (measured from input)
@@ -1022,6 +1024,41 @@ export default {
       this.simulateKeyboardCycle()
     })
 
+    // --- Mobile viewport height fix (Visual Viewport API) ---
+    const setViewportHeight = () => {
+      if (window.visualViewport) {
+        // Use the visible height reported by VisualViewport so keyboard area is excluded
+        this.viewportHeight = `${window.visualViewport.height}px`
+
+        // When keyboard appears, ensure panel body scrolls to bottom
+        if (this.$refs.panelBody) {
+          setTimeout(() => {
+            try {
+              this.$refs.panelBody.scrollTop = this.$refs.panelBody.scrollHeight
+            } catch (e) { /* ignore */ }
+          }, 100)
+        }
+      } else {
+        // Fallback
+        this.viewportHeight = `${window.innerHeight}px`
+      }
+    }
+
+    // Initial set
+    setViewportHeight()
+
+    // Attach listeners
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', setViewportHeight)
+      window.visualViewport.addEventListener('scroll', setViewportHeight)
+    } else {
+      window.addEventListener('resize', setViewportHeight)
+    }
+
+    // keep reference for cleanup
+    this._viewportHandler = setViewportHeight
+    // ---------------------------------------------------------
+
     // Fetch categories from backend. This app supports your backend's flat rows
     // shape: { CategoriesID, CategoriesName, ParentCategoriesID, CategoriesPDF }
     this.loading = true
@@ -1255,6 +1292,16 @@ export default {
     if (this.feedbackCooldownInterval) {
       clearInterval(this.feedbackCooldownInterval)
       this.feedbackCooldownInterval = null
+    }
+    // Remove visualViewport listeners if set
+    if (this._viewportHandler) {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', this._viewportHandler)
+        window.visualViewport.removeEventListener('scroll', this._viewportHandler)
+      } else {
+        window.removeEventListener('resize', this._viewportHandler)
+      }
+      this._viewportHandler = null
     }
   },
   watch: {
@@ -2050,7 +2097,35 @@ export default {
     },
     onAiMouseLeave() { this.aiTilt.x = 0; this.aiTilt.y = 0; this.aiTilt.s = 1 },
     // embedding removed; toggleEmbedScripts omitted
-    toggle(i, evt) {
+    toggle(i, evt, msg = null) {
+      // If a message object is provided, keep open state local to that message
+      if (msg) {
+        if (!msg.openIndexes) {
+          if (this.$set) this.$set(msg, 'openIndexes', [])
+          else msg.openIndexes = []
+        }
+
+        const idxMsg = msg.openIndexes.indexOf(i)
+        if (idxMsg === -1) msg.openIndexes.push(i)
+        else msg.openIndexes.splice(idxMsg, 1)
+
+        // Persist message changes
+        this.saveChatHistory()
+
+        // If opened, scroll to bottom after DOM/transition
+        if (idxMsg === -1) {
+          this.$nextTick(() => {
+            setTimeout(() => {
+              this.scrollToBottom()
+              this.updateAnchoring()
+            }, 300)
+          })
+        }
+
+        return
+      }
+
+      // Fallback: global openIndexes (used by welcome/top categories)
       const idx = this.openIndexes.indexOf(i)
       if (idx === -1) this.openIndexes.push(i)
       else this.openIndexes.splice(idx, 1)
@@ -2066,6 +2141,17 @@ export default {
         }
       } catch (e) {
         // ignore
+      }
+
+      // Ensure chat panel scrolls to bottom when opening an accordion
+      if (idx === -1) {
+        this.$nextTick(() => {
+          // Wait for DOM update and accordion transition to finish
+          setTimeout(() => {
+            this.scrollToBottom()
+            this.updateAnchoring()
+          }, 300)
+        })
       }
     },
     // Show bot typing animation then reveal the reply text
@@ -2386,6 +2472,7 @@ export default {
             type: 'bot',
             text: replyText,
             showCategories: true, // <--- คีย์สำคัญที่ทำให้เมนูแสดงในแชท
+            openIndexes: [], // per-message accordion state
             timestamp: new Date().toISOString()
           });
 

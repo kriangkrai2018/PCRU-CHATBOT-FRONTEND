@@ -32,6 +32,34 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Mobile viewport & safe-area helpers: use visual viewport + safe area insets */
+.chat-panel {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  max-height: 100dvh;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  overscroll-behavior: none;
+}
+
+.panel-top, .panel-footer {
+  flex: 0 0 auto;
+}
+
+.panel-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.input-pill {
+  font-size: 16px !important;
+}
+
 /* Animated gradient orbs background */
 .chat-panel::before {
   content: '';
@@ -299,20 +327,60 @@ html.keyboard-open .clear-chat-btn {
   top: -10px;
   left: 50%;
   transform: translateX(-50%) translateY(-100%);
+
+  /* สีและพื้นหลัง */
   background: linear-gradient(135deg, rgba(139,76,184,0.95) 0%, rgba(107,44,145,0.95) 100%);
   color: white;
   padding: 12px 16px;
   border-radius: 16px;
+
+  /* ฟอนต์ */
   font-size: 13px;
   font-weight: 500;
   line-height: 1.5;
   text-align: center;
-  white-space: nowrap;
+
+  /* --- แก้ไข: บังคับความกว้างและห้ามตัดคำมั่ว --- */
+  width: max-content;
+  max-width: 260px;
+  white-space: normal;
+  word-break: keep-all;
+  /* ------------------------------------------- */
+
   box-shadow: 0 8px 32px rgba(107,44,145,0.3), 0 0 0 1px rgba(255,255,255,0.1);
   z-index: 100;
-  min-width: 220px;
-  max-width: 280px;
-  white-space: normal;
+}
+
+.ai-speech-bubble .bubble-tail {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid rgba(107,44,145,0.95);
+}
+
+/* --- ส่วนมือถือ (แก้ปัญหาบีบ) --- */
+@media (max-width: 600px) {
+  .ai-speech-bubble {
+    width: max-content !important;
+    min-width: auto;
+
+    /* จัดตำแหน่งชิดซ้ายเหนือ Avatar */
+    left: 0;
+    transform: translateY(-100%);
+    margin-left: 0px;
+    text-align: left;
+  }
+
+  /* ย้ายหางลูกศรไปทางซ้ายเพื่อให้ตรงกับ Avatar */
+  .ai-speech-bubble .bubble-tail {
+    left: 32px;
+    transform: translateX(0);
+  }
 }
 
 .ai-speech-bubble .bubble-content {
@@ -632,25 +700,12 @@ html.keyboard-open .panel-footer {
   box-shadow: 0 4px 16px rgba(107,44,145,0.25), 0 1px 0 rgba(255,255,255,0.1) inset; 
   margin-right: 0px;
   margin-left: auto;
-  position: absolute;
+  position: fixed;
   right: 12px;
   /* center vertically without transforms so it doesn't jump on active/focus */
   top: calc(50% - 26px);
   z-index: 1622;
-}
-
-/* Desktop - ให้ปุ่มห่างจากขอบ */
-@media (min-width: 1024px) {
-  .btn-send {
-    margin-right: 12px;
-  }
-}
-
-/* Mobile - ปุ่มชิดขอบ */
-@media (max-width: 1023px) {
-  .btn-send {
-    margin-right: -8px;
-  }
+  
 }
 
 /* Responsive tweaks for send button to avoid overlapping input/typing bubble on small screens */
@@ -660,41 +715,15 @@ html.keyboard-open .panel-footer {
     padding-right: 8px; /* tightened to allow input to reach send button */
   }
 
-  /* On mobile, use flow layout so the input fills to the button; when focused/keyboard-open we pin the button again. */
-  .panel-footer .btn-send {
-    position: fixed !important; /* keep in flow so input naturally fills available space */
-    width: 48px;
-    height: 48px;
-  }
+
 
   /* When keyboard is open on mobile, nudge the input and send button up */
   html.keyboard-open .panel-footer { padding-bottom: max(12px, env(safe-area-inset-bottom, 12px)); }
-  html.keyboard-open .panel-footer .btn-send { top: calc(50% - 24px); right: 12px; }
   html.keyboard-open .panel-footer .input-pill { transform: translateY(-6px); }
 
-  /* When input has focus or panel has focus-within, nudge the send button up so it follows the input and stays visible (mobile only) */
-  .panel-footer.focused .btn-send,
-  .panel-footer:focus-within .btn-send,
-  .panel-footer .input-pill:focus ~ .btn-send,
-  .panel-footer .input-pill:active ~ .btn-send {
-    /* Keep stable top to avoid jumps */
-    top: calc(50% - 24px);
-    right: 12px;
-  }
 
-  /* Stronger behavior (mobile only): pin the send button above the input using fixed positioning when focused/keyboard-open.
-     On desktop we keep the button absolutely positioned inside the input row to avoid jumps when focusing/hovering. */
-  .panel-footer.focused .btn-send,
-  .panel-footer:focus-within .btn-send,
-  html.keyboard-open .panel-footer .btn-send {
-    /* Use fixed positioning when focused/keyboard-open but keep static bottom so it doesn't jump */
-    position: fixed;
-    right: calc(12px + env(safe-area-inset-right, 0px));
-    bottom: calc(48px + 12px + env(safe-area-inset-bottom, 0px));
-    top: auto;
-    margin-top: 0;
-    z-index: 99999; /* very high so it overlays the input/tooltip/FAB */
-  }
+
+
 
   /* Reduce reserved right padding so input visually reaches the send button */
   .panel-footer .input-pill {
@@ -772,7 +801,47 @@ html.keyboard-open .panel-footer {
     0 2px 8px rgba(107, 44, 145, 0.08),
     0 0 0 1px rgba(139, 76, 184, 0.06),
     0 1px 0 rgba(255,255,255,0.8) inset;
-  white-space: nowrap;
+  /* allow wrapping and flexible width to avoid compressed text */
+  white-space: normal;
+  width: max-content;
+  max-width: 260px;
+  min-width: 150px;
+  text-align: center;
+
+/* แก้ไขปุ่มลอยในมือถือ */
+@media (max-width: 600px) {
+  /* 1. บังคับให้ Panel Footer เป็นตัวอ้างอิงตำแหน่ง */
+  .panel-footer {
+    position: relative !important;
+    /* เว้นพื้นที่ขวาเผื่อปุ่มส่ง ไม่ให้ Input ทับ */
+    padding-right: 68px !important; 
+  }
+
+  /* 2. บังคับปุ่มส่งให้เกาะติดกับ Footer เสมอ ห้ามใช้ Fixed */
+  .panel-footer .btn-send,
+  .panel-footer.focused .btn-send,
+  .panel-footer:focus-within .btn-send,
+  html.keyboard-open .panel-footer .btn-send {
+    position: absolute !important; /* เกาะติดกับ Footer */
+    top: 50% !important;           /* กึ่งกลางแนวตั้ง */
+    transform: translateY(-50%) !important; /* จัดกึ่งกลางเป๊ะๆ */
+    right: 12px !important;        /* ชิดขวา */
+    bottom: auto !important;       /* ยกเลิกค่า bottom เดิม */
+    margin-top: 0 !important;
+    z-index: 20 !important;        /* เลเยอร์ไม่ต้องสูงเวอร์ */
+    
+    /* คงขนาดปุ่มไว้ */
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  /* 3. ปรับ Input ให้เต็มพื้นที่ที่เหลือ */
+  .panel-footer .input-pill {
+    width: 100% !important;
+    margin-right: 0 !important;
+    padding-right: 12px !important; /* ไม่ต้องเผื่อที่ใน Input แล้ว เพราะเว้นที่ Footer แทน */
+  }
+}
   z-index: 1601;
   animation: unlikeTooltipBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   pointer-events: none;
@@ -832,6 +901,25 @@ html.keyboard-open .panel-footer {
 .unlike-tooltip-fade-leave-to {
   opacity: 0;
   transform: translateY(4px) scale(0.95);
+}
+
+/* Responsive tooltip sizing for small screens */
+@media (max-width: 640px) {
+  .unlike-tooltip, .like-tooltip {
+    width: auto !important;
+    max-width: 220px !important;
+    min-width: auto !important;
+    white-space: normal !important;
+    padding: 12px 14px !important;
+    left: 0 !important;
+    transform: none !important;
+    margin-left: 0 !important;
+  }
+
+  .unlike-tooltip-content, .like-tooltip-content {
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+  }
 }
 
 /* 💖 Like Tooltip - ข้อความขอบคุณเมื่อเปลี่ยนใจเป็น like */
