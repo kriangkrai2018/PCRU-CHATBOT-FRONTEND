@@ -13,6 +13,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css'
 // Import AOS
 import AOS from 'aos'
 import 'aos/dist/aos.css'
+import '@/assets/global.css'
 
 // --- ส่วนที่เพิ่มเข้ามา ---
 import axios from 'axios'
@@ -27,7 +28,10 @@ const axiosInstance = axios.create({
 
 // กำหนด Global Properties
 app.config.globalProperties.$axios = axiosInstance;
-app.config.globalProperties.$swal = Swal;
+
+// Use a Swal mixin that appends to document body to avoid being placed inside other stacking contexts
+const GlobalSwal = Swal.mixin({ target: (typeof document !== 'undefined') ? document.body : 'body' });
+app.config.globalProperties.$swal = GlobalSwal;
 // --- สิ้นสุดส่วนที่เพิ่ม ---
 
 app.use(router)

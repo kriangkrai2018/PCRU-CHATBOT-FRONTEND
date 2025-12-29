@@ -51,3 +51,187 @@
   bottom: 20px !important;
   right: 20px !important;
 }
+
+/* Ensure SweetAlert2 toasts sit above modal overlay blurs */
+.swal2-container.swal2-bottom-end,
+.swal2-container.swal2-top-end,
+.swal2-container.swal2-bottom-start,
+.swal2-container.swal2-top-start {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  z-index: 2147483647 !important; /* highest safe z-index */
+  pointer-events: none !important; /* container itself should not block clicks */
+}
+
+/* Toast content should accept pointer events and sit above overlays */
+.swal2-toast {
+  pointer-events: auto !important;
+  z-index: 2147483647 !important;
+}
+
+/* Compact centered confirmation dialog look (apple-like buttons) */
+.swal2-popup.swal2-toast-center {
+  border-radius: 12px !important;
+  padding: 18px 22px !important;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important;
+  max-width: 480px !important;
+  z-index: 2147483648 !important; /* Ensure above overlays */
+}
+
+.swal2-popup.swal2-toast-center .swal2-icon {
+  width: 48px !important;
+  height: 48px !important;
+  margin: 6px auto 8px auto !important;
+}
+.swal2-popup.swal2-toast-center .swal2-title {
+  font-size: 20px !important;
+  margin-bottom: 6px !important;
+}
+.swal2-popup.swal2-toast-center .swal2-content {
+  font-size: 14px !important;
+  margin-bottom: 10px !important;
+}
+.swal2-popup.swal2-toast-center .swal2-actions {
+  display: flex !important;
+  gap: 10px !important;
+  justify-content: center !important;
+}
+
+/* Apple-style confirm (primary) */
+.apple-swal-confirm,
+.swal2-popup.swal2-toast-center .swal2-confirm.apple-swal-confirm,
+.swal2-popup.swal2-toast-center .swal2-confirm.swal2-styled {
+  background: linear-gradient(135deg, #007AFF 0%, #0051D4 100%) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 10px !important;
+  padding: 8px 16px !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  box-shadow: 0 6px 18px rgba(0, 90, 255, 0.14) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 36px !important;
+}
+.swal2-popup.swal2-toast-center .swal2-confirm.apple-swal-confirm:hover,
+.swal2-popup.swal2-toast-center .swal2-confirm.swal2-styled:hover,
+.apple-swal-confirm:hover { transform: translateY(-1px) !important; }
+
+/* Apple-style cancel (secondary) */
+.apple-swal-cancel,
+.swal2-popup.swal2-toast-center .swal2-cancel.apple-swal-cancel,
+.swal2-popup.swal2-toast-center .swal2-cancel.swal2-styled {
+  background: rgba(0, 0, 0, 0.06) !important;
+  color: #1d1d1f !important;
+  border: none !important;
+  border-radius: 10px !important;
+  padding: 8px 14px !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  min-height: 36px !important;
+}
+.swal2-popup.swal2-toast-center .swal2-cancel.apple-swal-cancel:hover,
+.swal2-popup.swal2-toast-center .swal2-cancel.swal2-styled:hover,
+.apple-swal-cancel:hover { background: rgba(0,0,0,0.12) !important; }
+/* Ensure swal containers are above other overlays */
+.swal2-container { z-index: 2147483648 !important; }
+
+/* High-specificity overrides for SweetAlert2 buttons (covers default swal2-styled and our custom classes) */
+body .swal2-container .swal2-popup .swal2-styled,
+body .swal2-container .swal2-popup .swal2-styled.swal2-confirm,
+body .swal2-container .swal2-popup .swal2-styled.swal2-cancel,
+.swal2-popup .swal2-styled,
+.swal2-popup .swal2-confirm,
+.swal2-popup .swal2-cancel {
+  border: none !important;
+  outline: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+}
+
+/* Confirm (primary) */
+body .swal2-container .swal2-popup .swal2-styled.swal2-confirm,
+.swal2-popup .swal2-styled.swal2-confirm,
+.swal2-popup .swal2-confirm {
+  background: linear-gradient(135deg, #007AFF 0%, #0051D4 100%) !important;
+  color: #ffffff !important;
+  border-radius: 10px !important;
+  padding: 8px 16px !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  box-shadow: 0 6px 18px rgba(0, 90, 255, 0.14) !important;
+  min-width: 72px !important;
+  height: 36px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Cancel (secondary) */
+body .swal2-container .swal2-popup .swal2-styled.swal2-cancel,
+.swal2-popup .swal2-styled.swal2-cancel,
+.swal2-popup .swal2-cancel {
+  background: rgba(0,0,0,0.06) !important;
+  color: #1d1d1f !important;
+  border-radius: 10px !important;
+  padding: 8px 14px !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  min-width: 64px !important;
+  height: 36px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Remove default focus ring and use subtle box-shadow */
+.swal2-popup .swal2-styled:focus {
+  box-shadow: 0 0 0 4px rgba(0,122,255,0.12) !important;
+  outline: none !important;
+}
+
+/* If SweetAlert injects inline styles, increase specificity further */
+.swal2-popup .swal2-confirm[style],
+.swal2-popup .swal2-cancel[style] {
+  background: none !important;
+}
+
+/* Force styling for inline HTML confirm buttons inside table rows */
+button.apple-swal-confirm,
+button.apple-swal-confirm:focus,
+button.apple-swal-confirm:hover {
+  background: linear-gradient(135deg, #007AFF 0%, #0051D4 100%) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 6px 18px rgba(0, 90, 255, 0.14) !important;
+  border-radius: 10px !important;
+  padding: 8px 14px !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 34px !important;
+}
+
+button.apple-swal-cancel,
+button.apple-swal-cancel:focus,
+button.apple-swal-cancel:hover {
+  background: rgba(0,0,0,0.06) !important;
+  color: #1d1d1f !important;
+  border: none !important;
+  border-radius: 10px !important;
+  padding: 8px 12px !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  min-height: 34px !important;
+}
+
+/* Ensure the inline confirm buttons are displayed properly in the row-action container */
+.row-actions > button.apple-swal-confirm,
+.row-actions > button.apple-swal-cancel {
+  margin-left: 6px !important;
+  margin-right: 6px !important;
+}

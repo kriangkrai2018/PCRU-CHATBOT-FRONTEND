@@ -40,30 +40,40 @@
               <p class="section-desc">ผู้ช่วยอัจฉริยะที่พร้อมตอบทุกข้อสงสัยเกี่ยวกับ PCRU</p>
               
               <div class="feature-grid">
-                <div class="feature-card">
-                  <div class="icon-circle purple">
-                    <i class="bi bi-mortarboard-fill"></i>
+                <template v-if="featureCategories.length">
+                  <div class="feature-card" v-for="(fc, idx) in featureCategories" :key="fc.CategoriesID || idx">
+                    <div class="icon-circle" :class="iconColor(fc)">
+                      <i :class="iconClass(fc)"></i>
+                    </div>
+                    <span>{{ fc.CategoriesName || fc.CategoriesID || '—' }}</span>
                   </div>
-                  <span>ทุนการศึกษา</span>
-                </div>
-                <div class="feature-card">
-                  <div class="icon-circle orange">
-                    <i class="bi bi-house-door-fill"></i>
+                </template>
+                <template v-else>
+                  <div class="feature-card">
+                    <div class="icon-circle purple">
+                      <i class="bi bi-mortarboard-fill"></i>
+                    </div>
+                    <span>ทุนการศึกษา</span>
                   </div>
-                  <span>หอพัก</span>
-                </div>
-                <div class="feature-card">
-                  <div class="icon-circle green">
-                    <i class="bi bi-calendar-event-fill"></i>
+                  <div class="feature-card">
+                    <div class="icon-circle orange">
+                      <i class="bi bi-house-door-fill"></i>
+                    </div>
+                    <span>หอพัก</span>
                   </div>
-                  <span>กิจกรรม</span>
-                </div>
-                <div class="feature-card">
-                  <div class="icon-circle blue">
-                    <i class="bi bi-file-earmark-text-fill"></i>
+                  <div class="feature-card">
+                    <div class="icon-circle green">
+                      <i class="bi bi-calendar-event-fill"></i>
+                    </div>
+                    <span>กิจกรรม</span>
                   </div>
-                  <span>เอกสาร</span>
-                </div>
+                  <div class="feature-card">
+                    <div class="icon-circle blue">
+                      <i class="bi bi-file-earmark-text-fill"></i>
+                    </div>
+                    <span>เอกสาร</span>
+                  </div>
+                </template>
               </div>
             </section>
 
@@ -167,7 +177,28 @@ export default {
         { q: 'Bot ตอบคำถามเรื่องอะไรได้บ้าง?', a: 'สามารถตอบข้อมูลเกี่ยวกับทุนการศึกษา, หอพัก, การลงทะเบียนเรียน และบริการต่างๆ สำหรับนักศึกษา PCRU' },
         { q: 'ต้องพิมพ์ภาษาทางการไหม?', a: 'ไม่จำเป็นครับ สามารถพิมพ์ภาษาพูดปกติได้เลย เช่น "อยากรู้เรื่องหอพัก", "สมัครทุนยังไง"' },
         { q: 'ข้อมูลเชื่อถือได้หรือไม่?', a: 'ข้อมูลทั้งหมดถูกดึงมาจากฐานข้อมูลของมหาวิทยาลัยโดยตรง และมีการอัปเดตอย่างสม่ำเสมอ' }
-      ]
+      ],
+      categories: [],
+      categoriesLoading: false
+    }
+  },
+  computed: {
+    featureCategories() {
+      // Try to find by common keywords, fallback to first 4 categories
+      const desired = ['ทุน','หอ','กิจกรรม','เอกสาร'];
+      const list = Array.isArray(this.categories) ? this.categories : [];
+      const result = [];
+      desired.forEach(k => {
+        const found = list.find(c => String(c.CategoriesName || '').includes(k));
+        if (found && !result.find(r => r.CategoriesID === found.CategoriesID)) result.push(found);
+      });
+      // fill with first categories if missing
+      let i = 0;
+      while (result.length < 4 && i < list.length) {
+        const c = list[i++];
+        if (!result.find(r => r.CategoriesID === c.CategoriesID)) result.push(c);
+      }
+      return result;
     }
   },
   methods: {
@@ -176,7 +207,41 @@ export default {
     },
     toggleFaq(index) {
       this.openFaq = this.openFaq === index ? null : index;
+    },
+    async loadCategories() {
+      try {
+        this.categoriesLoading = true;
+        const res = await this.$axios.get('/getcategories');
+        const raw = res.data?.data ?? res.data;
+        if (Array.isArray(raw)) this.categories = raw;
+        else if (raw && Array.isArray(raw.categories)) this.categories = raw.categories;
+        else this.categories = [];
+      } catch (e) {
+        console.error('Failed to load categories for help panel', e);
+        this.categories = [];
+      } finally {
+        this.categoriesLoading = false;
+      }
+    },
+    iconClass(cat) {
+      const name = String(cat.CategoriesName || '').toLowerCase();
+      if (name.includes('ทุน')) return 'bi bi-mortarboard-fill';
+      if (name.includes('หอ')) return 'bi bi-house-door-fill';
+      if (name.includes('กิจ')) return 'bi bi-calendar-event-fill';
+      if (name.includes('เอกสาร') || name.includes('file') || name.includes('document')) return 'bi bi-file-earmark-text-fill';
+      return 'bi bi-tag-fill';
+    },
+    iconColor(cat) {
+      const name = String(cat.CategoriesName || '').toLowerCase();
+      if (name.includes('ทุน')) return 'purple';
+      if (name.includes('หอ')) return 'orange';
+      if (name.includes('กิจ')) return 'green';
+      if (name.includes('เอกสาร')) return 'blue';
+      return 'blue';
     }
+  },
+  mounted() {
+    this.loadCategories();
   }
 }
 </script>

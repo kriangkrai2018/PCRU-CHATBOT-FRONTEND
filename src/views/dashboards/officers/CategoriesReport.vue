@@ -801,7 +801,7 @@ function closeModal() { showFileModal.value = false; }
 /* Modal */
 .apple-modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px);
-  z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;
+  z-index: 99; display: flex; align-items: center; justify-content: center; padding: 20px;
 }
 .apple-modal-content {
   background: rgba(255,255,255,0.95); backdrop-filter: blur(20px);

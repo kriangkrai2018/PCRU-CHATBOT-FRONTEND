@@ -519,7 +519,7 @@ const saveCrudForm = async () => {
     await fetchCategories();
   } catch (err) {
     console.error(err);
-    $swal?.fire({ icon: 'error', title: 'Error', text: err.response?.data?.message || 'Operation failed' });
+    $swal?.fire({ icon: 'error', title: 'Error', text: err.response?.data?.message || 'Operation failed', toast: true, position: 'bottom-end', timer: 4000, showConfirmButton: false });
   } finally {
     isSaving.value = false;
   }
@@ -581,7 +581,7 @@ const saveUpload = async () => {
     await fetchCategories();
     closeUploadModal();
   } catch (err) {
-    $swal?.fire({ icon: 'error', title: 'Upload Failed', text: err.response?.data?.message || err.message });
+    $swal?.fire({ icon: 'error', title: 'Upload Failed', text: err.response?.data?.message || err.message, toast: true, position: 'bottom-end', timer: 4000, showConfirmButton: false });
   } finally {
     isUploading.value = false;
   }
@@ -1040,7 +1040,7 @@ onUnmounted(() => {
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  z-index: 9999; /* FIX: Increased Z-Index to prevent sidebar overlap */
+  z-index: 99; /* FIX: Increased Z-Index to prevent sidebar overlap */
   display: flex;
   align-items: center;
   justify-content: center;
