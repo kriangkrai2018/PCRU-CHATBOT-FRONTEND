@@ -2125,6 +2125,8 @@ export default {
     onAiMouseLeave() { this.aiTilt.x = 0; this.aiTilt.y = 0; this.aiTilt.s = 1 },
     // embedding removed; toggleEmbedScripts omitted
     toggle(i, evt, msg = null) {
+      // เก็บ element ปุ่มที่ถูกกดไว้ก่อน เพื่อใช้อ้างอิงตอนเลื่อนจอ
+      const clickedElement = evt ? evt.currentTarget : null
       // If a message object is provided, keep open state local to that message
       if (msg) {
         if (!msg.openIndexes) {
@@ -2143,8 +2145,11 @@ export default {
         if (idxMsg === -1) {
           this.$nextTick(() => {
             setTimeout(() => {
-              this.scrollToBottom()
+              // this.scrollToBottom() <-- Removed to prevent jumping
               this.updateAnchoring()
+              if (clickedElement && typeof clickedElement.scrollIntoView === 'function') {
+                clickedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+              }
             }, 300)
           })
         }
@@ -2160,23 +2165,16 @@ export default {
       // Save category state to localStorage
       this.saveCategoryState()
 
-      // Scroll the clicked category header into view
-      try {
-        const el = evt && evt.currentTarget
-        if (el && typeof el.scrollIntoView === 'function') {
-          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-        }
-      } catch (e) {
-        // ignore
-      }
-
       // Ensure chat panel scrolls to bottom when opening an accordion
       if (idx === -1) {
         this.$nextTick(() => {
           // Wait for DOM update and accordion transition to finish
           setTimeout(() => {
-            this.scrollToBottom()
+            // this.scrollToBottom() <-- Removed to prevent jumping
             this.updateAnchoring()
+            if (clickedElement && typeof clickedElement.scrollIntoView === 'function') {
+              clickedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+            }
           }, 300)
         })
       }

@@ -363,25 +363,7 @@ html.keyboard-open .clear-chat-btn {
   border-top: 10px solid rgba(107,44,145,0.95);
 }
 
-/* --- ส่วนมือถือ (แก้ปัญหาบีบ) --- */
-@media (max-width: 600px) {
-  .ai-speech-bubble {
-    width: max-content !important;
-    min-width: auto;
 
-    /* จัดตำแหน่งชิดซ้ายเหนือ Avatar */
-    left: 0;
-    transform: translateY(-100%);
-    margin-left: 0px;
-    text-align: left;
-  }
-
-  /* ย้ายหางลูกศรไปทางซ้ายเพื่อให้ตรงกับ Avatar */
-  .ai-speech-bubble .bubble-tail {
-    left: 32px;
-    transform: translateX(0);
-  }
-}
 
 .ai-speech-bubble .bubble-content {
   position: relative;
