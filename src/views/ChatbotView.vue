@@ -4,7 +4,6 @@
     <transition name="fade" @enter="animateOpen" @leave="animateClose">
       <div v-if="visible" class="chat-overlay" role="dialog" aria-label="Chat drawer">
         <div class="overlay-backdrop" @click="visible = false"></div>
-
         <aside class="chat-panel" :style="{ width: drawerWidth, height: viewportHeight }">
           <!-- Snowflakes (only in winter season: Nov-Feb) and if enabled -->
           <div v-if="isWinterSeason && snowEnabled" class="snowflakes" aria-hidden="true" :style="{ zIndex: snowZIndex }">
@@ -52,6 +51,7 @@
                 </path>
               </svg>
             </button>
+            <div class="overlay-backdrop-2"></div>
 
             
           </div>
@@ -73,7 +73,7 @@
             <!-- Chat Messages Area (always rendered so welcome content can show on first open) -->
             <div class="chat-messages" ref="messagesContainer">
               <!-- Welcome Bot Message with Categories -->
-              <div class="welcome-message" style="margin-top: 1rem;">
+              <div class="welcome-message" style="margin-top: 2rem;">
                 <!-- Top welcome typing placeholder removed — use a temporary bottom typing message inside `messages` instead -->
                 
                 <div v-if="showTopCategories" class="message-wrapper bot">
