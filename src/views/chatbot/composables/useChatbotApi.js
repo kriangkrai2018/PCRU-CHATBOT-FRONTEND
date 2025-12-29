@@ -215,7 +215,7 @@ export function useChatbotApi(axios) {
     if (typeof data.found !== 'undefined') result.found = !!data.found
     if (data.questionId) result.questionId = data.questionId
     if (!result.text || result.text.trim() === '') {
-      result.text = 'ดูเหมือนว่าคำถามนี้ยังเหนือความสามารถของฉันเลย ลองพูดคุยกับศูนย์บริการได้ค่ะ!'
+      result.text = 'ดูเหมือนว่าคำถามนี้ยังเกินความสามารถของหนูค่ะ ลองติดต่อศูนย์บริการหรือลองระบุรายละเอียดเพิ่มเติมได้ไหมคะ?'
     }
     return result
   }

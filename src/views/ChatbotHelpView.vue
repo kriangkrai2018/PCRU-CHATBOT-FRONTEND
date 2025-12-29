@@ -101,6 +101,54 @@
               </div>
             </section>
 
+            <!-- Section 2.5: Bot limitations & tips -->
+            <section class="apple-section fade-in-stagger" style="--delay: 0.25s">
+              <div class="section-header">
+                <div class="mini-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" class="draw-loop" />
+                  </svg>
+                </div>
+                <h3>การทำงานและข้อจำกัดของ Bot</h3>
+              </div>
+
+              <div class="example-container">
+                <div class="example-row bad">
+                  <div class="indicator">
+                    <i class="bi bi-info-circle-fill"></i>
+                  </div>
+                  <div class="text">
+                    <strong>เมื่อบอทตอบไม่ได้:</strong> "ขอโทษนะคะ หนูยังไม่มีข้อมูลนี้ในระบบ — ต้องการให้หนูส่งคำถามไปยังเจ้าหน้าที่ให้ไหมคะ?"
+                  </div>
+                </div>
+
+                <!-- Removed specific 'ข้อจำกัดการเผยแพร่' example. Added user refusal examples below. -->
+                <div class="example-row bad">
+                  <div class="indicator">
+                    <i class="bi bi-chat-left-dots-fill"></i>
+                  </div>
+                  <div class="text">
+                    <strong>ตัวอย่างคำปฏิเสธของผู้ใช้ (และการตอบของบอท):</strong>
+                    <ul style="margin:8px 0 0 14px; color: var(--text-secondary);">
+                      <li><strong>ผู้ใช้:</strong> "ไม่" → <strong>บอท:</strong> "เข้าใจค่ะ ไม่เป็นไรเลย ถ้าต้องการถามอย่างอื่น หนูช่วยได้ค่ะ"</li>
+                      <li><strong>ผู้ใช้:</strong> "ไม่เอาทุน" → <strong>บอท:</strong> "รับทราบค่ะ ถ้าไม่ต้องการทุน หนูแนะนำหมวดหมู่อื่นหรือช่วยหาข้อมูลที่ต้องการได้ไหมคะ?"</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section-header" style="margin-top: 12px">
+                <h3>เทคนิคการถามให้ได้คำตอบดีขึ้น</h3>
+              </div>
+
+              <ul style="padding-left: 18px; margin-top: 8px; color: var(--text-secondary);">
+                <li>ใช้คำที่ชัดเจน เช่น ชื่อทุน/ชื่อกิจกรรม พร้อมระบุปีหรือหน่วยงาน</li>
+                <li>เพิ่มคำว่า "PDF" หรือ "ดาวน์โหลด" เมื่อมองหาเอกสาร</li>
+                <li>ถามเป็นขั้นตอน หากต้องการขั้นตอนปฏิบัติ เช่น "วิธีสมัครทุน — ขั้นตอนอะไรบ้าง"</li>
+                <li>หากไม่เจอ ให้ขยายคำอธิบาย เช่น ระบุปี หรือคำค้นเพิ่มเติม</li>
+              </ul>
+            </section>
+
             <!-- Section 3: FAQ Accordion -->
             <section class="apple-section fade-in-stagger" style="--delay: 0.3s">
                <div class="section-header">
@@ -168,7 +216,7 @@ export default {
       openFaq: 0,
       faqs: [
         { q: 'Bot ตอบคำถามเรื่องอะไรได้บ้าง?', a: 'สามารถตอบข้อมูลเกี่ยวกับทุนการศึกษา, หอพัก, การลงทะเบียนเรียน และบริการต่างๆ สำหรับนักศึกษา PCRU' },
-        { q: 'ต้องพิมพ์ภาษาทางการไหม?', a: 'ไม่จำเป็นครับ สามารถพิมพ์ภาษาพูดปกติได้เลย เช่น "อยากรู้เรื่องหอพัก", "สมัครทุนยังไง"' },
+        { q: 'ต้องพิมพ์ภาษาทางการไหม?', a: 'ไม่จำเป็นค่ะ สามารถพิมพ์ภาษาพูดปกติได้เลย เช่น "อยากรู้เรื่องหอพัก", "สมัครทุนยังไง"' },
         { q: 'ข้อมูลเชื่อถือได้หรือไม่?', a: 'ข้อมูลทั้งหมดถูกดึงมาจากฐานข้อมูลของมหาวิทยาลัยโดยตรง และมีการอัปเดตอย่างสม่ำเสมอ' }
       ],
       categories: [],
