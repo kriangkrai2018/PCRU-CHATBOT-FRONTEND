@@ -301,14 +301,14 @@
 
     <!-- Template Image Modal -->
     <div class="modal fade" ref="templateModalRef" id="templateModal" tabindex="-1" aria-labelledby="templateModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-dialog modal-dialog-centered modal-fullscreen">
         <div class="modal-content">
           <div class="modal-header border-0">
             <h5 class="modal-title w-100 text-center" id="templateModalLabel">Template Example</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @click="closeTemplateModal()"></button>
           </div>
           <div class="modal-body text-center">
-            <img :src="ex4Url" alt="Template Example" class="img-fluid">
+            <img :src="ex4Url" alt="Template Example" class="img-fluid" width="100%" height="100%">
           </div>
         </div>
       </div>
