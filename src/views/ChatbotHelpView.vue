@@ -40,38 +40,31 @@
               <p class="section-desc">ผู้ช่วยอัจฉริยะที่พร้อมตอบทุกข้อสงสัยเกี่ยวกับ PCRU</p>
               
               <div class="feature-grid">
-                <template v-if="featureCategories.length">
+                <!-- Loading placeholders while fetching categories -->
+                <template v-if="categoriesLoading">
+                  <div class="feature-card placeholder" v-for="i in 4" :key="'ph-'+i">
+                    <div class="icon-circle" style="opacity:0.2">
+                      <i class="bi bi-tag-fill"></i>
+                    </div>
+                    <span style="opacity:0.3">Loading…</span>
+                  </div>
+                </template>
+
+                <!-- Render categories provided by backend (max 4 from computed) -->
+                <template v-else>
                   <div class="feature-card" v-for="(fc, idx) in featureCategories" :key="fc.CategoriesID || idx">
                     <div class="icon-circle" :class="iconColor(fc)">
                       <i :class="iconClass(fc)"></i>
                     </div>
                     <span>{{ fc.CategoriesName || fc.CategoriesID || '—' }}</span>
                   </div>
-                </template>
-                <template v-else>
-                  <div class="feature-card">
-                    <div class="icon-circle purple">
-                      <i class="bi bi-mortarboard-fill"></i>
-                    </div>
-                    <span>ทุนการศึกษา</span>
-                  </div>
-                  <div class="feature-card">
-                    <div class="icon-circle orange">
-                      <i class="bi bi-house-door-fill"></i>
-                    </div>
-                    <span>หอพัก</span>
-                  </div>
-                  <div class="feature-card">
-                    <div class="icon-circle green">
-                      <i class="bi bi-calendar-event-fill"></i>
-                    </div>
-                    <span>กิจกรรม</span>
-                  </div>
-                  <div class="feature-card">
+
+                  <!-- If backend returned no categories, show an informative card -->
+                  <div v-if="!featureCategories.length && !categoriesLoading" class="feature-card no-data">
                     <div class="icon-circle blue">
-                      <i class="bi bi-file-earmark-text-fill"></i>
+                      <i class="bi bi-tag-fill"></i>
                     </div>
-                    <span>เอกสาร</span>
+                    <span>ไม่มีหมวดหมู่</span>
                   </div>
                 </template>
               </div>
@@ -185,7 +178,7 @@ export default {
   computed: {
     featureCategories() {
       // Try to find by common keywords, fallback to first 4 categories
-      const desired = ['ทุน','หอ','กิจกรรม','เอกสาร'];
+      const desired = [];
       const list = Array.isArray(this.categories) ? this.categories : [];
       const result = [];
       desired.forEach(k => {
