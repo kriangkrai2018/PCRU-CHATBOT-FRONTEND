@@ -796,6 +796,36 @@ const showInlineEdit = ref(false);
 const editLoading = ref(false);
 const savingInlineEdit = ref(false);
 const inlineCategories = ref([]);
+
+// จัดเรียงหมวดหมู่สำหรับ Dropdown (แยก Main/Sub และกำหนด isMain)
+const sortedInlineCategories = computed(() => {
+  const raw = inlineCategories.value || [];
+  const result = [];
+  
+  // 1. หาหมวดหมู่หลัก (ไม่มีขีด -)
+  const mains = raw.filter(c => !String(c.CategoriesID).includes('-'))
+    .sort((a, b) => String(a.CategoriesID).localeCompare(String(b.CategoriesID), undefined, { numeric: true }));
+
+  for (const m of mains) {
+    // เพิ่มแม่ (isMain = true)
+    result.push({ ...m, isMain: true });
+    
+    // 2. หาหมวดหมู่ลูกของแม่นี้ (ขึ้นต้นด้วย "แม่-")
+    const pId = String(m.CategoriesID);
+    const subs = raw.filter(c => {
+      const cId = String(c.CategoriesID);
+      return cId !== pId && cId.startsWith(pId + '-');
+    }).sort((a, b) => String(a.CategoriesID).localeCompare(String(b.CategoriesID), undefined, { numeric: true }));
+    
+    // เพิ่มลูก (isMain = false)
+    for (const s of subs) {
+      result.push({ ...s, isMain: false });
+    }
+  }
+  
+  return result;
+});
+
 const inlineKeywordsInput = ref('');
 const inlineForm = ref({
   questionTitle: '',

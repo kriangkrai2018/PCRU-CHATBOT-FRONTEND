@@ -158,8 +158,14 @@
                 <label class="form-label fw-semibold">Category</label>
                 <select class="form-select" v-model="inlineForm.categoriesId">
                   <option value="">-- เลือกหมวดหมู่ --</option>
-                  <option v-for="cat in inlineCategories" :key="cat.CategoriesID" :value="cat.CategoriesID">
-                    {{ cat.CategoriesName || cat.CategoriesID }}
+                  <option 
+                    v-for="cat in sortedInlineCategories" 
+                    :key="cat.CategoriesID" 
+                    :value="cat.CategoriesID"
+                    :class="cat.isMain ? 'fw-bold bg-light text-muted' : ''"
+                    :disabled="cat.isMain"
+                  >
+                    {{ cat.isMain ? '▸ ' : '  └ ' }}{{ cat.CategoriesName || cat.CategoriesID }}
                   </option>
                 </select>
               </div>
@@ -214,6 +220,38 @@ const showInlineEdit = ref(false);
 const editLoading = ref(false);
 const savingInlineEdit = ref(false);
 const inlineCategories = ref([]);
+
+// จัดเรียงหมวดหมู่สำหรับ Dropdown (แยก Main/Sub และกำหนด isMain)
+const sortedInlineCategories = computed(() => {
+  const raw = inlineCategories.value || [];
+  const result = [];
+  // กรองเฉพาะรายการที่มี CategoriesID เท่านั้น เพื่อป้องกัน Error และ key ซ้ำ
+  const validRaw = Array.isArray(raw) ? raw.filter(c => c && c.CategoriesID != null) : [];
+
+  // 1. หาหมวดหมู่หลัก (ไม่มีขีด -)
+  const mains = validRaw.filter(c => !String(c.CategoriesID).includes('-'))
+    .sort((a, b) => String(a.CategoriesID).localeCompare(String(b.CategoriesID), undefined, { numeric: true }));
+
+  for (const m of mains) {
+    // เพิ่มแม่ (isMain = true)
+    result.push({ ...m, isMain: true });
+
+    // 2. หาหมวดหมู่ลูกของแม่นี้ (ขึ้นต้นด้วย "แม่-")
+    const pId = String(m.CategoriesID);
+    const subs = validRaw.filter(c => {
+      const cId = String(c.CategoriesID);
+      return cId !== pId && cId.startsWith(pId + '-');
+    }).sort((a, b) => String(a.CategoriesID).localeCompare(String(b.CategoriesID), undefined, { numeric: true }));
+
+    // เพิ่มลูก (isMain = false)
+    for (const s of subs) {
+      result.push({ ...s, isMain: false });
+    }
+  }
+
+  return result;
+});
+
 const inlineKeywordsInput = ref('');
 const inlineForm = ref({
   questionTitle: '',
@@ -347,13 +385,14 @@ const removeInlineKeyword = (idx) => {
 const fetchInlineCategories = async () => {
   try {
     const resp = await $axios.get('/questionsanswers/categories');
-    inlineCategories.value = resp.data?.data || resp.data || [];
+    // ตรวจสอบว่าเป็น Array จริงๆ ก่อน assign
+    const data = resp.data?.data || resp.data;
+    inlineCategories.value = Array.isArray(data) ? data : [];
   } catch (err) {
     console.error('Failed to load categories:', err);
     inlineCategories.value = [];
   }
 };
-
 const fetchInlineQuestion = async (questionId) => {
   const resp = await $axios.get('/questionsanswers');
   const list = Array.isArray(resp.data) ? resp.data : (resp.data?.data || []);
