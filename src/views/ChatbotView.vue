@@ -73,7 +73,7 @@
             <!-- Chat Messages Area (always rendered so welcome content can show on first open) -->
             <div class="chat-messages" ref="messagesContainer">
               <!-- Welcome Bot Message with Categories -->
-              <div class="welcome-message" style="margin-top: 3rem;">
+              <div class="welcome-message" style="margin-top: 1rem;">
                 <!-- Top welcome typing placeholder removed — use a temporary bottom typing message inside `messages` instead -->
                 
                 <div v-if="showTopCategories" class="message-wrapper bot">

@@ -6,8 +6,15 @@
   position: relative; 
   width: 100%;
   max-width: 370px;
-  margin: 0 auto;
+  /* Desktop: pin to right-bottom look */
+  margin-left: auto;   /* push to right */
+  margin-right: 24px;  /* spacing from right edge */
+  margin-bottom: 24px; /* spacing from bottom edge */
+  margin-top: auto;    /* push to bottom when overlay is flex column */
   height: 100vh;
+  /* make it look like a floating chat on desktop */
+  max-height: calc(100vh - 48px);
+  border-radius: 24px;
   /* iOS safe area support */
   height: -webkit-fill-available;
   min-height: 100vh;
@@ -3183,7 +3190,16 @@ body.no-effects .apple-help-button::after { display: none !important; }
 }
 
 @media (max-width: 640px) {
+  /* Ensure overlay and panel are pinned to the right edge on small screens */
+  .chat-overlay {
+    justify-content: flex-end !important;
+  }
+
   .chat-panel { 
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
     width: 100% !important; 
     max-width: none !important;
     margin: 0 !important;
@@ -3192,6 +3208,7 @@ body.no-effects .apple-help-button::after { display: none !important; }
     /* remove side gutter while keeping safe-area padding on notch devices */
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
+    box-shadow: none !important;
   }
   
   .category-card { margin: 8px; }
@@ -3247,6 +3264,57 @@ body.no-effects .apple-help-button::after { display: none !important; }
   .btn-send {
     width: 48px;
     height: 48px;
+  }
+
+  /* Make bot chat bubbles use full available width on narrow screens */
+  .message-bubble,
+  .message-bubble.bot {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 8px 0 !important;
+    box-sizing: border-box;
+    border-radius: 14px !important;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  /* Keep user bubbles narrower and right-aligned on mobile */
+  .message-bubble.user {
+    max-width: 72% !important;
+    width: auto !important;
+    margin: 8px 0 8px auto !important;
+    box-sizing: border-box;
+    border-radius: 14px !important;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+/* Pin chat to the right only on large (desktop) screens */
+@media (min-width: 1200px) {
+  .chat-overlay {
+    justify-content: flex-end !important;
+  }
+
+  .chat-panel {
+    position: fixed !important;
+    right: 0 !important;
+    top: 0 !important;
+    margin: 0 !important;
+    width: 370px !important;
+    max-width: 370px !important;
+    border-left: 0.5px solid rgba(255, 255, 255, 0.4);
+    box-shadow: -24px 0 48px rgba(0,0,0,0.12), -4px 0 12px rgba(0,0,0,0.06);
+    z-index: 1401;
+    left: auto !important;
+    transform: none !important;
+  }
+
+  /* Override inline transform/left styles applied by JS so panel stays flush-right on desktop */
+  .chat-panel[style] {
+    left: auto !important;
+    right: 0 !important;
+    transform: none !important;
   }
 }
 
