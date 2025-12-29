@@ -128,7 +128,8 @@
                   <th>ID</th>
                   <th>Category Name</th>
                   <th>Type</th>
-                  <th>Document</th>
+                  <th>Contact</th>
+                  <th>File</th>
                 </tr>
               </thead>
               <tbody>
@@ -150,6 +151,12 @@
                       <span :class="isMain(cat) ? 'apple-badge-blue' : 'apple-badge-gray'">
                         {{ isMain(cat) ? 'Main' : 'Sub' }}
                       </span>
+                    </td>
+                    <td class="contact-cell">
+                      <div v-if="cat.Contact">
+                        <div v-for="(cc, i) in parseContacts(cat.Contact)" :key="i" class="small text-secondary">{{ cc }}</div>
+                      </div>
+                      <span v-else class="text-muted small">-</span>
                     </td>
                     <td>
                       <template v-if="cat.CategoriesPDF">
@@ -175,6 +182,12 @@
                       </td>
                       <td class="ps-4 text-secondary">{{ sub.CategoriesName }}</td>
                       <td><span class="apple-badge-gray-outline">Sub</span></td>
+                      <td class="contact-cell">
+                        <div v-if="sub.Contact">
+                          <div v-for="(cc, i) in parseContacts(sub.Contact)" :key="i" class="small text-secondary">{{ cc }}</div>
+                        </div>
+                        <span v-else class="text-muted small">-</span>
+                      </td>
                       <td>
                         <template v-if="sub.CategoriesPDF">
                           <button @click.prevent="openFile(sub.CategoriesPDF, sub.CategoriesName)" class="file-link-btn">
@@ -189,7 +202,7 @@
                 </template>
 
                 <tr v-if="(Array.isArray(visibleParents) ? visibleParents.length : (visibleParents || []).length) === 0">
-                  <td colspan="5" class="text-center text-muted py-5">
+                  <td colspan="6" class="text-center text-muted py-5">
                     <div class="empty-state">
                       <i class="bi bi-folder-x"></i>
                       <p>No categories found</p>
@@ -238,7 +251,7 @@
                   <i class="bi bi-file-earmark-pdf-fill"></i>
                 </div>
                 <div>
-                  <h6 class="m-0 fw-semibold text-dark">Document Preview</h6>
+                  <h6 class="m-0 fw-semibold text-dark">File Preview</h6>
                   <small class="text-secondary text-truncate d-block" style="max-width: 300px;">{{ modalFileName }}</small>
                 </div>
               </div>
@@ -337,6 +350,12 @@ onUnmounted(() => { if (ws) ws.disconnect(); });
 function hideIfFour(id) { return id != null && /^\d{4}$/.test(String(id).trim()); }
 function isThreeDigits(id) { return id != null && /^\d{3}$/.test(String(id).trim()); }
 function toggleExpand(id) { expanded.value[id] = !expanded.value[id]; }
+
+// Parse contact field into lines (supports ' ||| ' separator and newlines)
+function parseContacts(str) {
+  if (!str) return [];
+  return String(str).split(/ \|\|\| |\n/).map(s => s.trim()).filter(Boolean);
+}
 
 // Data Computations
 const allItems = computed(() => {
@@ -594,7 +613,7 @@ function pdfIconClass(val) {
 
 function openFile(fileValue, name) {
   modalFileUrl.value = pdfUrl(fileValue);
-  modalFileName.value = name || 'Document';
+  modalFileName.value = name || 'File';
   showFileModal.value = true;
 }
 function closeModal() { showFileModal.value = false; }
@@ -739,6 +758,10 @@ function closeModal() { showFileModal.value = false; }
   font-size: 0.9rem; transition: all 0.2s;
 }
 .search-input:focus { background: white; border-color: var(--apple-blue); outline: none; box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15); }
+
+/* Contact column: show full text, multi-line */
+.contact-cell { min-width: 220px; max-width: 380px; word-break: break-word; }
+.contact-cell .small { display: block; white-space: normal; }
 .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #86868b; }
 .search-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: none; color: #86868b; cursor: pointer; }
 
