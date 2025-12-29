@@ -544,11 +544,26 @@ const confirmDelete = async (cat) => {
 
   if (result?.isConfirmed) {
     try {
-      await $axios.delete(`/categories/crud/delete/${cat.CategoriesID}`);
-      $swal?.fire({ icon: 'success', title: 'Deleted', text: 'ลบหมวดหมู่เรียบร้อย', toast: true, position: 'bottom-end', timer: 2000, showConfirmButton: false });
-      await fetchCategories();
+      const resp = await $axios.delete(`/categories/crud/delete/${cat.CategoriesID}`);
+      // If backend indicates it was already removed, show info and refresh
+      if (resp?.data && resp.data.data && resp.data.data.alreadyRemoved) {
+        await fetchCategories();
+        $swal?.fire({ icon: 'info', title: 'Removed', text: 'หมวดหมู่นี้ถูกลบไปแล้ว', toast: true, position: 'bottom-end', timer: 2000, showConfirmButton: false });
+      } else {
+        $swal?.fire({ icon: 'success', title: 'Deleted', text: 'ลบหมวดหมู่เรียบร้อย', toast: true, position: 'bottom-end', timer: 2000, showConfirmButton: false });
+        await fetchCategories();
+      }
     } catch (err) {
-      $swal?.fire({ icon: 'error', title: 'Failed', text: err.response?.data?.message || 'Delete failed' });
+      // If there are linked Q&A entries, show message from server
+      if (err.response?.status === 400 && err.response?.data?.qaCount) {
+        $swal?.fire({ icon: 'error', title: 'Failed', text: err.response?.data?.message || 'Delete failed' });
+      } else if (err.response?.status === 404) {
+        // Resource not found: refresh list and show informative message
+        await fetchCategories();
+        $swal?.fire({ icon: 'info', title: 'Not Found', text: 'ไม่พบหมวดหมู่ที่ต้องการลบ (อาจถูกลบไปแล้ว)' });
+      } else {
+        $swal?.fire({ icon: 'error', title: 'Failed', text: err.response?.data?.message || 'Delete failed' });
+      }
     }
   }
 };
