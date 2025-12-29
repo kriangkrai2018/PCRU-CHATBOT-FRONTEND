@@ -1,87 +1,166 @@
 <template>
-  <div class="">
-    <div class="card p-4 bg-light shadow-sm mb-4 rounded-4">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="fs-5 mb-0">Keywords Report</h3>
-        <span v-if="wsConnected" class="badge bg-success">
-          <i class="bi bi-wifi"></i> Live
-        </span>
-        <span v-else class="badge bg-secondary">
-          <i class="bi bi-wifi-off"></i> Offline
-        </span>
-      </div>
-      <div v-if="keywordsLoading" class="text-center py-3">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
-        <p class="mt-2">Loading keywords data...</p>
-      </div>
-      <div v-else-if="keywordsError" class="alert alert-danger" role="alert">
-        Error: {{ keywordsError }}
-      </div>
-      <div v-else>
-        <div class="row">
-          <div class="col-12 col-md-6 mb-3">
-            <!-- removed card/heading; keep chart only -->
-            <div class="p-0">
-              <PieChart :chart-data="keywordsPieChartData" :chart-options="chartOptions" style="height: 260px;" />
-            </div>
+  <div class="dashboard-container">
+    <!-- Main Content -->
+    <div class="container-fluid pt-2 px-4 pb-5">
+      <!-- Header -->
+      <div class="d-flex align-items-center justify-content-between mb-4 fade-in-up">
+        <div class="d-flex align-items-center gap-3">
+          <!-- Apple Icon Box (Teal for Keywords) -->
+          <div class="apple-icon-box teal-gradient">
+            <i class="bi bi-tags-fill text-white"></i>
           </div>
-          <div class="col-12 col-md-6 mb-3">
-            <!-- removed card/heading; keep chart only -->
-            <div class="p-0">
-              <BarChart :chart-data="keywordsBarChartData" :chart-options="barChartOptions" style="height: 260px;" />
-            </div>
+          <div>
+            <h3 class="page-title m-0">Keywords Report</h3>
+            <span class="text-secondary small">Search terms & trending topics</span>
           </div>
         </div>
+        
+        <!-- Live Status -->
+        <div class="d-flex align-items-center gap-2">
+          <div class="apple-status-badge" :class="{ 'online': wsConnected }">
+            <span class="status-dot"></span>
+            <span>{{ wsConnected ? 'Live Updates' : 'Offline' }}</span>
+          </div>
+        </div>
+      </div>
 
-        <div class="table-responsive mt-3">
-          <!-- Updated: total left, search right, same row -->
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="small text-muted flex-grow-1 text-start">Total: {{ totalEntries }}</div>
-            <div class="search-wrapper">
-              <ReportSearch v-model="localSearch" placeholder="ค้นหา keywords..." />
+      <!-- Loading State -->
+      <div v-if="keywordsLoading" class="text-center py-5 fade-in">
+        <div class="apple-spinner"></div>
+        <p class="mt-3 text-secondary">Loading keywords...</p>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="keywordsError" class="alert apple-alert-danger mx-auto" role="alert">
+        <i class="bi bi-exclamation-circle-fill me-2"></i> {{ keywordsError }}
+      </div>
+
+      <div v-else class="fade-in-up" style="animation-delay: 0.1s;">
+        
+        <!-- Stats Cards -->
+        <div class="row mb-4 g-3">
+          <div class="col-md-6">
+            <div class="apple-stat-card">
+              <div class="stat-icon-wrapper blue-gradient">
+                <i class="bi bi-hash"></i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">{{ totalEntries }}</div>
+                <div class="stat-label">Total Keywords</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="apple-stat-card">
+              <div class="stat-icon-wrapper orange-gradient">
+                <i class="bi bi-trophy-fill"></i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value text-truncate" style="max-width: 200px;" :title="topKeyword">{{ topKeyword }}</div>
+                <div class="stat-label">Top Keyword</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="row mb-4 g-4">
+          <div class="col-12 col-lg-6">
+            <div class="apple-card chart-card h-100">
+              <div class="card-header-clean">
+                <h5>Distribution</h5>
+              </div>
+              <div class="chart-area">
+                <PieChart :chart-data="keywordsPieChartData" :chart-options="chartOptions" style="height: 260px;" />
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-lg-6">
+            <div class="apple-card chart-card h-100">
+              <div class="card-header-clean">
+                <h5>Frequency Analysis</h5>
+              </div>
+              <div class="chart-area">
+                <BarChart :chart-data="keywordsBarChartData" :chart-options="barChartOptions" style="height: 260px;" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table Section -->
+        <div class="apple-card table-wrapper">
+          <div class="card-header-actions p-3 d-flex justify-content-between align-items-center">
+            
+            <!-- Total Counter -->
+            <div class="apple-counter-capsule">
+              <span class="label">Count</span>
+              <span class="separator">|</span>
+              <span class="count">{{ totalEntries }}</span>
+            </div>
+
+            <!-- Search -->
+            <div class="search-container">
+              <i class="bi bi-search search-icon"></i>
+              <input
+                type="text"
+                class="search-input"
+                placeholder="Search keywords..."
+                v-model="localSearch"
+              />
+              <button v-if="localSearch" class="search-clear" @click="localSearch = ''">
+                <i class="bi bi-x-circle-fill"></i>
+              </button>
             </div>
           </div>
 
-          <table class="table table-striped table-hover">
-            <thead>
-              <tr>
-                <th>KeywordID</th>
-                <th>KeywordText</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="kw in paginatedKeywords" :key="kw.KeywordID">
-                <td>{{ kw.KeywordID }}</td>
-                <td>{{ kw.KeywordText }}</td>
-              </tr>
-              <tr v-if="filteredKeywords.length === 0">
-                <td colspan="2" class="text-center text-muted py-3">No keywords data found</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table class="table apple-table mb-0">
+              <thead>
+                <tr>
+                  <th class="ps-4" style="width: 100px;">ID</th>
+                  <th>Keyword Text</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="kw in paginatedKeywords" :key="kw.KeywordID" class="align-middle apple-row">
+                  <td class="ps-4 fw-medium text-secondary">#{{ kw.KeywordID }}</td>
+                  <td class="py-3">
+                    <span class="keyword-pill">{{ kw.KeywordText }}</span>
+                  </td>
+                </tr>
+                <tr v-if="filteredKeywords.length === 0">
+                  <td colspan="2" class="text-center text-muted py-5">
+                    <div class="empty-state">
+                      <i class="bi bi-search"></i>
+                      <p>No keywords found</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-          <div class="d-flex justify-content-between align-items-center p-3 border-top mt-auto">
-            <div class="small text-muted">
-              Showing {{ startIndex }} to {{ endIndex }} of {{ totalEntries }} entries
+          <!-- Pagination -->
+          <div class="d-flex justify-content-between align-items-center p-3 border-top bg-white rounded-bottom-4">
+            <div class="small text-secondary">
+              Showing {{ startIndex }} - {{ endIndex }} of {{ totalEntries }}
             </div>
-            <nav aria-label="Page navigation for keywords">
+            <nav aria-label="Page navigation">
               <ul class="pagination pagination-sm mb-0 align-items-center">
                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                  <a class="page-link" href="#" @click.prevent="firstPage" aria-label="First">&laquo;</a>
+                  <a class="page-link" href="#" @click.prevent="firstPage">&laquo;</a>
                 </li>
                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                  <a class="page-link" href="#" @click.prevent="prevPage" aria-label="Previous">&lsaquo;</a>
+                  <a class="page-link" href="#" @click.prevent="prevPage">&lsaquo;</a>
                 </li>
                 <li v-for="p in pagesToShow" :key="p" class="page-item" :class="{ active: currentPage === p }">
-                  <a class="page-link page-num rounded-3" href="#" @click.prevent="goToPage(p)">{{ p }}</a>
+                  <a class="page-link page-num" href="#" @click.prevent="goToPage(p)">{{ p }}</a>
                 </li>
                 <li class="page-item" :class="{ disabled: currentPage === totalPages || totalPages === 0 }">
-                  <a class="page-link" href="#" @click.prevent="nextPage" aria-label="Next">&rsaquo;</a>
+                  <a class="page-link" href="#" @click.prevent="nextPage">&rsaquo;</a>
                 </li>
                 <li class="page-item" :class="{ disabled: currentPage === totalPages || totalPages === 0 }">
-                  <a class="page-link" href="#" @click.prevent="lastPage" aria-label="Last">&raquo;</a>
+                  <a class="page-link" href="#" @click.prevent="lastPage">&raquo;</a>
                 </li>
               </ul>
             </nav>
@@ -96,7 +175,9 @@
 import { ref, computed, watch, onMounted, onUnmounted, getCurrentInstance } from 'vue';
 import { PieChart, BarChart } from 'vue-chart-3';
 import { createWebSocketConnection, WS_ENDPOINTS } from '@/config/websocket';
-import ReportSearch from '@/components/ReportSearch.vue';
+import { Chart, registerables } from 'chart.js';
+
+Chart.register(...registerables);
 
 const props = defineProps({
   keywords: { type: Array, default: () => [] },
@@ -106,7 +187,6 @@ const props = defineProps({
   keywordsBarChartData: Object,
   chartOptions: Object,
   barChartOptions: Object,
-  // optional initial search from parent
   searchQueryKeywords: { type: String, default: '' },
 });
 
@@ -148,6 +228,19 @@ watch(localSearch, v => emit('update:searchQueryKeywords', v));
 // Defensive keyword list
 const allKeywords = computed(() => Array.isArray(props.keywords) ? props.keywords : []);
 
+// Compute top keyword from bar chart data if available
+const topKeyword = computed(() => {
+  if (props.keywordsBarChartData?.labels?.length > 0) {
+    // Assuming the chart is sorted or we just pick the first one for now
+    // A more robust way would be to find the index of max data
+    const data = props.keywordsBarChartData.datasets?.[0]?.data || [];
+    if (data.length === 0) return '-';
+    const maxIndex = data.indexOf(Math.max(...data));
+    return props.keywordsBarChartData.labels[maxIndex] || '-';
+  }
+  return '-';
+});
+
 // Filtered list by search (search KeywordID or KeywordText)
 const filteredKeywords = computed(() => {
   const q = (localSearch.value || '').toString().trim().toLowerCase();
@@ -160,7 +253,7 @@ const filteredKeywords = computed(() => {
 
 // Pagination
 const currentPage = ref(1);
-const itemsPerPage = ref(8);
+const itemsPerPage = ref(10); // Updated to 10 for better view
 
 watch(localSearch, () => { currentPage.value = 1; });
 
@@ -194,64 +287,135 @@ function lastPage() { goToPage(totalPages.value); }
 </script>
 
 <style scoped>
-.search-wrapper {
-  min-width: 260px;
-  max-width: 320px;
-  width: 100%;
-  margin-left: auto;
-}
-.input-group.search-input-group {
-  position: relative;
+@import '@/assets/dashboard-styles.css';
+@import '@/assets/main.css';
+@import '@/assets/pagination-styles.css';
+
+:root {
+  --apple-blue: #0071e3;
+  --apple-gray: #86868b;
+  --apple-light-bg: #F5F5F7;
+  --apple-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --card-radius: 18px;
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
-/* Pagination: NO border, NO background for arrows/non-active, but active page (current) has border/background */
-.pagination {
-  gap: 0.15rem;
+.dashboard-container {
+  font-family: var(--apple-font);
+  background-color: var(--apple-light-bg);
 }
 
-.pagination .page-link,
-.pagination .page-item.disabled .page-link {
-  border: none !important;
-  background: transparent !important;
-  color: #6c757d;
-  font-size: 1.05rem;
-  border-radius: 0.5rem !important;
-  min-width: 38px;
-  min-height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, color 0.15s;
-  box-shadow: none;
-  outline: none;
-  padding: 0.375rem 0.75rem;
+.page-title {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #1d1d1f;
 }
 
-.pagination .page-item.active .page-link {
-  background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%) !important;
-  color: #FFFFFF !important;
-  border: none !important;
-  font-weight: 600;
-  box-shadow: none;
+/* Animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
+.fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 
-.pagination .page-item.disabled .page-link {
-  color: #adb5bd;
-  pointer-events: none;
+/* Apple Icon Box */
+.apple-icon-box {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.25);
+  font-size: 1.5rem;
 }
+.teal-gradient { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); } /* A rich teal/purple mix or similar */
+/* Overriding teal gradient for a fresher look */
+.teal-gradient { background: linear-gradient(135deg, #2AF598 0%, #009EFD 100%); }
 
-.pagination .page-link:focus,
-.pagination .page-link:hover {
-  background: transparent !important;
-  color: #495057;
-  box-shadow: none;
+/* Status Badge */
+.apple-status-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255, 255, 255, 0.9); padding: 6px 12px;
+  border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: #86868b;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05);
 }
+.apple-status-badge.online {
+  color: #34C759; border-color: rgba(52, 199, 89, 0.2); background: rgba(52, 199, 89, 0.05);
+}
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: #86868b; }
+.apple-status-badge.online .status-dot { background: #34C759; box-shadow: 0 0 8px rgba(52, 199, 89, 0.4); }
 
-.pagination .page-num {
-  border-radius: 0.5rem !important;
+/* Stats Cards */
+.apple-stat-card {
+  background: white; border-radius: var(--card-radius); padding: 20px;
+  box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 16px;
+  transition: transform 0.2s, box-shadow 0.2s; border: 1px solid rgba(0,0,0,0.02);
 }
+.apple-stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
 
-.pagination {
-  margin-bottom: 0 !important;
+.stat-icon-wrapper {
+  width: 50px; height: 50px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; color: white;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
+.blue-gradient { background: linear-gradient(135deg, #0071e3 0%, #4facfe 100%); }
+.orange-gradient { background: linear-gradient(135deg, #FF9500 0%, #ffc371 100%); }
+
+.stat-value { font-size: 1.6rem; font-weight: 700; color: #1d1d1f; line-height: 1.1; }
+.stat-label { font-size: 0.85rem; color: #86868b; margin-top: 4px; font-weight: 500; }
+
+/* Cards & Charts */
+.apple-card {
+  background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px);
+  border-radius: var(--card-radius); box-shadow: var(--card-shadow);
+  overflow: hidden; border: 1px solid rgba(0,0,0,0.05);
+}
+.chart-card { padding: 20px; }
+.chart-area { position: relative; height: 260px; width: 100%; }
+.card-header-clean h5 { font-size: 1rem; font-weight: 600; color: #1d1d1f; margin: 0 0 16px 0; }
+
+/* Counter Capsule */
+.apple-counter-capsule {
+  display: inline-flex; align-items: center; background: #F2F2F7;
+  padding: 6px 14px; border-radius: 30px; color: #1d1d1f;
+  font-size: 0.9rem; font-weight: 500; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+}
+.apple-counter-capsule .label { color: #86868b; margin-right: 8px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.apple-counter-capsule .separator { color: #d1d1d6; margin-right: 8px; font-weight: 300; }
+.apple-counter-capsule .count { font-weight: 700; color: #0071e3; }
+
+/* Search */
+.search-container { position: relative; width: 240px; }
+.search-input {
+  width: 100%; padding: 8px 36px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1);
+  background: rgba(118, 118, 128, 0.08); font-size: 0.9rem; transition: all 0.2s;
+}
+.search-input:focus { background: white; border-color: var(--apple-blue); outline: none; box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15); }
+.search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #86868b; }
+.search-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: none; color: #86868b; cursor: pointer; }
+
+/* Table */
+.apple-table thead th {
+  background: rgba(249, 249, 251, 0.95); font-weight: 600; color: #86868b;
+  font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(0,0,0,0.08); padding: 16px;
+}
+.apple-table tbody td { padding: 14px 16px; border-bottom: 1px solid rgba(0,0,0,0.03); color: #1d1d1f; }
+.apple-table tr.apple-row:hover { background-color: rgba(0, 113, 227, 0.03); }
+
+/* Keyword Pill */
+.keyword-pill {
+  display: inline-block; padding: 6px 14px; border-radius: 20px;
+  background: rgba(0, 113, 227, 0.08); color: var(--apple-blue);
+  font-size: 0.9rem; font-weight: 500;
+  transition: all 0.2s;
+}
+.apple-row:hover .keyword-pill { background: rgba(0, 113, 227, 0.15); transform: translateX(2px); }
+
+/* Empty State */
+.empty-state { display: flex; flex-direction: column; align-items: center; color: var(--apple-gray); }
+.empty-state i { font-size: 2.5rem; margin-bottom: 8px; opacity: 0.5; }
+
+/* Pagination Override */
+.pagination .page-link { border: none; color: #1d1d1f; border-radius: 8px; margin: 0 2px; }
+.pagination .page-item.active .page-link { background: var(--apple-blue); color: white; box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3); }
 </style>

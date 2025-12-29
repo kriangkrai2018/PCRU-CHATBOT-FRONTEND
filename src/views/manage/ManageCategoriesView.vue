@@ -14,14 +14,15 @@
         </div>
 
         <div v-else>
+          <!-- Header Section -->
           <div class="d-block d-md-flex align-items-center justify-content-between mb-4">
             <div class="d-flex align-items-center gap-3">
               <h2 class="page-title m-0">จัดการหมวดหมู่</h2>
-              <button class="btn-add-apple" @click="openCrudModal" title="เพิ่มหมวดหมู่ใหม่">
-                <i class="bi bi-plus-lg"></i>
+              <button class="apple-btn-primary" @click="openCrudModal()">
+                <i class="bi bi-plus-lg me-2"></i>
                 <span>เพิ่มหมวดหมู่</span>
               </button>
-              <button class="btn-upload-apple" @click="openAddModal" title="อัพโหลด CSV">
+              <button class="apple-icon-btn-large" @click="openUploadModal" title="อัพโหลด CSV">
                 <i class="bi bi-cloud-upload"></i>
               </button>
             </div>
@@ -40,109 +41,102 @@
             </div>
           </div>
 
-          <div class="bg-white shadow-apple rounded-0 overflow-hidden">
+          <!-- Table Section -->
+          <div class="apple-card">
             <div class="table-responsive">
-              <table class="table table-hover mb-0">
+              <table class="table apple-table mb-0">
                 <thead>
                   <tr>
-                    <th class="fw-bold py-3 ps-3"></th>
-                    <th class="fw-bold py-3">CategoriesID</th>
-                    <th class="fw-bold py-3">CategoriesName</th>
-                    <th class="fw-bold py-3">Parent</th>
-                    <th class="fw-bold py-3">Contact</th>
-                    <th class="fw-bold py-3">CategoriesPDF</th>
-                    <th class="fw-bold py-3 text-center">Actions</th>
+                    <th class="ps-4" style="width: 50px;"></th>
+                    <th>CategoriesID</th>
+                    <th>CategoriesName</th>
+                    <th>Type</th>
+                    <th>Contact</th>
+                    <th>File</th>
+                    <th class="text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   <template v-for="(cat, idx) in visibleParents" :key="cat.CategoriesID">
-                    <tr class="align-middle" :class="isMain(cat) ? 'bg-primary-subtle' : ''">
-                      <td class="py-3 ps-3"></td>
-                      <td class="py-3 cat-id-cell">
-                        <div class="d-flex align-items-center">
-                          <div class="me-2" style="width:22px; display:flex; justify-content:center;">
-                            <template v-if="hasSubCategories(cat.CategoriesID, cat.CategoriesID)">
-                              <button class="btn btn-link btn-sm p-0" @click="toggleExpand(cat.CategoriesID)" style="font-size:1.0rem;">
-                                <i :class="expandedMap[cat.CategoriesID] ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
-                              </button>
-                            </template>
-                            <template v-else>
-                              <span aria-hidden="true" style="display:inline-block; width:14px;"></span>
-                            </template>
-                          </div>
-                          <div>{{ cat.CategoriesID }}</div>
-                        </div>
+                    <tr class="align-middle parent-row">
+                      <td class="ps-4">
+                        <button 
+                          v-if="hasSubCategories(cat.CategoriesID, cat.CategoriesID)" 
+                          class="expand-btn" 
+                          @click="toggleExpand(cat.CategoriesID)"
+                        >
+                          <i class="bi" :class="expandedMap[cat.CategoriesID] ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                        </button>
                       </td>
-                      <td class="py-3">{{ cat.CategoriesName }}</td>
-                      <td class="py-3">
-                        <span :class="isMain(cat) ? 'badge bg-primary' : 'badge bg-info'">
-                          {{ isMain(cat) ? 'main' : 'sub' }}
+                      <td class="cat-id-cell fw-semibold text-primary">
+                        {{ cat.CategoriesID }}
+                      </td>
+                      <td class="fw-medium text-dark">{{ cat.CategoriesName }}</td>
+                      <td>
+                        <span :class="isMain(cat) ? 'apple-badge-blue' : 'apple-badge-gray'">
+                          {{ isMain(cat) ? 'Main' : 'Sub' }}
                         </span>
                       </td>
-                      <td class="py-3 contact-cell">
+                      <td class="contact-cell">
                         <div v-if="cat.Contact">
-                          <div v-for="(cc, i) in parseContacts(cat.Contact)" :key="i" class="small text-muted">{{ cc }}</div>
+                          <div v-for="(cc, i) in parseContacts(cat.Contact)" :key="i" class="small text-secondary text-truncate" style="max-width: 200px;">{{ cc }}</div>
                         </div>
-                        <span v-else class="text-muted">-</span>
+                        <span v-else class="text-muted small">-</span>
                       </td>
-                      <td class="py-3">
+                      <td>
                         <template v-if="cat.CategoriesPDF">
-                          <a href="#" @click.prevent="openFile(cat.CategoriesPDF, cat.CategoriesName)" class="d-inline-flex align-items-center text-decoration-none">
-                            <i :class="pdfIconClass(cat.CategoriesPDF) + ' me-2'"></i>
-                            <span class="small">Read file</span>
-                          </a>
+                          <button @click.prevent="openFile(cat.CategoriesPDF, cat.CategoriesName)" class="file-link-btn">
+                            <i :class="pdfIconClass(cat.CategoriesPDF)"></i>
+                            <span>View</span>
+                          </button>
                         </template>
-                        <span v-else class="text-muted">-</span>
+                        <span v-else class="text-muted small">-</span>
                       </td>
-                      <td class="py-3 text-center">
+                      <td class="text-center">
                         <div class="row-actions">
-                          <button class="action-btn action-btn-edit" @click.stop="openEditModal(cat)" title="แก้ไข">
+                          <button class="action-btn edit" @click.stop="openEditModal(cat)" title="แก้ไข">
                             <i class="bi bi-pencil-square"></i>
                           </button>
-                          <button class="action-btn action-btn-delete" @click.stop="confirmDelete(cat)" title="ลบ">
+                          <button class="action-btn delete" @click.stop="confirmDelete(cat)" title="ลบ">
                             <i class="bi bi-trash"></i>
                           </button>
                         </div>
                       </td>
                     </tr>
 
+                    <!-- Sub Categories -->
                     <tr
                       v-for="sub in expandedMap[cat.CategoriesID] ? subCategories(cat.CategoriesID, cat.CategoriesID) : []"
                       :key="sub.CategoriesID"
-                      class="bg-light align-middle sub-row"
+                      class="sub-row"
                     >
-                      <td class="py-3"></td>
-                      <td class="py-3 cat-id-cell cat-id-sub">
-                        <div class="d-flex align-items-center">
-                          <div class="me-2" style="width:22px; display:flex; justify-content:center;">
-                            <span aria-hidden="true" style="display:inline-block; width:14px;"></span>
-                          </div>
-                          <div>{{ sub.CategoriesID }}</div>
-                        </div>
+                      <td></td>
+                      <td class="cat-id-cell ps-4 text-secondary">
+                        <span class="tree-line">└</span> {{ sub.CategoriesID }}
                       </td>
-                      <td class="py-3">{{ sub.CategoriesName }}</td>
-                      <td class="py-3"><span class="badge bg-info">sub</span></td>
-                      <td class="py-3 contact-cell">
+                      <td class="ps-4 text-dark">{{ sub.CategoriesName }}</td>
+                      <td><span class="apple-badge-gray">Sub</span></td>
+                      <td class="contact-cell">
                         <div v-if="sub.Contact">
-                          <div v-for="(cc, i) in parseContacts(sub.Contact)" :key="i" class="small text-muted">{{ cc }}</div>
+                          <div v-for="(cc, i) in parseContacts(sub.Contact)" :key="i" class="small text-secondary text-truncate">{{ cc }}</div>
                         </div>
-                        <span v-else class="text-muted">-</span>
+                        <span v-else class="text-muted small">-</span>
                       </td>
-                      <td class="py-3">
+                      <td>
                         <template v-if="sub.CategoriesPDF">
-                          <a href="#" @click.prevent="openFile(sub.CategoriesPDF, sub.CategoriesName)" class="d-inline-flex align-items-center text-decoration-none">
-                            <i :class="pdfIconClass(sub.CategoriesPDF) + ' me-2'"></i>
-                            <span class="small">Read file</span>
-                          </a>
+                          <button @click.prevent="openFile(sub.CategoriesPDF, sub.CategoriesName)" class="file-link-btn">
+                            <i :class="pdfIconClass(sub.CategoriesPDF)"></i>
+                            <span>View</span>
+                          </button>
                         </template>
-                        <span v-else class="text-muted">-</span>
+                        <span v-else class="text-muted small">-</span>
                       </td>
-                      <td class="py-3 text-center">
+                      <td class="text-center">
                         <div class="row-actions">
-                          <button class="action-btn action-btn-edit" @click.stop="openEditModal(sub)" title="แก้ไข">
+                          <button class="action-btn edit" @click.stop="openEditModal(sub)" title="แก้ไข">
                             <i class="bi bi-pencil-square"></i>
                           </button>
-                          <button class="action-btn action-btn-delete" @click.stop="confirmDelete(sub)" title="ลบ">
+                          <button class="action-btn delete" @click.stop="confirmDelete(sub)" title="ลบ">
                             <i class="bi bi-trash"></i>
                           </button>
                         </div>
@@ -151,35 +145,38 @@
                   </template>
 
                   <tr v-if="visibleParents.length === 0">
-                    <td colspan="7" class="text-center text-muted py-3">No categories data found</td>
+                    <td colspan="7" class="text-center text-muted py-5">
+                      <div class="empty-state">
+                        <i class="bi bi-folder-x"></i>
+                        <p>No categories found</p>
+                      </div>
+                    </td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
             <!-- Pagination footer -->
-            <div class="d-flex justify-content-between align-items-center p-3">
-              <div class="small text-muted">
+            <div class="d-flex justify-content-between align-items-center p-3 border-top">
+              <div class="small text-secondary">
                 Showing {{ categoriesStartIndex }} to {{ categoriesEndIndex }} of {{ categoriesTotalEntries }} entries
               </div>
               <nav aria-label="Page navigation">
-                <ul class="pagination mb-0 align-items-center">
+                <ul class="pagination pagination-sm mb-0">
                   <li class="page-item" :class="{ disabled: displayPage === 1 }">
-                    <a class="page-link" href="#" @click.prevent="categoriesFirstPage" aria-label="First">&laquo;</a>
+                    <a class="page-link" href="#" @click.prevent="categoriesFirstPage">&laquo;</a>
                   </li>
                   <li class="page-item" :class="{ disabled: displayPage === 1 }">
-                    <a class="page-link" href="#" @click.prevent="categoriesPrevPage" aria-label="Previous">&lsaquo;</a>
+                    <a class="page-link" href="#" @click.prevent="categoriesPrevPage">&lsaquo;</a>
                   </li>
-
                   <li v-for="page in localPagesToShow" :key="page" class="page-item" :class="{ active: displayPage === page }">
-                    <a class="page-link page-num rounded-3" href="#" @click.prevent="categoriesGoToPage(page)">{{ page }}</a>
-                  </li>
-
-                  <li class="page-item" :class="{ disabled: displayPage === localTotalPages }">
-                    <a class="page-link" href="#" @click.prevent="categoriesNextPage" aria-label="Next">&rsaquo;</a>
+                    <a class="page-link" href="#" @click.prevent="categoriesGoToPage(page)">{{ page }}</a>
                   </li>
                   <li class="page-item" :class="{ disabled: displayPage === localTotalPages }">
-                    <a class="page-link" href="#" @click.prevent="categoriesLastPage" aria-label="Last">&raquo;</a>
+                    <a class="page-link" href="#" @click.prevent="categoriesNextPage">&rsaquo;</a>
+                  </li>
+                  <li class="page-item" :class="{ disabled: displayPage === localTotalPages }">
+                    <a class="page-link" href="#" @click.prevent="categoriesLastPage">&raquo;</a>
                   </li>
                 </ul>
               </nav>
@@ -189,150 +186,33 @@
       </div>
     </main>
 
-    <!-- File Modal -->
-    <div ref="fileModalEl" class="modal fade file-modal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content">
-          <div class="file-modal-header-btns">
-            <a
-              v-if="modalFileUrl"
-              :href="modalFileUrl"
-              target="_blank"
-              rel="noopener"
-              class="btn file-modal-open"
-              :title="'Open in new tab'"
-            >
-              <span aria-hidden="true">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M6.364 13.657a.5.5 0 0 1 0-.707l6.647-6.647H9.5a.5.5 0 0 1 0-1h5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-1 0V7.343l-6.647 6.647a.5.5 0 0 1-.707 0z"/>
-                  <path d="M13.5 2a.5.5 0 0 1 .5.5v11a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11A.5.5 0 0 1 2.5 2h11zm-11-1A1.5 1.5 0 0 0 1 2.5v11A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 13.5 1h-11z"/>
-                </svg>
-              </span>
-            </a>
-            <button type="button" class="btn file-modal-close" aria-label="Close" @click="closeModal()">
-              <span aria-hidden="true">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M2.146 2.146a.5.5 0 0 1 .708 0L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854a.5.5 0 0 1 0-.708z"/>
-                </svg>
-              </span>
+    <!-- 1. CRUD Modal (Apple Style) -->
+    <transition name="apple-zoom">
+      <div v-if="showCrudModal" class="apple-modal-overlay" @click.self="closeCrudModal">
+        <div class="apple-modal-content">
+          <div class="apple-modal-header-bg"></div>
+          <div class="apple-modal-header">
+            <div class="d-flex flex-column">
+              <h5 class="apple-modal-title">{{ isEditing ? 'แก้ไขหมวดหมู่' : 'เพิ่มหมวดหมู่ใหม่' }}</h5>
+              <span class="apple-modal-subtitle">{{ isEditing ? 'Edit Category' : 'Create New Category' }}</span>
+            </div>
+            <button class="apple-close-btn" @click="closeCrudModal">
+              <i class="bi bi-x-lg"></i>
             </button>
           </div>
-          <div class="modal-body p-0">
-            <div v-if="isPdf(modalFileUrl)" style="height:80vh;">
-              <iframe :src="modalFileUrl" frameborder="0" style="width:100%; height:100%;"></iframe>
-            </div>
-            <div v-else class="py-4 text-center">
-              <p class="mb-3">Preview not available for this file type.</p>
-              <a :href="modalFileUrl" target="_blank" rel="noopener" class="btn btn-primary">Open / Download</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Upload Modal - Apple Style -->
-    <div class="modal fade" ref="bsModalRef" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content apple-modal rounded-4 p-3 shadow-lg">
-          <div class="modal-header border-0">
-            <div class="modal-title w-100 text-center" id="addCategoryModalLabel">
-              <div class="fs-5 fw-bold">อัพโหลดไฟล์</div>
-              <div class="text-muted fs-6">Categories CSV</div>
-            </div>
-            <button type="button" class="btn-close btn-close-custom" aria-label="Close" @click="hideModal()"></button>
-          </div>
-          <div class="modal-body">
-            <div class="mb-3">
-              <div
-                class="upload-drop-area-apple"
-                :class="{ 'has-file': uploadedFile }"
-                @drop.prevent="onFileDrop"
-                @dragover.prevent
-                @click="$refs.fileInput && $refs.fileInput.click()"
-              >
-                <div class="upload-icon-wrapper">
-                  <i class="bi bi-cloud-arrow-up"></i>
-                </div>
-                <div class="upload-text">
-                  <span v-if="!uploadedFile">ลากไฟล์มาวางที่นี่ หรือ <strong>คลิกเลือกไฟล์</strong></span>
-                  <span v-else class="file-selected">
-                    <i class="bi bi-file-earmark-check me-2"></i>{{ uploadedFile.name }}
-                  </span>
-                </div>
-                <div class="upload-hint">รองรับไฟล์ .csv เท่านั้น</div>
-                <input ref="fileInput" type="file" accept=".csv" class="d-none" @change="onFileChange" />
+          <div class="apple-modal-body">
+            <form @submit.prevent="saveCrudForm" class="apple-form-container">
+              
+              <div class="apple-input-group">
+                <label>ชื่อหมวดหมู่ (Category Name) <span class="text-danger">*</span></label>
+                <input type="text" class="apple-input" v-model="crudFormData.CategoriesName" required placeholder="เช่น ทุนการศึกษา" />
               </div>
 
-              <!-- Template / Download actions -->
-              <div class="d-flex align-items-center justify-content-center gap-3 mt-4">
-                <button type="button" class="btn-apple-secondary"
-                        @click.prevent="downloadTemplateFile" :disabled="isDownloadingTemplate">
-                  <i class="bi bi-file-earmark-text"></i>
-                  <span>Template</span>
-                  <span v-if="isDownloadingTemplate" class="spinner-border spinner-border-sm ms-2"></span>
-                </button>
-
-                <button type="button" class="btn-apple-secondary" @click.prevent="openTemplateModal">
-                  <i class="bi bi-eye"></i>
-                  <span>ดูตัวอย่าง</span>
-                </button>
-
-                <button type="button" class="btn-apple-secondary" @click.prevent="downloadLastUploadedFile" :disabled="isDownloadingFile">
-                  <i class="bi bi-download"></i>
-                  <span>ดาวน์โหลด</span>
-                  <span v-if="isDownloadingFile" class="spinner-border spinner-border-sm ms-2"></span>
-                </button>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer border-0 justify-content-center gap-3">
-            <button type="button" class="btn btn-secondary rounded-3 px-4" @click="hideModal()" :disabled="isUploading">
-              ยกเลิก
-            </button>
-            <button type="button" class="btn btn-primary rounded-3 px-4" @click="saveUpload" :disabled="!uploadedFile || isUploading">
-              <span v-if="isUploading" class="spinner-border spinner-border-sm me-2"></span>
-              <i v-if="!isUploading" class="bi bi-cloud-upload me-2"></i>
-              อัพโหลด
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Template Image Modal -->
-    <div class="modal fade" ref="templateModalRef" id="templateModal" tabindex="-1" aria-labelledby="templateModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-fullscreen">
-        <div class="modal-content">
-          <div class="modal-header border-0">
-            <h5 class="modal-title w-100 text-center" id="templateModalLabel">Template Example</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @click="closeTemplateModal()"></button>
-          </div>
-          <div class="modal-body text-center">
-            <img :src="ex4Url" alt="Template Example" class="img-fluid" width="100%" height="100%">
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CRUD Modal for Add/Edit Category -->
-    <div class="modal fade" ref="crudModalRef" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content apple-modal rounded-4 p-3 shadow-lg">
-          <div class="modal-header border-0">
-            <h5 class="modal-title">{{ isEditing ? 'แก้ไขหมวดหมู่' : 'เพิ่มหมวดหมู่ใหม่' }}</h5>
-            <button type="button" class="btn-close" @click="hideCrudModal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="saveCrudForm">
-              <div class="mb-3">
-                <label class="form-label fw-bold">ชื่อหมวดหมู่ <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" v-model="crudFormData.CategoriesName" required placeholder="เช่น ทุนการศึกษา">
-              </div>
-              <div class="mb-3">
-                <label class="form-label fw-bold">ประเภทหมวดหมู่</label>
-                <select class="form-select" v-model="crudFormData.ParentCategoriesID">
-                  <option value="">หมวดหมู่หลัก (ไม่มี Parent)</option>
-                  <optgroup label="เลือกหมวดหมู่หลัก (เป็นหมวดหมู่ย่อย)">
+              <div class="apple-input-group">
+                <label>ประเภทหมวดหมู่ (Parent Category)</label>
+                <div class="select-wrapper">
+                  <select class="apple-input" v-model="crudFormData.ParentCategoriesID">
+                    <option value="">หมวดหมู่หลัก (Main Category)</option>
                     <option 
                       v-for="cat in parentCategoryOptions" 
                       :key="cat.CategoriesID" 
@@ -341,40 +221,144 @@
                     >
                       {{ cat.CategoriesID }} - {{ cat.CategoriesName }}
                     </option>
-                  </optgroup>
-                </select>
-                <small class="text-muted">เลือก "หมวดหมู่หลัก" ถ้าต้องการสร้างเป็นหมวดหมู่หลัก หรือเลือกหมวดหมู่ที่ต้องการเป็น parent</small>
-              </div>
-              <div class="mb-3">
-                <label class="form-label fw-bold">ลิงก์ PDF (ถ้ามี)</label>
-                <input type="url" class="form-control" v-model="crudFormData.CategoriesPDF" placeholder="https://example.com/document.pdf">
-                <small class="text-muted">ใส่ URL ของไฟล์ PDF ที่เกี่ยวข้องกับหมวดหมู่นี้</small>
+                  </select>
+                  <i class="bi bi-chevron-down select-icon"></i>
+                </div>
               </div>
 
-              <div class="mb-3">
-                <label class="form-label fw-bold">Contact (เบอร์/ลิงก์/หมายเหตุ)</label>
-                <textarea rows="3" class="form-control" v-model="crudFormData.Contact" placeholder="เช่น เบอร์โทรศัพท์: 056-717-119 หรือ https://..." />
-                <small class="text-muted">กรอกข้อมูลติดต่อที่ต้องการแสดงใต้หมวดหมู่ (สามารถรวมหลายบรรทัด)</small>
+              <div class="apple-input-group">
+                <label>ลิงก์ PDF (Optional)</label>
+                <div class="input-with-icon">
+                  <i class="bi bi-link-45deg input-icon"></i>
+                  <input type="url" class="apple-input ps-5" v-model="crudFormData.CategoriesPDF" placeholder="https://example.com/file.pdf" />
+                </div>
+              </div>
+
+              <div class="apple-input-group">
+                <label>ข้อมูลติดต่อ (Contact / Notes)</label>
+                <textarea rows="3" class="apple-input apple-textarea" v-model="crudFormData.Contact" placeholder="เบอร์โทรศัพท์, หมายเหตุ..."></textarea>
+              </div>
+
+              <div class="apple-actions">
+                <button type="button" class="apple-btn-secondary" @click="closeCrudModal">ยกเลิก</button>
+                <button type="submit" class="apple-btn-primary" :disabled="isSaving">
+                  <span v-if="isSaving" class="spinner-border spinner-border-sm me-2"></span>
+                  {{ isEditing ? 'บันทึกการแก้ไข' : 'เพิ่มหมวดหมู่' }}
+                </button>
               </div>
             </form>
           </div>
-          <div class="modal-footer border-0">
-            <button type="button" class="btn btn-secondary rounded-3" @click="hideCrudModal">ยกเลิก</button>
-            <button type="button" class="btn btn-primary rounded-3" @click="saveCrudForm" :disabled="isSaving">
-              <span v-if="isSaving" class="spinner-border spinner-border-sm me-1"></span>
-              {{ isEditing ? 'บันทึกการแก้ไข' : 'เพิ่มหมวดหมู่' }}
+        </div>
+      </div>
+    </transition>
+
+    <!-- 2. Upload Modal (Apple Style) -->
+    <transition name="apple-zoom">
+      <div v-if="showUploadModal" class="apple-modal-overlay" @click.self="closeUploadModal">
+        <div class="apple-modal-content">
+          <div class="apple-modal-header-bg"></div>
+          <div class="apple-modal-header">
+            <div class="d-flex flex-column">
+              <h5 class="apple-modal-title">อัพโหลดไฟล์</h5>
+              <span class="apple-modal-subtitle">Import CSV Data</span>
+            </div>
+            <button class="apple-close-btn" @click="closeUploadModal">
+              <i class="bi bi-x-lg"></i>
             </button>
+          </div>
+          <div class="apple-modal-body">
+            <div 
+              class="upload-drop-area-apple" 
+              :class="{ 'has-file': uploadedFile }"
+              @drop.prevent="onFileDrop"
+              @dragover.prevent
+              @click="$refs.fileInput.click()"
+            >
+              <div class="upload-icon-wrapper">
+                <i class="bi bi-cloud-arrow-up-fill"></i>
+              </div>
+              <div class="upload-text">
+                <span v-if="!uploadedFile">ลากไฟล์มาวางที่นี่ หรือ <strong>คลิกเลือกไฟล์</strong></span>
+                <span v-else class="file-selected">
+                  <i class="bi bi-file-earmark-spreadsheet-fill me-2 text-success"></i>{{ uploadedFile.name }}
+                </span>
+              </div>
+              <div class="upload-hint">รองรับไฟล์ .csv เท่านั้น</div>
+              <input ref="fileInput" type="file" accept=".csv" class="d-none" @change="onFileChange" />
+            </div>
+
+            <div class="d-flex justify-content-center gap-2 mt-4">
+              <button class="apple-btn-secondary small" @click.stop="downloadTemplateFile" :disabled="isDownloadingTemplate">
+                <i class="bi bi-file-earmark-arrow-down me-1"></i> Template
+              </button>
+              <button class="apple-btn-secondary small" @click.stop="openTemplateModal">
+                <i class="bi bi-eye me-1"></i> ตัวอย่าง
+              </button>
+              <button class="apple-btn-secondary small" @click.stop="downloadLastUploadedFile" :disabled="isDownloadingFile">
+                <i class="bi bi-clock-history me-1"></i> ไฟล์ล่าสุด
+              </button>
+            </div>
+
+            <div class="apple-actions mt-4">
+              <button class="apple-btn-secondary" @click="closeUploadModal" :disabled="isUploading">ยกเลิก</button>
+              <button class="apple-btn-primary" @click="saveUpload" :disabled="!uploadedFile || isUploading">
+                <span v-if="isUploading" class="spinner-border spinner-border-sm me-2"></span>
+                อัพโหลด
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </transition>
+
+    <!-- 3. Template Preview Modal -->
+    <transition name="apple-zoom">
+      <div v-if="showTemplateModal" class="apple-modal-overlay" @click.self="closeTemplateModal">
+        <div class="apple-modal-content wide-modal">
+          <div class="apple-modal-header">
+            <h5 class="apple-modal-title">Template Example</h5>
+            <button class="apple-close-btn" @click="closeTemplateModal"><i class="bi bi-x-lg"></i></button>
+          </div>
+          <div class="apple-modal-body p-0 d-flex justify-content-center bg-light">
+             <img :src="ex4Url" alt="Template Example" class="img-fluid" style="max-height: 70vh;">
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- 4. File Preview Modal -->
+    <transition name="apple-zoom">
+      <div v-if="showFileModal" class="apple-modal-overlay" @click.self="closeFileModal">
+        <div class="apple-modal-content large-modal" style="height: 90vh;">
+          <div class="apple-modal-header py-2">
+             <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-file-earmark-pdf text-danger fs-5"></i>
+                <span class="fw-semibold text-truncate" style="max-width: 300px;">{{ modalFileName }}</span>
+             </div>
+             <div class="d-flex gap-2">
+                <a :href="modalFileUrl" target="_blank" class="apple-icon-btn"><i class="bi bi-box-arrow-up-right"></i></a>
+                <button class="apple-close-btn" @click="closeFileModal"><i class="bi bi-x-lg"></i></button>
+             </div>
+          </div>
+          <div class="apple-modal-body p-0 h-100 bg-light position-relative">
+            <iframe v-if="isPdf(modalFileUrl)" :src="modalFileUrl" frameborder="0" class="w-100 h-100"></iframe>
+            <div v-else class="d-flex flex-column align-items-center justify-content-center h-100">
+               <i class="bi bi-file-earmark-x fs-1 text-muted mb-3"></i>
+               <p>Preview not available</p>
+               <a :href="modalFileUrl" target="_blank" class="apple-btn-primary">Download File</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
+
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch, getCurrentInstance, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
-import { Modal, Tooltip } from 'bootstrap';
+import { Tooltip } from 'bootstrap';
 import Sidebar from '@/components/Sidebar.vue';
 import { bindSidebarResize } from '@/stores/sidebarState';
 import '@/assets/sidebar.css';
@@ -386,44 +370,45 @@ const { $axios, $swal } = appContext.config.globalProperties;
 
 const userInfoObject = ref({});
 const userType = ref("");
-
 let unbindSidebarResize = null;
 
 const searchQueryCategories = ref('');
 const expanded = ref({});
 
-// --- Categories Report Data ---
+// Data
 const categories = ref([]);
 const categoriesLoading = ref(true);
 const categoriesError = ref(null);
 
-// upload state
+// Modals Visibility State (Replaces Bootstrap Instances)
+const showUploadModal = ref(false);
+const showCrudModal = ref(false);
+const showTemplateModal = ref(false);
+const showFileModal = ref(false);
+
+// Upload State
 const uploadedFile = ref(null);
 const isUploading = ref(false);
-const bsModalRef = ref(null);
-let bsModalInstance = null;
-
 const isDownloadingFile = ref(false);
 const isDownloadingTemplate = ref(false);
 
-const templateModalRef = ref(null);
-let templateModalInstance = null;
-
-// CRUD state
-const crudModalRef = ref(null);
-let crudModalInstance = null;
+// CRUD State
 const isEditing = ref(false);
 const editingId = ref(null);
 const isSaving = ref(false);
 const crudFormData = ref({
   CategoriesName: '',
   ParentCategoriesID: '',
-  CategoriesPDF: ''
+  CategoriesPDF: '',
+  Contact: ''
 });
 
-// Computed: list หมวดหมู่หลัก (สำหรับ dropdown เลือก parent)
+// File Preview State
+const modalFileUrl = ref('');
+const modalFileName = ref('');
+
+// Computed: Parent Options
 const parentCategoryOptions = computed(() => {
-  // หมวดหมู่หลัก = ParentCategoriesID เป็น null หรือ '' หรือเท่ากับ CategoriesID ของตัวเอง
   return (categories.value || []).filter(c => {
     const pid = String(c.ParentCategoriesID ?? '').trim();
     const cid = String(c.CategoriesID ?? '').trim();
@@ -431,112 +416,33 @@ const parentCategoryOptions = computed(() => {
   });
 });
 
-function openAddModal() {
+// --- Modal Functions ---
+function openUploadModal() {
   uploadedFile.value = null;
-  const el = bsModalRef.value;
-  if (!el) return;
-  bsModalInstance = Modal.getOrCreateInstance(el, { backdrop: 'static', keyboard: true });
-  bsModalInstance.show();
+  showUploadModal.value = true;
 }
-
-function hideModal() {
-  bsModalInstance?.hide();
+function closeUploadModal() {
+  showUploadModal.value = false;
 }
-
-function onFileChange(e) {
-  const f = e.target.files?.[0];
-  if (!f) return;
-  if (!f.name.toLowerCase().endsWith('.csv')) {
-    $swal?.fire({ icon: 'error', title: 'Invalid file', text: 'Please upload a CSV file.', position: 'bottom-end', toast: true, timer: 3000 });
-    return;
-  }
-  uploadedFile.value = f;
-  if (e.target) e.target.value = '';
-}
-
-function onFileDrop(e) {
-  const f = e.dataTransfer?.files?.[0];
-  if (!f) return;
-  if (!f.name.toLowerCase().endsWith('.csv')) {
-    $swal?.fire({ icon: 'error', title: 'Invalid file', text: 'Please upload a CSV file.', position: 'bottom-end', toast: true, timer: 3000 });
-    return;
-  }
-  uploadedFile.value = f;
-}
-
-const saveUpload = async () => {
-  if (!uploadedFile.value || !$axios) return;
-  isUploading.value = true;
-  try {
-    const formData = new FormData();
-    formData.append('file', uploadedFile.value);
-    const resp = await $axios.post('/categories/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-    $swal?.fire({ icon: 'success', title: resp.data?.message || 'Upload successful!', position: 'bottom-end', toast: true, timer: 3000, showConfirmButton: false });
-    await fetchCategories();
-    hideModal();
-  } catch (err) {
-    console.error('Upload failed', err);
-    const payload = err.response?.data || {};
-    const serverMessage = payload?.message || err.message || 'An error occurred during upload.';
-    const detail = payload?.detail;
-
-    let html = '';
-    if (detail) {
-      html += `<div><strong>detail:</strong><pre style="white-space:pre-wrap;margin:0;">${detail}</pre></div>`;
-    }
-    html += `<div class="mt-2"><strong>message:</strong> "${serverMessage}"</div>`;
-
-    $swal?.fire({
-      icon: 'error',
-      title: 'Upload Failed',
-      html,
-      position: 'bottom-end',
-      toast: true,
-      timer: 3000,
-      showConfirmButton: false,
-    });
-
-    categoriesError.value = (detail ? detail + '\n' : '') + serverMessage;
-  } finally {
-    isUploading.value = false;
-  }
-};
 
 function openTemplateModal() {
-  if (!templateModalInstance && templateModalRef.value) {
-    templateModalInstance = new Modal(templateModalRef.value, { backdrop: true, keyboard: true });
-  }
-  templateModalInstance?.show();
+  showTemplateModal.value = true;
 }
-
 function closeTemplateModal() {
-  templateModalInstance?.hide();
+  showTemplateModal.value = false;
 }
 
-const downloadTemplateFile = async () => {
-  if (isDownloadingTemplate.value) return;
-  isDownloadingTemplate.value = true;
-  try {
-    const response = await $axios.get('/categories/crud/template', { responseType: 'blob' });
-    const blob = new Blob([response.data], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.setAttribute('download', 'categories_template.csv');
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-    $swal?.fire({ icon: 'success', title: 'ดาวน์โหลดสำเร็จ!', position: 'bottom-end', toast: true, timer: 2000, showConfirmButton: false });
-  } catch (err) {
-    console.error('Failed to download template:', err);
-    $swal?.fire({ icon: 'error', title: 'ดาวน์โหลดไม่สำเร็จ', text: 'ไม่สามารถดาวน์โหลดไฟล์ Template ได้', position: 'bottom-end', toast: true, timer: 3000, showConfirmButton: false });
-  } finally {
-    isDownloadingTemplate.value = false;
-  }
-};
+function openFile(fileValue, name) {
+  modalFileUrl.value = pdfUrl(fileValue);
+  modalFileName.value = name || 'Document';
+  showFileModal.value = true;
+}
+function closeFileModal() {
+  showFileModal.value = false;
+  modalFileUrl.value = '';
+}
 
-// ======= CRUD Functions =======
+// --- CRUD Functions ---
 function resetCrudForm() {
   crudFormData.value = {
     CategoriesName: '',
@@ -550,63 +456,47 @@ function resetCrudForm() {
 
 function openCrudModal() {
   resetCrudForm();
-  nextTick(() => {
-    if (!crudModalInstance && crudModalRef.value) {
-      crudModalInstance = new Modal(crudModalRef.value, { backdrop: true, keyboard: true });
-    }
-    crudModalInstance?.show();
-  });
+  showCrudModal.value = true;
+}
+
+function closeCrudModal() {
+  showCrudModal.value = false;
+  resetCrudForm();
 }
 
 async function openEditModal(cat) {
   isEditing.value = true;
   editingId.value = cat.CategoriesID;
+  
+  // Pre-fill
+  crudFormData.value = {
+    CategoriesName: cat.CategoriesName || '',
+    ParentCategoriesID: cat.ParentCategoriesID || '',
+    CategoriesPDF: cat.CategoriesPDF || '',
+    Contact: cat.Contact || ''
+  };
 
-  // Fetch fresh single category (to ensure Contact is included)
+  // Try fetching fresh details
   try {
     const resp = await $axios.get(`/categories/crud/single/${encodeURIComponent(cat.CategoriesID)}`);
-    if (resp && resp.data && resp.data.success && resp.data.data) {
+    if (resp?.data?.success && resp.data.data) {
       const d = resp.data.data;
       crudFormData.value = {
-        CategoriesName: d.CategoriesName || cat.CategoriesName || '',
-        ParentCategoriesID: d.ParentCategoriesID || cat.ParentCategoriesID || '',
-        CategoriesPDF: d.CategoriesPDF || cat.CategoriesPDF || '',
+        CategoriesName: d.CategoriesName || cat.CategoriesName,
+        ParentCategoriesID: d.ParentCategoriesID || cat.ParentCategoriesID,
+        CategoriesPDF: d.CategoriesPDF || cat.CategoriesPDF,
         Contact: d.Contact || ''
-      };
-    } else {
-      crudFormData.value = {
-        CategoriesName: cat.CategoriesName || '',
-        ParentCategoriesID: cat.ParentCategoriesID || '',
-        CategoriesPDF: cat.CategoriesPDF || '',
-        Contact: cat.Contact || ''
       };
     }
   } catch (err) {
-    console.warn('Failed to fetch single category for edit, falling back to provided data:', err && (err.message || err));
-    crudFormData.value = {
-      CategoriesName: cat.CategoriesName || '',
-      ParentCategoriesID: cat.ParentCategoriesID || '',
-      CategoriesPDF: cat.CategoriesPDF || '',
-      Contact: cat.Contact || ''
-    };
+    console.warn('Fetch single category failed, utilizing list data.');
   }
-
-  nextTick(() => {
-    if (!crudModalInstance && crudModalRef.value) {
-      crudModalInstance = new Modal(crudModalRef.value, { backdrop: true, keyboard: true });
-    }
-    crudModalInstance?.show();
-  });
-}
-
-function hideCrudModal() {
-  if (crudModalInstance) crudModalInstance.hide();
-  resetCrudForm();
+  showCrudModal.value = true;
 }
 
 const saveCrudForm = async () => {
   if (!crudFormData.value.CategoriesName?.trim()) {
-    $swal?.fire({ icon: 'warning', title: 'กรุณากรอกชื่อหมวดหมู่', position: 'bottom-end', toast: true, timer: 3000, showConfirmButton: false });
+    $swal?.fire({ icon: 'warning', title: 'Required', text: 'กรุณากรอกชื่อหมวดหมู่', toast: true, position: 'bottom-end', timer: 3000, showConfirmButton: false });
     return;
   }
   isSaving.value = true;
@@ -619,21 +509,17 @@ const saveCrudForm = async () => {
     };
 
     if (isEditing.value && editingId.value) {
-      // Update
       await $axios.put(`/categories/crud/update/${editingId.value}`, payload);
-      $swal?.fire({ icon: 'success', title: 'แก้ไขหมวดหมู่สำเร็จ', position: 'bottom-end', toast: true, timer: 2000, showConfirmButton: false });
+      $swal?.fire({ icon: 'success', title: 'Saved', text: 'แก้ไขหมวดหมู่สำเร็จ', toast: true, position: 'bottom-end', timer: 2000, showConfirmButton: false });
     } else {
-      // Create
       await $axios.post('/categories/crud/create', payload);
-      $swal?.fire({ icon: 'success', title: 'เพิ่มหมวดหมู่สำเร็จ', position: 'bottom-end', toast: true, timer: 2000, showConfirmButton: false });
+      $swal?.fire({ icon: 'success', title: 'Created', text: 'เพิ่มหมวดหมู่สำเร็จ', toast: true, position: 'bottom-end', timer: 2000, showConfirmButton: false });
     }
-
-    hideCrudModal();
+    closeCrudModal();
     await fetchCategories();
   } catch (err) {
-    console.error('Save category error:', err);
-    const msg = err.response?.data?.message || err.message || 'เกิดข้อผิดพลาด';
-    $swal?.fire({ icon: 'error', title: 'Error', text: msg, position: 'bottom-end', toast: true, timer: 4000, showConfirmButton: false });
+    console.error(err);
+    $swal?.fire({ icon: 'error', title: 'Error', text: err.response?.data?.message || 'Operation failed' });
   } finally {
     isSaving.value = false;
   }
@@ -641,1167 +527,705 @@ const saveCrudForm = async () => {
 
 const confirmDelete = async (cat) => {
   const result = await $swal?.fire({
-    title: 'ยืนยันการลบ',
-    html: `คุณต้องการลบหมวดหมู่ "<strong>${cat.CategoriesName}</strong>" หรือไม่?`,
+    title: 'ยืนยันการลบ?',
+    text: `ต้องการลบหมวดหมู่ "${cat.CategoriesName}" ใช่หรือไม่?`,
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#6c757d',
+    confirmButtonColor: '#FF3B30', // Apple Red
+    cancelButtonColor: '#8E8E93',   // Apple Gray
     confirmButtonText: 'ลบ',
-    cancelButtonText: 'ยกเลิก'
+    cancelButtonText: 'ยกเลิก',
+    customClass: {
+      popup: 'apple-swal-popup',
+      confirmButton: 'apple-swal-confirm',
+      cancelButton: 'apple-swal-cancel'
+    }
   });
 
   if (result?.isConfirmed) {
     try {
       await $axios.delete(`/categories/crud/delete/${cat.CategoriesID}`);
-      $swal?.fire({ icon: 'success', title: 'ลบหมวดหมู่สำเร็จ', position: 'bottom-end', toast: true, timer: 2000, showConfirmButton: false });
+      $swal?.fire({ icon: 'success', title: 'Deleted', text: 'ลบหมวดหมู่เรียบร้อย', toast: true, position: 'bottom-end', timer: 2000, showConfirmButton: false });
       await fetchCategories();
     } catch (err) {
-      console.error('Delete category error:', err);
-      const msg = err.response?.data?.message || err.message || 'เกิดข้อผิดพลาด';
-      $swal?.fire({ icon: 'error', title: 'ลบไม่สำเร็จ', text: msg, position: 'bottom-end', toast: true, timer: 4000, showConfirmButton: false });
+      $swal?.fire({ icon: 'error', title: 'Failed', text: err.response?.data?.message || 'Delete failed' });
     }
   }
+};
+
+// --- Upload Logic ---
+function onFileChange(e) {
+  const f = e.target.files?.[0];
+  if (!f) return;
+  if (!f.name.toLowerCase().endsWith('.csv')) {
+    $swal?.fire({ icon: 'error', title: 'Invalid File', text: 'Please upload a CSV file' });
+    return;
+  }
+  uploadedFile.value = f;
+  e.target.value = '';
+}
+function onFileDrop(e) {
+  const f = e.dataTransfer?.files?.[0];
+  if (f && f.name.toLowerCase().endsWith('.csv')) {
+    uploadedFile.value = f;
+  }
+}
+const saveUpload = async () => {
+  if (!uploadedFile.value) return;
+  isUploading.value = true;
+  try {
+    const formData = new FormData();
+    formData.append('file', uploadedFile.value);
+    await $axios.post('/categories/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+    $swal?.fire({ icon: 'success', title: 'Uploaded!', toast: true, position: 'bottom-end', timer: 3000, showConfirmButton: false });
+    await fetchCategories();
+    closeUploadModal();
+  } catch (err) {
+    $swal?.fire({ icon: 'error', title: 'Upload Failed', text: err.response?.data?.message || err.message });
+  } finally {
+    isUploading.value = false;
+  }
+};
+
+const downloadTemplateFile = async () => {
+  if (isDownloadingTemplate.value) return;
+  isDownloadingTemplate.value = true;
+  try {
+    const res = await $axios.get('/categories/crud/template', { responseType: 'blob' });
+    downloadBlob(res.data, 'categories_template.csv');
+  } catch(e) { console.error(e); } 
+  finally { isDownloadingTemplate.value = false; }
 };
 
 const downloadLastUploadedFile = async () => {
   if (isDownloadingFile.value) return;
   isDownloadingFile.value = true;
   try {
-    const response = await $axios.get('/categories/last-upload', { responseType: 'blob' });
-    const contentDisposition = response.headers['content-disposition'];
-    let filename = 'last_uploaded_categories.csv';
-    if (contentDisposition) {
-      const m = contentDisposition.match(/filename="?(.+)"?/);
-      if (m && m[1]) filename = m[1];
-    }
-    const blob = new Blob([response.data], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.setAttribute('download', filename);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-  } catch (err) {
-    console.error('Failed to download last uploaded file:', err);
-    const msg = err.response?.status === 404 ? 'No previously uploaded file found.' : 'Could not download the file.';
-    $swal?.fire({ icon: 'error', title: 'Download Failed', text: msg, position: 'bottom-end', toast: true, timer: 3000, showConfirmButton: false });
-  } finally {
-    isDownloadingFile.value = false;
-  }
+    const res = await $axios.get('/categories/last-upload', { responseType: 'blob' });
+    downloadBlob(res.data, 'last_uploaded.csv');
+  } catch(e) { 
+    $swal?.fire({ icon: 'info', title: 'No File', text: 'No previously uploaded file found' });
+  } 
+  finally { isDownloadingFile.value = false; }
 };
 
-// Fetch categories data from API
+function downloadBlob(blobData, filename) {
+  const url = window.URL.createObjectURL(new Blob([blobData]));
+  const a = document.createElement('a');
+  a.href = url;
+  a.setAttribute('download', filename);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+}
+
+// --- Fetch Data ---
 const fetchCategories = async () => {
   categoriesLoading.value = true;
-  categoriesError.value = null;
   try {
-    const response = await $axios.get('/getcategories');
-    categories.value = response.data?.categories || [];
+    const res = await $axios.get('/getcategories');
+    categories.value = res.data?.categories || [];
   } catch (err) {
-    categoriesError.value = err.response?.data?.message || 'Failed to load categories data.';
+    categoriesError.value = 'Failed to load';
   } finally {
     categoriesLoading.value = false;
   }
 };
 
-// --- Categories Pagination State ---
+// --- Table Logic & Helpers ---
 const categoriesCurrentPage = ref(1);
-// Show all categories on a single page to ensure every main category (including "3") appears
 const categoriesItemsPerPage = ref(100);
 
-// Helper functions
-function hideIfFour(id) {
-  // Don't hide anything - we want to show all categories including "3"
-  // The original logic was hiding 4-digit IDs but we don't want that
+// FIX: Robust isMain check to handle orphans
+function isMain(cat) {
+  if (!cat) return false;
+  const id = String(cat.CategoriesID ?? '').trim();
+  const parent = String(cat.ParentCategoriesID ?? '').trim();
+  
+  // 1. If it has no parent or parent is itself => Main
+  if (!parent || parent === id) return true;
+  
+  // 2. If it has a parent, check if that parent actually exists in our data
+  const parentExists = (categories.value || []).some(c => String(c.CategoriesID) === parent);
+  
+  // 3. If parent does NOT exist => It's an orphan => Show as Main so we can edit/delete it
+  if (!parentExists) return true;
+  
+  // 4. Parent exists => It is a Sub
   return false;
 }
 
-function isThreeDigits(id) {
-  if (id == null) return false;
-  const str = String(id).trim();
-  // Check if it's a single digit (1, 2, 3) or pattern like 1-1, 2-1, 2-2
-  return /^\d$/.test(str) || /^\d-\d$/.test(str);
+function pdfUrl(val) {
+  if (!val) return '#';
+  return /^https?:\/\//i.test(val) ? val : `/uploads/${val}`;
+}
+function isPdf(url) {
+  return String(url).toLowerCase().trim().endsWith('.pdf');
+}
+function pdfIconClass(val) {
+  const s = String(val).toLowerCase();
+  if (s.endsWith('.pdf')) return 'bi bi-file-earmark-pdf-fill text-danger';
+  if (s.endsWith('.doc') || s.endsWith('.docx')) return 'bi bi-file-earmark-word-fill text-primary';
+  return 'bi bi-file-earmark-text-fill text-secondary';
 }
 
-// Remove duplicate categories by CategoriesID (keep first occurrence)
-function dedupeById(list) {
-  const seen = new Set();
-  return (Array.isArray(list) ? list : []).filter(item => {
-    const id = String(item?.CategoriesID ?? '').trim();
-    if (!id) return false;
-    if (seen.has(id)) return false;
-    seen.add(id);
-    return true;
-  });
+// FIX: Handle newlines in contacts
+function parseContacts(str) {
+  if (!str) return [];
+  // Split by " ||| " OR newline
+  return String(str).split(/ \|\|\| |\n/).map(s => s.trim()).filter(Boolean);
 }
 
 function toggleExpand(id) {
   expanded.value[id] = !expanded.value[id];
 }
 
-const allItems = computed(() => {
-  if (Array.isArray(categories.value) && categories.value.length) return categories.value;
-  if (Array.isArray(filteredCategories.value) && filteredCategories.value.length) return filteredCategories.value;
-  return [];
+// ADDED: expandedMap definition
+const expandedMap = computed(() => expanded.value);
+
+// Filtering & Pagination
+const filteredCategories = computed(() => {
+  const list = (categories.value || []).filter((v,i,a)=>a.findIndex(t=>(t.CategoriesID===v.CategoriesID))===i);
+  if (!searchQueryCategories.value) return list;
+  const q = searchQueryCategories.value.toLowerCase();
+  return list.filter(c => 
+    String(c.CategoriesID).toLowerCase().includes(q) || 
+    String(c.CategoriesName).toLowerCase().includes(q)
+  );
 });
 
-function itemMatchesQuery(item, q) {
-  if (!item || !q) return false;
-  const s = String(q || '').toLowerCase().trim().normalize('NFC');
-  const id = String(item.CategoriesID ?? '').toLowerCase().trim().normalize('NFC');
-  const name = String(item.CategoriesName ?? '').toLowerCase().trim().normalize('NFC');
-  const parent = String(item.ParentCategoriesID ?? '').toLowerCase().trim().normalize('NFC');
-  const pdf = String(item.CategoriesPDF ?? '').toLowerCase().trim().normalize('NFC');
-  const contact = String(item.Contact ?? '').toLowerCase().trim().normalize('NFC');
-  return id.includes(s) || name.includes(s) || parent.includes(s) || pdf.includes(s) || contact.includes(s);
-}
-
-function parseContacts(contactStr) {
-  if (!contactStr) return [];
-  return String(contactStr).split(' ||| ').map(s => s.trim()).filter(Boolean);
-}
-
-function findParentIdsForItem(item) {
-  const parents = [];
-  if (!item) return parents;
-  const list = allItems.value;
-  const parentId = String(item.ParentCategoriesID ?? '').trim();
-  if (parentId && parentId !== String(item.CategoriesID ?? '').trim() && list.some(c => String(c.CategoriesID ?? '').trim() === parentId)) {
-    parents.push(parentId);
+const visibleParents = computed(() => {
+  // Logic to show parents based on filter or pagination
+  // Simplified for display:
+  const all = filteredCategories.value;
+  const start = (categoriesCurrentPage.value - 1) * categoriesItemsPerPage.value;
+  const end = start + categoriesItemsPerPage.value;
+  
+  // If searching, just show matched items that are parents, or whose children match
+  if (searchQueryCategories.value) {
+    return all.filter(c => isMain(c)).slice(start, end); // Simplified view
   }
-  const cid = String(item.CategoriesID ?? '').trim();
-  if (hideIfFour(cid)) {
-    const threeParent = list.find(c => isThreeDigits(String(c.CategoriesID ?? '').trim()) && cid.startsWith(String(c.CategoriesID ?? '').trim()));
-    if (threeParent) parents.push(String(threeParent.CategoriesID));
-  }
-  if (isMain(item)) parents.push(String(item.CategoriesID));
-  return [...new Set(parents)];
-}
-
-const searchTerm = computed(() => {
-  const raw = searchQueryCategories.value || '';
-  return String(raw).toLowerCase().trim().normalize('NFC');
+  
+  return all.filter(c => isMain(c)).slice(start, end);
 });
 
-const matchedParentIds = computed(() => {
-  const q = searchTerm.value;
-  if (!q) return new Set();
-  const matches = allItems.value.filter(item => itemMatchesQuery(item, q));
-  const ids = new Set();
-  matches.forEach(item => {
-    findParentIdsForItem(item).forEach(id => { if (id) ids.add(String(id)); });
-  });
-  return ids;
-});
-
+// Subcategory lookup
 function subCategories(parentId, selfId) {
-  const parentStr = String(parentId ?? '').trim();
-  const list = allItems.value.slice();
-  const q = searchTerm.value;
-  return list.filter(c => {
-    if (c == null) return false;
-    const cid = String(c.CategoriesID ?? '').trim();
-    if (String(c.CategoriesID) === String(selfId)) return false;
-
-    if (hideIfFour(cid)) {
-      const isChildOfPrefix = isThreeDigits(parentStr) && cid.startsWith(parentStr);
-      if (!isChildOfPrefix) return false;
-      return q ? itemMatchesQuery(c, q) : true;
-    }
-
-    const isParentMatch = String(c.ParentCategoriesID ?? '').trim() === parentStr;
-    if (!isParentMatch) return false;
-    return q ? itemMatchesQuery(c, q) : true;
-  });
+  return (categories.value || []).filter(c => 
+    String(c.ParentCategoriesID) === String(parentId) && 
+    String(c.CategoriesID) !== String(selfId)
+  );
 }
-
 function hasSubCategories(parentId, selfId) {
   return subCategories(parentId, selfId).length > 0;
 }
 
-function parentExists(parentId) {
-  if (parentId == null || parentId === '') return false;
-  const list = Array.isArray(filteredCategories.value) && filteredCategories.value.length ? filteredCategories.value : (Array.isArray(categories.value) ? categories.value : []);
-  return list.some(c => String(c?.CategoriesID ?? '').trim() === String(parentId).trim());
-}
-
-function isMain(cat) {
-  if (!cat) return false;
-  const id = String(cat.CategoriesID ?? '').trim();
-  const parent = String(cat.ParentCategoriesID ?? '').trim();
-  if (parent && parent === id) return true;
-  if (!parent) return true;
-  if (!parentExists(parent)) return true;
-  return false;
-}
-
-// --- Categories Filtered List ---
-const filteredCategories = computed(() => {
-  if (!Array.isArray(categories.value)) return [];
-  const data = dedupeById(categories.value);
-  if (!searchQueryCategories.value) return data;
-  const query = searchQueryCategories.value.toLowerCase();
-  return data.filter(cat =>
-    (cat.CategoriesID && cat.CategoriesID.toString().includes(query)) ||
-    (cat.CategoriesName && cat.CategoriesName.toLowerCase().includes(query)) ||
-    (cat.ParentCategoriesID && cat.ParentCategoriesID.toString().includes(query)) ||
-    (cat.CategoriesPDF && cat.CategoriesPDF.toLowerCase().includes(query))
-  );
-});
-
-// --- Categories Pagination Computed Properties ---
-const categoriesTotalPages = computed(() => {
-  return Math.max(1, Math.ceil(filteredCategories.value.length / categoriesItemsPerPage.value));
-});
-const categoriesTotalEntries = computed(() => filteredCategories.value.length);
-const categoriesStartIndex = computed(() => {
-  if (categoriesTotalEntries.value === 0) return 0;
-  return (categoriesCurrentPage.value - 1) * categoriesItemsPerPage.value + 1;
-});
-const categoriesEndIndex = computed(() => {
-  if (categoriesTotalEntries.value === 0) return 0;
-  return Math.min(categoriesCurrentPage.value * categoriesItemsPerPage.value, categoriesTotalEntries.value);
-});
-const paginatedCategories = computed(() => {
-  const start = (categoriesCurrentPage.value - 1) * categoriesItemsPerPage.value;
-  const end = start + categoriesItemsPerPage.value;
-  return filteredCategories.value.slice(start, end);
-});
-
-const visibleParents = computed(() => {
-  const page = Array.isArray(paginatedCategories.value) ? paginatedCategories.value : [];
-  const q = searchTerm.value;
-  if (!q) {
-    return page.filter(cat => {
-      if (!cat) return false;
-      const id = String(cat.CategoriesID ?? '').trim();
-      if (hideIfFour(id)) return false;
-      const parent = String(cat.ParentCategoriesID ?? '').trim();
-      if (parent && parent === id) return true;
-      if (!parent) return true;
-      if (!parentExists(parent)) return true;
-      return false;
-    });
-  }
-  const ids = matchedParentIds.value;
-  if (!ids || ids.size === 0) return [];
-  const list = allItems.value || [];
-  const parents = list.filter(c => {
-    if (!c) return false;
-    const id = String(c.CategoriesID ?? '').trim();
-    if (hideIfFour(id)) return false;
-    return ids.has(id);
-  });
-  return parents;
-});
-
-const visibleParentsTotal = computed(() => {
-  const q = searchTerm.value;
-  if (q) {
-    const vp = Array.isArray(visibleParents.value) ? visibleParents.value : [];
-    return vp.length;
-  }
-  const source = Array.isArray(filteredCategories.value) && filteredCategories.value.length
-    ? filteredCategories.value
-    : (Array.isArray(categories.value) ? categories.value : []);
-  return source.filter(cat => {
-    if (!cat) return false;
-    const id = String(cat.CategoriesID ?? '').trim();
-    if (hideIfFour(id)) return false;
-    const parent = String(cat.ParentCategoriesID ?? '').trim();
-    if (parent && parent === id) return true;
-    if (!parent) return true;
-    return !parentExists(parent);
-  }).length;
-});
-
-const itemsPerPageLocal = computed(() => {
-  const start = Number(categoriesStartIndex.value || 0);
-  const end = Number(categoriesEndIndex.value || 0);
-  if (end >= start && start > 0) return end - start + 1;
-  return Array.isArray(paginatedCategories.value) ? paginatedCategories.value.length || 8 : 8;
-});
-
-const localTotalPages = computed(() => Math.max(1, Math.ceil(visibleParentsTotal.value / itemsPerPageLocal.value)));
-
-const displayPage = computed(() => {
-  const p = Number(categoriesCurrentPage.value || 1);
-  return Math.min(Math.max(1, p), localTotalPages.value);
-});
-
+// Pagination
+const categoriesTotalEntries = computed(() => filteredCategories.value.filter(c => isMain(c)).length);
+const localTotalPages = computed(() => Math.ceil(categoriesTotalEntries.value / categoriesItemsPerPage.value));
+const displayPage = computed(() => categoriesCurrentPage.value);
+const categoriesStartIndex = computed(() => (categoriesCurrentPage.value - 1) * categoriesItemsPerPage.value + 1);
+const categoriesEndIndex = computed(() => Math.min(categoriesCurrentPage.value * categoriesItemsPerPage.value, categoriesTotalEntries.value));
 const localPagesToShow = computed(() => {
   const total = localTotalPages.value;
   const current = displayPage.value;
-  const maxButtons = 4;
-  if (total <= maxButtons) return Array.from({ length: total }, (_, i) => i + 1);
-  if (current <= 2) return [1,2,3,4];
-  if (current >= total - 1) return [total-3, total-2, total-1, total];
-  return [current-1, current, current+1, current+2];
+  if (total <= 5) return Array.from({length: total}, (_, i) => i + 1);
+  if (current <= 3) return [1,2,3,4,5];
+  if (current >= total - 2) return [total-4, total-3, total-2, total-1, total];
+  return [current-2, current-1, current, current+1, current+2];
 });
 
-const autoExpanded = computed(() => {
-  const out = {};
-  const ids = matchedParentIds.value || new Set();
-  ids.forEach(id => { if (id) out[String(id)] = true; });
-  return out;
-});
+function categoriesGoToPage(p) { if(p>=1 && p<=localTotalPages.value) categoriesCurrentPage.value = p; }
+function categoriesPrevPage() { categoriesGoToPage(displayPage.value - 1); }
+function categoriesNextPage() { categoriesGoToPage(displayPage.value + 1); }
+function categoriesFirstPage() { categoriesGoToPage(1); }
+function categoriesLastPage() { categoriesGoToPage(localTotalPages.value); }
 
-const expandedMap = computed(() => {
-  return Object.assign({}, expanded.value || {}, autoExpanded.value || {});
-});
-
-// --- Categories Pagination Methods ---
-function categoriesGoToPage(page) {
-  if (page >= 1 && page <= localTotalPages.value) {
-    categoriesCurrentPage.value = page;
-  }
-}
-function categoriesPrevPage() {
-  categoriesGoToPage(Math.max(1, categoriesCurrentPage.value - 1));
-}
-function categoriesNextPage() {
-  categoriesGoToPage(Math.min(localTotalPages.value, categoriesCurrentPage.value + 1));
-}
-function categoriesFirstPage() {
-  categoriesGoToPage(1);
-}
-function categoriesLastPage() {
-  categoriesGoToPage(localTotalPages.value);
-}
-
-watch(searchQueryCategories, () => {
-  categoriesCurrentPage.value = 1;
-});
-
-// File handling
-function isUrl(val) {
-  if (!val) return false;
-  return /^https?:\/\//i.test(val) || val.startsWith('/');
-}
-
-function pdfUrl(val) {
-  if (!val) return '#';
-  const s = String(val).trim();
-  if (isUrl(s)) return s;
-  return `/uploads/${s}`;
-}
-
-function pdfIconClass(val) {
-  if (!val) return 'bi bi-file-earmark-text text-secondary';
-  const s = String(val).trim().toLowerCase();
-  if (s.endsWith('.pdf')) return 'bi bi-file-earmark-pdf-fill text-danger';
-  if (s.endsWith('.doc') || s.endsWith('.docx')) return 'bi bi-file-earmark-word-fill text-primary';
-  if (s.endsWith('.xls') || s.endsWith('.xlsx')) return 'bi bi-file-earmark-excel-fill text-success';
-  return 'bi bi-file-earmark-text text-secondary';
-}
-
-const fileModalEl = ref(null);
-const modalFileUrl = ref('');
-const modalFileName = ref('');
-let bsFileModal = null;
-
-function isPdf(url) {
-  if (!url) return false;
-  return String(url).toLowerCase().trim().endsWith('.pdf');
-}
-
-function openFile(fileValue, name) {
-  const url = pdfUrl(fileValue);
-  modalFileUrl.value = url;
-  modalFileName.value = name || String(fileValue || '').split('/').pop();
-  nextTick(() => {
-    if (bsFileModal) {
-      try { bsFileModal.dispose(); } catch(e){ /* ignore */ }
-      bsFileModal = null;
-    }
-    if (fileModalEl.value) {
-      bsFileModal = new Modal(fileModalEl.value, { backdrop: false, keyboard: true });
-      bsFileModal.show();
-    }
-  });
-}
-
-function closeModal() {
-  if (bsFileModal) {
-    try { bsFileModal.hide(); } catch(e) { /* ignore */ }
-  }
-}
+watch(searchQueryCategories, () => categoriesCurrentPage.value = 1);
 
 onMounted(() => {
   unbindSidebarResize = bindSidebarResize();
-
-  // init tooltips
-  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-  tooltipTriggerList.map((el) => new Tooltip(el));
-
   const token = localStorage.getItem("userToken");
-  const type = localStorage.getItem("userType");
+  if (!token) { router.replace({ name: "login" }); return; }
+  
   const userInfoString = localStorage.getItem("userInfo");
-
-  if (!token) {
-    router.replace({ name: "login" });
-    return;
-  }
-
-  if (type) userType.value = type;
-  if (userInfoString) {
-    try { userInfoObject.value = JSON.parse(userInfoString); } catch(e) { console.error(e); }
-  }
+  if (userInfoString) userInfoObject.value = JSON.parse(userInfoString);
+  userType.value = localStorage.getItem("userType") || "";
 
   fetchCategories();
+  
+  // Init tooltips
+  nextTick(() => {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new Tooltip(el));
+  });
 });
 
 onUnmounted(() => {
-  if (typeof unbindSidebarResize === 'function') unbindSidebarResize();
-  if (bsFileModal) {
-    try { bsFileModal.dispose(); } catch(e) { /* ignore */ }
-    bsFileModal = null;
-  }
-  if (bsModalInstance) { try { bsModalInstance.dispose(); } catch(e) {} bsModalInstance = null; }
-  if (templateModalInstance) { try { templateModalInstance.dispose(); } catch(e) {} templateModalInstance = null; }
-  if (crudModalInstance) { try { crudModalInstance.dispose(); } catch(e) {} crudModalInstance = null; }
+  if (unbindSidebarResize) unbindSidebarResize();
 });
 </script>
 
 <style scoped>
 @import '@/assets/dashboard-styles.css';
 @import '@/assets/main.css';
-@import '@/assets/pagination-styles.css';
 @import '@/assets/sidebar.css';
 
-/* ===== Apple-Style Design System ===== */
+/* =========================================
+   Apple Design System - Colors & Variables
+   ========================================= */
 :root {
-  --apple-blue: #007AFF;
-  --apple-green: #34C759;
+  --apple-blue: #0071e3; /* Changed to Web Apple Blue */
+  --apple-blue-hover: #0077ED;
   --apple-red: #FF3B30;
-  --apple-gray: #8E8E93;
-  --apple-light-gray: #F2F2F7;
-  --apple-bg: #FFFFFF;
-  --apple-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-  --apple-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.12);
-  --apple-radius: 12px;
-  --apple-transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --apple-red-hover: #D70015;
+  --apple-gray: #86868b; /* Slightly softer gray */
+  --apple-light-bg: #F5F5F7;
+  --apple-card-bg: #FFFFFF;
+  --apple-border: #E5E5EA;
+  --apple-radius: 16px;
+  --apple-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  --apple-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 .dashboard-container {
-  display: flex;
-  width: 100%;
+  font-family: var(--apple-font);
+  background-color: var(--apple-light-bg);
   min-height: 100vh;
 }
 
 .main-content {
-  flex-grow: 1;
-  background-color: var(--apple-light-gray);
-  overflow-x: hidden;
-  padding-top: 0.5rem;
+  padding-bottom: 40px;
 }
 
-.main-content .container-fluid {
-  padding-top: 0.5rem !important;
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-/* ===== Apple Card Style ===== */
-.bg-white.shadow-apple {
-  background: var(--apple-bg) !important;
-  border-radius: var(--apple-radius) !important;
-  box-shadow: var(--apple-shadow) !important;
-  overflow: hidden;
-  transition: var(--apple-transition);
-}
-
-/* ===== Apple Button Style ===== */
-.apple-btn {
-  border-radius: 20px !important;
-  padding: 8px 16px !important;
-  font-weight: 500 !important;
-  transition: var(--apple-transition) !important;
-  border: none !important;
-}
-
-.apple-btn:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
-}
-
-.apple-btn:active {
-  transform: scale(0.98);
-}
-
-.btn-primary.apple-btn {
-  background: linear-gradient(135deg, #007AFF 0%, #0056CC 100%) !important;
-}
-
-/* ===== Table Styles ===== */
-.table {
-  width: 100%;
-  margin-bottom: 0;
+.page-title {
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: #1d1d1f;
 }
 
-.table th {
+/* =========================================
+   Apple Card & Table
+   ========================================= */
+.apple-card {
+  background: var(--apple-card-bg);
+  border-radius: var(--apple-radius);
+  box-shadow: var(--apple-shadow);
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.02);
+}
+
+.apple-table thead th {
+  background: #F9F9FB;
   font-weight: 600;
-  color: var(--apple-gray);
-  font-size: 0.8rem;
+  color: #6e6e73; /* Darker gray for readability */
+  font-size: 0.85rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-top: none !important;
-  border-bottom: 1px solid #E5E5EA !important;
-  padding: 1rem 0.75rem;
+  letter-spacing: 0.02em;
+  border-bottom: 1px solid var(--apple-border);
+  padding: 14px 16px;
 }
 
-.table td {
-  padding: 0.875rem 0.75rem;
-  vertical-align: middle;
-  border-top: none;
-  border-bottom: 1px solid #F2F2F7;
+.apple-table tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #F5F5F5;
+  color: #1d1d1f;
+  font-size: 0.95rem;
 }
 
-.cat-id-cell {
-  font-variant-numeric: tabular-nums;
-  font-weight: 500;
+.apple-table tr:last-child td {
+  border-bottom: none;
 }
 
-.cat-id-sub {
-  padding-left: 0.75rem !important;
+.apple-table tr.parent-row:hover {
+  background-color: rgba(0, 113, 227, 0.04); /* Subtle blue tint */
 }
 
-/* ===== Row Hover Effect - Apple Style ===== */
-.table tbody tr {
-  transition: var(--apple-transition);
-  cursor: default;
-}
-
-.table tbody tr:hover {
-  background-color: rgba(0, 122, 255, 0.04) !important;
-}
-
-.table tbody tr:hover .row-actions {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-/* Main category row */
-.table tbody tr.bg-primary-subtle {
-  background: linear-gradient(90deg, rgba(0, 122, 255, 0.08) 0%, rgba(0, 122, 255, 0.03) 100%) !important;
-}
-
-/* Sub category row */
 .sub-row {
-  background: #FAFAFA !important;
-  animation: slideIn 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  background-color: #FAFAFC;
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.tree-line {
+  color: #C7C7CC;
+  margin-right: 6px;
+  font-weight: 300;
 }
 
-/* ===== Action Buttons - Apple Style ===== */
-.row-actions {
-  display: flex;
+/* Badges */
+.apple-badge-blue {
+  background: rgba(0, 113, 227, 0.1);
+  color: var(--apple-blue);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.apple-badge-gray {
+  background: rgba(142, 142, 147, 0.1);
+  color: var(--apple-gray);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* =========================================
+   Buttons & Inputs (Updated: improved contrast & typography, rounded corners)
+   ========================================= */
+.apple-btn-primary {
+  background: linear-gradient(135deg, #007AFF 0%, #0051D4 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px; /* changed from pill to rounded */
+  padding: 9px 16px; /* slightly reduced horizontal padding for balanced look */
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
-  justify-content: center;
-  opacity: 0.7;
-  transition: var(--apple-transition);
+  box-shadow: 0 6px 18px rgba(0, 90, 255, 0.18);
 }
 
-.action-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px !important;
+.apple-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(0, 90, 255, 0.22);
+  background: linear-gradient(135deg, #0A8AFF 0%, #0046C4 100%);
+}
+
+.apple-btn-primary:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.apple-btn-secondary {
+  background: rgba(0, 0, 0, 0.06);
+  color: #1d1d1f;
+  border: none;
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.apple-btn-secondary:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.apple-btn-secondary.small {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+.apple-icon-btn-large {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px; /* changed rounded shape to match cancel button */
+  background: linear-gradient(135deg, #007AFF 0%, #0051D4 100%);
+  border: none;
+  color: #ffffff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: none !important;
-  padding: 0 !important;
-  transition: var(--apple-transition) !important;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  font-size: 1.05rem;
+  box-shadow: 0 6px 16px rgba(0, 90, 255, 0.12);
+  padding: 6px; /* keep icon centered while non-circular */
+}
+
+.apple-icon-btn-large:hover {
+  transform: translateY(-1px) scale(1.02);
+  background: linear-gradient(135deg, #0A8AFF 0%, #0046C4 100%);
+  color: #ffffff;
+}
+
+
+/* Action Buttons in Table */
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 2px;
+  transition: all 0.2s;
   background: transparent;
 }
 
-.action-btn-edit {
-  color: var(--apple-blue);
-  background: rgba(0, 122, 255, 0.1);
-}
+.action-btn.edit { color: var(--apple-blue); }
+.action-btn.edit:hover { background: rgba(0, 113, 227, 0.1); transform: scale(1.1); }
 
-.action-btn-edit:hover {
-  background: var(--apple-blue);
-  color: white;
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
-}
+.action-btn.delete { color: var(--apple-red); }
+.action-btn.delete:hover { background: rgba(255, 59, 48, 0.1); transform: scale(1.1); }
 
-.action-btn-delete {
-  color: var(--apple-red);
-  background: rgba(255, 59, 48, 0.1);
-}
-
-.action-btn-delete:hover {
-  background: var(--apple-red);
-  color: white;
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.4);
-}
-
-.action-btn:active {
-  transform: scale(0.95) !important;
-}
-
-/* ===== Badge Style ===== */
-.badge {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-weight: 500;
-  font-size: 0.75rem;
-  letter-spacing: 0.3px;
-}
-
-.badge.bg-primary {
-  background: linear-gradient(135deg, #007AFF 0%, #0056CC 100%) !important;
-}
-
-.badge.bg-info {
-  background: linear-gradient(135deg, #5AC8FA 0%, #32ADE6 100%) !important;
-}
-
-/* ===== Search Input - Apple Style ===== */
-.search-input-group {
-  position: relative;
-}
-
-.search-input-group .form-control {
-  background: var(--apple-bg);
-  border: 1px solid #E5E5EA !important;
-  border-radius: 12px !important;
-  padding: 10px 40px 10px 16px !important;
-  font-size: 0.95rem;
-  transition: var(--apple-transition);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.search-input-group .form-control:focus {
-  border-color: var(--apple-blue) !important;
-  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
-  outline: none;
-}
-
-.search-input-group .input-group-text {
-  color: var(--apple-gray);
-}
-
-/* ===== Modal - Apple Style ===== */
-.apple-modal {
-  border: none !important;
-  border-radius: 16px !important;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.2) !important;
-  animation: modalSlideIn 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
-}
-
-@keyframes modalSlideIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9) translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.apple-modal .modal-title {
-  font-weight: 600;
-  font-size: 1.25rem;
-  color: #1d1d1f;
-}
-
-.apple-modal .form-control,
-.apple-modal .form-select {
-  border-radius: 10px;
-  border: 1px solid #E5E5EA;
-  padding: 12px 16px;
-  font-size: 0.95rem;
-  transition: var(--apple-transition);
-}
-
-.apple-modal .form-control:focus,
-.apple-modal .form-select:focus {
-  border-color: var(--apple-blue);
-  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
-}
-
-.apple-modal .form-label {
-  font-size: 0.875rem;
-  color: #86868B;
-  margin-bottom: 8px;
-}
-
-.apple-modal .btn {
-  padding: 12px 24px;
-  font-weight: 500;
-  border-radius: 12px !important;
-  transition: var(--apple-transition);
-}
-
-.apple-modal .btn-primary {
-  background: linear-gradient(135deg, #007AFF 0%, #0056CC 100%);
+.expand-btn {
+  background: transparent;
   border: none;
-}
-
-.apple-modal .btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4);
-}
-
-.apple-modal .btn-secondary {
-  background: var(--apple-light-gray);
-  border: none;
-  color: #1d1d1f;
-}
-
-.apple-modal .btn-secondary:hover {
-  background: #E5E5EA;
-}
-
-/* ===== Page Title ===== */
-.page-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1d1d1f;
-  letter-spacing: -0.5px;
-}
-
-/* ===== Add Button - Apple Style ===== */
-.btn-add-apple {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border-radius: 24px;
-  border: none;
-  background: linear-gradient(135deg, #007AFF 0%, #0056CC 100%);
-  color: white;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: var(--apple-transition);
-  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
-}
-
-.btn-add-apple:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 24px rgba(0, 122, 255, 0.4);
-}
-
-.btn-add-apple:active {
-  transform: scale(0.98);
-}
-
-.btn-add-apple i {
-  font-size: 1rem;
-}
-
-/* ===== Upload Button - Apple Style ===== */
-.btn-upload-apple {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  border: none;
-  background: var(--apple-light-gray);
-  color: var(--apple-gray);
+  color: #86868b;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: var(--apple-transition);
+  transition: all 0.2s;
 }
+.expand-btn:hover { background: rgba(0,0,0,0.05); color: #1d1d1f; }
 
-.btn-upload-apple:hover {
-  background: #E5E5EA;
-  color: var(--apple-blue);
-  transform: scale(1.05);
+.file-link-btn {
+  border: none;
+  background: rgba(0,0,0,0.04);
+  padding: 4px 10px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #1d1d1f;
+  transition: all 0.2s;
 }
+.file-link-btn:hover { background: rgba(0,0,0,0.08); color: var(--apple-blue); }
 
-.btn-upload-apple i {
-  font-size: 1.1rem;
-}
-
-/* ===== Search Container - Apple Style ===== */
+/* Search Input */
 .search-container {
   position: relative;
   width: 100%;
   max-width: 320px;
 }
-
 .search-input {
   width: 100%;
-  padding: 12px 40px 12px 44px;
-  border-radius: 12px;
-  border: 1px solid #E5E5EA;
   background: white;
+  border: 1px solid var(--apple-border);
+  border-radius: 12px;
+  padding: 10px 40px 10px 40px;
   font-size: 0.95rem;
-  transition: var(--apple-transition);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s;
 }
-
 .search-input:focus {
   outline: none;
   border-color: var(--apple-blue);
-  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15);
 }
-
 .search-icon {
   position: absolute;
-  left: 16px;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--apple-gray);
-  font-size: 1rem;
+  color: #86868b;
 }
-
 .search-clear {
   position: absolute;
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
+  border: none;
   background: none;
-  border: none;
-  color: var(--apple-gray);
+  color: #86868b;
   cursor: pointer;
-  padding: 4px;
-  transition: var(--apple-transition);
 }
+.search-clear:hover { color: #1d1d1f; }
 
-.search-clear:hover {
-  color: var(--apple-red);
-}
 
-/* ===== Expand/Collapse Button ===== */
-.btn-link {
-  color: var(--apple-gray);
-  text-decoration: none;
-  transition: var(--apple-transition);
-}
-
-.btn-link:hover {
-  color: var(--apple-blue);
-  transform: scale(1.2);
-}
-
-.btn-link i {
-  transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-}
-
-/* ===== Pagination - Apple Style ===== */
-.pagination {
-  gap: 4px;
-}
-
-.pagination .page-link {
-  border: none;
-  border-radius: 8px !important;
-  padding: 8px 14px;
-  color: #1d1d1f;
-  font-weight: 500;
-  transition: var(--apple-transition);
-  background: transparent;
-}
-
-.pagination .page-link:hover {
-  background: var(--apple-light-gray);
-  color: var(--apple-blue);
-}
-
-.pagination .page-item.active .page-link {
-  background: var(--apple-blue);
-  color: white;
-  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
-}
-
-.pagination .page-item.disabled .page-link {
-  color: #6c757d;
-  pointer-events: none;
-  background-color: #fff;
-  border-color: #dee2e6;
-}
-
-.btn-link {
-  color: #495057;
-  text-decoration: none;
-}
-.btn-link:hover {
-  color: #007bff;
-  text-decoration: none;
-}
-.ps-4 {
-  padding-left: 2rem !important;
-}
-
-.table a.text-decoration-none {
-  color: inherit;
-}
-.table a.text-decoration-none:hover {
-  text-decoration: underline;
-}
-
-.file-modal .modal-content {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  overflow: hidden;
-  position: relative;
-}
-.file-modal .modal-body {
-  padding: 0;
-}
-
-.file-modal-header-btns {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  z-index: 1055;
-  display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-}
-.file-modal-open {
-  order: 1;
-}
-.file-modal-close {
-  order: 2;
-}
-
-.file-modal-close,
-.file-modal-open {
-  background: #fff !important;
-  border-radius: 0.375rem;
-  width: 2.2rem;
-  height: 2.2rem;
+/* =========================================
+   Apple Modals (Custom Implementation)
+   ========================================= */
+.apple-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 9999; /* FIX: Increased Z-Index to prevent sidebar overlap */
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  padding: 0;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  color: #212529;
-  transition: background 0.15s;
-}
-.file-modal-close:hover,
-.file-modal-open:hover {
-  background: #f1f3f5 !important;
-  color: #007bff;
-}
-.file-modal-close svg,
-.file-modal-open svg {
-  display: block;
+  padding: 20px;
 }
 
-.file-modal iframe {
-  display: block;
+.apple-modal-content {
+  background: rgba(255, 255, 255, 0.92); /* Higher opacity for readability */
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 20px;
   width: 100%;
-  height: 100%;
-  border: 0;
+  max-width: 550px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.4) inset;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-/* ===== Upload Drop Area - Apple Style ===== */
-.upload-drop-area-apple {
-  border: 2px dashed #E5E5EA;
-  border-radius: 16px;
-  padding: 2.5rem 1.5rem;
-  text-align: center;
+.apple-modal-content.wide-modal { max-width: 800px; }
+.apple-modal-content.large-modal { max-width: 90vw; }
+
+.apple-modal-header {
+  padding: 24px 24px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+  z-index: 2;
+}
+
+.apple-modal-header-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 100px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.apple-modal-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  letter-spacing: -0.02em;
+}
+
+.apple-modal-subtitle {
+  font-size: 0.9rem;
+  color: #86868b;
+  margin-top: 4px;
+}
+
+.apple-close-btn {
+  background: rgba(0,0,0,0.05);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: var(--apple-transition);
-  background: linear-gradient(180deg, #FAFAFA 0%, #F5F5F7 100%);
+  transition: all 0.2s;
+  color: #1d1d1f;
+}
+.apple-close-btn:hover { background: rgba(0,0,0,0.1); transform: rotate(90deg); }
+
+.apple-modal-body {
+  padding: 0 24px 24px;
+  position: relative;
+  z-index: 2;
+  overflow-y: auto;
+  max-height: 80vh;
+}
+
+/* Modal Inputs */
+.apple-form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.apple-input-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1d1d1f; /* Darker label for better contrast */
+  margin-bottom: 6px;
+  display: block;
+  margin-left: 4px;
+}
+
+.apple-input {
+  width: 100%;
+  background: rgba(118, 118, 128, 0.12);
+  border: none;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 1rem;
+  color: #1d1d1f;
+  transition: all 0.2s;
+}
+
+.apple-input:focus {
+  outline: none;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15);
+}
+
+.apple-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.select-wrapper { position: relative; }
+.select-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 0.8rem;
+  color: #86868b;
+}
+.select-wrapper select { appearance: none; padding-right: 40px; }
+
+.input-with-icon { position: relative; }
+.input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #86868b;
+  font-size: 1.2rem;
+}
+
+/* Upload Drop Area */
+.upload-drop-area-apple {
+  border: 2px dashed #C7C7CC;
+  border-radius: 16px;
+  padding: 40px 20px;
+  text-align: center;
+  background: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .upload-drop-area-apple:hover {
   border-color: var(--apple-blue);
-  background: linear-gradient(180deg, #F0F7FF 0%, #E8F2FF 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 122, 255, 0.1);
+  background: rgba(0, 113, 227, 0.04);
 }
 
 .upload-drop-area-apple.has-file {
-  border-color: var(--apple-green);
-  background: linear-gradient(180deg, #F0FFF4 0%, #E8FFE8 100%);
+  border-color: #34C759;
+  background: rgba(52, 199, 89, 0.05);
 }
 
 .upload-icon-wrapper {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #007AFF 0%, #0056CC 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1rem;
-  transition: var(--apple-transition);
-}
-
-.upload-drop-area-apple:hover .upload-icon-wrapper {
-  transform: scale(1.1);
-  box-shadow: 0 8px 24px rgba(0, 122, 255, 0.3);
-}
-
-.upload-icon-wrapper i {
-  font-size: 1.75rem;
-  color: white;
-}
-
-.upload-text {
-  font-size: 1rem;
-  color: #1d1d1f;
-  margin-bottom: 0.5rem;
-}
-
-.upload-text strong {
-  color: var(--apple-blue);
-}
-
-.upload-text .file-selected {
-  color: var(--apple-green);
-  font-weight: 600;
-}
-
-.upload-hint {
-  font-size: 0.8rem;
-  color: var(--apple-gray);
-}
-
-/* ===== Apple Secondary Button ===== */
-.btn-apple-secondary {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border-radius: 12px;
-  border: none;
-  background: var(--apple-light-gray);
-  color: #1d1d1f;
-  font-weight: 500;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: var(--apple-transition);
-}
-
-.btn-apple-secondary:hover:not(:disabled) {
-  background: #E5E5EA;
-  transform: translateY(-1px);
-}
-
-.btn-apple-secondary:active {
-  transform: scale(0.98);
-}
-
-.btn-apple-secondary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* ===== Toast Animation ===== */
-@keyframes toastSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ===== Success Animation ===== */
-@keyframes successPulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.success-animation {
-  animation: successPulse 0.5s ease-in-out;
-}
-
-/* ===== Loading Skeleton ===== */
-@keyframes shimmer {
-  0% {
-    background-position: -200px 0;
-  }
-  100% {
-    background-position: 200px 0;
-  }
-}
-
-.skeleton {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200px 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-/* Buttons */
-.btn-outline-secondary {
-  color: #6c757d;
-  border-color: #6c757d;
-}
-
-.btn-outline-secondary:hover {
-  color: #fff;
-  background-color: #6c757d;
-  border-color: #6c757d;
-}
-
-.btn-black {
-  background-color: #000;
-  color: #fff;
-  border: none;
-}
-
-.btn-black:hover {
-  background-color: #333;
-}
-
-/* Modal styles */
-.modal-content {
-  border-radius: 0.5rem;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-}
-
-.modal-header {
-  border-bottom: none;
-}
-
-.modal-footer {
-  border-top: none;
-}
-
-/* ===== Empty State ===== */
-.empty-state {
-  padding: 3rem;
-  text-align: center;
-}
-
-.empty-state i {
   font-size: 3rem;
-  color: var(--apple-gray);
-  margin-bottom: 1rem;
+  color: var(--apple-blue);
+  margin-bottom: 12px;
+}
+.upload-text { font-size: 1rem; color: #1d1d1f; }
+.upload-hint { font-size: 0.85rem; color: #86868b; margin-top: 4px; }
+
+.apple-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
 }
 
-.empty-state p {
+/* Transitions */
+.apple-zoom-enter-active { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.apple-zoom-leave-active { transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1); }
+.apple-zoom-enter-from, .apple-zoom-leave-to { opacity: 0; transform: scale(0.95); }
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   color: var(--apple-gray);
-  font-size: 1rem;
 }
+.empty-state i { font-size: 2.5rem; margin-bottom: 0.5rem; opacity: 0.5; }
+
 </style>
