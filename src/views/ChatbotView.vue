@@ -38,7 +38,7 @@
                 </path>
               </svg>
             </button>
-            <button v-if="messages.length > 0" class="clear-chat-btn" @click="clearChatHistory" aria-label="clear chat" title="ล้างประวัติการสนทนา">
+            <button v-if="showClearBtn" class="clear-chat-btn" @click="clearChatHistory" aria-label="clear chat" title="ล้างประวัติการสนทนา">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="trash-icon">
                 <path class="trash-lid" d="M3 6h18" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="20" stroke-dashoffset="20">
                   <animate attributeName="stroke-dashoffset" to="0" dur="0.3s" fill="freeze"/>
@@ -52,8 +52,6 @@
               </svg>
             </button>
             <div class="overlay-backdrop-2"></div>
-
-            
           </div>
 
           <div class="panel-body" :class="{ 'anchor-bottom': anchorBottom }" @scroll="handleScroll" ref="panelBody">
@@ -878,6 +876,10 @@ export default {
     // ตรวจว่ามี bot message ใน chat หรือยัง
     hasBotMessages() {
       return this.lastBotMessageIndex >= 0
+    },
+    // Show clear (trash) button on welcome view or when messages exist
+    showClearBtn() {
+      return (Array.isArray(this.messages) && this.messages.length > 0) || this.showTopCategories
     }
   },
   
@@ -1222,11 +1224,10 @@ export default {
 
     // embedding removed; no persisted embed settings
 
-    // Auto-open chatbot if enabled in env
-    if (import.meta.env.VITE_AUTO_OPEN_CHATBOT === 'true') {
-      setTimeout(() => {
-        this.visible = true
-      }, 500)
+    // Auto-open chatbot if enabled in env, or if the current route is the chatbot root
+    if (import.meta.env.VITE_AUTO_OPEN_CHATBOT === 'true' || (this.$route && this.$route.name === 'chatbot')) {
+      // Open immediately on mount without artificial delay
+      this.visible = true
     }
   },
 
@@ -1357,14 +1358,25 @@ export default {
 
         // After opening, ensure the panel shows the latest messages
         this.$nextTick(() => {
-          this.scrollToBottom()
           this.updateAnchoring()
-          // Force scroll again after a delay to ensure it reaches bottom
-          setTimeout(() => {
+          if (!this.messages || this.messages.length === 0) {
+            // No messages: show top (welcome/categories) at start
             if (this.$refs.panelBody) {
-              this.$refs.panelBody.scrollTop = this.$refs.panelBody.scrollHeight
+              this.$refs.panelBody.scrollTop = 0
             }
-          }, 400)
+            // Ensure it remains at top after animations/rendering
+            setTimeout(() => {
+              if (this.$refs.panelBody) this.$refs.panelBody.scrollTop = 0
+            }, 400)
+          } else {
+            // Has messages: scroll to bottom as usual
+            this.scrollToBottom()
+            setTimeout(() => {
+              if (this.$refs.panelBody) {
+                this.$refs.panelBody.scrollTop = this.$refs.panelBody.scrollHeight
+              }
+            }, 400)
+          }
         })
       } else {
         // Chat closed: cancel any pending welcome typing and bot typing timers
@@ -3292,10 +3304,17 @@ export default {
 
       // Ensure panel scrolls to bottom so user sees the typing near the input
       this.$nextTick(() => {
-        this.scrollToBottom()
-        // slight delay for rendering/animation quirk on mobile
-        setTimeout(() => this.scrollToBottom(), 50)
-        setTimeout(() => this.scrollToBottom(), 250)
+        if (this.tempTyping) {
+          // If we're showing the typing indicator at the bottom, keep behavior to scroll to bottom
+          this.scrollToBottom()
+          setTimeout(() => this.scrollToBottom(), 50)
+          setTimeout(() => this.scrollToBottom(), 250)
+        } else {
+          // No messages/typing: ensure the panel is scrolled to the top so welcome/categories are visible
+          if (this.$refs.panelBody) this.$refs.panelBody.scrollTop = 0
+          setTimeout(() => { if (this.$refs.panelBody) this.$refs.panelBody.scrollTop = 0 }, 50)
+          setTimeout(() => { if (this.$refs.panelBody) this.$refs.panelBody.scrollTop = 0 }, 250)
+        }
         this.updateAnchoring()
       })
 
@@ -3902,6 +3921,14 @@ export default {
     // Animate open using Web Animations API for a spring-like Apple sheet motion
     animateOpen(el, done) {
       try {
+        // Ensure panel body is at top BEFORE animation starts so user doesn't see it scrolling
+        const panelBody = el.querySelector('.panel-body')
+        if (panelBody) {
+          // Apply instant scroll behavior and set to top immediately
+          panelBody.style.scrollBehavior = 'auto'
+          panelBody.scrollTop = 0
+        }
+
         const panel = el.querySelector('.chat-panel')
         const overlay = el.querySelector('.overlay-backdrop')
         if (overlay) {
@@ -3928,12 +3955,17 @@ export default {
 
         Promise.all([overlayAnim ? overlayAnim.finished : Promise.resolve(), panelAnim.finished]).then(() => {
           if (panel) panel.style.willChange = ''
+          // restore any forced scroll-behavior we set earlier
+          try {
+            if (panelBody) panelBody.style.scrollBehavior = ''
+          } catch(e) {}
           done()
         }).catch(() => done())
       } catch (e) {
         done()
       }
     },
+
 
     // Reverse animation for close
     animateClose(el, done) {
