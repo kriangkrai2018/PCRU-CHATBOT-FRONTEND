@@ -583,7 +583,39 @@
             </div>
 
             <div class="input-row">
-              <input v-model="query" class="input-pill" :class="{ 'shake': isTyping }" :style="typingStyle" :placeholder="placeholderText" @keyup.enter="onSend" @input="onTyping" @focus="onInputFocus" @blur="onInputBlur" ref="inputBox" />
+              <div class="input-container">
+                <!-- ⌨️ Input-anchored Typing Tooltip (shows above input) -->
+                <transition name="typing-tooltip-fade">
+                  <div v-if="showUserTypingTooltip" class="typing-tooltip typing-tooltip-input" :style="userTypingTooltipStyle">
+                    <div class="typing-tooltip-content">{{ userTypingTooltipText }}</div>
+                    <div class="typing-tooltip-tail"></div>
+                  </div>
+                </transition>
+
+                <!-- 👻 Ghost overlay showing only the suggested suffix -->
+                <div :class="['input-pill', 'ghost-input', { 'ghost-hidden': showUserTypingTooltip }]" aria-hidden="true">
+                  <span class="ghost-typed">{{ query }}</span>
+                  <span class="ghost-suffix" v-if="suggestionText && suggestionText.length > (query || '').length">{{ suggestionText.slice((query || '').length) }}</span>
+                </div>
+                <!-- ⌨️ Real Input -->
+                <input
+                  v-model="query"
+                  class="input-pill real-input"
+                  :class="{ 'shake': isTyping }"
+                  :style="typingStyle"
+                  :placeholder="placeholderText"
+                  @keyup.enter="onSend"
+                  @keydown.tab.prevent="acceptSuggestion"
+                  @keydown.arrow-right.prevent="checkAcceptSuggestion"
+                  @compositionstart="onCompositionStart"
+                  @compositionend="onCompositionEnd"
+                  @input="onTyping"
+                  @focus="onInputFocus"
+                  @blur="onInputBlur"
+                  ref="inputBox"
+                  autocomplete="off"
+                />
+              </div>
               <button class="btn-send" @click="onSend" aria-label="send" ref="sendBtn" :style="sendBtnFixedStyle">
                 <!-- Animated chat bubble icon -->
                 <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="send-icon" aria-hidden="true" focusable="false">
@@ -720,6 +752,11 @@ export default {
       userTypingTooltipStyle: {},
       typingTooltipTimer: null,
       currentTypingMessageIndex: 0,
+      // Composition / Autocomplete state
+      isComposing: false,
+      suggestionText: '',
+      // Populated from backend `/keywords/public` on mount
+      autocompleteKeywords: [],
       // Power mode particles
       particles: [],
       particleAnimationFrame: null,
@@ -1432,6 +1469,18 @@ export default {
 
         if (Array.isArray(keywordsData)) {
           this.protectedKeywords = new Set(keywordsData.map(k => (k.KeywordText || '').toLowerCase()));
+
+          // Fill autocomplete keywords from backend-provided keywords
+          // Support both object with KeywordText and plain string entries
+          this.autocompleteKeywords = Array.from(new Set(
+            keywordsData
+              .map(k => (k && (k.KeywordText || k.keyword || k.text || k)).toString().trim())
+              .filter(Boolean)
+          ))
+          // Sort using Thai locale where possible for stable suggestions
+          try { this.autocompleteKeywords.sort((a, b) => a.localeCompare(b, 'th')); } catch (e) { /* ignore */ }
+        } else {
+          this.autocompleteKeywords = [];
         }
 
         if (Array.isArray(stopwordsData)) {
@@ -1820,6 +1869,9 @@ export default {
         // Hide any typing hint tooltip and clear timer
         this.showUserTypingTooltip = false
         if (this.typingTooltipTimer) { clearTimeout(this.typingTooltipTimer); this.typingTooltipTimer = null }
+        // Clear autocomplete suggestion and composition state
+        this.suggestionText = ''
+        this.isComposing = false
         // Clear the measured send button positioning and remove listeners
         this.sendBtnFixedStyle = null
         try {
@@ -2369,6 +2421,9 @@ export default {
       })
     },
     onTyping() {
+      // Ignore autocomplete while IME composition active
+      if (this.isComposing) return
+
       // Animation-only typing feedback; tooltip handled on focus/blur
       if (this.typingTimeout) {
         clearTimeout(this.typingTimeout)
@@ -2380,7 +2435,7 @@ export default {
         }
       }
 
-      // Detect if user is typing something that looks like the word "เมนู" (allow spaces/partial input)
+      // --- 1) Typing hint for 'เมนู' ---
       try {
         const raw = (this.query || '').toString()
         const normalized = raw.replace(/\s+/g, '') // remove spaces (handles 'เ ม น ู')
@@ -2406,6 +2461,24 @@ export default {
           }
         }
       } catch (e) { /* ignore detection errors */ }
+
+      // --- 2) Autocomplete / Ghost Suggestion ---
+      try {
+        const input = (this.query || '').toString()
+        if (!input || input.trim().length < 2) {
+          this.suggestionText = ''
+        } else {
+          const match = this.autocompleteKeywords.find(k => {
+            return k && k.toLowerCase().startsWith(input.toLowerCase()) && k.toLowerCase() !== input.toLowerCase()
+          })
+          if (match) {
+            const suffix = match.slice(input.length)
+            this.suggestionText = input + suffix
+          } else {
+            this.suggestionText = ''
+          }
+        }
+      } catch (e) { this.suggestionText = '' }
 
       // End typing animation shortly after input stops
       this.typingTimeout = setTimeout(() => {
@@ -2457,6 +2530,36 @@ export default {
         this.animateParticles()
       }
     },
+
+    // --- Autocomplete helpers ---
+    acceptSuggestion() {
+      if (!this.suggestionText) return
+      this.query = this.suggestionText
+      this.suggestionText = ''
+      this.$nextTick(() => {
+        const input = this.$refs.inputBox
+        if (input && typeof input.focus === 'function') {
+          input.focus()
+          const len = (this.query || '').length
+          try { input.setSelectionRange(len, len) } catch (e) { /* ignore */ }
+        }
+      })
+    },
+    checkAcceptSuggestion(e) {
+      if (!this.suggestionText) return
+      const input = e && e.target ? e.target : this.$refs.inputBox
+      try {
+        if (input.selectionEnd === input.value.length) {
+          this.query = this.suggestionText
+          this.suggestionText = ''
+          this.$nextTick(() => {
+            try { input.setSelectionRange(this.query.length, this.query.length); input.focus() } catch (e) {}
+          })
+        }
+      } catch (err) { /* ignore */ }
+    },
+    onCompositionStart() { this.isComposing = true },
+    onCompositionEnd() { this.isComposing = false; this.$nextTick(() => this.onTyping()) },
     animateParticles() {
       const canvas = this.$refs.particleCanvas
       if (!canvas) return
@@ -2548,6 +2651,8 @@ export default {
       }, 600)
     },
     async onSend(options = {}) {
+      // Clear autocomplete suggestion on send
+      this.suggestionText = ''
       // --- แก้ไข Logic ปุ่มเมนู ---
       if (this.query && (this.query.trim() === 'เมนู' || this.query.trim() === 'menu')) {
         const originalUserMessage = this.query.trim();
@@ -4302,6 +4407,83 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
 /* Limit layout recalcs for the containing panel */
 .chat-panel {
   contain: content;
+}
+
+/* === Autocomplete Ghost Text (input layering) === */
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.input-container {
+  position: relative;
+  flex: 1;
+  display: flex;
+}
+
+.input-pill {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 24px;
+  border: 1px solid #e6e6e9;
+  font-size: 15px;
+  line-height: 1.4;
+  outline: none;
+  font-family: inherit;
+  transition: all 0.15s;
+  box-sizing: border-box;
+}
+
+.real-input {
+  position: relative;
+  z-index: 2;
+  background-color: transparent !important;
+  color: #111;
+}
+.real-input:focus {
+  border-color: #8B4CB8;
+  box-shadow: 0 0 0 3px rgba(139, 76, 184, 0.08);
+}
+
+.ghost-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0; /* sit behind floating tooltips */
+  background-color: transparent; /* don't obscure guides */
+  border-color: transparent !important;
+  pointer-events: none;
+  user-select: none;
+  box-shadow: none !important;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.ghost-input .ghost-typed {
+  color: transparent; /* reserve space so suffix aligns */
+  white-space: pre; /* preserve spaces */
+}
+.ghost-input .ghost-suffix {
+  color: #c7c7cc;
+  font-weight: 500;
+  white-space: pre;
+  pointer-events: none;
+}
+
+/* Hide ghost overlay entirely while typing tooltip is visible so guide text is never occluded */
+.ghost-input.ghost-hidden {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s ease;
+}
+
+/* Small layout tweak for very small screens to avoid overlapping */
+@media (max-width: 520px) {
+  .panel-footer .btn-send { right: 12px; }
 }
 
 .snowflakes {
