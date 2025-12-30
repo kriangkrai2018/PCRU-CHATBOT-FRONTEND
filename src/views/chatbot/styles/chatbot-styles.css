@@ -1667,7 +1667,6 @@ html.keyboard-open .message-wrapper {
 .message-bubble {
   max-width: 85%;
   padding: 14px 18px;
-  border-radius: 20px;
   font-size: 15px;
   line-height: 1.45;
   word-wrap: break-word;

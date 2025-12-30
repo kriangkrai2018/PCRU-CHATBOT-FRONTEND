@@ -25,13 +25,12 @@
   max-width: 370px;
   /* Desktop: pin to right-bottom look */
   margin-left: auto;   /* push to right */
-  margin-right: 24px;  /* spacing from right edge */
-  margin-bottom: 24px; /* spacing from bottom edge */
   margin-top: auto;    /* push to bottom when overlay is flex column */
   height: 100vh;
   /* make it look like a floating chat on desktop */
   max-height: calc(100vh - 48px);
-  border-radius: 24px;
+  border-top-left-radius: 24px;
+  border-bottom-left-radius: 24px;
   /* iOS safe area support */
   height: -webkit-fill-available;
   min-height: 100vh;
@@ -534,6 +533,7 @@ html.keyboard-open .clear-chat-btn {
   scroll-margin-top: 110px;
   background: rgba(255, 255, 255, 0.5);
   border: 0.5px solid rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .cat-sub-btn:hover { 
@@ -2155,7 +2155,7 @@ body.no-effects .apple-help-button::after { display: none !important; }
   /* Push to right edge - narrower max-width */
   max-width: 72%;
   margin-left: auto;
-  margin-right: 0;
+  margin-right: 0px;
   word-break: break-word;
   /* 🍎 GPU acceleration */
   will-change: transform, opacity;
@@ -2170,6 +2170,8 @@ body.no-effects .apple-help-button::after { display: none !important; }
 
 .message-bubble.bot {
   background: rgba(255, 255, 255, 0.9);
+  /* Default: full width for normal bot messages */
+  width: 100% !important;
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   color: #1d1d1f;
@@ -2178,6 +2180,13 @@ body.no-effects .apple-help-button::after { display: none !important; }
   border: 0.5px solid rgba(0, 0, 0, 0.06);
   overflow: visible;
   margin-top: .65rem;
+}
+
+/* Typing state or temporary bottom typing bubble: let bubble size to its content */
+.message-wrapper.bot.typing .message-bubble,
+.panel-footer .bottom-typing .message-bubble {
+  width: auto !important;
+  max-width: 60% !important;
 }
 
 @keyframes botBubbleIn {
@@ -3369,10 +3378,8 @@ body.no-effects .apple-help-button::after { display: none !important; }
   .message-bubble,
   .message-bubble.bot {
     max-width: 100% !important;
-    width: 100% !important;
     margin: 8px 0 !important;
     box-sizing: border-box;
-    border-radius: 26px !important;
     padding-left: 20px;
     padding-right: 20px;
     padding-top: 16px;
@@ -3385,7 +3392,6 @@ body.no-effects .apple-help-button::after { display: none !important; }
     width: auto !important;
     margin: 8px 0 8px auto !important;
     box-sizing: border-box;
-    border-radius: 26px !important;
     padding-left: 16px;
     padding-right: 16px;
   }

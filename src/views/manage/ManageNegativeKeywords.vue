@@ -13,6 +13,14 @@
       </div>
       <h1 class="page-title slide-in-down">จัดการคำปฏิเสธ</h1>
       <p class="page-subtitle slide-in-up">Negative Keywords Management</p>
+
+      <!-- 🆕 ปุ่ม Seed (Auto-Fill) เพิ่มตรงนี้ -->
+      <div class="header-actions slide-in-up" :style="{animationDelay: '0.1s'}">
+        <button class="btn-seed" @click="confirmSeed" :disabled="isSeeding">
+          <i class="bi bi-magic me-2"></i>
+          {{ isSeeding ? 'กำลังเติมข้อมูล...' : 'เติมคำมาตรฐานอัตโนมัติ' }}
+        </button>
+      </div>
     </div>
 
     <!-- Stats Cards -->
@@ -272,6 +280,28 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- 🆕 Seed Confirmation Modal -->
+    <Teleport to="body">
+      <div class="modal-overlay" v-if="seedModal.show" @click.self="seedModal.show = false">
+        <div class="modal-content pop-in">
+          <div class="modal-icon primary">
+            <i class="bi bi-magic"></i>
+          </div>
+          <h3 class="modal-title">เติมคำอัตโนมัติ</h3>
+          <p class="modal-text">
+            ระบบจะเติมคำปฏิเสธมาตรฐานประมาณ 50 คำ (เช่น ไม่, อย่า, ห้าม) ลงในระบบ<br>
+            <small class="text-muted">คำที่คุณเคยลบไปแล้วจะไม่ถูกเติมกลับมา</small>
+          </p>
+          <div class="modal-actions">
+            <button class="btn-secondary" @click="seedModal.show = false">ยกเลิก</button>
+            <button class="btn-primary-apple" @click="seedKeywords" :disabled="isSeeding">
+              {{ isSeeding ? 'กำลังเติม...' : 'ยืนยัน' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
       </div>
     </main>
   </div>
@@ -296,7 +326,11 @@ const filterActive = ref(undefined);
 const isLoading = ref(false);
 const isAdding = ref(false);
 const isDeleting = ref(false);
+const isSeeding = ref(false); // 🆕
 const editingId = ref(null);
+
+// Seed modal state
+const seedModal = reactive({ show: false }); // 🆕
 
 // Forms
 const newKeyword = reactive({
@@ -445,6 +479,36 @@ const confirmDelete = (keyword) => {
   deleteModal.show = true;
 };
 
+// 🆕 Seed helpers
+const confirmSeed = () => {
+  seedModal.show = true;
+};
+
+const seedKeywords = async () => {
+  isSeeding.value = true;
+  try {
+    const response = await axiosInstance.post('/negativekeywords/seed');
+    if (response.data && response.data.ok) {
+      const added = response.data.addedCount || 0;
+      if (added > 0) {
+        showToast(`เติมข้อมูลสำเร็จ! เพิ่มคำใหม่ ${added} คำ`, 'success');
+      } else {
+        showToast('ข้อมูลเป็นปัจจุบันอยู่แล้ว ไม่มีคำใหม่ที่ต้องเพิ่ม', 'warning');
+      }
+      seedModal.show = false;
+      // Refresh table
+      pagination.value.page = 1;
+      await fetchKeywords();
+    } else {
+      showToast(response.data?.message || 'ไม่สามารถเติมคำได้', 'error');
+    }
+  } catch (error) {
+    showToast(error.response?.data?.message || error.message || 'เกิดข้อผิดพลาดในการเติมข้อมูล', 'error');
+  } finally {
+    isSeeding.value = false;
+  }
+};
+
 const deleteKeyword = async () => {
   if (!deleteModal.keyword) return;
   
@@ -574,6 +638,43 @@ onMounted(() => {
   grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
   margin-bottom: 1.5rem;
+}
+
+/* 🆕 Seed Button */
+.header-actions {
+  margin-top: 1rem;
+}
+
+.btn-seed {
+  background: #E5F0FF;
+  color: #007AFF;
+  border: none;
+  border-radius: 20px;
+  padding: 0.5rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-seed:hover:not(:disabled) {
+  background: #007AFF;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+}
+
+.btn-seed:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 🆕 Modal Icon Primary */
+.modal-icon.primary {
+  background: #E5F0FF;
+  color: #007AFF;
 }
 
 .stat-card {

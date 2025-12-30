@@ -218,7 +218,7 @@
                 </div>
               </div>
               <transition-group name="message-pop" tag="div" class="message-list">
-                <div v-for="(msg, idx) in messages" :key="msg.id || idx" class="message-wrapper" :class="msg.type">
+                <div v-for="(msg, idx) in messages" :key="msg.id || idx" class="message-wrapper" :class="[msg.type, { typing: !!msg.typing }]">
                 <div v-if="msg.type === 'bot'" class="bot-avatar-wrapper">
                   <div class="bot-avatar" role="button" tabindex="0" @click="openAiIntro" title="เปิด AI เต็มจอ">
                     <img :src="botAvatar" alt="Bot" class="bot-avatar-img" />
