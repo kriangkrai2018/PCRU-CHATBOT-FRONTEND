@@ -2121,16 +2121,12 @@ export default {
       // Close help modal and return to chat
       this.showHelpModal = false
       this.showAiIntro = false
-      // Ensure chat drawer is open and input is focused
+      // Ensure chat drawer is open but do NOT force focusing the input (avoid opening keyboard)
       this.$nextTick(() => {
         if (!this.visible) {
           this.visible = true
         }
-        // Focus the input field for better UX
-        const inputBox = this.$refs.inputBox
-        if (inputBox) {
-          inputBox.focus()
-        }
+        // Do not autofocus input to prevent forcing keyboard to open on mobile
       })
     },
     // Parallax tilt interactions
