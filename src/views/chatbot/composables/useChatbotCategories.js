@@ -18,20 +18,34 @@ export function useChatbotCategories() {
   })
 
   function toggle(index) {
+    // Make accordion single-open: opening one closes others
     const idx = openIndexes.value.indexOf(index)
-    if (idx === -1) openIndexes.value.push(index)
-    else openIndexes.value.splice(idx, 1)
+    if (idx === -1) {
+      // Open this index and close all others
+      openIndexes.value = [index]
+    } else {
+      // It was open, so close it
+      openIndexes.value.splice(idx, 1)
+    }
     saveCategoryState()
   }
 
   function saveCategoryState() {
-    try { localStorage.setItem('chatbot_category_state', JSON.stringify(openIndexes.value)) } catch (e) {}
+    try {
+      // Persist only first open index to maintain single-open rule
+      const toSave = Array.isArray(openIndexes.value) && openIndexes.value.length > 0 ? [openIndexes.value[0]] : []
+      localStorage.setItem('chatbot_category_state', JSON.stringify(toSave))
+    } catch (e) {}
   }
 
   function loadCategoryState() {
     try {
       const saved = localStorage.getItem('chatbot_category_state')
-      if (saved) openIndexes.value = JSON.parse(saved)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) openIndexes.value = [parsed[0]]
+        else openIndexes.value = []
+      }
     } catch (e) { openIndexes.value = [] }
   }
 

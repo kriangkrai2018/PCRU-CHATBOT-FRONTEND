@@ -2135,8 +2135,13 @@ export default {
         }
 
         const idxMsg = msg.openIndexes.indexOf(i)
-        if (idxMsg === -1) msg.openIndexes.push(i)
-        else msg.openIndexes.splice(idxMsg, 1)
+        if (idxMsg === -1) {
+          // Open this index and ensure only one open per message
+          msg.openIndexes = [i]
+        } else {
+          // It was open, so close it
+          msg.openIndexes = []
+        }
 
         // Persist message changes
         this.saveChatHistory()
@@ -2159,10 +2164,15 @@ export default {
 
       // Fallback: global openIndexes (used by welcome/top categories)
       const idx = this.openIndexes.indexOf(i)
-      if (idx === -1) this.openIndexes.push(i)
-      else this.openIndexes.splice(idx, 1)
+      if (idx === -1) {
+        // Open this index and close all others (single-open behavior)
+        this.openIndexes = [i]
+      } else {
+        // It was already open - close it
+        this.openIndexes = []
+      }
       
-      // Save category state to localStorage
+      // Save category state to localStorage (single index only)
       this.saveCategoryState()
 
       // Ensure chat panel scrolls to bottom when opening an accordion
@@ -3303,7 +3313,9 @@ export default {
     },
     saveCategoryState() {
       try {
-        localStorage.setItem('chatbot_category_state', JSON.stringify(this.openIndexes))
+        // Persist only the first open index to enforce single-open behavior
+        const toSave = Array.isArray(this.openIndexes) && this.openIndexes.length > 0 ? [this.openIndexes[0]] : []
+        localStorage.setItem('chatbot_category_state', JSON.stringify(toSave))
       } catch (error) {
         console.error('Failed to save category state:', error)
       }
@@ -3313,7 +3325,9 @@ export default {
       try {
         const savedState = localStorage.getItem('chatbot_category_state')
         if (savedState) {
-          this.openIndexes = JSON.parse(savedState)
+          const parsed = JSON.parse(savedState)
+          if (Array.isArray(parsed) && parsed.length > 0) this.openIndexes = [parsed[0]]
+          else this.openIndexes = []
         }
       } catch (error) {
         console.error('Failed to load category state:', error)
