@@ -520,7 +520,7 @@ onMounted(() => {
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-radius: 24px;
+  border-radius: 26px;
   border: 1px solid rgba(139, 92, 184, 0.1);
   box-shadow: 
     0 8px 32px rgba(139, 92, 184, 0.08),

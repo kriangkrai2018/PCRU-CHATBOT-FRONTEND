@@ -696,7 +696,7 @@ onUnmounted(() => {
 .alert-modal {
   width: min(460px, 90vw);
   background: rgba(255, 255, 255, 0.95);
-  border-radius: 24px;
+  border-radius: 26px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   padding: 28px 26px;
   text-align: center;
@@ -930,7 +930,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(124, 58, 237, 0.15));
-  border-radius: 24px;
+  border-radius: 26px;
   animation: iconFloat 4s ease-in-out infinite;
 }
 
@@ -1157,7 +1157,7 @@ onUnmounted(() => {
   position: relative;
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(20px);
-  border-radius: 24px;
+  border-radius: 26px;
   padding: 24px;
   overflow: hidden;
 }

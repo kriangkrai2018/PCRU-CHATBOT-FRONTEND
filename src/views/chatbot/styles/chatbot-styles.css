@@ -1026,7 +1026,6 @@ html.keyboard-open .panel-footer {
   background: rgba(255, 255, 255, 0.98);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.4) inset;
   border: 0.5px solid rgba(0, 0, 0, 0.06);
-  border-radius: 20px;
   animation: cardFloat 0.6s cubic-bezier(.2,.9,.2,1);
   box-sizing: border-box;
   overflow: visible;
@@ -2923,7 +2922,7 @@ html.keyboard-open .message-wrapper {
   bottom: 100px;
   width: 48px;
   height: 48px;
-  border-radius: 24px;
+  border-radius: 26px;
   background: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%);
   border: none;
   display: flex;

@@ -710,6 +710,7 @@ export default {
       showUserTypingTooltip: false,
       userTypingTooltipText: '',
       userTypingTooltipStyle: {},
+      typingTooltipTimer: null,
       currentTypingMessageIndex: 0,
       // Power mode particles
       particles: [],
@@ -1808,6 +1809,9 @@ export default {
         this.handleKeyboardDetection()
         // Reactive cleanup: unset panelFocused so CSS reverts
         this.panelFocused = false
+        // Hide any typing hint tooltip and clear timer
+        this.showUserTypingTooltip = false
+        if (this.typingTooltipTimer) { clearTimeout(this.typingTooltipTimer); this.typingTooltipTimer = null }
         // Clear the measured send button positioning and remove listeners
         this.sendBtnFixedStyle = null
         try {
@@ -2367,6 +2371,34 @@ export default {
           this.createParticles()
         }
       }
+
+      // Detect if user is typing something that looks like the word "เมนู" (allow spaces/partial input)
+      try {
+        const raw = (this.query || '').toString()
+        const normalized = raw.replace(/\s+/g, '') // remove spaces (handles 'เ ม น ู')
+        const target = 'เมนู'
+        if (normalized && target.startsWith(normalized)) {
+          // Show a contextual hint only when user is typing a prefix of "เมนู"
+          this.userTypingTooltipText = 'พิมพ์ เมนู คำเดียว เพื่อเปิด เมนูได้นะคะ'
+          this.userTypingTooltipStyle = {}
+          this.openTooltip('typing')
+
+          // Reset/hide any previous timer
+          if (this.typingTooltipTimer) { clearTimeout(this.typingTooltipTimer); this.typingTooltipTimer = null }
+          // Auto-hide after a few seconds if user stops
+          this.typingTooltipTimer = setTimeout(() => {
+            this.showUserTypingTooltip = false
+            this.typingTooltipTimer = null
+          }, 4200)
+        } else {
+          // If the typed text no longer matches, hide the hint
+          if (this.showUserTypingTooltip) {
+            this.showUserTypingTooltip = false
+            if (this.typingTooltipTimer) { clearTimeout(this.typingTooltipTimer); this.typingTooltipTimer = null }
+          }
+        }
+      } catch (e) { /* ignore detection errors */ }
+
       // End typing animation shortly after input stops
       this.typingTimeout = setTimeout(() => {
         this.isTyping = false
