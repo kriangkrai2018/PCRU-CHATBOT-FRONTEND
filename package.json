@@ -10,7 +10,9 @@
     "dev": "vite",
     "start": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "bg:preview": "nohup npm run preview -- --port 36144 > ./preview.log 2>&1 & echo $! > ./preview.pid",
+    "stop:bg": "[ -f ./preview.pid ] && (kill $(cat ./preview.pid) && rm ./preview.pid) || pkill -f 'vite preview' || true"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
