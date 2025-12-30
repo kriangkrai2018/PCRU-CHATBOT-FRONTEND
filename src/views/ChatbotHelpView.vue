@@ -13,7 +13,7 @@
           <!-- Header with Glass Effect -->
           <header class="panel-header">
             <div class="header-content">
-              <h1 class="title">ช่วยเหลือ</h1>
+              <h1 class="title">ศูนย์ช่วยเหลือ</h1>
               <button class="close-btn" @click="closeHelp">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <path d="M1 1L13 13M13 1L1 13" stroke="#86868b" stroke-width="2" stroke-linecap="round"/>
@@ -25,32 +25,34 @@
           <!-- Scrollable Content -->
           <div class="panel-content custom-scrollbar">
             
-            <!-- Section 1: Features -->
+            <!-- Section 1: Features & Intro -->
             <section class="apple-section fade-in-stagger" style="--delay: 0.1s">
-              <div class="section-icon-wrapper blue-gradient">
-                <svg class="animated-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="11" width="18" height="10" rx="2" class="draw-path" style="--duration: 1s"/>
-                  <circle cx="12" cy="5" r="2" class="draw-path" style="--duration: 0.5s; --delay: 0.5s"/>
-                  <path d="M12 7v4" class="draw-path" style="--duration: 0.3s; --delay: 0.8s"/>
-                  <line x1="8" y1="16" x2="8" y2="16" class="pop-in" style="--delay: 1.1s"/>
-                  <line x1="16" y1="16" x2="16" y2="16" class="pop-in" style="--delay: 1.2s"/>
-                </svg>
+              <div class="section-hero">
+                <div class="hero-icon-wrapper blue-gradient float-animation">
+                  <svg class="animated-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="10" rx="2" class="draw-path" style="--duration: 1.2s"/>
+                    <circle cx="12" cy="5" r="2" class="draw-path" style="--duration: 0.6s; --delay: 0.5s"/>
+                    <path d="M12 7v4" class="draw-path" style="--duration: 0.4s; --delay: 0.8s"/>
+                    <line x1="8" y1="16" x2="8" y2="16" class="pop-in" style="--delay: 1.2s"/>
+                    <line x1="16" y1="16" x2="16" y2="16" class="pop-in" style="--delay: 1.3s"/>
+                  </svg>
+                </div>
+                <div class="hero-text">
+                  <h2 class="section-heading">ผู้ช่วยอัจฉริยะ PCRU</h2>
+                  <p class="section-desc">พร้อมตอบคำถามเรื่องทุน, หอพัก, และเอกสารต่างๆ</p>
+                </div>
               </div>
-              <h2 class="section-heading">ความสามารถของ Bot</h2>
-              <p class="section-desc">ผู้ช่วยอัจฉริยะที่พร้อมตอบทุกข้อสงสัยเกี่ยวกับ PCRU</p>
               
               <div class="feature-grid">
-                <!-- Loading placeholders while fetching categories -->
+                <!-- Loading placeholders -->
                 <template v-if="categoriesLoading">
                   <div class="feature-card placeholder" v-for="i in 4" :key="'ph-'+i">
-                    <div class="icon-circle" style="opacity:0.2">
-                      <i class="bi bi-tag-fill"></i>
-                    </div>
-                    <span style="opacity:0.3">Loading…</span>
+                    <div class="icon-circle skeleton-pulse"></div>
+                    <span class="skeleton-text skeleton-pulse"></span>
                   </div>
                 </template>
 
-                <!-- Render categories provided by backend (max 4 from computed) -->
+                <!-- Render categories -->
                 <template v-else>
                   <div class="feature-card" v-for="(fc, idx) in featureCategories" :key="fc.title || fc.CategoriesID || idx">
                     <div class="icon-circle" :class="iconColor(fc)">
@@ -58,11 +60,9 @@
                     </div>
                     <span>{{ fc.title || fc.CategoriesName || fc.CategoriesID || '—' }}</span>
                   </div>
-
-                  <!-- If backend returned no categories, show an informative card -->
                   <div v-if="!featureCategories.length && !categoriesLoading" class="feature-card no-data">
-                    <div class="icon-circle blue">
-                      <i class="bi bi-tag-fill"></i>
+                    <div class="icon-circle gray">
+                      <i class="bi bi-inbox-fill"></i>
                     </div>
                     <span>ไม่มีหมวดหมู่</span>
                   </div>
@@ -70,12 +70,46 @@
               </div>
             </section>
 
-            <!-- Section 2: How to Ask -->
+            <!-- 🆕 Section: Synonyms & Smart Search (New Feature) -->
             <section class="apple-section fade-in-stagger" style="--delay: 0.2s">
               <div class="section-header">
                 <div class="mini-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M7 4v16M17 4v16M3 8h4M3 16h4M17 8h4M17 16h4" class="draw-path" style="--duration: 1.5s"/>
+                  </svg>
+                </div>
+                <h3>พิมพ์คำพ้องก็เข้าใจนะ!</h3>
+              </div>
+              
+              <div class="example-container">
+                <div class="example-row magic">
+                  <div class="indicator">
+                    <i class="bi bi-stars"></i>
+                  </div>
+                  <div class="text">
+                    <strong>คำพ้องเสียง:</strong> พิมพ์ "สามหกห้า" <i class="bi bi-arrow-right-short"></i> เข้าใจเป็น "365"
+                  </div>
+                </div>
+                <div class="example-row magic">
+                  <div class="indicator">
+                    <i class="bi bi-translate"></i>
+                  </div>
+                  <div class="text">
+                    <strong>คำทับศัพท์:</strong> พิมพ์ "อีบุ๊ค" <i class="bi bi-arrow-right-short"></i> เข้าใจเป็น "E-Book"
+                  </div>
+                </div>
+                <p class="helper-text">
+                  ระบบช่วยแปลงคำพูดภาษาไทยให้เป็นคำค้นที่ถูกต้องโดยอัตโนมัติ ไม่ต้องกังวลเรื่องสะกดผิด
+                </p>
+              </div>
+            </section>
+
+            <!-- Section: How to Ask -->
+            <section class="apple-section fade-in-stagger" style="--delay: 0.3s">
+              <div class="section-header">
+                <div class="mini-icon">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" class="draw-loop"/>
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
                   </svg>
                 </div>
                 <h3>เคล็ดลับการถาม</h3>
@@ -83,78 +117,48 @@
               
               <div class="example-container">
                 <div class="example-row good">
-                  <div class="indicator">
-                    <i class="bi bi-check-circle-fill"></i>
-                  </div>
-                  <div class="text">
-                    <strong>แนะนำ:</strong> "ขอรายละเอียดทุนเรียนดีปีล่าสุด"
-                  </div>
+                  <div class="indicator"><i class="bi bi-check-circle-fill"></i></div>
+                  <div class="text"><strong>แนะนำ:</strong> "ขอรายละเอียดทุนเรียนดีปีล่าสุด"</div>
                 </div>
                 <div class="example-row bad">
-                  <div class="indicator">
-                    <i class="bi bi-x-circle-fill"></i>
-                  </div>
-                  <div class="text">
-                    <strong>ไม่แนะนำ:</strong> "ทุน" (กว้างเกินไป)
-                  </div>
+                  <div class="indicator"><i class="bi bi-x-circle-fill"></i></div>
+                  <div class="text"><strong>ไม่แนะนำ:</strong> "ทุน" (กว้างไป)</div>
                 </div>
               </div>
             </section>
 
-            <!-- Section 2.5: Bot limitations & tips -->
-            <section class="apple-section fade-in-stagger" style="--delay: 0.25s">
+            <!-- Section: Limitations -->
+            <section class="apple-section fade-in-stagger" style="--delay: 0.4s">
               <div class="section-header">
                 <div class="mini-icon">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" class="draw-loop" />
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="16" x2="12" y2="12" />
+                    <line x1="12" y1="8" x2="12.01" y2="8" />
                   </svg>
                 </div>
-                <h3>การทำงานและข้อจำกัดของ Bot</h3>
+                <h3>ข้อจำกัดและการปฏิเสธ</h3>
               </div>
 
               <div class="example-container">
-                <div class="example-row bad">
-                  <div class="indicator">
-                    <i class="bi bi-info-circle-fill"></i>
-                  </div>
+                <div class="example-row neutral">
+                  <div class="indicator"><i class="bi bi-hand-thumbs-down-fill"></i></div>
                   <div class="text">
-                    <strong>เมื่อบอทตอบไม่ได้:</strong> "ขอโทษนะคะ หนูยังไม่มีข้อมูลนี้ในระบบ — ต้องการให้หนูส่งคำถามไปยังเจ้าหน้าที่ให้ไหมคะ?"
+                    <strong>ปฏิเสธการค้นหา:</strong> พิมพ์ "ไม่" หรือ "ไม่เอาทุน" บอทจะหยุดค้นหาเรื่องนั้นให้ทันที
                   </div>
                 </div>
-
-                <!-- Removed specific 'ข้อจำกัดการเผยแพร่' example. Added user refusal examples below. -->
-                <div class="example-row bad">
-                  <div class="indicator">
-                    <i class="bi bi-chat-left-dots-fill"></i>
-                  </div>
-                  <div class="text">
-                    <strong>ตัวอย่างคำปฏิเสธของผู้ใช้ (และการตอบของบอท):</strong>
-                    <ul style="margin:8px 0 0 14px; color: var(--text-secondary);">
-                      <li><strong>ผู้ใช้:</strong> "ไม่" → <strong>บอท:</strong> "เข้าใจค่ะ ไม่เป็นไรเลย ถ้าต้องการถามอย่างอื่น หนูช่วยได้ค่ะ"</li>
-                      <li><strong>ผู้ใช้:</strong> "ไม่เอาทุน" → <strong>บอท:</strong> "รับทราบค่ะ ถ้าไม่ต้องการทุน หนูแนะนำหมวดหมู่อื่นหรือช่วยหาข้อมูลที่ต้องการได้ไหมคะ?"</li>
-                    </ul>
-                  </div>
-                </div>
+                <p class="helper-text">
+                  หากบอทตอบไม่ตรง สามารถกดปุ่ม "ส่งต่อ" เพื่อส่งคำถามให้เจ้าหน้าที่ได้
+                </p>
               </div>
-
-              <div class="section-header" style="margin-top: 12px">
-                <h3>เทคนิคการถามให้ได้คำตอบดีขึ้น</h3>
-              </div>
-
-              <ul style="padding-left: 18px; margin-top: 8px; color: var(--text-secondary);">
-                <li>ใช้คำที่ชัดเจน เช่น ชื่อทุน/ชื่อกิจกรรม พร้อมระบุปีหรือหน่วยงาน</li>
-                <li>เพิ่มคำว่า "PDF" หรือ "ดาวน์โหลด" เมื่อมองหาเอกสาร</li>
-                <li>ถามเป็นขั้นตอน หากต้องการขั้นตอนปฏิบัติ เช่น "วิธีสมัครทุน — ขั้นตอนอะไรบ้าง"</li>
-                <li>หากไม่เจอ ให้ขยายคำอธิบาย เช่น ระบุปี หรือคำค้นเพิ่มเติม</li>
-              </ul>
             </section>
 
-            <!-- Section 3: FAQ Accordion -->
-            <section class="apple-section fade-in-stagger" style="--delay: 0.3s">
+            <!-- Section: FAQ -->
+            <section class="apple-section fade-in-stagger" style="--delay: 0.5s">
                <div class="section-header">
                 <div class="mini-icon">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10" class="draw-loop"/>
+                    <circle cx="12" cy="12" r="10"/>
                     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
                     <line x1="12" y1="17" x2="12.01" y2="17" />
                   </svg>
@@ -217,14 +221,10 @@ export default {
     return {
       openFaq: 0,
       faqs: [
-        { q: 'Bot ตอบคำถามเรื่องอะไรได้บ้าง?', a: 'สามารถตอบข้อมูลเกี่ยวกับทุนการศึกษา, หอพัก, การลงทะเบียนเรียน, เอกสาร (PDF) และบริการต่างๆ สำหรับนักศึกษา PCRU' },
-        { q: 'ต้องพิมพ์ภาษาทางการไหม?', a: 'ไม่จำเป็นค่ะ สามารถพิมพ์ภาษาพูดหรือข้อความสั้น ๆ ได้ เช่น "ขอรายละเอียดทุนปีล่าสุด"' },
-        { q: 'ข้อมูลเชื่อถือได้หรือไม่?', a: 'ข้อมูลส่วนใหญ่ถูกดึงจากฐานข้อมูลของมหาวิทยาลัยและแหล่งทางการ แต่อาจมีบางรายการที่ต้องยืนยันกับเจ้าหน้าที่' },
-        { q: 'บอทรองรับภาษาอะไรบ้าง?', a: 'รองรับภาษาไทยเป็นหลัก และสามารถตอบภาษาอังกฤษได้ในบางคำถาม (ผลลัพธ์อาจแตกต่างกันตามข้อมูลที่มี)' },
-        { q: 'บอทสามารถส่งไฟล์หรือเอกสารได้ไหม?', a: 'ถ้ามีเอกสารแนบในคำตอบ บอทจะแสดงลิงก์ดาวน์โหลดไฟล์ (เช่น PDF)' },
-        { q: 'ถ้าบอทตอบไม่ตรง ควรทำอย่างไร?', a: 'ลองระบุรายละเอียดเพิ่ม (เช่น ปี หน่วยงาน หรือชื่อเอกสาร) หากยังไม่ตรง สามารถกด "ส่งต่อ" หรือแจ้งให้หนูส่งคำถามไปยังเจ้าหน้าที่ได้ค่ะ' },
-        { q: 'บอทเก็บข้อมูลการสนทนาหรือไม่?', a: 'ระบบเก็บบันทึกการสนทนาในรูปแบบที่ช่วยให้ปรับปรุงบริการ โดยจะไม่เปิดเผยข้อมูลส่วนตัวสู่สาธารณะ' },
-        { q: 'ข้อมูลอัปเดตบ่อยแค่ไหน?', a: 'การอัปเดตขึ้นกับแหล่งข้อมูลของมหาวิทยาลัย — บางข้อมูลอัปเดตเป็นประจำ ในขณะที่บางรายการอาจต้องรอการยืนยันจากเจ้าหน้าที่' },
+        { q: 'Bot ตอบอะไรได้บ้าง?', a: 'ตอบข้อมูลทุนการศึกษา, หอพัก, การลงทะเบียน, เอกสาร PDF และข่าวสารทั่วไปของ PCRU' },
+        { q: 'ต้องพิมพ์ทางการไหม?', a: 'ไม่ต้องค่ะ พิมพ์ภาษาพูดได้เลย เช่น "อยากรู้เรื่องทุนกู้ยืม"' },
+        { q: 'คำพ้องคืออะไร?', a: 'คือคำที่เขียนต่างกันแต่ความหมายเหมือนกัน เช่น พิมพ์ "สามหกห้า" บอทจะหา "365" ให้ หรือ "อีบุ๊ค" หา "E-Book" ให้' },
+        { q: 'ข้อมูลอัปเดตไหม?', a: 'ข้อมูลดึงจากฐานข้อมูลมหาวิทยาลัย บางส่วนอาจต้องรอการประกาศอย่างเป็นทางการ' },
       ],
       categories: [],
       categoriesLoading: false
@@ -232,15 +232,12 @@ export default {
   },
   computed: {
     featureCategories() {
-      // Pick top-level categories sorted by number of children (desc) then by title (locale-aware)
       const list = Array.isArray(this.categories) ? [...this.categories] : [];
       list.sort((a, b) => {
         const aCount = Array.isArray(a.items) ? a.items.length : 0;
         const bCount = Array.isArray(b.items) ? b.items.length : 0;
         if (bCount !== aCount) return bCount - aCount;
-        const aTitle = String(a.title || a.CategoriesName || '');
-        const bTitle = String(b.title || b.CategoriesName || '');
-        return aTitle.localeCompare(bTitle, 'th');
+        return (a.title || '').localeCompare(b.title || '', 'th');
       });
       return list.slice(0, 4);
     }
@@ -255,59 +252,46 @@ export default {
     async loadCategories() {
       try {
         this.categoriesLoading = true;
-
-        // Fetch raw rows from public endpoint and filter main categories where ParentCategoriesID === CategoriesID
         const res = await this.$axios.get('/categories');
         const raw = res.data?.data ?? res.data;
-        const rows = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.categories) ? raw.categories : []);
+        const rows = Array.isArray(raw) ? raw : (raw?.categories || []);
 
         if (rows.length && rows[0].hasOwnProperty('CategoriesID')) {
-          // DB shape: build roots where ParentCategoriesID === CategoriesID
-          const byId = new Map();
-          rows.forEach(r => byId.set(String(r.CategoriesID), r));
-
           const roots = rows
             .filter(r => String(r.ParentCategoriesID) === String(r.CategoriesID))
             .map(r => {
               const id = String(r.CategoriesID);
-              // children are rows whose ParentCategoriesID equals this id (but not self)
               const items = rows
                 .filter(rr => String(rr.ParentCategoriesID) === id && String(rr.CategoriesID) !== id)
-                .map(rr => rr.CategoriesName || rr.CategoriesID || '—');
-              return { title: r.CategoriesName || r.CategoriesID || '—', items };
+                .map(rr => rr.CategoriesName || rr.CategoriesID);
+              return { title: r.CategoriesName || r.CategoriesID, items };
             });
-
           this.categories = roots;
         } else {
-          // Fallback: reuse mapped categories from composable
           const { fetchCategories } = useChatbotApi(this.$axios);
           const cats = await fetchCategories();
           this.categories = Array.isArray(cats) ? cats : [];
         }
       } catch (e) {
-        console.error('Failed to load categories for help panel', e);
+        console.error('Failed to load categories', e);
         this.categories = [];
       } finally {
         this.categoriesLoading = false;
       }
     },
-
-
     iconClass(cat) {
       const name = String(cat.title || cat.CategoriesName || '').toLowerCase();
       if (name.includes('ทุน')) return 'bi bi-mortarboard-fill';
       if (name.includes('หอ')) return 'bi bi-house-door-fill';
       if (name.includes('กิจ')) return 'bi bi-calendar-event-fill';
-      if (name.includes('เอกสาร') || name.includes('file') || name.includes('document')) return 'bi bi-file-earmark-text-fill';
-      return 'bi bi-tag-fill';
+      if (name.includes('เอกสาร')) return 'bi bi-file-earmark-text-fill';
+      return 'bi bi-grid-fill';
     },
-
     iconColor(cat) {
       const name = String(cat.title || cat.CategoriesName || '').toLowerCase();
       if (name.includes('ทุน')) return 'purple';
       if (name.includes('หอ')) return 'orange';
       if (name.includes('กิจ')) return 'green';
-      if (name.includes('เอกสาร')) return 'blue';
       return 'blue';
     }
   },
@@ -318,21 +302,26 @@ export default {
 </script>
 
 <style scoped>
-/* Base Font & Variables */
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css");
+
+/* --- Apple Style Variables --- */
 .apple-help-overlay {
   --apple-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --panel-width: 400px;
-  --bg-color: rgba(255, 255, 255, 0.88);
-  --blur-amt: 25px;
+  --panel-width: 363px;
+  --bg-color: rgba(255, 255, 255, 0.85); /* More translucency */
+  --blur-amt: 50px; /* Stronger blur like iOS/macOS */
   --primary-color: #0071e3;
   --text-primary: #1d1d1f;
   --text-secondary: #86868b;
+  --radius-l: 24px;
+  --radius-m: 16px;
+  --radius-s: 12px;
   
   position: fixed;
   inset: 0;
   z-index: 9999;
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-end; /* Sidebar style */
   font-family: var(--apple-font);
 }
 
@@ -340,8 +329,8 @@ export default {
 .backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(4px);
+  background: rgba(50, 50, 50, 0.2);
+  backdrop-filter: blur(8px);
   z-index: 1;
 }
 
@@ -354,14 +343,16 @@ export default {
   background: var(--bg-color);
   backdrop-filter: blur(var(--blur-amt));
   -webkit-backdrop-filter: blur(var(--blur-amt));
-  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.1);
+  box-shadow: -10px 0 60px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 /* Header */
 .panel-header {
-  padding: 24px 28px;
+  padding: 32px 32px 24px;
+  background: rgba(255,255,255,0.5);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 .header-content {
@@ -370,16 +361,15 @@ export default {
   align-items: center;
 }
 .title {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
   margin: 0;
-  letter-spacing: -0.01em;
   color: var(--text-primary);
+  letter-spacing: -0.02em;
 }
-/* Close Button with Animation */
 .close-btn {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: rgba(118, 118, 128, 0.12);
   border: none;
@@ -389,67 +379,53 @@ export default {
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
-/* Animation for Icon inside */
-.close-btn svg {
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
 .close-btn:hover {
   background: rgba(118, 118, 128, 0.24);
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
-.close-btn:hover svg {
-  transform: rotate(90deg);
-}
-.close-btn:active {
-  transform: scale(0.95);
-}
-.close-btn:active svg {
-  transform: rotate(180deg);
-}
+.close-btn:active { transform: scale(0.95); }
 
-/* Content Area */
+/* Scrollable Content */
 .panel-content {
   flex: 1;
   overflow-y: auto;
-  padding: 28px;
-  /* Hide scrollbar but keep functionality */
+  padding: 32px;
   scrollbar-width: thin;
   scrollbar-color: rgba(0,0,0,0.1) transparent;
 }
-.panel-content::-webkit-scrollbar {
-  width: 6px;
-}
-.panel-content::-webkit-scrollbar-thumb {
-  background-color: rgba(0,0,0,0.1);
-  border-radius: 3px;
-}
+.panel-content::-webkit-scrollbar { width: 6px; }
+.panel-content::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.1); border-radius: 3px; }
 
 /* Sections */
-.apple-section {
-  margin-bottom: 40px;
+.apple-section { margin-bottom: 48px; }
+
+/* Section 1: Hero */
+.section-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
 }
-.section-icon-wrapper {
-  width: 56px;
-  height: 56px;
-  border-radius: 18px;
+.hero-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
-  box-shadow: 0 8px 24px rgba(0, 113, 227, 0.25);
+  box-shadow: 0 10px 30px rgba(0, 113, 227, 0.3);
+  background: linear-gradient(135deg, #0071e3, #42a1ff);
 }
-.blue-gradient { background: linear-gradient(135deg, #0071e3, #42a1ff); }
-
-.section-heading {
+.hero-text .section-heading {
   font-size: 20px;
   font-weight: 600;
-  margin: 0 0 6px 0;
+  margin: 0 0 4px;
   color: var(--text-primary);
 }
-.section-desc {
-  font-size: 15px;
+.hero-text .section-desc {
+  font-size: 14px;
   color: var(--text-secondary);
-  margin: 0 0 24px 0;
+  margin: 0;
   line-height: 1.4;
 }
 
@@ -460,110 +436,134 @@ export default {
   gap: 12px;
 }
 .feature-card {
-  background: white;
+  background: rgba(255, 255, 255, 0.6);
   padding: 16px;
-  border-radius: 16px;
+  border-radius: var(--radius-m);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-  transition: transform 0.2s ease;
-  border: 1px solid rgba(0,0,0,0.02);
+  border: 1px solid rgba(0,0,0,0.03);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
 }
 .feature-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  transform: translateY(-4px) scale(1.02);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.06);
 }
 .icon-circle {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 20px;
 }
-.purple { background: rgba(175, 82, 222, 0.1); color: #AF52DE; }
-.orange { background: rgba(255, 149, 0, 0.1); color: #FF9500; }
-.green { background: rgba(52, 199, 89, 0.1); color: #34C759; }
-.blue { background: rgba(0, 113, 227, 0.1); color: #0071e3; }
+.purple { background: rgba(175, 82, 222, 0.15); color: #AF52DE; }
+.orange { background: rgba(255, 149, 0, 0.15); color: #FF9500; }
+.green { background: rgba(52, 199, 89, 0.15); color: #34C759; }
+.blue { background: rgba(0, 113, 227, 0.15); color: #0071e3; }
+.gray { background: rgba(142, 142, 147, 0.15); color: #8E8E93; }
 
 .feature-card span {
   font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
+  text-align: center;
 }
 
-/* Example Rows */
+/* Section Header */
 .section-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 16px;
 }
-.mini-icon {
-  color: var(--text-secondary);
-  display: flex;
-}
+.mini-icon { color: var(--text-secondary); display: flex; }
 .section-header h3 {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   margin: 0;
   color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  opacity: 0.8;
 }
+
+/* Example Rows */
 .example-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 .example-row {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  border-radius: 14px;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border-radius: var(--radius-m);
   font-size: 14px;
+  line-height: 1.5;
+  transition: transform 0.2s;
 }
+.example-row:hover { transform: scale(1.01); }
+
 .example-row.good {
   background: rgba(52, 199, 89, 0.08);
-  border: 1px solid rgba(52, 199, 89, 0.1);
+  border: 1px solid rgba(52, 199, 89, 0.15);
 }
 .example-row.bad {
   background: rgba(255, 59, 48, 0.08);
-  border: 1px solid rgba(255, 59, 48, 0.1);
+  border: 1px solid rgba(255, 59, 48, 0.15);
 }
-.example-row.good .indicator { color: #34C759; font-size: 16px; }
-.example-row.bad .indicator { color: #FF3B30; font-size: 16px; }
+.example-row.neutral {
+  background: rgba(142, 142, 147, 0.08);
+  border: 1px solid rgba(142, 142, 147, 0.15);
+}
+/* Magic Style for Synonyms */
+.example-row.magic {
+  background: linear-gradient(135deg, rgba(88, 86, 214, 0.08), rgba(175, 82, 222, 0.08));
+  border: 1px solid rgba(88, 86, 214, 0.15);
+}
+.example-row.magic .indicator { color: #5856D6; }
+
+.indicator { font-size: 18px; margin-top: 1px; }
+.example-row.good .indicator { color: #34C759; }
+.example-row.bad .indicator { color: #FF3B30; }
+.example-row.neutral .indicator { color: #8E8E93; }
+
 .example-row .text { color: var(--text-primary); }
+.helper-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 4px 0 0 14px;
+  line-height: 1.4;
+}
 
 /* FAQ Accordion */
-.faq-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+.faq-list { display: flex; flex-direction: column; gap: 12px; }
 .faq-item {
-  background: white;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-s);
+  border: 1px solid rgba(0,0,0,0.03);
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-  transition: box-shadow 0.2s;
+  transition: all 0.3s ease;
 }
 .faq-item.is-active {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  background: white;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+  border-color: transparent;
 }
 .faq-toggle {
   width: 100%;
-  padding: 16px;
+  padding: 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: none;
   border: none;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--text-primary);
   text-align: left;
@@ -573,103 +573,103 @@ export default {
   color: var(--text-secondary);
   transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
-.faq-item.is-active .chevron {
-  transform: rotate(180deg);
-}
+.faq-item.is-active .chevron { transform: rotate(180deg); }
 .faq-body {
   overflow: hidden;
-  transition: max-height 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: max-height 0.4s cubic-bezier(0.33, 1, 0.68, 1);
 }
 .faq-content {
-  padding: 0 16px 16px 16px;
+  padding: 0 18px 20px;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.6;
   color: var(--text-secondary);
 }
 
 /* Footer */
 .panel-footer {
-  padding: 20px 28px 28px;
+  padding: 24px 32px 32px;
   border-top: 1px solid rgba(0, 0, 0, 0.05);
+  background: rgba(255,255,255,0.5);
 }
 .apple-btn-primary {
   width: 100%;
   background: #0071e3;
   color: white;
   border: none;
-  padding: 14px;
-  border-radius: 14px;
-  font-size: 15px;
+  padding: 16px;
+  border-radius: var(--radius-m);
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
 }
 .apple-btn-primary:hover {
   background: #0077ED;
-  transform: scale(1.02);
+  transform: scale(1.01);
+  box-shadow: 0 6px 16px rgba(0, 113, 227, 0.4);
 }
-.apple-btn-primary:active {
-  transform: scale(0.98);
-}
+.apple-btn-primary:active { transform: scale(0.98); }
 
-/* --- SVG Animations --- */
+/* --- Animations --- */
 .draw-path {
-  stroke-dasharray: 50;
-  stroke-dashoffset: 50;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
   animation: dash var(--duration) ease-out forwards;
   animation-delay: var(--delay, 0s);
 }
 .pop-in {
   opacity: 0;
-  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   animation-delay: var(--delay, 0s);
 }
-.draw-loop {
-  stroke-dasharray: 100;
-  animation: dash 3s ease-in-out infinite alternate;
+/* New Float Animation */
+.float-animation {
+  animation: float 6s ease-in-out infinite;
 }
 
-@keyframes dash {
-  to { stroke-dashoffset: 0; }
-}
+@keyframes dash { to { stroke-dashoffset: 0; } }
 @keyframes popIn {
   0% { opacity: 0; transform: scale(0); transform-origin: center; }
   100% { opacity: 1; transform: scale(1); transform-origin: center; }
 }
-
-/* --- Vue Transitions (Apple Style) --- */
-.apple-fade-enter-active, .apple-fade-leave-active {
-  transition: opacity 0.4s ease;
-}
-.apple-fade-enter-from, .apple-fade-leave-to {
-  opacity: 0;
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
 }
 
-.apple-slide-enter-active {
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); /* Apple's spring curve */
-}
-.apple-slide-leave-active {
-  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-}
-.apple-slide-enter-from, .apple-slide-leave-to {
-  transform: translateX(100%);
-}
+/* Vue Transitions */
+.apple-fade-enter-active, .apple-fade-leave-active { transition: opacity 0.5s ease; }
+.apple-fade-enter-from, .apple-fade-leave-to { opacity: 0; }
+
+.apple-slide-enter-active { transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+.apple-slide-leave-active { transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+.apple-slide-enter-from, .apple-slide-leave-to { transform: translateX(100%); }
 
 .fade-in-stagger {
   opacity: 0;
-  transform: translateY(10px);
-  animation: fadeUp 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  transform: translateY(20px);
+  animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   animation-delay: var(--delay);
 }
-@keyframes fadeUp {
-  to { opacity: 1; transform: translateY(0); }
-}
+@keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
 
-/* Mobile Responsive */
+/* Skeleton Loading */
+.skeleton-pulse {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton 1.5s infinite;
+}
+@keyframes skeleton {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton-text { width: 60%; height: 12px; border-radius: 4px; margin-top: 8px; }
+
+/* Mobile */
 @media (max-width: 480px) {
-  .apple-panel {
-    width: 100%;
-  }
+  .apple-panel { width: 100%; border-left: none; }
+  .feature-grid { grid-template-columns: 1fr; }
 }
 </style>
