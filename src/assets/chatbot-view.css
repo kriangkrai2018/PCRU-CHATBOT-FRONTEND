@@ -726,16 +726,6 @@ html.keyboard-open .panel-footer {
     max-width: calc(100% - 96px); /* don't overlap send button */
   }
 
-  /* Make the input taller (mobile) and expand it to reach the send button using flex flow */
-  .panel-footer .input-pill {
-    height: 48px;
-    font-size: 15px;
-    padding-right: 12px; /* minimal buffer so text doesn't go under the button */
-    width: auto !important; /* allow flex to control width */
-    flex: 1 1 auto;
-    box-sizing: border-box;
-    margin-right: 0 !important;
-  }
 
 
 
@@ -745,10 +735,6 @@ html.keyboard-open .panel-footer {
 
  
 
-  /* On small screens, let the input fill the row so the pill reaches the send button */
-
-  /* Ensure input keeps above bottom typing bubble visually */
-  .panel-footer .input-pill { position: relative; }
 }
 
 
