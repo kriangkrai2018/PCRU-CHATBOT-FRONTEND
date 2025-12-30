@@ -3312,7 +3312,7 @@ body.no-effects .apple-help-button::after { display: none !important; }
   }
   
   .scroll-to-top-btn {
-    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(100px + env(safe-area-inset-bottom, 0px));
     width: 44px;
     height: 44px;
   }
@@ -3360,9 +3360,11 @@ body.no-effects .apple-help-button::after { display: none !important; }
     width: 100% !important;
     margin: 8px 0 !important;
     box-sizing: border-box;
-    border-radius: 14px !important;
-    padding-left: 14px;
-    padding-right: 14px;
+    border-radius: 26px !important;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 16px;
+    padding-bottom: 16px;
   }
 
   /* Keep user bubbles narrower and right-aligned on mobile */
@@ -3371,9 +3373,9 @@ body.no-effects .apple-help-button::after { display: none !important; }
     width: auto !important;
     margin: 8px 0 8px auto !important;
     box-sizing: border-box;
-    border-radius: 14px !important;
-    padding-left: 14px;
-    padding-right: 14px;
+    border-radius: 26px !important;
+    padding-left: 16px;
+    padding-right: 16px;
   }
 }
 

@@ -4108,7 +4108,7 @@ export default {
 }
 .org-card {
   background: rgba(255,255,255,0.95);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 12px 14px;
   box-shadow: 0 8px 18px rgba(20,20,20,0.06);
   border: 1px solid rgba(0,0,0,0.06);
