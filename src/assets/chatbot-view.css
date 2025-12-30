@@ -978,8 +978,11 @@ html.keyboard-open .panel-footer {
 /* ⌨️ Typing Tooltip - hint shown when user is typing a menu-like word */
 .typing-tooltip {
   position: absolute;
-  bottom: 100%;
-  left: 0;
+  bottom: auto; /* prefer explicit top when fixed-positioned via inline style */
+  /* center horizontally over avatar using transform (so left doesn't animate) */
+  left: 50%;
+  transform: translateX(-50%) translateY(0);
+  transform-origin: bottom center;
   margin-bottom: 8px;
   /* White background to match other tooltips */
   background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%);
@@ -997,12 +1000,14 @@ html.keyboard-open .panel-footer {
   min-width: 140px;
   text-align: center;
   z-index: 9999; /* raise above overlays */
+  /* only animate opacity and vertical translate so it doesn't slide horizontally */
+  transition: opacity 0.35s cubic-bezier(.2,.9,.2,1), transform 0.35s cubic-bezier(.2,.9,.2,1);
   animation: typingTooltipBounce 0.35s cubic-bezier(.2,.9,.2,1);
   pointer-events: none;
 }
 @keyframes typingTooltipBounce {
-  0% { opacity: 0; transform: translateY(8px) scale(0.95); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+  0% { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.95); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 }
 .typing-tooltip-content {
   font-size: 15px;
@@ -1015,8 +1020,9 @@ html.keyboard-open .panel-footer {
 .typing-tooltip-tail {
   position: absolute;
   bottom: -7px;
-  left: 20px;
-  transform: rotate(45deg);
+  /* tail position now driven by CSS variable (set inline) so we can point to left-bottom */
+  left: var(--tail-left, 50%);
+  transform: translateX(0) rotate(45deg);
   width: 14px;
   height: 14px;
   background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%);
@@ -1034,15 +1040,34 @@ html.keyboard-open .panel-footer {
   transform-origin: bottom left;
 }
 .typing-tooltip-fade-enter-active, .typing-tooltip-fade-leave-active {
-  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: opacity 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .typing-tooltip-fade-enter-from {
   opacity: 0;
-  transform: translateY(8px) scale(0.95);
+  transform: translateX(-50%) translateY(8px) scale(0.95);
 }
 .typing-tooltip-fade-leave-to {
   opacity: 0;
-  transform: translateY(4px) scale(0.95);
+  transform: translateX(-50%) translateY(4px) scale(0.95);
+}
+
+/* Responsive: nudge tooltip upward on small screens to avoid overlapping the input/footer */
+@media (max-width: 640px) {
+  .bot-avatar-wrapper .typing-tooltip {
+    bottom: calc(100% + 38px) !important;
+    margin-bottom: 0 !important;
+    max-width: 220px !important;
+    min-width: 120px !important;
+    padding: 8px 12px !important;
+  }
+  .bot-avatar-wrapper .typing-tooltip .typing-tooltip-tail {
+    bottom: -6px;
+  }
+}
+
+/* When virtual keyboard is open, move tooltip further up so it never overlaps the input */
+html.keyboard-open .bot-avatar-wrapper .typing-tooltip {
+  bottom: calc(100% + 64px) !important;
 }
 
 .fab-open { 

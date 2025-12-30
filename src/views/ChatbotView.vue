@@ -5,6 +5,7 @@
       <div v-if="visible" class="chat-overlay" role="dialog" aria-label="Chat drawer">
         <div class="overlay-backdrop" @click="visible = false"></div>
         <aside class="chat-panel" :style="{ width: drawerWidth, height: viewportHeight }">
+
           <!-- Snowflakes (only in winter season: Nov-Feb) and if enabled -->
           <div v-if="isWinterSeason && snowEnabled" class="snowflakes" aria-hidden="true" :style="{ zIndex: snowZIndex }">
             <div 
@@ -255,12 +256,7 @@
                   </transition>
 
                   <!-- ⌨️ User Typing Tooltip (hint to type "เมนู") -->
-                  <transition name="typing-tooltip-fade">
-                    <div v-if="showUserTypingTooltip && idx === lastBotMessageIndex" class="typing-tooltip" :style="userTypingTooltipStyle">
-                      <div class="typing-tooltip-content">{{ userTypingTooltipText }}</div>
-                      <div class="typing-tooltip-tail"></div>
-                    </div>
-                  </transition>
+
                 </div>
                 <div class="message-bubble" :class="[msg.type, { 'has-contacts': msg.showContacts || (msg.visibleContacts && msg.visibleContacts.length > 0) }]">
                   <div v-if="!(msg.multipleResults && msg.text && msg.text.trim().startsWith('พบหลายคำถาม'))" class="message-text" v-html="linkifyText(msg.text)"></div>
@@ -626,6 +622,14 @@
           
           <!-- Feedback Dropdown moved inline with unlike button above -->
         </aside>
+
+        <!-- Global avatar-anchored typing tooltip (rendered once, positioned with fixed coords to avoid clipping) -->
+        <transition name="typing-tooltip-fade">
+          <div v-if="showUserTypingTooltip" class="typing-tooltip" :style="userTypingTooltipStyle">
+            <div class="typing-tooltip-content">{{ userTypingTooltipText }}</div>
+            <div class="typing-tooltip-tail"></div>
+          </div>
+        </transition>
       </div>
     </transition>
 
@@ -1774,9 +1778,142 @@ export default {
         this.showUnlikeTooltip = false
         this.showLikeTooltip = false
         this.showUserTypingTooltip = false
+        this.userTypingTooltipStyle = {}
         if (this.unlikeTooltipTimer) { clearTimeout(this.unlikeTooltipTimer); this.unlikeTooltipTimer = null }
         if (this.likeTooltipTimer) { clearTimeout(this.likeTooltipTimer); this.likeTooltipTimer = null }
+        // remove tooltip position handlers if any
+        if (this._tooltipPositionHandler) {
+          window.removeEventListener('resize', this._tooltipPositionHandler)
+          window.removeEventListener('scroll', this._tooltipPositionHandler, true)
+          this._tooltipPositionHandler = null
+        }
       } catch (e) { /* ignore */ }
+    },
+
+    // Position the typing tooltip over the last bot avatar using fixed coords so it won't be clipped
+    updateTypingTooltipPosition() {
+      this.$nextTick(() => {
+        try {
+          const avatars = this.$el.querySelectorAll('.bot-avatar')
+          if (!avatars || avatars.length === 0) return
+          const avatar = avatars[avatars.length - 1]
+          const rect = avatar.getBoundingClientRect()
+          const centerX = rect.left + rect.width / 2
+          // place tooltip above the avatar with extra offset so it doesn't overlap inline action buttons
+          let top = rect.top - 64 // base buffer above the avatar
+
+          // on small screens, nudge more so input isn't overlapped
+          if (window.innerWidth <= 640) top -= 20
+          // when virtual keyboard is open, nudge further up
+          if (document.documentElement.classList.contains('keyboard-open')) top -= 40
+
+          // set fixed positioning so tooltip escapes any clipping containers
+          // but clamp the horizontal position so the tooltip stays inside the chat panel
+          this.$nextTick(() => {
+            try {
+              const panel = this.$el.querySelector('.chat-panel')
+              const tooltipEl = document.querySelector('.typing-tooltip')
+              let leftToUse = centerX
+              let tailLeftPx = null
+
+              if (panel && tooltipEl) {
+                const panelRect = panel.getBoundingClientRect()
+                const tipRect = tooltipEl.getBoundingClientRect()
+
+                // clamp centerX so tooltip doesn't overflow panel horizontally (8px padding)
+                const minCenter = panelRect.left + (tipRect.width / 2) + 8
+                const maxCenter = panelRect.right - (tipRect.width / 2) - 8
+                leftToUse = Math.max(minCenter, Math.min(maxCenter, centerX))
+
+                // calculate tooltip left (top-left) and compute tail position relative to tooltip
+                const tooltipLeft = leftToUse - (tipRect.width / 2)
+
+                // Compute a stable tail position using the avatar center, but bias toward the left
+                const rawTail = centerX - tooltipLeft
+                // For narrow tooltips, anchor very close to the left edge for consistent appearance
+                if (tipRect.width < 220) {
+                  tailLeftPx = 12
+                } else {
+                  const maxTail = Math.max(12, Math.floor(tipRect.width * 0.35))
+                  tailLeftPx = Math.max(10, Math.min(Math.floor(rawTail), maxTail))
+                }
+
+                // compute top so tooltip sits just above the avatar (use tooltip height for precise placement)
+                const gap = 8
+                let computedTop = rect.top - tipRect.height - gap
+
+                // On small screens, keep it closer to avatar
+                if (window.innerWidth <= 640) computedTop = rect.top - tipRect.height - 6
+
+                // If keyboard is open, nudge up slightly
+                if (document.documentElement.classList.contains('keyboard-open')) computedTop -= 12
+
+                // ensure tooltip stays inside the panel vertically
+                const minTop = panelRect.top + 8
+                const maxTop = panelRect.bottom - tipRect.height - 8
+                computedTop = Math.max(minTop, Math.min(maxTop, computedTop))
+
+                top = computedTop
+
+                // Schedule a recalculation shortly after to handle cases where tooltip width/content changes
+                if (this._tooltipRecalcTimer) clearTimeout(this._tooltipRecalcTimer)
+                this._tooltipRecalcTimer = setTimeout(() => {
+                  try {
+                    const newTipRect = tooltipEl.getBoundingClientRect()
+                    // Re-clamp horizontal center using updated width
+                    const newMinCenter = panelRect.left + (newTipRect.width / 2) + 8
+                    const newMaxCenter = panelRect.right - (newTipRect.width / 2) - 8
+                    const newLeftToUse = Math.max(newMinCenter, Math.min(newMaxCenter, centerX))
+
+                    // Recompute tail position relative to the tooltip left
+                    const newTooltipLeft = newLeftToUse - (newTipRect.width / 2)
+                    const rawNewTail = centerX - newTooltipLeft
+                    let newTail
+                    if (newTipRect.width < 220) {
+                      newTail = 12
+                    } else {
+                      const newMax = Math.max(12, Math.floor(newTipRect.width * 0.35))
+                      newTail = Math.max(10, Math.min(Math.floor(rawNewTail), newMax))
+                    }
+
+                    // Recompute top so tooltip sits just above avatar
+                    const gap = 8
+                    let newTop = rect.top - newTipRect.height - gap
+                    if (window.innerWidth <= 640) newTop = rect.top - newTipRect.height - 6
+                    if (document.documentElement.classList.contains('keyboard-open')) newTop -= 12
+                    const newMinTop = panelRect.top + 8
+                    const newMaxTop = panelRect.bottom - newTipRect.height - 8
+                    newTop = Math.max(newMinTop, Math.min(newMaxTop, newTop))
+
+                    // Apply updated inline styles atomically
+                    this.userTypingTooltipStyle = {
+                      position: 'fixed',
+                      left: `${newLeftToUse}px`,
+                      top: `${newTop}px`,
+                      transform: 'translateX(-50%) translateY(0)',
+                      zIndex: 99999,
+                      '--tail-left': `${newTail}px`
+                    }
+                  } catch (e) { /* ignore safe failures */ }
+                }, 140)
+
+              }
+
+              const styleObj = {
+                position: 'fixed',
+                left: `${leftToUse}px`,
+                top: `${top}px`,
+                transform: 'translateX(-50%) translateY(0)',
+                zIndex: 99999
+              }
+
+              if (tailLeftPx !== null) styleObj['--tail-left'] = `${tailLeftPx}px`
+
+              this.userTypingTooltipStyle = styleObj
+            } catch (e) { /* ignore safe failures */ }
+          })
+        } catch (e) { /* ignore */ }
+      })
     },
     openTooltip(type) {
       this.hideAllTooltips()
@@ -2437,21 +2574,42 @@ export default {
         if (normalized && target.startsWith(normalized)) {
           // Show a contextual hint only when user is typing a prefix of "เมนู"
           this.userTypingTooltipText = 'พิมพ์ เมนู คำเดียว เพื่อเปิด เมนูได้นะคะ'
-          this.userTypingTooltipStyle = {}
+          // Show tooltip then position it (positioning runs after the DOM renders)
           this.openTooltip('typing')
+          this.$nextTick(() => this.updateTypingTooltipPosition())
+
+          // Attach listeners that keep the tooltip positioned when user scrolls/resizes
+          if (!this._tooltipPositionHandler) {
+            this._tooltipPositionHandler = () => this.updateTypingTooltipPosition()
+            window.addEventListener('resize', this._tooltipPositionHandler)
+            window.addEventListener('scroll', this._tooltipPositionHandler, true)
+          }
 
           // Reset/hide any previous timer
           if (this.typingTooltipTimer) { clearTimeout(this.typingTooltipTimer); this.typingTooltipTimer = null }
           // Auto-hide after a few seconds if user stops
           this.typingTooltipTimer = setTimeout(() => {
             this.showUserTypingTooltip = false
+            this.userTypingTooltipStyle = {}
+            // remove listeners
+            if (this._tooltipPositionHandler) {
+              window.removeEventListener('resize', this._tooltipPositionHandler)
+              window.removeEventListener('scroll', this._tooltipPositionHandler, true)
+              this._tooltipPositionHandler = null
+            }
             this.typingTooltipTimer = null
           }, 4200)
         } else {
           // If the typed text no longer matches, hide the hint
           if (this.showUserTypingTooltip) {
             this.showUserTypingTooltip = false
+            this.userTypingTooltipStyle = {}
             if (this.typingTooltipTimer) { clearTimeout(this.typingTooltipTimer); this.typingTooltipTimer = null }
+            if (this._tooltipPositionHandler) {
+              window.removeEventListener('resize', this._tooltipPositionHandler)
+              window.removeEventListener('scroll', this._tooltipPositionHandler, true)
+              this._tooltipPositionHandler = null
+            }
           }
         }
       } catch (e) { /* ignore detection errors */ }
@@ -4322,7 +4480,7 @@ export default {
 .org-card-title { font-weight: 600; font-size: 14px; color: #111; }
 .org-card-sub { font-size: 12px; color: #6b6b6b; }
 .org-card-phone { font-size: 13px; color: #0a66c2; margin-top: 6px; }
-  .category-badge { display: inline-block; background-color: #e0f2fe; color: #0369a1; font-size: 0.8rem; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+  .category-badge { display: inline-block; background-color: #e0f2fe; color: #0369a1; font-size: 0.8rem; font-weight: 600; padding: 10px 16px; border-radius: 16px; }
   .contact-detail { white-space: pre-wrap; word-break: break-word; font-size: 0.9rem; color: #374151; margin-top: 0.5rem; }
   .contact-empty { color: #9ca3af; font-style: italic; font-size: 0.85rem; margin-top: 0.5rem; }
 @media (max-width: 520px) {
