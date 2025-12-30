@@ -755,6 +755,8 @@ export default {
       hasSimulatedKeyboardCycle: false,
       // Mini help dismissed state (persist until clear chat)
       miniHelpDismissed: false,
+      // Track whether the user has ever asked the bot (used to hide the clear/trash on fresh installs)
+      hasAskedBot: false,
       // 🕵️‍♀️ Rapid input-focus detection
       inputFocusTimestamps: [],
       inputFocusCooldownUntil: 0,
@@ -877,9 +879,9 @@ export default {
     hasBotMessages() {
       return this.lastBotMessageIndex >= 0
     },
-    // Show clear (trash) button on welcome view or when messages exist
+    // Show clear (trash) button only if there are messages or the user has previously interacted
     showClearBtn() {
-      return (Array.isArray(this.messages) && this.messages.length > 0) || this.showTopCategories
+      return (Array.isArray(this.messages) && this.messages.length > 0) || !!this.hasAskedBot
     }
   },
   
@@ -920,6 +922,12 @@ export default {
         this.thaiNoticeTimer = null
       }, 5000)
     }
+
+    // Load whether the user has ever asked the bot before (used to hide the clear button on fresh users)
+    try {
+      const hasAsked = localStorage.getItem('chatbot_has_asked')
+      this.hasAskedBot = !!hasAsked
+    } catch (e) { this.hasAskedBot = false }
     
     // Setup particle canvas
     this.$nextTick(() => {
@@ -2498,6 +2506,9 @@ export default {
           text: originalUserMessage,
           timestamp: new Date().toISOString()
         });
+        // Mark that the user has interacted with the bot
+        try { localStorage.setItem('chatbot_has_asked', '1'); } catch(e) {}
+        this.hasAskedBot = true
         
         this.query = ''; // เคลียร์ช่องพิมพ์
         this.welcomeTyping = false;
@@ -2583,6 +2594,9 @@ export default {
         text: originalUserMessage,
         timestamp: new Date().toISOString()
       })
+      // Mark that the user has interacted with the bot
+      try { localStorage.setItem('chatbot_has_asked', '1'); } catch(e) {}
+      this.hasAskedBot = true
 
       // If the user typed the name of a category item, disable it so it can't be selected again
       try { this.disableCategoryItemByLabel(originalUserMessage) } catch (e) { /* ignore */ }
@@ -3255,6 +3269,10 @@ export default {
         localStorage.removeItem('chatbot_mini_help_dismissed')
       } catch (e) {}
       this.miniHelpDismissed = false
+
+      // Reset 'has asked' flag so fresh users don't see the trash button
+      try { localStorage.removeItem('chatbot_has_asked') } catch (e) {}
+      this.hasAskedBot = false
 
       // Also clear persisted category disabled state so items become selectable again
       try {
