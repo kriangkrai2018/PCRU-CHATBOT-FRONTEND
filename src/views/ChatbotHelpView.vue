@@ -52,11 +52,11 @@
 
                 <!-- Render categories provided by backend (max 4 from computed) -->
                 <template v-else>
-                  <div class="feature-card" v-for="(fc, idx) in featureCategories" :key="fc.CategoriesID || idx">
+                  <div class="feature-card" v-for="(fc, idx) in featureCategories" :key="fc.title || fc.CategoriesID || idx">
                     <div class="icon-circle" :class="iconColor(fc)">
                       <i :class="iconClass(fc)"></i>
                     </div>
-                    <span>{{ fc.CategoriesName || fc.CategoriesID || '—' }}</span>
+                    <span>{{ fc.title || fc.CategoriesName || fc.CategoriesID || '—' }}</span>
                   </div>
 
                   <!-- If backend returned no categories, show an informative card -->
@@ -202,6 +202,8 @@
 </template>
 
 <script>
+import { useChatbotApi } from '@/views/chatbot/composables'
+
 export default {
   name: 'ChatbotHelpView',
   props: {
@@ -223,7 +225,6 @@ export default {
         { q: 'ถ้าบอทตอบไม่ตรง ควรทำอย่างไร?', a: 'ลองระบุรายละเอียดเพิ่ม (เช่น ปี หน่วยงาน หรือชื่อเอกสาร) หากยังไม่ตรง สามารถกด "ส่งต่อ" หรือแจ้งให้หนูส่งคำถามไปยังเจ้าหน้าที่ได้ค่ะ' },
         { q: 'บอทเก็บข้อมูลการสนทนาหรือไม่?', a: 'ระบบเก็บบันทึกการสนทนาในรูปแบบที่ช่วยให้ปรับปรุงบริการ โดยจะไม่เปิดเผยข้อมูลส่วนตัวสู่สาธารณะ' },
         { q: 'ข้อมูลอัปเดตบ่อยแค่ไหน?', a: 'การอัปเดตขึ้นกับแหล่งข้อมูลของมหาวิทยาลัย — บางข้อมูลอัปเดตเป็นประจำ ในขณะที่บางรายการอาจต้องรอการยืนยันจากเจ้าหน้าที่' },
-        { q: 'ต้องการติดต่อเจ้าหน้าที่ต้องทำอย่างไร?', a: 'ถ้าต้องการความช่วยเหลือเพิ่มเติม ให้บอกหนูว่าจะให้ส่งต่อคำถามหรือแนะนำช่องทางการติดต่อที่มีอยู่'}
       ],
       categories: [],
       categoriesLoading: false
@@ -231,21 +232,17 @@ export default {
   },
   computed: {
     featureCategories() {
-      // Try to find by common keywords, fallback to first 4 categories
-      const desired = [];
-      const list = Array.isArray(this.categories) ? this.categories : [];
-      const result = [];
-      desired.forEach(k => {
-        const found = list.find(c => String(c.CategoriesName || '').includes(k));
-        if (found && !result.find(r => r.CategoriesID === found.CategoriesID)) result.push(found);
+      // Pick top-level categories sorted by number of children (desc) then by title (locale-aware)
+      const list = Array.isArray(this.categories) ? [...this.categories] : [];
+      list.sort((a, b) => {
+        const aCount = Array.isArray(a.items) ? a.items.length : 0;
+        const bCount = Array.isArray(b.items) ? b.items.length : 0;
+        if (bCount !== aCount) return bCount - aCount;
+        const aTitle = String(a.title || a.CategoriesName || '');
+        const bTitle = String(b.title || b.CategoriesName || '');
+        return aTitle.localeCompare(bTitle, 'th');
       });
-      // fill with first categories if missing
-      let i = 0;
-      while (result.length < 4 && i < list.length) {
-        const c = list[i++];
-        if (!result.find(r => r.CategoriesID === c.CategoriesID)) result.push(c);
-      }
-      return result;
+      return list.slice(0, 4);
     }
   },
   methods: {
@@ -258,11 +255,35 @@ export default {
     async loadCategories() {
       try {
         this.categoriesLoading = true;
-        const res = await this.$axios.get('/getcategories');
+
+        // Fetch raw rows from public endpoint and filter main categories where ParentCategoriesID === CategoriesID
+        const res = await this.$axios.get('/categories');
         const raw = res.data?.data ?? res.data;
-        if (Array.isArray(raw)) this.categories = raw;
-        else if (raw && Array.isArray(raw.categories)) this.categories = raw.categories;
-        else this.categories = [];
+        const rows = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.categories) ? raw.categories : []);
+
+        if (rows.length && rows[0].hasOwnProperty('CategoriesID')) {
+          // DB shape: build roots where ParentCategoriesID === CategoriesID
+          const byId = new Map();
+          rows.forEach(r => byId.set(String(r.CategoriesID), r));
+
+          const roots = rows
+            .filter(r => String(r.ParentCategoriesID) === String(r.CategoriesID))
+            .map(r => {
+              const id = String(r.CategoriesID);
+              // children are rows whose ParentCategoriesID equals this id (but not self)
+              const items = rows
+                .filter(rr => String(rr.ParentCategoriesID) === id && String(rr.CategoriesID) !== id)
+                .map(rr => rr.CategoriesName || rr.CategoriesID || '—');
+              return { title: r.CategoriesName || r.CategoriesID || '—', items };
+            });
+
+          this.categories = roots;
+        } else {
+          // Fallback: reuse mapped categories from composable
+          const { fetchCategories } = useChatbotApi(this.$axios);
+          const cats = await fetchCategories();
+          this.categories = Array.isArray(cats) ? cats : [];
+        }
       } catch (e) {
         console.error('Failed to load categories for help panel', e);
         this.categories = [];
@@ -270,16 +291,19 @@ export default {
         this.categoriesLoading = false;
       }
     },
+
+
     iconClass(cat) {
-      const name = String(cat.CategoriesName || '').toLowerCase();
+      const name = String(cat.title || cat.CategoriesName || '').toLowerCase();
       if (name.includes('ทุน')) return 'bi bi-mortarboard-fill';
       if (name.includes('หอ')) return 'bi bi-house-door-fill';
       if (name.includes('กิจ')) return 'bi bi-calendar-event-fill';
       if (name.includes('เอกสาร') || name.includes('file') || name.includes('document')) return 'bi bi-file-earmark-text-fill';
       return 'bi bi-tag-fill';
     },
+
     iconColor(cat) {
-      const name = String(cat.CategoriesName || '').toLowerCase();
+      const name = String(cat.title || cat.CategoriesName || '').toLowerCase();
       if (name.includes('ทุน')) return 'purple';
       if (name.includes('หอ')) return 'orange';
       if (name.includes('กิจ')) return 'green';

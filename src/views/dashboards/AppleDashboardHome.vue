@@ -489,7 +489,8 @@ const fetchAll = async () => {
     console.time('fetchAll');
     // Fetch everything in parallel (original behavior) — preserve previous fast-loading perception
     const [cRes, qRes, kRes, fRes, chRes, cnRes, orgRes, offRes, handledRes, adminsRes] = await Promise.all([
-      $axios.get('/getcategories').catch(() => ({ data: { categories: [] } })),
+      // Use public categories endpoint on the public dashboard (no auth required)
+      $axios.get('/categories').catch(() => ({ data: { categories: [] } })),
       $axios.get('/questionsanswers').catch(() => ({ data: [] })),
       $axios.get('/keywords').catch(() => ({ data: [] })),
       $axios.get('/feedbacks').catch(() => ({ data: [] })),

@@ -76,7 +76,8 @@ export function useChatbotApi(axios) {
   /**
    * Fetch categories from backend
    */
-  async function fetchCategories() {
+  async function fetchCategories(options = { onlySelfParent: false }) {
+    // options.onlySelfParent - when true, only include rows where ParentCategoriesID === CategoriesID
     if (!axios) {
       loadError.value = 'axios plugin not available'
       return []
@@ -100,7 +101,7 @@ export function useChatbotApi(axios) {
         throw new Error('Unexpected categories response shape - payload is not an array')
       }
       if (payload.length && payload[0].hasOwnProperty('CategoriesID')) {
-        return mapCategoriesFromSQL(payload)
+        return mapCategoriesFromSQL(payload, options)
       } else {
         return payload.map(c => {
           const title = c.title || c.name || c.category || 'Untitled'
@@ -120,13 +121,14 @@ export function useChatbotApi(axios) {
     }
   }
 
-  function mapCategoriesFromSQL(payload) {
+  function mapCategoriesFromSQL(payload, options = { onlySelfParent: false }) {
+    // options.onlySelfParent: when true, treat top-level only if ParentCategoriesID === CategoriesID
     const byId = {}
     const childrenByParent = {}
     payload.forEach(r => {
       const id = String(r.CategoriesID)
       const parentId = r.ParentCategoriesID == null ? null : String(r.ParentCategoriesID)
-      const isTopLevel = !parentId || parentId === id
+      const isTopLevel = options.onlySelfParent ? (parentId === id) : (!parentId || parentId === id)
       byId[id] = {
         id,
         title: r.CategoriesName || 'Untitled',

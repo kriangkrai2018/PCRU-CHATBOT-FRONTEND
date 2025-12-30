@@ -22,6 +22,17 @@ axiosInstance.interceptors.request.use(
     // ถ้ามี token อยู่ ให้เพิ่ม Authorization header เข้าไปใน config ของ request
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      // If no token and the request is accidentally going to the protected '/getcategories',
+      // rewrite it to the public '/categories' to avoid 401 on public pages
+      try {
+        if (config && typeof config.url === 'string' && config.url.includes('/getcategories')) {
+          console.warn('[axios] No token present – rewriting request path /getcategories -> /categories to avoid 401');
+          config.url = config.url.replace('/getcategories', '/categories');
+        }
+      } catch (e) {
+        // ignore rewrite problems
+      }
     }
     
     // 🛡️ Add session ID for context tracking
