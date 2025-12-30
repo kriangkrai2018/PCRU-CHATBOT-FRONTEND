@@ -584,13 +584,7 @@
 
             <div class="input-row">
               <div class="input-container">
-                <!-- ⌨️ Input-anchored Typing Tooltip (shows above input) -->
-                <transition name="typing-tooltip-fade">
-                  <div v-if="showUserTypingTooltip" class="typing-tooltip typing-tooltip-input" :style="userTypingTooltipStyle">
-                    <div class="typing-tooltip-content">{{ userTypingTooltipText }}</div>
-                    <div class="typing-tooltip-tail"></div>
-                  </div>
-                </transition>
+                <!-- Typing tooltip is rendered on the bot avatar (avatar-anchored). Removed input-anchored tooltip so pointer correctly targets the avatar -->
 
                 <!-- 👻 Ghost overlay showing only the suggested suffix -->
                 <div :class="['input-pill', 'ghost-input', { 'ghost-hidden': showUserTypingTooltip }]" aria-hidden="true">
