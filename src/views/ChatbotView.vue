@@ -253,6 +253,14 @@
                       <div class="like-tooltip-tail"></div>
                     </div>
                   </transition>
+
+                  <!-- ⌨️ User Typing Tooltip (hint to type "เมนู") -->
+                  <transition name="typing-tooltip-fade">
+                    <div v-if="showUserTypingTooltip && idx === lastBotMessageIndex" class="typing-tooltip" :style="userTypingTooltipStyle">
+                      <div class="typing-tooltip-content">{{ userTypingTooltipText }}</div>
+                      <div class="typing-tooltip-tail"></div>
+                    </div>
+                  </transition>
                 </div>
                 <div class="message-bubble" :class="[msg.type, { 'has-contacts': msg.showContacts || (msg.visibleContacts && msg.visibleContacts.length > 0) }]">
                   <div v-if="!(msg.multipleResults && msg.text && msg.text.trim().startsWith('พบหลายคำถาม'))" class="message-text" v-html="linkifyText(msg.text)"></div>
@@ -2623,6 +2631,7 @@ export default {
       
       // ⌨️ ซ่อน typing tooltip เมื่อส่งข้อความ
       this.showUserTypingTooltip = false
+      if (this.typingTooltipTimer) { clearTimeout(this.typingTooltipTimer); this.typingTooltipTimer = null }
       
       // เปลี่ยนข้อความ tooltip ครั้งต่อไป
       this.currentTypingMessageIndex = (this.currentTypingMessageIndex + 1) % this.dynamicUnlikeMessages.length
