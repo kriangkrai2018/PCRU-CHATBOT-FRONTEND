@@ -662,6 +662,8 @@ export default {
       botPronoun: import.meta.env.VITE_BOT_PRONOUN || 'หนู',
       showAiIntro: false,
       aiTilt: { x: 0, y: 0, s: 1 },
+      // rAF id for ai tilt updates (reduce reflows)
+      aiTiltRafId: null,
       timeGreetingText: '',
       showHelpModal: false,
       aiQuickActions: [],
@@ -1277,6 +1279,11 @@ export default {
       clearInterval(this.feedbackCooldownInterval)
       this.feedbackCooldownInterval = null
     }
+    // Cancel any outstanding animation frames
+    try {
+      if (this.particleAnimationFrame) { cancelAnimationFrame(this.particleAnimationFrame); this.particleAnimationFrame = null }
+      if (this.aiTiltRafId) { cancelAnimationFrame(this.aiTiltRafId); this.aiTiltRafId = null }
+    } catch (e) { /* ignore */ }
   },
 
   beforeUnmount() {
@@ -1706,7 +1713,8 @@ export default {
           ...windProfile
         })
       }
-      this.snowflakeStyles = styles
+      // Freeze styles to avoid Vue creating reactive proxies for this array (big perf win)
+      this.snowflakeStyles = Object.freeze(styles)
     },
     // Ensure only one tooltip is visible at a time
     hideAllTooltips() {
@@ -2129,16 +2137,24 @@ export default {
         // Do not autofocus input to prevent forcing keyboard to open on mobile
       })
     },
-    // Parallax tilt interactions
+    // Parallax tilt interactions (throttled via rAF)
     onAiMouseMove(e) {
-      const rect = e.currentTarget.getBoundingClientRect()
-      const rx = (e.clientX - rect.left) / rect.width - 0.5
-      const ry = (e.clientY - rect.top) / rect.height - 0.5
-      this.aiTilt.x = rx * 8
-      this.aiTilt.y = -ry * 8
-      this.aiTilt.s = 1.02
+      // Cancel any pending frame
+      if (this.aiTiltRafId) cancelAnimationFrame(this.aiTiltRafId)
+      const target = e.currentTarget
+      this.aiTiltRafId = requestAnimationFrame(() => {
+        const rect = target.getBoundingClientRect()
+        const rx = (e.clientX - rect.left) / rect.width - 0.5
+        const ry = (e.clientY - rect.top) / rect.height - 0.5
+        // update atomically to minimize reactive work
+        this.aiTilt = { x: rx * 8, y: -ry * 8, s: 1.02 }
+        this.aiTiltRafId = null
+      })
     },
-    onAiMouseLeave() { this.aiTilt.x = 0; this.aiTilt.y = 0; this.aiTilt.s = 1 },
+    onAiMouseLeave() {
+      if (this.aiTiltRafId) { cancelAnimationFrame(this.aiTiltRafId); this.aiTiltRafId = null }
+      this.aiTilt = { x: 0, y: 0, s: 1 }
+    },
     // embedding removed; toggleEmbedScripts omitted
     toggle(i, evt, msg = null) {
       // เก็บ element ปุ่มที่ถูกกดไว้ก่อน เพื่อใช้อ้างอิงตอนเลื่อนจอ
@@ -2408,37 +2424,38 @@ export default {
       const ctx = canvas.getContext('2d')
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       
-      // Update and draw particles
-      this.particles = this.particles.filter(p => {
+      // Reverse loop to avoid creating new arrays (better GC behavior)
+      for (let i = this.particles.length - 1; i >= 0; i--) {
+        const p = this.particles[i]
         p.x += p.vx
         p.y += p.vy
-        p.rotation += p.rotationSpeed // rotate petal
-        p.vx *= 0.99 // very slight air resistance
-        p.vy += 0.05 // gentle gravity for floating down
-        p.life -= 0.015 // slow fade out for graceful disappear
-        
+        p.rotation += p.rotationSpeed
+        p.vx *= 0.99
+        p.vy += 0.05
+        p.life -= 0.015
+
         if (p.life > 0) {
           ctx.save()
-          ctx.globalAlpha = p.life * 0.8 // slightly transparent for delicate look
+          ctx.globalAlpha = p.life * 0.8
           ctx.fillStyle = p.color
-          ctx.translate(p.x, p.y)
+          // Use integer coords to reduce subpixel rendering cost
+          ctx.translate(Math.floor(p.x), Math.floor(p.y))
           ctx.rotate(p.rotation)
-          
-          // Draw petal shape (oval/teardrop)
+
           ctx.beginPath()
           ctx.ellipse(0, 0, p.size * 1.2, p.size * 0.8, 0, 0, Math.PI * 2)
           ctx.fill()
-          
-          ctx.shadowBlur = 3
-          ctx.shadowColor = p.color
-          
+
+          // Avoid expensive shadows on mobile (commented out)
+          // ctx.shadowBlur = 0
+
           ctx.restore()
-          return true
+        } else {
+          // remove dead particle in-place
+          this.particles.splice(i, 1)
         }
-        return false
-      })
+      }
       
-      // Continue animation if there are particles
       if (this.particles.length > 0) {
         this.particleAnimationFrame = requestAnimationFrame(() => this.animateParticles())
       } else {
@@ -4227,6 +4244,39 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
 
 /* Keyboard focus visual */
 .apple-help-mini:focus-visible { box-shadow: 0 0 0 4px rgba(107,44,145,0.12); outline: none; transform: translateY(-1px); }
+
+/* === Performance & GPU Hints (Apple-like 60fps) === */
+/* Force GPU Layer Creation */
+.chat-panel,
+.overlay-backdrop,
+.snowflake,
+.flying-text,
+.ai-intro-content {
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Limit layout recalcs for the containing panel */
+.chat-panel {
+  contain: content;
+}
+
+.snowflakes {
+  pointer-events: none;
+  contain: strict;
+}
+
+/* Reduce heavy backdrop effects on iOS */
+.overlay-backdrop {
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.particle-canvas { pointer-events: none; }
+
+.message-list { -webkit-overflow-scrolling: touch; }
 </style>
 
 
