@@ -31,5 +31,5 @@ export function formatRelativeTime(timestamp) {
   if (diffHours < 24) return `${diffHours} ชม.`;
   if (diffDays < 30) return `${diffDays} วัน`;
   if (diffMonths < 12) return `${diffMonths} เดือน`;
-  return `${diffYears} ปี`;
+  return `เลยมา ${diffYears} ปี`;
 }

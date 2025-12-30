@@ -444,7 +444,7 @@ const props = defineProps({
     if (!date) return '';
     const d = new Date(date);
     if (isNaN(d.getTime())) return date;
-    return d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
   } },
 });
 
@@ -453,7 +453,7 @@ function formatFullDateTime(timestamp) {
   if (!timestamp) return '-';
   const date = new Date(timestamp);
   if (isNaN(date.getTime())) return timestamp;
-  return date.toLocaleString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return date.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 function addMonths(date, months) {

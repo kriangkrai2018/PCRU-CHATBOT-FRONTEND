@@ -530,9 +530,7 @@ function lastPage() { goToPage(totalPages.value); }
 
 function formatFullDateTime(ts) {
   if (!ts) return '-';
-  return new Date(ts).toLocaleString('th-TH', { 
-    year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
-  });
+  return new Date(ts).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 function formatReason(r) {
