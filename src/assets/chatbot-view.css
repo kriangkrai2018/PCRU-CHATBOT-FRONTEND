@@ -1257,9 +1257,20 @@ html.keyboard-open .panel-footer {
   width: 100%;
   margin: 0;
   padding: 22px;
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.4) inset;
-  border: 0.5px solid rgba(0, 0, 0, 0.06);
+  
+  /* ปรับพื้นหลัง: ลดความทึบลงอีกนิด (0.59 -> 0.4) เพื่อให้เห็นฉากหลังชัดขึ้น */
+  background: rgba(255, 255, 255, 0.4); 
+  
+  /* ปรับ Blur: ลดลงจาก 40px เหลือ 16px เพื่อให้ยังเห็นรูปทรงลางๆ ของสิ่งที่อยู่ข้างหลัง */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  /* เพิ่มเงาให้ลอยเด่นขึ้น ช่วยหลอกตาว่ามีมิติ */
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  
+  /* ขอบขาวฟุ้งๆ */
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  
   border-radius: 20px;
   animation: cardFloat 0.6s cubic-bezier(.2,.9,.2,1);
   box-sizing: border-box;
