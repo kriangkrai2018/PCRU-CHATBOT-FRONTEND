@@ -427,7 +427,7 @@ function aggregatedContacts(parentId) {
   for (const [phone, data] of phoneMap.entries()) {
     const extArr = Array.from(data.exts.values()).sort((a,b)=>a-b);
     let line = `เบอร์โทรศัพท์ : ${formatPhone(phone)}`;
-    if (extArr.length) line += ` ต่อ ${extArr.join(', ')}`;
+    if (extArr.length) line += ` ต่อ ${extArr.join(' หรือ ')}`;
     out.push(line);
     for (const u of data.urls) globalUrlSet.add(u);
   }

@@ -1584,7 +1584,7 @@ export default {
             if (/ต่อ\s*$/.test(last)) {
               parts[lastIdx] = `${last} ${cleanedExt}`;
             } else {
-              parts[lastIdx] = `${last}, ${cleanedExt}`;
+              parts[lastIdx] = `${last} หรือ ${cleanedExt}`;
             }
             continue; // consumed this numeric part
           }
@@ -1598,6 +1598,15 @@ export default {
         parts.push(p);
       }
       return parts;
+    },
+    joinBrokenUrls(s) {
+      if (!s) return s;
+      // Join URL fragments split over newlines (e.g. '.../loca\nle=th_TH') safely
+      // But do not join when the next line looks like a phone number (starts with 0\d)
+      const re = new RegExp('(https?:\\/\\/[^^\\s]+)\\n(?!0\\d)([A-Za-z0-9\\/\\?#%._=&+\\-:@]+)', 'ig');
+      let prev;
+      do { prev = s; s = s.replace(re, '$1$2'); } while (s !== prev);
+      return s;
     },
     linkifyText(text) {
       if (!text) return '';
@@ -1633,12 +1642,20 @@ export default {
         return match;
       });
 
+      // Normalize URLs that may have been split across newlines (e.g., '.../loca\nle=th_TH') so they become contiguous
+      // Use RegExp constructor and repeated replace to avoid unterminated regex literals in SFC parsing
+      const urlJoinRe = new RegExp('(https?:\\/\\/[^^\\s]+)\\n([A-Za-z0-9\\/\\?#%._=&+\\-:@]+)', 'ig');
+      let _prevProcessed;
+      do {
+        _prevProcessed = processedText;
+        processedText = processedText.replace(urlJoinRe, '$1$2');
+      } while (processedText !== _prevProcessed);
 
       // 3. Special handling for "ลิงค์ : ..." lines so multiple URLs are converted individually and joined with ' หรือ '
-      processedText = processedText.replace(/(ลิงค์\s*:\s*)([^\n<]+)/gi, (match, prefix, list) => {
-        // extract URLs inside the list
+      processedText = processedText.replace(/(ลิงค์\s*:\s*)([\s\S]*?)(?=(?:\n\S|$))/gi, (match, prefix, list) => {
+        // extract URLs inside the list (after we've normalized broken URLs)
         const urlList = [];
-        const urlRe = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/ig;
+        const urlRe = /(https?:\/\/[A-Za-z0-9\/\?#%._=&+\-:@][^\n\s]*)|(www\.[A-Za-z0-9\/\?#%._=&+\-:@][^\n\s]*)/ig;
         let m;
         while ((m = urlRe.exec(list)) !== null) {
           urlList.push(m[0]);
@@ -1675,15 +1692,18 @@ export default {
             const phoneDigits = phonePart.replace(/\D/g, '');
             if (phoneDigits.length === 9 || phoneDigits.length === 10) {
               let telHref = phoneDigits;
+              let extText = '';
               if (extDigits) {
-                // use comma for pause, which is widely supported.
-                // we'll take only the first extension if multiple are present.
-                const firstExt = extDigits.split(',')[0].replace(/\D/g, '');
-                if(firstExt) {
-                  telHref += ',' + firstExt;
+                // normalize ext list (comma/space separated) and join with ' หรือ '
+                const exts = extDigits.split(/[ ,]+/).map(e => e.replace(/\D/g, '')).filter(Boolean);
+                if (exts.length) {
+                  // use first ext in href for quick dial pause
+                  telHref += ',' + exts[0];
+                  extText = ' ต่อ ' + exts.join(' หรือ ');
                 }
               }
-              return `<a href="tel:${telHref}" class="message-link">${match}</a>`;
+              // Anchor only around the phone number; extension text remains plain (not underlined)
+              return `<a href="tel:${telHref}" class="message-link">${phonePart}</a>${extText}`;
             }
             return match; // not a valid phone number, return as is
           });
@@ -3324,14 +3344,69 @@ export default {
                     const m = String(s || '').match(/0(?:2|[3-9]\d)[-\s]?\d{3}[-\s]?\d{3,4}|0\d{2}[-\s]?\d{3}[-\s]?\d{4}/);
                     return m ? m[0].replace(/\D/g, '') : null;
                   }
-                  const extractExt = (s) => {
-                    const me = String(s || '').match(/(?:ต่อ|ext\.?|x)\s*[:\.]?\s*(\d{1,6})/i);
-                    return me ? me[1] : '';
+                  const extractExts = (s) => {
+                    if (!s) return [];
+                    const str = String(s);
+                    const exts = new Set();
+                    // capture explicitly marked extensions (e.g., 'ต่อ 1001', 'ext. 1001', 'x1001')
+                    for (const m of str.matchAll(/(?:ต่อ|ext\.?|x)\s*[:\.]?\s*(\d{1,6})/ig)) {
+                      if (m[1]) {
+                        const cleaned = m[1].replace(/\D/g, '');
+                        // Only accept extensions that look like typical internal extensions: 4-5 digits, not starting with 0
+                        if (cleaned.length >= 4 && cleaned.length <= 5 && !cleaned.startsWith('0')) exts.add(cleaned);
+                      }
+                    }
+                    // capture numeric tokens after the phone in same string (e.g., '\n5101' or ',5101')
+                    const phoneMatch = str.match(/0(?:2|[3-9]\d)[-\s]?\d{3}[-\s]?\d{3,4}|0\d{2}[-\s]?\d{3}[-\s]?\d{4}/);
+                    if (phoneMatch) {
+                      const rest = str.slice(str.indexOf(phoneMatch[0]) + phoneMatch[0].length);
+                      const nums = rest.match(/(\d{2,6})/g);
+                      if (nums) nums.forEach(n => {
+                        const cleaned = n.replace(/\D/g, '');
+                        if (cleaned.length >= 4 && cleaned.length <= 5 && !cleaned.startsWith('0')) exts.add(cleaned);
+                      });
+                    }
+                    return Array.from(exts);
                   }
                   const extractUrl = (s) => {
-                    const m = String(s || '').match(/https?:\/\/[^\s]+/i);
+                    if (!s) return null;
+                    let str = String(s);
+                    // merge URL fragments split across newlines (e.g., '.../loca\nle=th_TH')
+                    // Join broken URL fragments safely
+                    str = this.joinBrokenUrls(str);
+                    const m = str.match(/https?:\/\/[^\n\s]+/i);
                     if (!m) return null;
-                    return m[0].trim().toLowerCase().replace(/\/$/, '').split('?')[0];
+                    // preserve query string but remove internal newlines and trailing slash
+                    return m[0].trim().replace(/\n/g, '').replace(/\/$/, '');
+                  }
+
+                  const extractUrls = (s) => {
+                    if (!s) return [];
+                    let str = String(s);
+                    // merge URL fragments split across newlines (e.g., '.../loca\nle=th_TH')
+                    // Join broken URL fragments safely
+                    str = this.joinBrokenUrls(str);
+                    // Use RegExp constructor to avoid multi-line regex literal issues
+                    const re = new RegExp('(https?:\\/\\/[^^\\s]+)', 'ig');
+                    const matches = [];
+                    let m;
+                    while ((m = re.exec(str)) !== null) {
+                      let u = m[0].trim().replace(/\n/g, '').replace(/\/$/, '');
+                      // If a phone-like token got appended directly to the URL (e.g., '...TH056-717-144'),
+                      // strip that phone suffix so it won't be treated as part of the URL.
+                      const phoneSuffixRe = /(0(?:2|[3-9]\d)[-\d]{6,10}|0\d{2}[-\d]{7,10})$/;
+                      if (phoneSuffixRe.test(u)) {
+                        u = u.replace(phoneSuffixRe, '').replace(/[-_.]+$/,'');
+                      }
+                      matches.push(u);
+                    }
+                    // preserve order and dedupe
+                    return Array.from(new Set(matches));
+                  }
+
+                  const extractFirstUrl = (s) => {
+                    const all = extractUrls(s);
+                    return all.length ? all[0] : null;
                   }
 
                   const formatPhone = (digits) => {
@@ -3353,34 +3428,39 @@ export default {
 
                   for (const item of normalized) {
                     const phone = extractPhone(item.contact);
-                    const ext = extractExt(item.contact);
-                    const url = extractUrl(item.contact);
+                    const extsArr = extractExts(item.contact);
+                    const urlsFound = extractUrls(item.contact);
 
                     if (phone) {
                       if (!phoneAggregateMap.has(phone)) {
                         const exts = new Set();
                         const urlsSet = new Set();
-                        if (ext) exts.add(ext);
-                        if (url) urlsSet.add(url);
-                        const contactText = `${formatPhone(phone)}${exts.size ? ' ต่อ ' + Array.from(exts).join(', ') : ''}${urlsSet.size ? '\nลิงค์ : ' + Array.from(urlsSet).join(' หรือ ') : ''}`;
+                        if (extsArr && extsArr.length) extsArr.forEach(e => exts.add(e));
+                        if (urlsFound && urlsFound.length) urlsFound.forEach(u => urlsSet.add(u));
+                        const contactText = `${formatPhone(phone)}${exts.size ? ' ต่อ ' + Array.from(exts).join(' หรือ ') : ''}${urlsSet.size ? '\nลิงค์ : ' + Array.from(urlsSet).join(' หรือ ') : ''}`;
                         const idx = result.length;
                         result.push({ organization: item.organization, contact: contactText });
                         phoneAggregateMap.set(phone, { idx, exts, urls: urlsSet });
                       } else {
                         // merge extension and urls into existing
                         const entry = phoneAggregateMap.get(phone);
-                        if (ext) entry.exts.add(ext);
-                        if (url) entry.urls.add(url);
-                        const contactText = `${formatPhone(phone)}${entry.exts.size ? ' ต่อ ' + Array.from(entry.exts).join(', ') : ''}${entry.urls.size ? '\nลิงค์ : ' + Array.from(entry.urls).join(' หรือ ') : ''}`;
+                        if (extsArr && extsArr.length) extsArr.forEach(e => entry.exts.add(e));
+                        if (urlsFound && urlsFound.length) urlsFound.forEach(u => entry.urls.add(u));
+                        const contactText = `${formatPhone(phone)}${entry.exts.size ? ' ต่อ ' + Array.from(entry.exts).join(' หรือ ') : ''}${entry.urls.size ? '\nลิงค์ : ' + Array.from(entry.urls).join(' หรือ ') : ''}`;
                         result[entry.idx].contact = contactText;
                       }
-                    } else if (url) {
-                      // dedupe by url when no phone, but avoid adding if url already associated with a phone
-                      const alreadyInPhone = Array.from(phoneAggregateMap.values()).some(e => e.urls && e.urls.has(url));
-                      if (!urlMap.has(url) && !alreadyInPhone) {
-                        const idx = result.length;
-                        result.push({ organization: item.organization, contact: url });
-                        urlMap.set(url, idx);
+                    } else if (urlsFound && urlsFound.length) {
+                      // dedupe by urls when no phone, but avoid adding if url already associated with a phone
+                      const alreadyInPhone = (u) => Array.from(phoneAggregateMap.values()).some(e => e.urls && e.urls.has(u));
+                      const uniqueUrls = urlsFound.filter(u => !alreadyInPhone(u));
+                      if (uniqueUrls.length) {
+                        // only add URLs that haven't already been added to urlMap
+                        const notAdded = uniqueUrls.filter(u => !urlMap.has(u));
+                        if (notAdded.length) {
+                          const idx = result.length;
+                          result.push({ organization: item.organization, contact: 'ลิงค์ : ' + notAdded.join(' หรือ ') });
+                          notAdded.forEach(u => urlMap.set(u, idx));
+                        }
                       }
                     } else {
                       // fallback: keep name-only entries if not duplicates
