@@ -1,0 +1,110 @@
+/* ==========================================================================
+   Dark Mode Definitions (Google Chrome Native Theme)
+   ========================================================================== */
+
+/* 1. Define Color Variables (Light & Dark) */
+:root {
+  /* --- Light Mode (Default) --- */
+  --cb-bg-primary: #ffffff;
+  --cb-bg-secondary: #f3f4f6; /* gray-100 */
+  --cb-bg-panel: rgba(255, 255, 255, 0.95); /* Glassy */
+  --cb-bg-input: #ffffff;
+  --cb-bg-card: #ffffff;
+  --cb-bg-msg-bot: #ffffff;
+  --cb-bg-msg-user: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%);
+  --cb-bg-hover: rgba(0, 0, 0, 0.05);
+  
+  --cb-text-primary: #1f2937; /* gray-800 */
+  --cb-text-secondary: #6b7280; /* gray-500 */
+  --cb-text-inverse: #ffffff;
+  
+  --cb-border-color: #e5e7eb; /* gray-200 */
+  --cb-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --cb-shadow-msg: 0 1px 2px rgba(0, 0, 0, 0.05);
+  
+  --cb-scrollbar-track: transparent;
+  --cb-scrollbar-thumb: #d1d5db;
+  
+  /* Icon colors */
+  --cb-icon-primary: #5f6368;
+  --cb-icon-hover: #202124;
+}
+
+/* --- Dark Mode Override (Chrome Native Match) --- */
+[data-theme="dark"] {
+  /* Backgrounds */
+  --cb-bg-primary: #202124; /* Chrome Default Dark Background */
+  --cb-bg-secondary: #292a2d; /* Chrome Toolbar/Surface */
+  --cb-bg-panel: #292a2d; /* Panel solid color */
+  --cb-bg-input: #202124; /* Input matches main bg */
+  --cb-bg-card: #292a2d; /* Cards match surface */
+  --cb-bg-msg-bot: #3c4043; /* Message bubble matches input/card */
+  --cb-bg-msg-user: #8ab4f8; /* Google Blue 300 */
+  --cb-bg-hover: rgba(232, 234, 237, 0.08); /* Standard hover overlay */
+  
+  /* Text */
+  --cb-text-primary: #e8eaed; /* Google Grey 100 (Primary Text) */
+  --cb-text-secondary: #9aa0a6; /* Google Grey 500 (Secondary Text) */
+  --cb-text-inverse: #202124; /* Black text on blue accent */
+  
+  /* Borders */
+  --cb-border-color: #5f6368; /* Google Grey 700 */
+  
+  /* Shadows */
+  --cb-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  --cb-shadow-msg: none; /* Flat design in dark mode */
+  
+  /* Scrollbar */
+  --cb-scrollbar-track: #202124;
+  --cb-scrollbar-thumb: #5f6368;
+  
+  /* Icons */
+  --cb-icon-primary: #9aa0a6; /* Muted icon color */
+  --cb-icon-hover: #e8eaed; /* Brighter on hover */
+}
+
+/* ==========================================================================
+   Dark Mode Specific Overrides
+   ========================================================================== */
+
+/* Remove glassmorphism in Dark Mode for authentic Chrome look */
+[data-theme="dark"] .chat-panel {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-left: 1px solid #3c4043;
+}
+
+/* Links in Dark Mode */
+[data-theme="dark"] .message-text a {
+  color: #8ab4f8; /* Chrome Blue (Dark) */
+}
+
+/* Contact Phone in Dark Mode */
+[data-theme="dark"] .contact-phone {
+  color: #8ab4f8 !important;
+}
+
+/* Buttons in Dark Mode */
+[data-theme="dark"] .cat-sub-btn {
+    background-color: #35363a;
+    border-color: #5f6368;
+}
+[data-theme="dark"] .cat-sub-btn:hover {
+    background-color: #3f4042;
+}
+[data-theme="dark"] .cat-sub-btn:hover .cat-sub-icon {
+    color: #e8eaed;
+}
+
+/* Headers in Dark Mode */
+[data-theme="dark"] .ai-greet-title {
+    text-shadow: none;
+    color: #e8eaed;
+    background: none;
+    -webkit-text-fill-color: initial;
+}
+
+/* Theme Toggle Button specific tweak */
+[data-theme="dark"] .theme-toggle-btn {
+    background: rgba(255,255,255,0.05);
+}

@@ -1,0 +1,68 @@
+/* ==========================================================================
+   Light Mode Specific Overrides
+   ========================================================================== */
+
+/* Light Mode Button Overrides - Ensure proper pill appearance */
+[data-theme="light"] .close-circle,
+[data-theme="light"] .clear-chat-btn,
+[data-theme="light"] .theme-toggle-btn {
+  background: var(--cb-bg-input) !important;
+  border: 1px solid var(--cb-border-color) !important;
+  box-shadow: var(--cb-shadow-msg);
+  color: var(--cb-icon-primary) !important;
+}
+
+/* Light Mode Message Bubbles - Add subtle border */
+[data-theme="light"] .message-bubble.bot {
+  border: 1px solid var(--cb-border-color);
+}
+
+/* Light Mode Input Pill - Ensure border is visible */
+[data-theme="light"] .input-pill {
+  border: 1px solid var(--cb-border-color) !important;
+}
+
+/* Light Mode Contact Cards - Ensure proper styling */
+[data-theme="light"] .contact-card {
+  background: var(--cb-bg-card) !important;
+  border: 1px solid var(--cb-border-color);
+}
+
+/* Light Mode Tooltip - Ensure visibility */
+[data-theme="light"] .chatbot-tooltip {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #1d1d1f;
+}
+
+/* Light Mode Unlike Tooltip */
+[data-theme="light"] .unlike-tooltip {
+  background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%);
+  border: 1px solid rgba(139, 76, 184, 0.06);
+}
+
+/* Light Mode Like Tooltip */
+[data-theme="light"] .like-tooltip {
+  background: linear-gradient(135deg, rgba(255, 240, 245, 0.98) 0%, rgba(255, 235, 245, 0.95) 100%);
+  border: 1px solid rgba(236, 72, 153, 0.06);
+}
+
+/* Light Mode Feedback Dropdown */
+[data-theme="light"] .feedback-reason-dropdown {
+  background: rgba(255, 255, 255, 0.98);
+  border: 0.5px solid rgba(0,0,0,0.06);
+}
+
+/* Light Mode Category Sub Buttons */
+[data-theme="light"] .cat-sub-btn {
+  background: rgba(255, 255, 255, 0.5);
+  border: 0.5px solid rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Light Mode Panel Footer */
+[data-theme="light"] .panel-footer {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}

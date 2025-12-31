@@ -52,6 +52,29 @@
                 </path>
               </svg>
             </button>
+
+            <!-- Theme toggle button -->
+            <button class="theme-toggle-btn" @click.stop="toggleTheme" :title="theme === 'dark' ? 'สลับเป็นโหมดสว่าง' : 'สลับเป็นโหมดมืด'" :aria-pressed="theme === 'dark'">
+              <!-- Sun when dark (toggle to light) -->
+              <svg v-if="theme === 'dark'" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="12" cy="12" r="4" fill="#FFD54F" />
+                <g stroke="#FFD54F" stroke-width="1.6" stroke-linecap="round">
+                  <path d="M12 2v2" />
+                  <path d="M12 20v2" />
+                  <path d="M2 12h2" />
+                  <path d="M20 12h2" />
+                  <path d="M4.9 4.9l1.4 1.4" />
+                  <path d="M17.7 17.7l1.4 1.4" />
+                  <path d="M4.9 19.1l1.4-1.4" />
+                  <path d="M17.7 6.3l1.4-1.4" />
+                </g>
+              </svg>
+              <!-- Moon when light (toggle to dark) -->
+              <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" fill="#C9B6F1" />
+              </svg>
+            </button>
+
             <div class="overlay-backdrop-2"></div>
           </div>
 
@@ -794,6 +817,8 @@ export default {
       viewportHeight: '100%',
       // Footer focus fallback to reliably move send button on mobile
       panelFocused: false,
+      // Theme: 'light' | 'dark' (initialized in mounted via initTheme)
+      theme: 'light',
       // Inline style object for fixed-position send button when focused (measured from input)
       sendBtnFixedStyle: null,
       // One-time simulation to stabilize mobile layout
@@ -973,6 +998,11 @@ export default {
       const hasAsked = localStorage.getItem('chatbot_has_asked')
       this.hasAskedBot = !!hasAsked
     } catch (e) { this.hasAskedBot = false }
+
+    // Initialize theme preference (dark / light) and apply it
+    try {
+      this.initTheme()
+    } catch (e) { /* ignore */ }
     
     // Setup particle canvas
     this.$nextTick(() => {
@@ -1504,6 +1534,42 @@ export default {
         return tel;
       }
       return String(raw).replace(/\D/g, '');
+    },
+
+    // Theme initialization & toggle (persist to localStorage & set document dataset)
+    initTheme() {
+      try {
+        const stored = localStorage.getItem('chatbot_theme')
+        if (stored === 'dark' || stored === 'light') {
+          this.theme = stored
+        } else {
+          // Respect system preference if nothing persisted
+          const prefers = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+          this.theme = prefers ? 'dark' : 'light'
+        }
+      } catch (e) {
+        this.theme = 'light'
+      }
+      // Apply to document root
+      try {
+        document.documentElement.setAttribute('data-theme', this.theme)
+        const meta = document.querySelector('meta[name="theme-color"]')
+        if (meta) meta.setAttribute('content', this.theme === 'dark' ? '#202124' : '#8B4CB8')
+        const cs = document.querySelector('meta[name="color-scheme"]')
+        if (cs) cs.setAttribute('content', this.theme === 'dark' ? 'dark' : 'light')
+      } catch (e) { /* ignore */ }
+    },
+
+    toggleTheme() {
+      this.theme = this.theme === 'dark' ? 'light' : 'dark'
+      try {
+        document.documentElement.setAttribute('data-theme', this.theme)
+        localStorage.setItem('chatbot_theme', this.theme)
+        const meta = document.querySelector('meta[name="theme-color"]')
+        if (meta) meta.setAttribute('content', this.theme === 'dark' ? '#202124' : '#8B4CB8')
+        const cs = document.querySelector('meta[name="color-scheme"]')
+        if (cs) cs.setAttribute('content', this.theme === 'dark' ? 'dark' : 'light')
+      } catch (e) { /* ignore */ }
     },
 
     parseContactParts(contactStr) {
@@ -4880,3 +4946,5 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
 
 
 <style src="../assets/chatbot-view.css"></style>
+<style src="../assets/dark-mode.css"></style>
+<style src="../assets/light-mode.css"></style>
