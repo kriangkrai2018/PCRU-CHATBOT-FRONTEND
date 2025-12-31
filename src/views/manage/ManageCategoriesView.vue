@@ -692,8 +692,21 @@ function parseContacts(str) {
   return String(str).split(/ \|\|\| |\n/).map(s => s.trim()).filter(Boolean);
 }
 
+// ============================================
+// MODIFIED: toggleExpand function (Single Open Logic)
+// ============================================
 function toggleExpand(id) {
-  expanded.value[id] = !expanded.value[id];
+  // 1. Check if this ID is currently expanded (before we clear anything)
+  const isCurrentlyExpanded = expanded.value[id];
+  
+  // 2. Clear ALL expanded states (collapse everything)
+  expanded.value = {};
+  
+  // 3. If the clicked ID was NOT expanded, then expand it now.
+  //    (If it WAS expanded, we effectively just closed it by step 2, creating a toggle effect)
+  if (!isCurrentlyExpanded) {
+    expanded.value[id] = true;
+  }
 }
 
 // ADDED: expandedMap definition
