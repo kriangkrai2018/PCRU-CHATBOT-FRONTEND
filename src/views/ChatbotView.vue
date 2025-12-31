@@ -487,7 +487,7 @@
                                     <span v-if="!/^ลิงค์/i.test(part)">ลิงค์ : </span>
                                     <span v-html="linkifyText(part)"></span>
                                   </div>
-                                  <div v-else>
+                                  <div v-else-if="hasContact(part)">
                                     <span>ติดต่อ: </span><span v-html="linkifyText(part)"></span>
                                   </div>
                                 </div>
@@ -1602,11 +1602,16 @@ export default {
     joinBrokenUrls(s) {
       if (!s) return s;
       // Join URL fragments split over newlines (e.g. '.../loca\nle=th_TH') safely
-      // But do not join when the next line looks like a phone number (starts with 0\d)
-      const re = new RegExp('(https?:\\/\\/[^^\\s]+)\\n(?!0\\d)([A-Za-z0-9\\/\\?#%._=&+\\-:@]+)', 'ig');
+      // But do not join when the next line looks like a phone number (starts with 0\d), another URL, 'www.' or the word 'ลิงค์'
+      const re = new RegExp('(https?:\\/\\/[^^\\s]+)\\n(?!0\\d|https?:\\/\\/|www\\.|ลิงค์)([A-Za-z0-9\\/\\?#%._=&+\\-:@]+)', 'ig');
       let prev;
       do { prev = s; s = s.replace(re, '$1$2'); } while (s !== prev);
       return s;
+    },
+    hasContact(raw) {
+      // Return true if linkifyText(raw) contains meaningful contact info (not blank or 'ไม่มี')
+      const plain = (this.linkifyText(raw || '') || '').replace(/<[^>]+>/g, '').trim();
+      return !!plain && !/^ไม่มี$/i.test(plain);
     },
     linkifyText(text) {
       if (!text) return '';
@@ -3658,7 +3663,22 @@ export default {
     getVisibleContactGroups(msg) {
       const groups = (msg.groupedContacts && msg.groupedContacts.length) ? msg.groupedContacts : (universityContacts || [])
       const visibleCount = this.getContactVisibleCount(msg)
-      return groups.slice(0, visibleCount)
+      // Filter out groups that have no meaningful contact info (no phone/ext/url)
+      const filtered = groups.filter(group => {
+        if (!group || !Array.isArray(group.categories)) return false
+        for (const cat of group.categories) {
+          if (!cat || !cat.contact) continue
+          const parts = this.parseContactParts(cat.contact)
+          for (const p of parts) {
+            // link parts (start with url/www/facebook/ลิงค์) count as meaningful
+            if (/^(https?:|www\.|facebook\.|ลิงค์)/i.test(p)) return true
+            // other parts: check if has meaningful contact (not 'ไม่มี')
+            if (this.hasContact(p)) return true
+          }
+        }
+        return false
+      })
+      return filtered.slice(0, visibleCount)
     },
 
     toggleLoadMoreContacts(msg) {

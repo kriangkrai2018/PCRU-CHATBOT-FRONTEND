@@ -2347,7 +2347,7 @@ body.no-effects .apple-help-button::after { display: none !important; }
 .message-bubble.bot {
   background: rgba(255, 255, 255, 0.9);
   /* FIX: เปลี่ยนจาก width: 100% เป็น fit-content เพื่อไม่ให้ดันจนล้นจอ */
-  width: fit-content !important;
+  
   max-width: 85%; /* กำหนดขอบเขตสูงสุดไม่ให้กว้างเกินไป */
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -3559,7 +3559,7 @@ body.no-effects .apple-help-button::after { display: none !important; }
   .message-bubble.bot {
     /* FIX: คำนวณความกว้างโดยหักลบ Avatar (40px) และ Gap ออก เพื่อไม่ให้ล้น */
     max-width: calc(100% - 55px) !important; 
-    width: fit-content !important;
+    
     
     margin: 8px 0 !important;
     box-sizing: border-box;
