@@ -881,19 +881,39 @@ html.keyboard-open .panel-footer {
 /* Responsive tooltip sizing for small screens */
 @media (max-width: 640px) {
   .unlike-tooltip, .like-tooltip {
-    width: auto !important;
-    max-width: 220px !important;
-    min-width: auto !important;
-    white-space: normal !important;
-    padding: 12px 14px !important;
+    /* FIX: Restore absolute positioning to point to avatar */
+    position: absolute !important;
     left: 0 !important;
+    top: auto !important;
+    bottom: 100% !important;
     transform: none !important;
-    margin-left: 0 !important;
+    margin: 0 0 8px 0 !important;
+    
+    /* ปรับขนาดให้พอดีไม่บีบ และไม่ล้นจอ */
+    width: max-content !important;
+    max-width: 250px !important; /* กว้างพอประมาณสำหรับมือถือ */
+    min-width: 140px !important;
+    
+    /* Reset style ให้เหมือนเดิม */
+    white-space: normal !important;
+    padding: 10px 16px !important;
+    text-align: left !important;
+    z-index: 1000 !important;
+    
+    /* เงาปกติ */
+    box-shadow: 0 8px 24px rgba(139, 76, 184, 0.12), 0 2px 8px rgba(107, 44, 145, 0.08) !important;
   }
 
   .unlike-tooltip-content, .like-tooltip-content {
     font-size: 13px !important;
     line-height: 1.4 !important;
+  }
+  
+  /* แสดงหางลูกศรกลับมา เพื่อชี้ที่ Avatar */
+  .unlike-tooltip-tail, .like-tooltip-tail {
+    display: block !important;
+    left: 16px !important;
+    bottom: -6px !important;
   }
 }
 
@@ -975,6 +995,84 @@ html.keyboard-open .panel-footer {
   transform: translateY(4px) scale(0.95);
 }
 
+/* -----------------------------------------------------------------------
+   GENERAL TOOLTIP STYLES
+   -----------------------------------------------------------------------
+*/
+.chatbot-tooltip {
+  position: fixed;
+  z-index: 99999;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  color: #1d1d1f;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+
+  /* Layout & Sizing */
+  max-width: 320px;
+  width: max-content;
+  white-space: normal;
+  word-wrap: break-word;
+  line-height: 1.5;
+
+  /* Animation */
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  transform: translateY(5px);
+
+  /* Glassmorphism */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.chatbot-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* -----------------------------------------------------------------------
+   MOBILE RESPONSIVENESS FIX
+   -----------------------------------------------------------------------
+*/
+@media (max-width: 480px) {
+  .chatbot-tooltip {
+    /* ขยายความกว้างให้เกือบเต็มจอ โดยเว้นขอบซ้ายขวาไว้เล็กน้อย */
+    max-width: calc(100vw - 32px) !important;
+    width: auto !important;
+
+    /* ปรับขนาดตัวอักษรให้อ่านง่ายบนมือถือ */
+    font-size: 0.85rem;
+    padding: 10px 14px;
+
+    /* จัดตำแหน่งให้ไม่หลุดจอ */
+    left: 16px !important;
+    right: auto !important;
+
+    /* กรณีที่ JS คำนวณ top มาแล้ว ให้ใช้ top เดิม แต่ reset transform แนวนอนถ้ามี */
+    transform: none !important;
+    opacity: 1 !important; /* Ensure visibility */
+  }
+
+  /* ถ้าต้องการให้ Tooltip อยู่ด้านล่างเสมอในมือถือ (Optional) */
+  /* .chatbot-tooltip {
+    top: auto !important;
+    bottom: 20px !important;
+  }
+  */
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .chatbot-tooltip {
+    background: rgba(40, 40, 40, 0.95);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #f0f0f0;
+  }
+}
+
 /* ⌨️ Typing Tooltip - hint shown when user is typing a menu-like word */
 .typing-tooltip {
   position: absolute;
@@ -1054,12 +1152,19 @@ html.keyboard-open .panel-footer {
 /* Responsive: nudge tooltip upward on small screens to avoid overlapping the input/footer */
 @media (max-width: 640px) {
   .bot-avatar-wrapper .typing-tooltip {
-    bottom: calc(100% + 38px) !important;
+    /* FIX: ปรับตำแหน่งและความกว้างของ Typing Tooltip */
+    bottom: calc(100% + 10px) !important;
     margin-bottom: 0 !important;
-    max-width: 220px !important;
+    
+    /* ขยายความกว้าง */
+    max-width: calc(100vw - 64px) !important;
     min-width: 120px !important;
-    padding: 8px 12px !important;
+    width: max-content !important;
+    
+    padding: 10px 14px !important;
+    white-space: normal !important;
   }
+  
   .bot-avatar-wrapper .typing-tooltip .typing-tooltip-tail {
     bottom: -6px;
   }
@@ -2241,8 +2346,9 @@ body.no-effects .apple-help-button::after { display: none !important; }
 
 .message-bubble.bot {
   background: rgba(255, 255, 255, 0.9);
-  /* Default: full width for normal bot messages */
-  width: 100% !important;
+  /* FIX: เปลี่ยนจาก width: 100% เป็น fit-content เพื่อไม่ให้ดันจนล้นจอ */
+  width: fit-content !important;
+  max-width: 85%; /* กำหนดขอบเขตสูงสุดไม่ให้กว้างเกินไป */
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   color: #1d1d1f;
@@ -2273,6 +2379,10 @@ body.no-effects .apple-help-button::after { display: none !important; }
   color: inherit;
   letter-spacing: -0.1px;
   white-space: pre-wrap;
+  
+  /* FIX: เพิ่มการตัดคำสำหรับ URL ยาวๆ */
+  word-break: break-word;
+  overflow-wrap: anywhere; /* สำคัญสำหรับ URL */
 }
 
 .message-bubble.user .message-text a.message-link {
@@ -3447,7 +3557,10 @@ body.no-effects .apple-help-button::after { display: none !important; }
   /* Make bot chat bubbles use full available width on narrow screens */
   .message-bubble,
   .message-bubble.bot {
-    max-width: 100% !important;
+    /* FIX: คำนวณความกว้างโดยหักลบ Avatar (40px) และ Gap ออก เพื่อไม่ให้ล้น */
+    max-width: calc(100% - 55px) !important; 
+    width: fit-content !important;
+    
     margin: 8px 0 !important;
     box-sizing: border-box;
     padding-left: 20px;
