@@ -32,6 +32,41 @@
         </div>
       </div>
 
+      <!-- NEW: Announcement Section (Modified Text) -->
+      <div class="glass-panel mb-5 p-4 announcement-panel header-animate">
+        <div class="d-flex align-items-start gap-3">
+          <div class="announcement-icon">
+            <i class="bi bi-megaphone-fill"></i>
+          </div>
+          <div class="flex-grow-1">
+            <h5 class="mb-2 fw-bold" style="color: var(--text-primary);">ประกาศรับสมัครนักศึกษา</h5>
+            
+            <!-- Announcement Text Container -->
+            <div class="announcement-text">
+               <!-- Case 1: Show Truncated Text -->
+               <span v-if="!isExpanded">
+                {{ truncatedText }}
+                <span v-if="shouldTruncate" class="text-secondary">...</span>
+              </span>
+              <!-- Case 2: Show Full Text -->
+              <span v-else>
+                {{ announcementFullText }}
+              </span>
+            </div>
+
+            <!-- Toggle Button -->
+            <button 
+              v-if="shouldTruncate" 
+              @click="toggleReadMore" 
+              class="btn-read-more mt-2"
+            >
+              {{ isExpanded ? 'ซ่อนบางส่วน' : 'อ่านต่อ' }}
+              <i class="bi" :class="isExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Loading Skeleton -->
       <div v-if="keywordsLoading" class="loader-container fade-in">
         <div class="spinner-apple">
@@ -192,7 +227,7 @@
                       <!-- Loop through all matched Q&A pairs retrieved from DB -->
                       <div v-if="getAllMatches(kw).length > 0">
                         <div 
-                          v-for="(match, mIndex) in getAllMatches(kw)" 
+                          v-for="(match, mIndex) in visibleMatches(kw)" 
                           :key="match.QuestionsAnswersID || mIndex" 
                           class="ai-content-wrapper mb-4 border-bottom pb-4"
                         >
@@ -242,16 +277,34 @@
                               </div>
                               <span class="card-label">คำตอบ (QuestionText)</span>
                             </div>
-                            <div class="card-body-text">
+                            <div :class="['card-body-text', { 'clamped': !isTextExpanded(kw, mIndex) } ]">
                               <!-- DB Column: QuestionText or Answer -->
                               {{ match.QuestionText || '-' }}
                             </div>
+
+                            <div v-if="(match.QuestionText || '').length > 300" class="text-end mt-2">
+                              <button class="matches-read-more" @click.stop="toggleTextExpanded(kw, mIndex)">
+                                {{ isTextExpanded(kw, mIndex) ? 'ซ่อน' : 'อ่านต่อ' }}
+                                <i :class="isTextExpanded(kw, mIndex) ? 'bi bi-chevron-up' : 'bi bi-chevron-down'" style="margin-left:8px"></i>
+                              </button>
+                            </div>
+
                             <div class="ai-tags">
                               <span class="ai-pill">QA ID: {{ match.QuestionsAnswersID }}</span>
                               <span class="ai-pill" v-if="match.CategoriesID">Cat ID: {{ match.CategoriesID }}</span>
                             </div>
                           </div>
                         </div>
+
+
+                        <!-- Read more / show less control -->
+                        <div v-if="getAllMatches(kw).length > 5" class="text-center mt-3">
+                          <button class="btn-read-more matches-read-more" @click.stop="toggleShowAll(kw)">
+                            {{ isShowingAll(kw) ? 'ซ่อน' : 'อ่านต่อ' }}
+                            <i :class="isShowingAll(kw) ? 'bi bi-chevron-up' : 'bi bi-chevron-down'" style="margin-left:8px"></i>
+                          </button>
+                        </div>
+
                       </div>
 
                       <!-- Empty State if no matches found -->
@@ -319,6 +372,32 @@ const { appContext } = getCurrentInstance();
 const $axios = appContext.config.globalProperties.$axios;
 let ws = null;
 
+// --- Announcement Logic (UPDATED) ---
+// Using Template Literal (``) to preserve structure, formatted nicely for display
+const announcementFullText = `1. ภาคปกติ ระดับปริญญาตรี ประเภทโควตารับตรง (คณะวิทยาการจัดการ, คณะมนุษยศาสตร์ฯ, คณะวิทยาศาสตร์ฯ, คณะเทคโนโลยีการเกษตรฯ) สมัครออนไลน์: 21 ก.ค. 68 – 25 พ.ย. 68 สมัครที่มหาวิทยาลัย: 21 ก.ค. 68 – 28 พ.ย. 68
+
+2. ภาคปกติ ระดับปริญญาตรี ประเภทรับตรงทั่วไป (คณะวิทยาการจัดการ, คณะมนุษยศาสตร์ฯ, คณะวิทยาศาสตร์ฯ, คณะเทคโนโลยีการเกษตรฯ)) สมัครออนไลน์: 29 พ.ย. 68 – 13 มี.ค. 69 สมัครที่มหาวิทยาลัย: 29 พ.ย. 68 – 20 มี.ค. 69
+
+3. ภาคปกติ ระดับปริญญาตรี ประเภท Portfolio (คณะครุศาสตร์ทุกสาขา และคณะเกษตร สาขาวิชาการงานอาชีพและเทคโนโลยี และสาขาวิชาวิศวกรรมอิเล็กทรอนิกส์และระบบอัตโนมัติ) สมัครออนไลน์: 4 – 17 เม.ย. 69 สมัครที่มหาวิทยาลัย: 4 – 20 เม.ย. 69
+
+4. ภาคปกติ ระดับปริญญาตรี ประเภทรับตรงแบบมีการสอบ (คณะครุศาสตร์ทุกสาขา และคณะเกษตร สาขาวิชาการงานอาชีพและเทคโนโลยี และสาขาวิชาวิศวกรรมอิเล็กทรอนิกส์และระบบอัตโนมัติ) สมัครออนไลน์: 4 เม.ย. – 10 พ.ค. 69 สมัครที่มหาวิทยาลัย: 4 เม.ย. – 22 พ.ค. 69
+
+5. ภาคปกติ ระดับปริญญาตรี ประเภทโควตาแบบมีการสอบและรับตรงแบบมีการสอบ (คณะพยาบาล) สมัครออนไลน์: 22 ธ.ค. 68 – 23 ม.ค. 69 สมัครที่มหาวิทยาลัย: 22 ธ.ค. 68 – 30 ม.ค. 69
+
+6. ภาค กศ.ปช. ระดับปริญญาตรี รอบที่ 1: 21 ก.ค. – 25 พ.ย. 68 (ออนไลน์) หรือถึง 28 พ.ย. 68 (ที่มหาวิทยาลัย) รอบที่ 2: 29 พ.ย. 68 – 13 มี.ค. 69 (ออนไลน์) หรือถึง 20 มี.ค. 69 (ที่มหาวิทยาลัย)
+
+7. ภาคปกติ ระดับปริญญาตรี (รอบเพิ่มเติม) (คณะวิทยาการจัดการ, คณะมนุษยศาสตร์ฯ, คณะวิทยาศาสตร์ฯ, คณะเทคโนโลยีการเกษตรฯ) ช่วงเวลา: 21 มี.ค. – 3 ก.ค. 69 (เปิดรับเฉพาะสาขาที่ยังไม่เต็ม)
+
+8. ภาค กศ.ปช. ระดับปริญญาตรี (รอบเพิ่มเติม) (คณะวิทยาการจัดการ, คณะมนุษยศาสตร์ฯ, คณะวิทยาศาสตร์ฯ, คณะเทคโนโลยีการเกษตรฯ)) ช่วงเวลา: 21 มี.ค. – 21 มิ.ย. 69 (เปิดรับเฉพาะสาขาที่ยังไม่เต็ม)`;
+
+const isExpanded = ref(false);
+const textLimit = 300; // เพิ่ม Limit ขึ้นเล็กน้อยเพื่อให้แสดงรายการแรกๆ ได้ครบถ้วนก่อนตัด
+
+const shouldTruncate = computed(() => announcementFullText.length > textLimit);
+const truncatedText = computed(() => announcementFullText.slice(0, textLimit));
+const toggleReadMore = () => { isExpanded.value = !isExpanded.value; };
+// ---------------------------------
+
 const toggleExpand = (id) => {
   expandedId.value = expandedId.value === id ? null : id;
 };
@@ -357,6 +436,27 @@ const getMatches = (kw) => {
 
 // Per-keyword insights cache (populated from /keywords/insights)
 const insightsCache = ref({});
+
+// Per-keyword "show all" toggle to control Read More behaviour (initially show 5 rows)
+const showAllMatches = ref({});
+const isShowingAll = (kw) => !!showAllMatches.value[kw.KeywordID];
+const toggleShowAll = (kw) => {
+  const id = kw.KeywordID;
+  showAllMatches.value = { ...showAllMatches.value, [id]: !showAllMatches.value[id] };
+};
+const visibleMatches = (kw) => {
+  const matches = getAllMatches(kw) || [];
+  return isShowingAll(kw) ? matches : matches.slice(0, 5);
+};
+
+// Per-match text expansion state (keyed by `${KeywordID}::${index}`)
+const readTextExpanded = ref({});
+const textKeyFor = (kw, idx) => `${kw.KeywordID}::${idx}`;
+const isTextExpanded = (kw, idx) => !!readTextExpanded.value[textKeyFor(kw, idx)];
+const toggleTextExpanded = (kw, idx) => {
+  const key = textKeyFor(kw, idx);
+  readTextExpanded.value = { ...readTextExpanded.value, [key]: !readTextExpanded.value[key] };
+};
 
 const insightsFor = (kw) => insightsCache.value[kw.KeywordID] || null;
 
@@ -558,6 +658,44 @@ function nextPage() { if (currentPage.value < totalPages.value) currentPage.valu
   background: rgba(255, 255, 255, 0.9);
 }
 
+/* ---------------- ANNOUNCEMENT STYLES (ADDED) ---------------- */
+.announcement-panel {
+  /* Inherits glass-panel style */
+  animation-delay: 0.1s; /* Slightly stagger from header */
+}
+.announcement-icon {
+  width: 48px; height: 48px;
+  /* Darkened background and explicit blue color for contrast */
+  background: rgba(0, 113, 227, 0.15); 
+  color: #005bb5;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+.announcement-text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #424245;
+  margin-bottom: 8px;
+  white-space: pre-line; /* Essential for preserving newlines from the data */
+}
+.btn-read-more {
+  background: none; border: none; padding: 0;
+  color: var(--accent-blue);
+  font-size: 0.9rem; font-weight: 600;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+  transition: color 0.2s;
+}
+.btn-read-more:hover { color: #005bb5; text-decoration: underline; }
+
+/* Matches read-more button */
+.matches-read-more {
+  background: none; border: 0; color: var(--accent-blue); font-weight: 700; cursor: pointer;
+  padding: 6px 12px; border-radius: 10px; transition: background 0.12s, color 0.12s;
+}
+.matches-read-more:hover { background: rgba(0,113,227,0.06); color: #005bb5; }
+
 /* ---------------- STATS & CHARTS ---------------- */
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
 .stat-card { padding: 24px; display: flex; align-items: center; gap: 20px; position: relative; overflow: hidden; }
@@ -566,6 +704,41 @@ function nextPage() { if (currentPage.value < totalPages.value) currentPage.valu
   display: flex; align-items: center; justify-content: center;
   font-size: 1.5rem; color: white;
   box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+/* Make the grid/table icon use accent color instead of white */
+/* Stronger selectors to override competing styles and ensure visibility */
+.stat-card .stat-icon.blue-glow {
+  background: linear-gradient(135deg, #0071e3, #4facfe) !important;
+  color: var(--accent-blue) !important;
+}
+
+.stat-card .stat-icon.blue-glow i.bi,
+.stat-card .stat-icon.blue-glow i.bi::before,
+.stat-card .stat-icon.blue-glow .bi-grid-fill,
+.stat-card .stat-icon.blue-glow .bi-grid-fill::before {
+  color: var(--accent-blue) !important;
+  -webkit-text-fill-color: var(--accent-blue) !important;
+  opacity: 1 !important;
+}
+
+/* In case the design uses a white rounded box for icon, prefer blue glyph on white box */
+.stat-card .stat-icon.white-box {
+  background: #ffffff !important;
+  color: var(--accent-blue) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+}
+
+/* Ensure bootstrap icon pseudo-element inherits color */
+.stat-card .stat-icon i.bi::before {
+  color: inherit !important;
+  opacity: 1 !important;
+}
+
+/* Optional: ensure the icon scales and is centered */
+.stat-icon .bi {
+  font-size: 1.1rem; /* slightly smaller for better balance */
+  line-height: 1; display: inline-block; vertical-align: middle;
 }
 .blue-glow { background: var(--accent-blue-gradient); }
 .orange-glow { background: linear-gradient(135deg, #FF9500, #FFCC00); }
@@ -721,6 +894,19 @@ function nextPage() { if (currentPage.value < totalPages.value) currentPage.valu
   animation: spin 2s linear infinite;
 }
 @keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* Card-body text line-clamp for long answers */
+.card-body-text.clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card-body-text:not(.clamped) { -webkit-line-clamp: unset; }
+
+/* Matches read-more small button (inside card) */
+.matches-read-more { background: none; border: 0; color: var(--accent-blue); font-weight: 600; cursor: pointer; }
+.matches-read-more:hover { color: #005bb5; text-decoration: underline; }
 
 /* Slide Animations */
 .slide-in-left { animation: slideLeft 0.5s ease-out forwards; opacity: 0; transform: translateX(-30px); }
