@@ -2614,7 +2614,7 @@ export default {
           if (allowByTime && allowByChance) {
             this.hideAllTooltips()
             // Show fixed instruction using the unlike tooltip component
-            this.unlikeTooltipText = 'พิมพ์ เมนู คำเดียว เพื่อเปิด เมนูได้นะคะ'
+            this.unlikeTooltipText = 'พิมพ์ เมนู คำเดียว แล้วกดส่ง เพื่อเปิด เมนูได้นะคะ'
             this.showUnlikeTooltip = true
 
             if (this.unlikeTooltipTimer) { clearTimeout(this.unlikeTooltipTimer); this.unlikeTooltipTimer = null }
