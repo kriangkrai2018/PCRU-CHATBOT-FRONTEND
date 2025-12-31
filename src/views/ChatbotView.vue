@@ -3425,22 +3425,22 @@ export default {
     getVisibleSuggestions(msg) {
       if (!msg || !msg.results) return []
       const msgIndex = this.messages.indexOf(msg)
-      const visibleCount = this.suggestionVisibleCounts[msgIndex] || 5
-      // Make sure we only show 5 items initially
+      const visibleCount = this.suggestionVisibleCounts[msgIndex] || 3
+      // Make sure we only show 3 items initially
       return msg.results.slice(0, visibleCount)
     },
     
     getVisibleCount(msg) {
       const msgIndex = this.messages.indexOf(msg)
-      return this.suggestionVisibleCounts[msgIndex] || 5
+      return this.suggestionVisibleCounts[msgIndex] || 3
     },
     
     loadMoreSuggestions(msg) {
       const msgIndex = this.messages.indexOf(msg)
       if (msgIndex === -1) return
 
-      const currentCount = this.suggestionVisibleCounts[msgIndex] || 5
-      const newCount = currentCount + 5
+      const currentCount = this.suggestionVisibleCounts[msgIndex] || 3
+      const newCount = currentCount + 3
 
       // Update visible count using Vue.set for reactivity
       if (this.$set) {
