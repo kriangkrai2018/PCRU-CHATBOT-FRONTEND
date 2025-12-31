@@ -606,7 +606,8 @@
                   autocomplete="off"
                 />
               </div>
-              <button class="btn-send" @click="onSend" aria-label="send" ref="sendBtn" :style="sendBtnFixedStyle">
+              <button class="btn-send" @click="onSend" aria-label="send" ref="sendBtn" :style="sendBtnFixedStyle"
+                @mouseenter="onSendBtnMouseEnter" @mouseleave="onSendBtnMouseLeave" @focus="onSendBtnMouseEnter" @blur="onSendBtnMouseLeave">
                 <!-- Animated chat bubble icon -->
                 <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="send-icon" aria-hidden="true" focusable="false">
                   <path class="send-bubble" fill="white" d="M21 6a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h2v3l4-3h6a3 3 0 0 0 3-3V6z">
@@ -1921,6 +1922,41 @@ export default {
       if (type === 'like') this.showLikeTooltip = true
       if (type === 'typing') this.showUserTypingTooltip = true
     },
+
+    // Show tooltip when user hovers / focuses the send button
+    onSendBtnMouseEnter(ev) {
+      // Avoid showing tooltip when keyboard is open on mobile
+      if (document.documentElement.classList.contains('keyboard-open')) return
+
+      try {
+        // If input is empty, show a single helpful message
+        if (!this.query || !String(this.query).trim()) {
+          this.hideAllTooltips()
+          this.unlikeTooltipText = 'ต้องพิมพ์ก่อนส่งนะคะ'
+          this.showUnlikeTooltip = true
+
+          // Auto-hide after a short delay
+          if (this.unlikeTooltipTimer) { clearTimeout(this.unlikeTooltipTimer); this.unlikeTooltipTimer = null }
+          this.unlikeTooltipTimer = setTimeout(() => {
+            this.showUnlikeTooltip = false
+            this.unlikeTooltipTimer = null
+          }, 4000)
+        } else {
+          // If there's already text, do not show the hint tooltip
+          this.hideAllTooltips()
+        }
+      } catch (e) { /* ignore */ }
+    },
+
+
+
+    onSendBtnMouseLeave(ev) {
+      if (this.typingTooltipTimer) {
+        clearTimeout(this.typingTooltipTimer)
+        this.typingTooltipTimer = null
+      }
+      this.hideAllTooltips()
+    },
     computeTimeGreeting() {
       // Use Bangkok time explicitly to avoid browser timezone differences
       const formatter = new Intl.DateTimeFormat('th-TH', { timeZone: 'Asia/Bangkok', hour: 'numeric', hour12: false })
@@ -2566,50 +2602,35 @@ export default {
         }
       }
 
-      // --- 1) Typing hint for 'เมนู' ---
+      // --- 1) Typing hint for 'เมนู' (show fixed instructional message) ---
       try {
         const raw = (this.query || '').toString()
         const normalized = raw.replace(/\s+/g, '') // remove spaces (handles 'เ ม น ู')
         const target = 'เมนู'
         if (normalized && target.startsWith(normalized)) {
-          // Show a contextual hint only when user is typing a prefix of "เมนู"
-          this.userTypingTooltipText = 'พิมพ์ เมนู คำเดียว เพื่อเปิด เมนูได้นะคะ'
-          // Show tooltip then position it (positioning runs after the DOM renders)
-          this.openTooltip('typing')
-          this.$nextTick(() => this.updateTypingTooltipPosition())
+          const now = Date.now()
+          const allowByTime = now >= (this.inputTooltipCooldownUntil || 0)
+          const allowByChance = Math.random() <= (this.inputTooltipShowProbability || 0.5)
+          if (allowByTime && allowByChance) {
+            this.hideAllTooltips()
+            // Show fixed instruction using the unlike tooltip component
+            this.unlikeTooltipText = 'พิมพ์ เมนู คำเดียว เพื่อเปิด เมนูได้นะคะ'
+            this.showUnlikeTooltip = true
 
-          // Attach listeners that keep the tooltip positioned when user scrolls/resizes
-          if (!this._tooltipPositionHandler) {
-            this._tooltipPositionHandler = () => this.updateTypingTooltipPosition()
-            window.addEventListener('resize', this._tooltipPositionHandler)
-            window.addEventListener('scroll', this._tooltipPositionHandler, true)
+            if (this.unlikeTooltipTimer) { clearTimeout(this.unlikeTooltipTimer); this.unlikeTooltipTimer = null }
+            this.unlikeTooltipTimer = setTimeout(() => {
+              this.showUnlikeTooltip = false
+              this.unlikeTooltipTimer = null
+            }, 5000)
+
+            // Set cooldown so it won't appear too frequently
+            this.inputTooltipCooldownUntil = now + (this.inputTooltipMinIntervalMs || 3000)
           }
-
-          // Reset/hide any previous timer
-          if (this.typingTooltipTimer) { clearTimeout(this.typingTooltipTimer); this.typingTooltipTimer = null }
-          // Auto-hide after a few seconds if user stops
-          this.typingTooltipTimer = setTimeout(() => {
-            this.showUserTypingTooltip = false
-            this.userTypingTooltipStyle = {}
-            // remove listeners
-            if (this._tooltipPositionHandler) {
-              window.removeEventListener('resize', this._tooltipPositionHandler)
-              window.removeEventListener('scroll', this._tooltipPositionHandler, true)
-              this._tooltipPositionHandler = null
-            }
-            this.typingTooltipTimer = null
-          }, 4200)
         } else {
-          // If the typed text no longer matches, hide the hint
-          if (this.showUserTypingTooltip) {
-            this.showUserTypingTooltip = false
-            this.userTypingTooltipStyle = {}
-            if (this.typingTooltipTimer) { clearTimeout(this.typingTooltipTimer); this.typingTooltipTimer = null }
-            if (this._tooltipPositionHandler) {
-              window.removeEventListener('resize', this._tooltipPositionHandler)
-              window.removeEventListener('scroll', this._tooltipPositionHandler, true)
-              this._tooltipPositionHandler = null
-            }
+          // If user stops matching 'เมนู', hide the tooltip
+          if (this.showUnlikeTooltip) {
+            this.showUnlikeTooltip = false
+            if (this.unlikeTooltipTimer) { clearTimeout(this.unlikeTooltipTimer); this.unlikeTooltipTimer = null }
           }
         }
       } catch (e) { /* ignore detection errors */ }
