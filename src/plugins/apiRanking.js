@@ -99,3 +99,26 @@ export async function setRankingWeights(weights) {
   const { data } = await client.post('/ranking/weights', weights);
   return data;
 }
+
+export const apiRanking = {
+  getRanking: async () => {
+    const client = axiosInstance || axios;
+    try {
+      const { data } = await client.get('/categories');
+      return { data };
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      throw error;
+    }
+  },
+  getChatbotResponse: async (payload) => {
+    const client = axiosInstance || axios;
+    try {
+      const { data } = await client.post('/chat/respond', payload);
+      return data;
+    } catch (error) {
+      console.error('Error sending message:', error);
+      throw error;
+    }
+  },
+};

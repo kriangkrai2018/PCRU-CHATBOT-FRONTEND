@@ -1,163 +1,138 @@
-/**
- * Chatbot Messages Composable
- * Handles message logic, history, and pagination
- */
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
+import { apiRanking } from '@/plugins/apiRanking'
+import { useChatbotScroll } from './useChatbotScroll'
+
+// Helper function to deduplicate contacts
+const deduplicateContacts = (contacts) => {
+  if (!contacts || !Array.isArray(contacts)) return [];
+  
+  const uniqueContacts = [];
+  const seen = new Set();
+
+  contacts.forEach(contact => {
+    // สร้าง key สำหรับเช็คความซ้ำ โดยใช้เบอร์โทรและเบอร์ต่อเป็นหลัก
+    // ถ้าไม่มีเบอร์ ใช้ชื่อหน่วยงานแทน
+    const phoneKey = contact.phone_number ? contact.phone_number.replace(/\s|-/g, '') : '';
+    const extKey = contact.phone_extension ? contact.phone_extension.trim() : '';
+    const nameKey = contact.organization ? contact.organization.trim() : '';
+    const officerKey = contact.officer_name ? contact.officer_name.trim() : '';
+
+    // สร้าง Unique String Key
+    // กรณีเน้นเบอร์โทร: ถ้าเบอร์และเบอร์ต่อเหมือนกัน ถือว่าซ้ำ
+    // กรณีไม่มีเบอร์: ถ้าชื่อหน่วยงานและชื่อเจ้าหน้าที่เหมือนกัน ถือว่าซ้ำ
+    let uniqueKey = '';
+    
+    if (phoneKey) {
+        uniqueKey = `phone:${phoneKey}|ext:${extKey}`;
+    } else {
+        uniqueKey = `org:${nameKey}|officer:${officerKey}`;
+    }
+
+    if (!seen.has(uniqueKey)) {
+      seen.add(uniqueKey);
+      uniqueContacts.push(contact);
+    }
+  });
+
+  return uniqueContacts;
+}
 
 export function useChatbotMessages() {
   const messages = ref([])
-  const suggestionVisibleCounts = ref({})
+  const isBotTyping = ref(false)
+  const sessionId = ref(null)
+  const currentCategory = ref(null)
+  
+  const { scrollToBottom } = useChatbotScroll()
 
-  function saveChatHistory() {
-    try {
-      localStorage.setItem('chatbot_messages', JSON.stringify(messages.value))
-    } catch (error) {
-      console.error('Failed to save chat history:', error)
+  // Initialize welcome message
+  const initWelcomeMessage = () => {
+    // Check if we already have messages, if not add welcome
+    if (messages.value.length === 0) {
+      // Welcome logic handled in view usually, but we can set initial state here
     }
   }
 
-  function loadChatHistory() {
+  const sendMessage = async (text, categoryId = null) => {
+    if (!text.trim()) return
+
+    // 1. Add User Message
+    const userMessage = {
+      id: Date.now(),
+      sender: 'user',
+      text: text,
+      timestamp: new Date()
+    }
+    messages.value.push(userMessage)
+    scrollToBottom()
+
+    // 2. Set Loading
+    isBotTyping.value = true
+
     try {
-      const savedMessages = localStorage.getItem('chatbot_messages')
-      if (savedMessages) {
-        messages.value = JSON.parse(savedMessages)
-        return true
+      // 3. Prepare Payload
+      const payload = {
+        message: text,
+        session_id: sessionId.value
       }
+      
+      if (categoryId) {
+        payload.category_id = categoryId
+        currentCategory.value = categoryId
+      }
+
+      // 4. Call API
+      const responseData = await apiRanking.getChatbotResponse(payload)
+      
+      // Update Session ID if new
+      if (responseData.session_id) {
+        sessionId.value = responseData.session_id
+      }
+
+      // 5. Add Bot Message
+      const botMessage = {
+        id: Date.now() + 1,
+        sender: 'bot',
+        text: responseData.answer || 'ขออภัย ฉันไม่เข้าใจคำถามนี้',
+        timestamp: new Date(),
+        // Deduplicate contacts before assigning
+        contacts: deduplicateContacts(responseData.contacts || []),
+        related_questions: responseData.related_questions || [],
+        confidence_score: responseData.confidence_score,
+        intent: responseData.intent,
+        pdf_url: responseData.pdf_url // Handle PDF link if present
+      }
+
+      messages.value.push(botMessage)
+      scrollToBottom()
+
     } catch (error) {
-      console.error('Failed to load chat history:', error)
-      messages.value = []
+      console.error('Chat error:', error)
+      const errorMessage = {
+        id: Date.now() + 1,
+        sender: 'bot',
+        text: 'เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง',
+        timestamp: new Date(),
+        isError: true
+      }
+      messages.value.push(errorMessage)
+      scrollToBottom()
+    } finally {
+      isBotTyping.value = false
     }
-    return false
   }
 
-  function clearChatHistory() {
+  const clearMessages = () => {
     messages.value = []
-    localStorage.removeItem('chatbot_messages')
+    sessionId.value = null
+    currentCategory.value = null
   }
-
-  function addUserMessage(text) {
-    messages.value.push({ type: 'user', text, timestamp: new Date().toISOString() })
-    saveChatHistory()
-    return messages.value.length - 1
-  }
-
-  function addBotTypingMessage() {
-    messages.value.push({ type: 'bot', text: '', typing: true })
-    saveChatHistory()
-    return messages.value.length - 1
-  }
-
-  function updateBotMessage(index, data) {
-    if (messages.value[index] && messages.value[index].type === 'bot') {
-      const msg = messages.value[index]
-      msg.typing = false
-      msg.text = data.text || ''
-      msg.timestamp = new Date().toISOString()
-      if (data.pdf) msg.pdf = data.pdf
-      if (data.contacts) msg.contacts = data.contacts
-      if (data.results) msg.results = data.results
-      if (data.multipleResults) msg.multipleResults = true
-      if (data.questionId) msg.questionId = data.questionId
-      if (data.found !== undefined) msg.found = data.found
-      if (data.lowConfidence) msg.lowConfidence = true
-      if (data.needsClarification) msg.needsClarification = true
-      if (data.confidenceLevel) msg.confidenceLevel = data.confidenceLevel
-      if (data.verificationWarnings?.length) msg.verificationWarnings = data.verificationWarnings
-      if (data.suggestions) msg.suggestions = data.suggestions
-      if (data.chatLogId) msg.chatLogId = data.chatLogId
-      if (!msg.feedback) msg.feedback = null
-      saveChatHistory()
-    }
-  }
-
-  function setBotMessageError(index, errorText) {
-    if (messages.value[index]) {
-      messages.value[index].typing = false
-      messages.value[index].text = errorText
-      messages.value[index].timestamp = new Date().toISOString()
-      saveChatHistory()
-    }
-  }
-
-  function getVisibleSuggestions(msg) {
-    if (!msg || !msg.results) return []
-    const msgIndex = messages.value.indexOf(msg)
-    const visibleCount = suggestionVisibleCounts.value[msgIndex] || 5
-    return msg.results.slice(0, visibleCount)
-  }
-
-  function getVisibleCount(msg) {
-    const msgIndex = messages.value.indexOf(msg)
-    return suggestionVisibleCounts.value[msgIndex] || 5
-  }
-
-  function loadMoreSuggestions(msg) {
-    const msgIndex = messages.value.indexOf(msg)
-    const currentCount = suggestionVisibleCounts.value[msgIndex] || 5
-    suggestionVisibleCounts.value[msgIndex] = currentCount + 5
-    saveChatHistory()
-  }
-
-  function markSuggestionSelected(msg, item) {
-    if (!item) return
-    item._disabled = true
-    item._selected = true
-    saveChatHistory()
-  }
-
-  function updateMessageFeedback(msg, feedback, animation = null) {
-    if (!msg) return
-    msg.feedback = feedback
-    if (animation) msg._anim = animation
-    saveChatHistory()
-    if (animation) {
-      setTimeout(() => { if (msg) msg._anim = null }, 600)
-    }
-  }
-
-  function getOriginalQueryForMessage(botMsg) {
-    if (!botMsg) return ''
-    const botIdx = messages.value.indexOf(botMsg)
-    if (botIdx <= 0) return ''
-    for (let i = botIdx - 1; i >= 0; i--) {
-      if (messages.value[i] && messages.value[i].type === 'user') {
-        return messages.value[i].text || ''
-      }
-    }
-    return ''
-  }
-
-  function findMatchedSuggestion(userMessage) {
-    for (const m of messages.value) {
-      if (!m || !m.results || !Array.isArray(m.results)) continue
-      for (const r of m.results) {
-        const title = (typeof r === 'string') ? r : (r.title || r.name || r.question || '')
-        if (title && title.trim() === userMessage) return r
-      }
-    }
-    return null
-  }
-
-  const lastBotMessageIndex = computed(() => {
-    if (!messages.value || messages.value.length === 0) return -1
-    for (let i = messages.value.length - 1; i >= 0; i--) {
-      if (messages.value[i].type === 'bot') return i
-    }
-    return -1
-  })
-
-  const hasBotMessages = computed(() => lastBotMessageIndex.value >= 0)
-
-  const latestBotMessage = computed(() => {
-    if (lastBotMessageIndex.value < 0) return null
-    return messages.value[lastBotMessageIndex.value]
-  })
 
   return {
-    messages, suggestionVisibleCounts, saveChatHistory, loadChatHistory, clearChatHistory,
-    addUserMessage, addBotTypingMessage, updateBotMessage, setBotMessageError,
-    getVisibleSuggestions, getVisibleCount, loadMoreSuggestions, markSuggestionSelected,
-    updateMessageFeedback, getOriginalQueryForMessage, findMatchedSuggestion,
-    lastBotMessageIndex, hasBotMessages, latestBotMessage
+    messages,
+    isBotTyping,
+    sendMessage,
+    clearMessages,
+    initWelcomeMessage
   }
 }
