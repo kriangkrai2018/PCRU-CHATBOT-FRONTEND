@@ -32,8 +32,8 @@ export function useChatbotCategories() {
 
         categories.value = rawCategories
           .filter(cat => {
-            const name = cat.name || cat.title || ''; // ตรวจสอบชื่อ field ที่ใช้อาจเป็น name หรือ title
-            return !hiddenCategories.some(hidden => name.includes(hidden));
+            const name = (cat.name || cat.title || '').trim().toLowerCase();
+            return !hiddenCategories.some(hidden => name.includes(hidden.toLowerCase()));
           })
           .map(cat => ({
             ...cat,

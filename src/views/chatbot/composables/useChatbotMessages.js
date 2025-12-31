@@ -2,34 +2,48 @@ import { ref } from 'vue'
 import { apiRanking } from '@/plugins/apiRanking'
 import { useChatbotScroll } from './useChatbotScroll'
 
-// Helper function to deduplicate contacts
+// Helper function to strictly deduplicate contacts
 const deduplicateContacts = (contacts) => {
   if (!contacts || !Array.isArray(contacts)) return [];
   
   const uniqueContacts = [];
-  const seen = new Set();
+  const seenKeys = new Set();
 
   contacts.forEach(contact => {
-    // สร้าง key สำหรับเช็คความซ้ำ โดยใช้เบอร์โทรและเบอร์ต่อเป็นหลัก
-    // ถ้าไม่มีเบอร์ ใช้ชื่อหน่วยงานแทน
-    const phoneKey = contact.phone_number ? contact.phone_number.replace(/\s|-/g, '') : '';
-    const extKey = contact.phone_extension ? contact.phone_extension.trim() : '';
-    const nameKey = contact.organization ? contact.organization.trim() : '';
-    const officerKey = contact.officer_name ? contact.officer_name.trim() : '';
+    // 1. Prepare Key Components
+    const phone = contact.phone_number ? contact.phone_number.replace(/\s|-/g, '') : '';
+    const ext = contact.phone_extension ? contact.phone_extension.trim() : '';
+    // Check for common URL fields
+    const url = (contact.url || contact.facebook_url || contact.website || '').trim().toLowerCase();
+    const org = contact.organization ? contact.organization.trim() : '';
+    const officer = contact.officer_name ? contact.officer_name.trim() : '';
 
-    // สร้าง Unique String Key
-    // กรณีเน้นเบอร์โทร: ถ้าเบอร์และเบอร์ต่อเหมือนกัน ถือว่าซ้ำ
-    // กรณีไม่มีเบอร์: ถ้าชื่อหน่วยงานและชื่อเจ้าหน้าที่เหมือนกัน ถือว่าซ้ำ
-    let uniqueKey = '';
-    
-    if (phoneKey) {
-        uniqueKey = `phone:${phoneKey}|ext:${extKey}`;
-    } else {
-        uniqueKey = `org:${nameKey}|officer:${officerKey}`;
+    // 2. Generate Unique Keys for checking
+    // สร้าง Keys หลายแบบเพื่อดักจับความซ้ำทุกกรณี
+    const keysToCheck = [];
+
+    // Case A: มีเบอร์โทร (เช็คเบอร์ + เบอร์ต่อ)
+    if (phone) {
+        keysToCheck.push(`phone:${phone}|ext:${ext}`);
     }
 
-    if (!seen.has(uniqueKey)) {
-      seen.add(uniqueKey);
+    // Case B: มี URL (เช็ค URL ซ้ำ)
+    if (url) {
+        keysToCheck.push(`url:${url}`);
+    }
+
+    // Case C: Fallback ถ้าไม่มีทั้งเบอร์และ URL ให้เช็คชื่อหน่วยงาน + ชื่อเจ้าหน้าที่
+    if (!phone && !url) {
+        keysToCheck.push(`org:${org}|officer:${officer}`);
+    }
+
+    // 3. Check for duplicates
+    // ถ้า Key ใด Key หนึ่งเคยเจอแล้ว ถือว่าเป็น "รายการซ้ำ" ทันที
+    const isDuplicate = keysToCheck.some(key => seenKeys.has(key));
+
+    if (!isDuplicate) {
+      // ถ้าไม่ซ้ำ ให้เก็บรายการนี้ไว้ และบันทึก Keys ลงใน Set
+      keysToCheck.forEach(key => seenKeys.add(key));
       uniqueContacts.push(contact);
     }
   });
@@ -45,12 +59,8 @@ export function useChatbotMessages() {
   
   const { scrollToBottom } = useChatbotScroll()
 
-  // Initialize welcome message
   const initWelcomeMessage = () => {
-    // Check if we already have messages, if not add welcome
-    if (messages.value.length === 0) {
-      // Welcome logic handled in view usually, but we can set initial state here
-    }
+    // Logic moved to component or handled by initial API call
   }
 
   const sendMessage = async (text, categoryId = null) => {
@@ -70,7 +80,6 @@ export function useChatbotMessages() {
     isBotTyping.value = true
 
     try {
-      // 3. Prepare Payload
       const payload = {
         message: text,
         session_id: sessionId.value
@@ -81,10 +90,8 @@ export function useChatbotMessages() {
         currentCategory.value = categoryId
       }
 
-      // 4. Call API
       const responseData = await apiRanking.getChatbotResponse(payload)
       
-      // Update Session ID if new
       if (responseData.session_id) {
         sessionId.value = responseData.session_id
       }
@@ -95,12 +102,12 @@ export function useChatbotMessages() {
         sender: 'bot',
         text: responseData.answer || 'ขออภัย ฉันไม่เข้าใจคำถามนี้',
         timestamp: new Date(),
-        // Deduplicate contacts before assigning
+        // ใช้ฟังก์ชัน deduplicateContacts ที่ปรับปรุงแล้ว
         contacts: deduplicateContacts(responseData.contacts || []),
         related_questions: responseData.related_questions || [],
         confidence_score: responseData.confidence_score,
         intent: responseData.intent,
-        pdf_url: responseData.pdf_url // Handle PDF link if present
+        pdf_url: responseData.pdf_url
       }
 
       messages.value.push(botMessage)
