@@ -1,11 +1,17 @@
 <template>
   <div class="report-page-container">
     <Sidebar :userType="userType" :userInfoObject="userInfoObject" />
+    <!-- Backdrop: clicking the darkened area closes the mobile sidebar overlay -->
+    <div v-if="isMobileSidebarOpen" class="mobile-sidebar-backdrop" @click="toggleSidebar" aria-hidden="true"></div>
     <main class="main-content flex-grow-1">
       <div class="apple-dashboard">
         <div class="dashboard-hero">
           <div class="hero-content">
-            <h1 class="hero-title">Keywords Report</h1>
+          <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
+            <i :class="isMobileSidebarOpen ? 'bi bi-x' : 'bi bi-list'"></i>
+          </button>
+            <h1 class="hero-title">
+              Keywords Report</h1>
             <p class="hero-subtitle">รายงานคีย์เวิร์ด</p>
           </div>
         </div>
@@ -30,7 +36,7 @@ import { ref, computed, onMounted, onUnmounted, getCurrentInstance } from 'vue';
 import { useRouter } from 'vue-router';
 import Sidebar from '@/components/Sidebar.vue';
 import KeywordsReport from '@/views/dashboards/officers/KeywordsReport.vue';
-import { bindSidebarResize } from '@/stores/sidebarState';
+import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import { Chart as ChartJS, registerables } from 'chart.js';
 import '@/assets/sidebar.css';
 import '@/assets/dashboard-styles.css';
@@ -94,6 +100,30 @@ const keywordsBarChartData = computed(() => {
 });
 
 let unbindSidebarResize = null;
+let _savedSidebarCollapsed = null;
+
+const toggleSidebar = () => {
+  const sb = document.querySelector('.sidebar');
+  const isOpen = !isMobileSidebarOpen.value;
+
+  if (isOpen) {
+    // Opening: save current collapsed state, force expand for mobile overlay
+    _savedSidebarCollapsed = isSidebarCollapsed.value;
+    isSidebarCollapsed.value = false;
+    if (sb) sb.classList.remove('collapsed');
+    document.body.classList.add('sidebar-open');
+    document.body.classList.add('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = true;
+  } else {
+    // Closing: restore previous collapsed state and hide overlay
+    isSidebarCollapsed.value = !!_savedSidebarCollapsed;
+    if (sb && _savedSidebarCollapsed) sb.classList.add('collapsed');
+    document.body.classList.remove('sidebar-open');
+    document.body.classList.remove('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = false;
+    _savedSidebarCollapsed = null;
+  }
+};
 
 onMounted(() => {
   unbindSidebarResize = bindSidebarResize();
@@ -106,7 +136,13 @@ onMounted(() => {
   fetchKeywords();
 });
 
-onUnmounted(() => { if (typeof unbindSidebarResize === 'function') unbindSidebarResize(); });
+onUnmounted(() => {
+  if (typeof unbindSidebarResize === 'function') unbindSidebarResize();
+  // Ensure mobile overlay is removed when leaving this view
+  isMobileSidebarOpen.value = false;
+  document.body.classList.remove('sidebar-open');
+  document.body.classList.remove('sidebar-mobile-expanded');
+});
 </script>
 
 <style scoped>
@@ -114,4 +150,55 @@ onUnmounted(() => { if (typeof unbindSidebarResize === 'function') unbindSidebar
 @import '@/assets/sidebar.css';
 .report-page-container { width: 100%; min-height: 100vh; display: grid; overflow-x: hidden; }
 .main-content { grid-column: 2/3; flex: 1 1 auto; min-width: 0; overflow: auto; padding: 1rem; }
+
+/* Remove main-content padding on small screens to maximize usable space */
+@media (max-width: 768px) {
+  .main-content[data-v-94d38d8e] {
+    padding: 0 !important;
+  }
+
+  /* Keep the header comfortable on mobile: give the hero content internal padding */
+  .dashboard-hero .hero-content {
+    padding: 1rem !important;
+  }
+
+  /* Center hero title/subtitle on mobile and stack the mobile toggle above */
+  .dashboard-hero .hero-content {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  .dashboard-hero .hero-content .mobile-sidebar-toggle.mobile-inline-toggle {
+    margin: 0 0 10px 0 !important; /* place above title */
+    align-self: flex-start !important; /* left-align on mobile */
+    margin-left: -1rem !important; /* offset the internal padding so button sits at the left edge */
+  }
+}
+
+/* Non-mobile: keep hero left-aligned and inline */
+@media (min-width: 769px) {
+  .dashboard-hero .hero-content {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+  }
+  .dashboard-hero .hero-content .mobile-sidebar-toggle.mobile-inline-toggle {
+    margin: 0 12px 0 0 !important; /* place inline to the left */
+    align-self: center !important;
+  }
+
+  /* Force title and subtitle onto separate lines on non-mobile */
+  .dashboard-hero .hero-content .hero-title { display: block; width: 100%; margin: 0; flex-basis: 100%; }
+  .dashboard-hero .hero-content .hero-subtitle { display: block; width: 100%; margin: 6px 0 0 0; color: var(--text-secondary); font-size: 0.95rem; flex-basis: 100%; }
+
+  /* Small adjustment to avoid overlap with page chrome */
+  .dashboard-hero { padding-top: 8px; }
+
+  .dashboard-hero .hero-content .hero-title,
+  .dashboard-hero .hero-content .hero-subtitle {
+    text-align: left !important;
+  }
+}
 </style>

@@ -363,6 +363,9 @@ watch(() => route.path, (newPath, oldPath) => {
   // Only auto-collapse on actual route change AND when viewport is narrow
   if (newPath !== oldPath && window.innerWidth < 768) {
     isCollapsed.value = true;
+    isMobileSidebarOpen.value = false;
+    document.body.classList.remove('sidebar-open');
+    document.body.classList.remove('sidebar-mobile-expanded');
   }
   lastPath = newPath;
 });
@@ -372,7 +375,19 @@ onMounted(() => {
   // No auto-collapse here; sidebar stays as user left it
 });
 
-const toggleSidebar = () => { isCollapsed.value = !isCollapsed.value; };
+import { isMobileSidebarOpen } from '@/stores/sidebarState';
+const toggleSidebar = () => {
+  // If the viewport is narrow, the collapse button should hide the mobile overlay entirely
+  if (window.innerWidth < 768) {
+    isMobileSidebarOpen.value = false;
+    document.body.classList.remove('sidebar-open');
+    document.body.classList.remove('sidebar-mobile-expanded');
+    // make sure sidebar becomes collapsed as well
+    isCollapsed.value = true;
+  } else {
+    isCollapsed.value = !isCollapsed.value;
+  }
+};
 const handleLogout = () => { logout(router); };
 </script>
 

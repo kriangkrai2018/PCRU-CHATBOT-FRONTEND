@@ -5,6 +5,7 @@
 
     <!-- Main Content -->
     <div class="container-fluid pt-4 px-4 pb-5 content-layer">
+
       
       <!-- Header Section -->
       <div class="d-flex align-items-end justify-content-between mb-5 header-animate">
@@ -344,7 +345,7 @@
                <button class="page-btn" :disabled="currentPage === 1" @click="prevPage">
                  <i class="bi bi-chevron-left"></i>
                </button>
-               <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+               <span class="page-info">{{ currentPage }} of {{ totalPages }}</span>
                <button class="page-btn" :disabled="currentPage === totalPages" @click="nextPage">
                  <i class="bi bi-chevron-right"></i>
                </button>
@@ -381,6 +382,39 @@ const expandedId = ref(null);
 const { appContext } = getCurrentInstance();
 const $axios = appContext.config.globalProperties.$axios;
 let ws = null;
+// Track mobile sidebar open state and original collapsed state so we can restore it on close
+import { isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
+let _savedSidebarCollapsed = null;
+const toggleSidebar = () => {
+  const sb = document.querySelector('.sidebar');
+  const isOpen = !isMobileSidebarOpen.value;
+
+  if (isOpen) {
+    // opening: save collapsed state and force expand via the store
+    _savedSidebarCollapsed = isSidebarCollapsed.value;
+    isSidebarCollapsed.value = false; // force expand
+
+    if (sb) sb.classList.remove('collapsed');
+    document.body.classList.add('sidebar-open');
+    document.body.classList.add('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = true;
+  } else {
+    // closing: restore previous collapsed state
+    isSidebarCollapsed.value = !!_savedSidebarCollapsed;
+    if (sb && _savedSidebarCollapsed) sb.classList.add('collapsed');
+    document.body.classList.remove('sidebar-open');
+    document.body.classList.remove('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = false;
+    _savedSidebarCollapsed = null;
+  }
+};
+// Clean up if component unmounts
+onUnmounted(() => {
+  if (ws) ws.disconnect();
+  document.body.classList.remove('sidebar-open');
+  document.body.classList.remove('sidebar-mobile-expanded');
+  isMobileSidebarOpen.value = false;
+});
 
 // --- Announcement Logic (UPDATED) ---
 // Using Template Literal (``) to preserve structure, formatted nicely for display
@@ -613,6 +647,9 @@ function nextPage() { if (currentPage.value < totalPages.value) currentPage.valu
   --ai-gradient: linear-gradient(135deg, #2E86DE, #A29BFE, #FF7675);
 }
 
+
+
+
 .dashboard-wrapper {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: #F5F5F7; 
@@ -770,6 +807,21 @@ function nextPage() { if (currentPage.value < totalPages.value) currentPage.valu
 .search-capsule input { border: none; background: transparent; flex: 1; padding-left: 10px; font-size: 0.95rem; outline: none; }
 .search-capsule i { color: var(--text-secondary); }
 
+/* Stack title and search on narrower screens so they appear on separate lines */
+@media (max-width: 992px) {
+  .panel-toolbar { flex-direction: column; align-items: center; gap: 10px; }
+  .toolbar-left { width: 100%; display: flex; justify-content: center; }
+  .toolbar-left h4 { margin: 0; text-align: center; }
+  .search-capsule { width: 100%; max-width: 520px; }
+  .search-capsule input { width: 100%; }
+}
+
+/* On very small screens, make search full-width and increase touch targets */
+@media (max-width: 520px) {
+  .search-capsule { padding: 12px 14px; border-radius: 12px; }
+  .search-capsule input { font-size: 1rem; }
+}
+
 .list-header {
   display: grid; grid-template-columns: 80px 2fr 1.5fr 60px;
   padding: 16px 24px; font-size: 0.75rem; font-weight: 600;
@@ -795,7 +847,7 @@ function nextPage() { if (currentPage.value < totalPages.value) currentPage.valu
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s;
   color: var(--text-secondary);
 }
-.chevron-circle.rotated { transform: rotate(180deg); background: var(--accent-blue); color: white; }
+.chevron-circle.rotated { transform: rotate(180deg); background: var(--accent-blue); }
 
 /* ----------------------------------------------------
    NEW APPLE INTELLIGENCE EXPANDED VIEW (CLEAN WHITE)
@@ -1012,8 +1064,29 @@ function nextPage() { if (currentPage.value < totalPages.value) currentPage.valu
 .spinner-apple .bar { width: 10%; height: 28%; background: #8e8e93; position: absolute; left: 45%; top: 45%; border-radius: 50px; opacity: 0; animation: fade 1s linear infinite; }
 @keyframes fade { from { opacity: 1; } to { opacity: 0.25; } }
 
+/* Make the status capsule sit on its own row for narrow/medium widths and center it */
+@media (max-width: 992px) {
+  .header-animate { flex-direction: column; align-items: center; gap: 12px; }
+  .header-animate .d-flex.align-items-center { width: 100%; justify-content: center; }
+  .header-animate .status-capsule {
+    align-self: center; /* center on its own line */
+    margin-top: 6px;
+    width: auto;
+    justify-content: center;
+  }
+}
+
+/* For very small screens, keep the capsule centered for readability */
+@media (max-width: 520px) {
+  .header-animate { align-items: center; }
+  .header-animate .status-capsule { align-self: center; justify-content: center; }
+}
 /* Pagination iOS */
-.pagination-ios { display: flex; justify-content: center; align-items: center; gap: 15px; }
+.pagination-ios {
+  /* Desktop/tablet: use flex so pagination sits inline (not forcibly centered) */
+  display: flex; justify-content: flex-start; align-items: center; gap: 16px;
+  width: 100%; margin: 0 auto;
+}
 .page-btn {
   border: none; background: white; width: 36px; height: 36px;
   border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
@@ -1021,6 +1094,97 @@ function nextPage() { if (currentPage.value < totalPages.value) currentPage.valu
 }
 .page-btn:disabled { opacity: 0.5; box-shadow: none; cursor: not-allowed; }
 .page-btn:hover:not(:disabled) { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+
+/* Page info styling (neutral, not forcing centering on desktop) */
+.page-info {
+  max-width: 280px; text-align: center; font-weight: 600;
+  padding: 10px 18px; border-radius: 22px; background: #fff; color: var(--text-primary);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+}
+
+/* Mobile-only: switch to grid and center the label */
+@media (max-width: 768px) {
+  .pagination-ios { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 16px; max-width: 520px; }
+  .page-info { justify-self: center; }
+}
+
+/* Slightly smaller on very small screens */
+@media (max-width: 420px) {
+  .pagination-ios { grid-template-columns: 36px 1fr 36px; max-width: 360px; gap: 8px; }
+  .page-info { min-width: 120px; padding: 8px 12px; font-size: 0.95rem; }
+}
 .page-info { font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); }
+
+</style>
+
+/* Global (unscoped) overrides for mobile layout */
+<style>
+@media (max-width: 768px) {
+  /* Hide the sidebar completely on small screens unless body.sidebar-open is set */
+  .sidebar, .sidebar.collapsed, .sidebar.collapsed[data-v-94d38d8e], .sidebar[data-v-94d38d8e] {
+    display: none !important;
+  }
+
+  /* Show sidebar when explicitly opened by mobile toggle (force-expanded) */
+  body.sidebar-open .sidebar, body.sidebar-open .sidebar.collapsed, body.sidebar-mobile-expanded .sidebar {
+    display: block !important;
+    position: fixed !important;
+    left: 0; top: 0; bottom: 0;
+    width: 320px; /* larger width on mobile when expanded */
+    z-index: 2600; background: white; box-shadow: 0 12px 50px rgba(0,0,0,0.24);
+    transform: translateX(0) !important;
+    transition: transform 280ms cubic-bezier(.22,.9,.33,1), opacity 180ms ease;
+  }
+
+  /* Start hidden off-screen when not open */
+  .sidebar { transition: transform 280ms cubic-bezier(.22,.9,.33,1), opacity 180ms ease; }
+  .sidebar { transform: translateX(-100%); }
+  body.sidebar-open .sidebar, body.sidebar-mobile-expanded .sidebar { transform: translateX(0); }
+
+  /* Backdrop for modal-like sidebar */
+  .mobile-sidebar-backdrop {
+    display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.42); z-index: 2500;
+    opacity: 0; transition: opacity 200ms ease; pointer-events: auto;
+  }
+  body.sidebar-open .mobile-sidebar-backdrop { opacity: 1; }
+  body.sidebar-mobile-expanded .mobile-sidebar-backdrop { opacity: 1; }
+  .mobile-sidebar-backdrop[style*="display: none"] { display: block; }
+
+  /* Make inline toggle visible and prominent inside header */
+  .mobile-sidebar-toggle.mobile-inline-toggle { display: flex !important; margin-right: 8px; align-self: center; }
+  .mobile-sidebar-toggle.mobile-inline-toggle { box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
+
+
+  /* Mobile toggle button styling (inline variant) */
+  .mobile-sidebar-toggle.mobile-inline-toggle { display: flex !important; align-items: center; justify-content: center; }
+
+  /* Make main content take full width when sidebar closed */
+  .dashboard-wrapper, .content-layer, .container-fluid {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* If there is a left margin reserved for sidebar elsewhere, override it */
+  main, #app, .app-root {
+    margin-left: 0 !important;
+  }
+}
+
+/* Mobile sidebar toggle button (hidden on desktop). Use inline variant when placed inside header */
+.mobile-sidebar-toggle { display: none; }
+.mobile-sidebar-toggle.mobile-inline-toggle {
+  display: none; /* enabled on small screens via media query */
+  position: relative; width: 44px; height: 44px; border-radius: 10px;
+  background: #ffffff; box-shadow: 0 6px 18px rgba(0,0,0,0.08); border: 0; cursor: pointer;
+  align-items: center; justify-content: center; font-size: 1.05rem; color: var(--accent-blue);
+  margin-right: 8px; margin-left: 6px; align-self: center;
+}
+.mobile-sidebar-toggle i { font-size: 1.15rem; }
+
+/* Show inline toggle on mobile */
+@media (max-width: 768px) { .mobile-sidebar-toggle.mobile-inline-toggle { display: flex !important; } }
 
 </style>

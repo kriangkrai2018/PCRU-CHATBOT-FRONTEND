@@ -3,8 +3,8 @@
     <!-- Main Content -->
     <div class="container-fluid pt-2 px-4 pb-5">
       <!-- Header with Apple-style Icon -->
-      <div class="d-flex align-items-center justify-content-between mb-4 fade-in-up">
-        <div class="d-flex align-items-center gap-3">
+      <div class="d-flex flex-column flex-md-row align-items-center justify-content-between mb-4 fade-in-up gap-3 gap-md-0">
+        <div class="d-flex flex-column flex-md-row align-items-center gap-3 text-center text-md-start">
           <!-- New Apple Icon Box -->
           <div class="apple-icon-box purple-gradient">
             <i class="bi bi-chat-quote-fill text-white"></i>

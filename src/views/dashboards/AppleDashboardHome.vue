@@ -1,8 +1,12 @@
 <template>
   <div class="apple-dashboard container-fluid">
+    <div v-if="isMobileSidebarOpen" class="mobile-sidebar-backdrop" @click="toggleSidebar" aria-hidden="true"></div>
     <!-- Hero Section with Role-based greeting -->
     <transition name="fade-slide" appear>
       <div class="apple-hero">
+          <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
+            <i :class="isMobileSidebarOpen ? 'bi bi-x' : 'bi bi-list'"></i>
+          </button>
         <h2 class="apple-title">{{ greetingText }}</h2>
         <p class="apple-sub">{{ roleDescription }}</p>
         <div class="role-badge" :class="roleBadgeClass">
@@ -140,7 +144,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, getCurrentInstance } from 'vue';
+import { ref, computed, onMounted, onUnmounted, getCurrentInstance } from 'vue';
+import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import { PieChart, BarChart } from 'vue-chart-3';
 import DashboardIcons from '@/components/icons/DashboardIcons.vue';
 import { Chart as ChartJS, registerables } from 'chart.js';
@@ -678,7 +683,47 @@ const needReviewChart = computed(() => {
   };
 });
 
-onMounted(() => { fetchAll(); });
+let unbindSidebarResize = null;
+let _savedSidebarCollapsed = null;
+
+const toggleSidebar = () => {
+  console.log('toggleSidebar called, current isMobileSidebarOpen:', isMobileSidebarOpen.value);
+  const sb = document.querySelector('.sidebar');
+  const isOpen = !isMobileSidebarOpen.value;
+
+  if (isOpen) {
+    // Opening: save current collapsed state, force expand for mobile overlay
+    _savedSidebarCollapsed = isSidebarCollapsed.value;
+    isSidebarCollapsed.value = false;
+    if (sb) sb.classList.remove('collapsed');
+    document.body.classList.add('sidebar-open');
+    document.body.classList.add('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = true;
+    console.log('Sidebar opened, body classes added');
+  } else {
+    // Closing: restore previous collapsed state and hide overlay
+    isSidebarCollapsed.value = !!_savedSidebarCollapsed;
+    if (sb && _savedSidebarCollapsed) sb.classList.add('collapsed');
+    document.body.classList.remove('sidebar-open');
+    document.body.classList.remove('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = false;
+    _savedSidebarCollapsed = null;
+    console.log('Sidebar closed, body classes removed');
+  }
+};
+
+onMounted(() => {
+  unbindSidebarResize = bindSidebarResize();
+  fetchAll();
+});
+
+onUnmounted(() => {
+  if (typeof unbindSidebarResize === 'function') unbindSidebarResize();
+  // Ensure mobile overlay is removed when leaving this view
+  isMobileSidebarOpen.value = false;
+  document.body.classList.remove('sidebar-open');
+  document.body.classList.remove('sidebar-mobile-expanded');
+});
 
 
 </script>
@@ -1090,8 +1135,22 @@ onUnmounted(() => {
 
 /* Responsive */
 @media (max-width: 768px) {
+  .apple-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
   .apple-title {
     font-size: 26px;
+  }
+
+  /* Make the mobile sidebar toggle sit at the left edge of the hero */
+  .apple-hero .mobile-sidebar-toggle.mobile-inline-toggle {
+    margin: 0 0 10px 0 !important;
+    align-self: flex-start !important;
+    margin-left: -12px !important;
   }
   
   .stats-grid {
@@ -1119,5 +1178,66 @@ onUnmounted(() => {
   .stat-value {
     font-size: 22px;
   }
+}
+</style>
+
+<style>
+/* Global overrides for mobile sidebar behavior on Dashboard */
+@media (max-width: 768px) {
+  /* Hide sidebar by default on mobile */
+  .sidebar, .sidebar.collapsed {
+    display: none !important;
+  }
+
+  /* Show sidebar when explicitly opened */
+  body.sidebar-open .sidebar, 
+  body.sidebar-mobile-expanded .sidebar {
+    display: flex !important;
+    flex-direction: column !important;
+    position: fixed !important;
+    left: 0; 
+    top: 0; 
+    bottom: 0;
+    width: 280px !important;
+    z-index: 2600 !important;
+    background: #E3E3E3;
+    box-shadow: 0 12px 50px rgba(0,0,0,0.24);
+    transform: translateX(0) !important;
+    transition: transform 280ms cubic-bezier(.22,.9,.33,1), opacity 180ms ease;
+  }
+
+  /* Ensure backdrop is visible */
+  .mobile-sidebar-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.42); z-index: 2500;
+  }
+
+  .mobile-sidebar-toggle.mobile-inline-toggle {
+    display: flex !important; /* Make it visible on mobile */
+  }
+}
+
+/* Mobile sidebar toggle button styling */
+.mobile-sidebar-toggle.mobile-inline-toggle {
+  display: none; /* Hidden by default, shown in media query */
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+  border: none;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  color: #007AFF; /* Apple Blue */
+  transition: all 0.2s ease;
+}
+
+.mobile-sidebar-toggle.mobile-inline-toggle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+}
+.mobile-sidebar-toggle.mobile-inline-toggle i {
+  font-size: 1.25rem;
+  line-height: 1;
 }
 </style>

@@ -52,12 +52,21 @@ watch(isRankingOpen, (val) => {
 });
 
 
+// Mobile-specific open state (non-persistent): whether the mobile overlay/sidebar is currently open
+export const isMobileSidebarOpen = ref(false);
+
 // helper to bind resize handler and return unbind function
 export function bindSidebarResize() {
   const handler = () => {
     // Only auto-change on resize if user hasn't explicitly chosen state.
     if (localStorage.getItem('sidebarCollapsed') === null) {
       isSidebarCollapsed.value = window.innerWidth < 768;
+    }
+    // If viewport becomes wide, ensure mobile overlay state is cleared
+    if (window.innerWidth >= 768 && isMobileSidebarOpen.value) {
+      isMobileSidebarOpen.value = false;
+      document.body.classList.remove('sidebar-open');
+      document.body.classList.remove('sidebar-mobile-expanded');
     }
   };
   window.addEventListener('resize', handler);
