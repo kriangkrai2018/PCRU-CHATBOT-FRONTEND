@@ -153,8 +153,8 @@
                       </span>
                     </td>
                     <td class="contact-cell">
-                      <div v-if="cat.Contact">
-                        <div v-for="(cc, i) in parseContacts(cat.Contact)" :key="i" class="small text-secondary">{{ cc }}</div>
+                      <div v-if="(aggregatedContacts(cat.CategoriesID) || []).length">
+                        <div v-for="(cc, i) in aggregatedContacts(cat.CategoriesID)" :key="i" class="small text-secondary">{{ cc }}</div>
                       </div>
                       <span v-else class="text-muted small">-</span>
                     </td>
@@ -184,7 +184,7 @@
                       <td><span class="apple-badge-gray-outline">Sub</span></td>
                       <td class="contact-cell">
                         <div v-if="sub.Contact">
-                          <div v-for="(cc, i) in parseContacts(sub.Contact)" :key="i" class="small text-secondary">{{ cc }}</div>
+                          <div v-for="(cc, i) in parseContacts(sub.Contact).filter(p => !isContactCoveredByParent(cat.CategoriesID, p))" :key="i" class="small text-secondary">{{ cc }}</div>
                         </div>
                         <span v-else class="text-muted small">-</span>
                       </td>
@@ -355,6 +355,106 @@ function toggleExpand(id) { expanded.value[id] = !expanded.value[id]; }
 function parseContacts(str) {
   if (!str) return [];
   return String(str).split(/ \|\|\| |\n/).map(s => s.trim()).filter(Boolean);
+}
+
+// Data Computations
+
+// Normalize a contact line into a canonical key for deduplication
+function normalizeContactKey(line) {
+  if (!line) return null;
+  const s = String(line).trim();
+  // extract phone
+  const phoneMatch = s.match(/0(?:2|[3-9]\d)[-\s]?\d{3}[-\s]?\d{3,4}|0\d{2}[-\s]?\d{3}[-\s]?\d{4}/);
+  if (phoneMatch) return `phone:${phoneMatch[0].replace(/\D/g, '')}`;
+  // extract url
+  const urlMatch = s.match(/https?:\/\/[^\s]+/i);
+  if (urlMatch) return `url:${urlMatch[0].trim().toLowerCase().replace(/\/$/, '').split('?')[0]}`;
+  const txt = s.toLowerCase().replace(/\s+/g, ' ').trim();
+  return `text:${txt}`;
+}
+
+// Aggregate contacts for a parent category and dedupe phones and urls (merge extensions)
+function aggregatedContacts(parentId) {
+  const parentStr = String(parentId ?? '').trim();
+  const list = [ ...(allItems.value || []).filter(c => String(c.CategoriesID || '').trim() === parentStr), ...subCategories(parentId, parentId) ];
+  const lines = [];
+  for (const c of list) {
+    if (c && c.Contact) {
+      const parts = parseContacts(c.Contact);
+      for (const p of parts) {
+        const cleaned = String(p || '').trim();
+        if (cleaned) lines.push(cleaned);
+      }
+    }
+  }
+
+  // Merge phone extensions for same base phone
+  const phoneMap = new Map(); // basePhone -> { exts:Set, urls:Set }
+  const urls = new Set();
+  const others = new Set();
+
+  for (const l of lines) {
+    const phoneMatch = l.match(/(0(?:2|[3-9]\d)[-\s]?\d{3}[-\s]?\d{3,4}|0\d{2}[-\s]?\d{3}[-\s]?\d{4})/);
+    const urlMatch = l.match(/https?:\/\/[^\s]+/i);
+    if (phoneMatch) {
+      const phoneDigits = phoneMatch[0].replace(/\D/g, '');
+      const extMatch = l.match(/(?:ต่อ|ext\.?|x)\s*[:\.]?\s*(\d{1,6})/i);
+      const ext = extMatch ? extMatch[1] : null;
+      const u = urlMatch ? urlMatch[0].trim().toLowerCase().replace(/\/$/, '').split('?')[0] : null;
+      if (!phoneMap.has(phoneDigits)) phoneMap.set(phoneDigits, { exts: new Set(), urls: new Set() });
+      if (ext) phoneMap.get(phoneDigits).exts.add(ext);
+      if (u) phoneMap.get(phoneDigits).urls.add(u);
+    } else if (urlMatch) {
+      urls.add(urlMatch[0].trim().toLowerCase().replace(/\/$/, '').split('?')[0]);
+    } else {
+      others.add(l);
+    }
+  }
+
+  // Build output lines
+  const out = [];
+  // phones first
+  const formatPhone = (digits) => {
+    if (!digits) return '';
+    if (digits.length === 9) return digits.slice(0,3) + '-' + digits.slice(3);
+    if (digits.length === 10) return digits.slice(0,3) + '-' + digits.slice(3,6) + '-' + digits.slice(6);
+    return digits;
+  }
+
+  // Collect urls globally to dedupe across phones and standalone entries
+  const globalUrlSet = new Set();
+
+  for (const [phone, data] of phoneMap.entries()) {
+    const extArr = Array.from(data.exts.values()).sort((a,b)=>a-b);
+    let line = `เบอร์โทรศัพท์ : ${formatPhone(phone)}`;
+    if (extArr.length) line += ` ต่อ ${extArr.join(', ')}`;
+    out.push(line);
+    for (const u of data.urls) globalUrlSet.add(u);
+  }
+
+  // then standalone urls
+  for (const u of urls) globalUrlSet.add(u);
+
+  // push unique urls as a single line separated by ' หรือ '
+  if (globalUrlSet.size > 0) {
+    out.push(`ลิงค์ : ${Array.from(globalUrlSet).join(' หรือ ')}`);
+  }
+
+  // then other free text
+  for (const o of others) out.push(o);
+
+  return out;
+}
+
+// check if a contact line is covered by parent's aggregated set
+function isContactCoveredByParent(parentId, contactLine) {
+  const ag = aggregatedContacts(parentId);
+  const key = normalizeContactKey(contactLine);
+  if (!key) return false;
+  for (const a of ag) {
+    if (normalizeContactKey(a) === key) return true;
+  }
+  return false;
 }
 
 // Data Computations

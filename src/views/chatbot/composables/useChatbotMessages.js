@@ -6,49 +6,57 @@ import { useChatbotScroll } from './useChatbotScroll'
 const deduplicateContacts = (contacts) => {
   if (!contacts || !Array.isArray(contacts)) return [];
   
-  const uniqueContacts = [];
-  const seenKeys = new Set();
+  const uniqueContactsMap = new Map();
 
   contacts.forEach(contact => {
-    // 1. Prepare Key Components
-    const phone = contact.phone_number ? contact.phone_number.replace(/\s|-/g, '') : '';
-    const ext = contact.phone_extension ? contact.phone_extension.trim() : '';
-    // Check for common URL fields
-    const url = (contact.url || contact.facebook_url || contact.website || '').trim().toLowerCase();
-    const org = contact.organization ? contact.organization.trim() : '';
-    const officer = contact.officer_name ? contact.officer_name.trim() : '';
+    // 1. Clean data for comparison
+    // Phone: Keep only digits
+    const phoneProp = (contact.phone_number || contact.PhoneNumber || '').toString().replace(/\D/g, ''); 
+    // URL: Lowercase, trim, remove trailing slash, remove query params
+    const urlProp = (contact.url || contact.Url || contact.facebook_url || contact.FacebookURL || contact.website || contact.Website || '').toString().trim().toLowerCase().replace(/\/$/, '').split('?')[0];
+    
+    // Create keys for checking
+    const keys = [];
+    if (phoneProp) keys.push(`phone:${phoneProp}`);
+    if (urlProp) keys.push(`url:${urlProp}`);
 
-    // 2. Generate Unique Keys for checking
-    // สร้าง Keys หลายแบบเพื่อดักจับความซ้ำทุกกรณี
-    const keysToCheck = [];
-
-    // Case A: มีเบอร์โทร (เช็คเบอร์ + เบอร์ต่อ)
-    if (phone) {
-        keysToCheck.push(`phone:${phone}|ext:${ext}`);
+    // 2. Extract from 'Contact' string if API returns it
+    const contactStr = (contact.Contact || '').toString();
+    if (contactStr) {
+        // Regex for landlines (02, 038, 056) and mobiles (08x)
+        const phoneMatches = contactStr.match(/0(?:2|[3-9]\d)[-\s]?\d{3}[-\s]?\d{3,4}|0\d{2}[-\s]?\d{3}[-\s]?\d{4}/g);
+        if (phoneMatches) {
+            phoneMatches.forEach(p => keys.push(`phone:${p.replace(/\D/g, '')}`));
+        }
+        
+        const urlMatches = contactStr.match(/https?:\/\/[^\s]+/g);
+        if (urlMatches) {
+            urlMatches.forEach(u => keys.push(`url:${u.trim().toLowerCase().replace(/\/$/, '').split('?')[0]}`));
+        }
     }
 
-    // Case B: มี URL (เช็ค URL ซ้ำ)
-    if (url) {
-        keysToCheck.push(`url:${url}`);
+    // 3. Fallback: Use name if no contact info
+    if (keys.length === 0) {
+        const name = (contact.CategoriesName || contact.organization || contact.Organization || '').toString().trim();
+        if (name) keys.push(`name:${name}`);
     }
 
-    // Case C: Fallback ถ้าไม่มีทั้งเบอร์และ URL ให้เช็คชื่อหน่วยงาน + ชื่อเจ้าหน้าที่
-    if (!phone && !url) {
-        keysToCheck.push(`org:${org}|officer:${officer}`);
+    // 4. Duplicate Check
+    let isDuplicate = false;
+    for (const key of keys) {
+        if (uniqueContactsMap.has(key)) {
+            isDuplicate = true;
+            break;
+        }
     }
 
-    // 3. Check for duplicates
-    // ถ้า Key ใด Key หนึ่งเคยเจอแล้ว ถือว่าเป็น "รายการซ้ำ" ทันที
-    const isDuplicate = keysToCheck.some(key => seenKeys.has(key));
-
-    if (!isDuplicate) {
-      // ถ้าไม่ซ้ำ ให้เก็บรายการนี้ไว้ และบันทึก Keys ลงใน Set
-      keysToCheck.forEach(key => seenKeys.add(key));
-      uniqueContacts.push(contact);
+    if (!isDuplicate && keys.length > 0) {
+        keys.forEach(key => uniqueContactsMap.set(key, true));
+        uniqueContactsMap.set(`obj_${uniqueContactsMap.size}`, contact); 
     }
   });
 
-  return uniqueContacts;
+  return Array.from(uniqueContactsMap.values()).filter(v => typeof v === 'object');
 }
 
 export function useChatbotMessages() {
@@ -60,13 +68,12 @@ export function useChatbotMessages() {
   const { scrollToBottom } = useChatbotScroll()
 
   const initWelcomeMessage = () => {
-    // Logic moved to component or handled by initial API call
+    // Logic moved to component
   }
 
   const sendMessage = async (text, categoryId = null) => {
     if (!text.trim()) return
 
-    // 1. Add User Message
     const userMessage = {
       id: Date.now(),
       sender: 'user',
@@ -76,7 +83,6 @@ export function useChatbotMessages() {
     messages.value.push(userMessage)
     scrollToBottom()
 
-    // 2. Set Loading
     isBotTyping.value = true
 
     try {
@@ -96,14 +102,27 @@ export function useChatbotMessages() {
         sessionId.value = responseData.session_id
       }
 
-      // 5. Add Bot Message
+      // 1. Filter Contacts (Categories Filter)
+      let rawContacts = responseData.contacts || [];
+      
+      rawContacts = rawContacts.filter(contact => {
+          // Check various name fields
+          const name = (contact.CategoriesName || contact.CategoryName || contact.organization || contact.Organization || '').toString().trim();
+          
+          // Strict check for short names
+          if (name === 'กยศ' || name === 'กยศ.') return false;
+          
+          // No other filters
+          return true;
+      });
+
       const botMessage = {
         id: Date.now() + 1,
         sender: 'bot',
         text: responseData.answer || 'ขออภัย ฉันไม่เข้าใจคำถามนี้',
         timestamp: new Date(),
-        // ใช้ฟังก์ชัน deduplicateContacts ที่ปรับปรุงแล้ว
-        contacts: deduplicateContacts(responseData.contacts || []),
+        // 2. Call deduplicate function
+        contacts: deduplicateContacts(rawContacts),
         related_questions: responseData.related_questions || [],
         confidence_score: responseData.confidence_score,
         intent: responseData.intent,

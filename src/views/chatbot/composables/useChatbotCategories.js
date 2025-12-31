@@ -11,16 +11,6 @@ export function useChatbotCategories() {
     try {
       const response = await apiRanking.getRanking()
       
-      // หมวดหมู่ที่ไม่ต้องการให้แสดง (ใช้ keywords สำหรับ partial match)
-      const hiddenKeywords = [
-        "ข่าว",
-        "กยศ",
-        "ช่องทางการติดต่อ",
-        "ชั่วโมงจิตอาสา",
-        "สถานะผู้กู้",
-        "ห้องคอมพิวเตอร์"
-      ];
-
       // กรองข้อมูล: รับเฉพาะรายการที่มีอยู่จริงและไม่อยู่ในรายการ hiddenKeywords
       if (response && response.data) {
         // กรณี response.data เป็น Array โดยตรง
@@ -33,8 +23,8 @@ export function useChatbotCategories() {
 
         categories.value = rawCategories
           .filter(cat => {
-            const name = (cat.name || cat.title || '').toString().trim().toLowerCase();
-            return !hiddenKeywords.some(keyword => name.includes(keyword.toLowerCase()));
+            const name = (cat.name || cat.title || cat.CategoriesName || '').toString().trim().toLowerCase();
+            return !name.includes('กยศ');
           })
           .map(cat => ({
             ...cat,

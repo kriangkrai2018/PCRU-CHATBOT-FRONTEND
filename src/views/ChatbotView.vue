@@ -480,9 +480,7 @@
                             <div class="org-card-title">{{ group.organization }}</div>
 
                             <div v-for="(cat, k) in group.categories" :key="k">
-                              <div v-if="cat.category" class="org-card-sub">
-                                <span class="category-badge">{{ cat.category }}</span>
-                              </div>
+                              <!-- Categories hidden in contact display per user request -->
                               <div v-if="cat.contact" class="org-card-phone contact-detail">
                                 <div v-for="(part,pi) in parseContactParts(cat.contact)" :key="pi">
                                   <div v-if="/^(https?:|www\.|facebook\.|ลิงค์)/i.test(part)">
@@ -1510,9 +1508,20 @@ export default {
 
     parseContactParts(contactStr) {
       if (!contactStr) return [];
-      // Remove common prefix and split on commas, 'หรือ', semicolons and newlines (not '/').
+      // Remove common prefix and split on commas, semicolons and newlines first (preserve 'หรือ' between URLs)
       let cleaned = String(contactStr).replace(/^(?:เบอร์โทรศัพท์|ติดต่อ)\s*:\s*/i, '').trim();
-      const rawParts = cleaned.split(/(?:,|\sหรือ\s|;|\r?\n)/i).map(p => p.trim()).filter(Boolean);
+      // initial split without \sหรือ\s so we can treat 'หรือ' specially
+      const initialParts = cleaned.split(/(?:,|;|\r?\n)/i).map(p => p.trim()).filter(Boolean);
+      const rawParts = [];
+      // Now further split on 'หรือ' ONLY when the fragment does not contain a URL-like pattern
+      for (const ip of initialParts) {
+        if (/https?:\/\/|www\.|facebook\./i.test(ip)) {
+          rawParts.push(ip);
+        } else {
+          rawParts.push(...ip.split(/\s(?:หรือ)\s/i).map(p => p.trim()).filter(Boolean));
+        }
+      }
+
       const parts = [];
       for (let i = 0; i < rawParts.length; i++) {
         let p = rawParts[i];
@@ -1523,8 +1532,8 @@ export default {
         }
         // Merge fragments where next piece looks like URL continuation
         if (/(facebook\.com|www\.|https?:)/i.test(p) && i+1 < rawParts.length) {
-          // if next fragment starts with '?' or contains '=' or looks like domain, append it
-          while (i+1 < rawParts.length && (/^[\?=&]/.test(rawParts[i+1]) || /facebook\.com|www\.|\./i.test(rawParts[i+1]))) {
+          // if next fragment starts with '?' or contains '=' or looks like a domain continuation (but NOT a full http(s) URL), append it
+          while (i+1 < rawParts.length && (/^[\?=&]/.test(rawParts[i+1]) || (/facebook\.com|www\.|\./i.test(rawParts[i+1]) && !/^https?:\/\//i.test(rawParts[i+1])))) {
             p += rawParts[i+1];
             i++;
           }
@@ -1625,7 +1634,24 @@ export default {
       });
 
 
-      // 3. Find URLs and wrap them in anchor tags, but avoid doing so inside existing <a> tags.
+      // 3. Special handling for "ลิงค์ : ..." lines so multiple URLs are converted individually and joined with ' หรือ '
+      processedText = processedText.replace(/(ลิงค์\s*:\s*)([^\n<]+)/gi, (match, prefix, list) => {
+        // extract URLs inside the list
+        const urlList = [];
+        const urlRe = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/ig;
+        let m;
+        while ((m = urlRe.exec(list)) !== null) {
+          urlList.push(m[0]);
+        }
+        if (urlList.length === 0) return match; // nothing to do
+        const anchors = urlList.map(u => {
+          const href = u.toLowerCase().startsWith('www.') ? 'http://' + u : u;
+          return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="message-link">${u}</a>`;
+        });
+        return prefix + anchors.join(' หรือ ');
+      });
+
+      // 4. Find other URLs and wrap them in anchor tags, but avoid doing so inside existing <a> tags.
       const urlParts = processedText.split(/(<a[^>]*>.*?<\/a>)/g);
       for (let i = 0; i < urlParts.length; i++) {
           if (!urlParts[i].startsWith('<a')) {
@@ -3250,58 +3276,135 @@ export default {
 
               // Show contacts after typing finishes
               if (visibleContacts && visibleContacts.length > 0) {
-                // Normalize visibleContacts to merge URL fragments and skip empty link entries
-                const normalizedContacts = [];
-                for (const c of visibleContacts) {
-                  const org = c.organization || 'อื่นๆ';
-                  let rawContact = (c.contact || '').trim();
-                  // capture label (if any) and stripped value for heuristics
-                  const labelMatch = String(rawContact || '').match(/^(เบอร์โทรศัพท์|ติดต่อ|ลิงค์)\s*:/i);
-                  const isLinkLabel = labelMatch && /ลิงค์/i.test(labelMatch[1]);
-                  const stripped = String(rawContact || '').replace(/^(?:เบอร์โทรศัพท์|ติดต่อ|ลิงค์)\s*:\s*/i, '').trim();
+                // Normalize + dedupe visibleContacts (merge URL fragments, skip empty entries, drop category labels, and keep distinct extensions)
+                const normalizeAndDedupe = (contacts) => {
+                  const normalized = [];
 
-                  // If stripped is empty (e.g., 'ลิงค์ :'), skip it entirely (do not render a null placeholder)
-                  if (!stripped) {
-                    continue;
+                  // First pass: normalize and merge URL continuations
+                  for (const c of contacts) {
+                    const org = c.organization || 'อื่นๆ';
+                    let rawContact = (c.contact || '').trim();
+                    const labelMatch = String(rawContact || '').match(/^(เบอร์โทรศัพท์|ติดต่อ|ลิงค์)\s*:/i);
+                    const isLinkLabel = labelMatch && /ลิงค์/i.test(labelMatch[1]);
+                    const stripped = String(rawContact || '').replace(/^(?:เบอร์โทรศัพท์|ติดต่อ|ลิงค์)\s*:\s*/i, '').trim();
+
+                    if (!stripped) continue;
+
+                    const isUrl = /https?:\/\/|www\./i.test(stripped);
+                    const currLooksLikeUrlContinuation = /^[\?&]/.test(stripped) || (/[=&]/.test(stripped) && stripped.length < 120);
+
+                    if (currLooksLikeUrlContinuation) {
+                      let attached = false;
+                      for (let j = normalized.length - 1; j >= 0; j--) {
+                        const prev = normalized[j];
+                        if (!prev || !prev.contact) continue;
+                        if (prev.organization !== org) break;
+                        if (/https?:\/\/|www\./i.test(prev.contact)) {
+                          prev.contact = String(prev.contact).trim() + stripped;
+                          attached = true;
+                          break;
+                        }
+                      }
+                      if (attached) continue;
+                    }
+
+                    if (isLinkLabel && !isUrl) continue;
+
+                    // Drop category labels here (we don't show categories in contact cards)
+                    normalized.push({ organization: org, contact: rawContact || null });
                   }
 
-                  const isUrl = /https?:\/\/|www\./i.test(stripped);
-                  const currLooksLikeUrlContinuation = /^[\?&]/.test(stripped) || (/[=&]/.test(stripped) && stripped.length < 120);
+                  // Deduplicate by phone+ext and by normalized URL; allow distinct extensions for same phone
+                  const phoneOnlyMap = new Map(); // phone -> index (no ext)
+                  const phoneExtMap = new Map(); // phone|ext -> index
+                  const urlMap = new Map(); // url -> index
+                  const result = [];
 
-                  // If this looks like a URL continuation, try to attach it to the nearest previous link in the same org
-                  if (currLooksLikeUrlContinuation) {
-                    let attached = false;
-                    for (let j = normalizedContacts.length - 1; j >= 0; j--) {
-                      const prev = normalizedContacts[j];
-                      if (!prev || !prev.contact) continue;
-                      if (prev.organization !== org) break; // stop if organization differs
-                      if (/https?:\/\/|www\./i.test(prev.contact)) {
-                        prev.contact = String(prev.contact).trim() + stripped;
-                        attached = true;
-                        break;
+                  const extractPhone = (s) => {
+                    const m = String(s || '').match(/0(?:2|[3-9]\d)[-\s]?\d{3}[-\s]?\d{3,4}|0\d{2}[-\s]?\d{3}[-\s]?\d{4}/);
+                    return m ? m[0].replace(/\D/g, '') : null;
+                  }
+                  const extractExt = (s) => {
+                    const me = String(s || '').match(/(?:ต่อ|ext\.?|x)\s*[:\.]?\s*(\d{1,6})/i);
+                    return me ? me[1] : '';
+                  }
+                  const extractUrl = (s) => {
+                    const m = String(s || '').match(/https?:\/\/[^\s]+/i);
+                    if (!m) return null;
+                    return m[0].trim().toLowerCase().replace(/\/$/, '').split('?')[0];
+                  }
+
+                  const formatPhone = (digits) => {
+                    if (!digits) return '';
+                    if (digits.length === 9) return digits.slice(0,3) + '-' + digits.slice(3);
+                    if (digits.length === 10) return digits.slice(0,3) + '-' + digits.slice(3,6) + '-' + digits.slice(6);
+                    return digits;
+                  }
+
+                  const hasPhoneExtForPhone = (phone) => {
+                    for (const k of phoneExtMap.keys()) {
+                      if (k.startsWith(`${phone}|ext:`)) return true;
+                    }
+                    return false;
+                  }
+
+                  // New logic: aggregate extensions for same base phone into one entry
+                  const phoneAggregateMap = new Map(); // phone -> { idx, exts: Set, urls: Set }
+
+                  for (const item of normalized) {
+                    const phone = extractPhone(item.contact);
+                    const ext = extractExt(item.contact);
+                    const url = extractUrl(item.contact);
+
+                    if (phone) {
+                      if (!phoneAggregateMap.has(phone)) {
+                        const exts = new Set();
+                        const urlsSet = new Set();
+                        if (ext) exts.add(ext);
+                        if (url) urlsSet.add(url);
+                        const contactText = `${formatPhone(phone)}${exts.size ? ' ต่อ ' + Array.from(exts).join(', ') : ''}${urlsSet.size ? '\nลิงค์ : ' + Array.from(urlsSet).join(' หรือ ') : ''}`;
+                        const idx = result.length;
+                        result.push({ organization: item.organization, contact: contactText });
+                        phoneAggregateMap.set(phone, { idx, exts, urls: urlsSet });
+                      } else {
+                        // merge extension and urls into existing
+                        const entry = phoneAggregateMap.get(phone);
+                        if (ext) entry.exts.add(ext);
+                        if (url) entry.urls.add(url);
+                        const contactText = `${formatPhone(phone)}${entry.exts.size ? ' ต่อ ' + Array.from(entry.exts).join(', ') : ''}${entry.urls.size ? '\nลิงค์ : ' + Array.from(entry.urls).join(' หรือ ') : ''}`;
+                        result[entry.idx].contact = contactText;
+                      }
+                    } else if (url) {
+                      // dedupe by url when no phone, but avoid adding if url already associated with a phone
+                      const alreadyInPhone = Array.from(phoneAggregateMap.values()).some(e => e.urls && e.urls.has(url));
+                      if (!urlMap.has(url) && !alreadyInPhone) {
+                        const idx = result.length;
+                        result.push({ organization: item.organization, contact: url });
+                        urlMap.set(url, idx);
+                      }
+                    } else {
+                      // fallback: keep name-only entries if not duplicates
+                      const nameKey = `name:${(item.organization || '').trim()}`;
+                      if (!phoneOnlyMap.has(nameKey)) {
+                        const idx = result.length;
+                        result.push({ organization: item.organization, contact: item.contact });
+                        phoneOnlyMap.set(nameKey, idx);
                       }
                     }
-                    if (attached) continue; // merged into previous link
-                    // If we couldn't attach, fall through to handle normally below
                   }
 
-                  // If labeled as link but does not contain a URL, skip it (don't show placeholder text)
-                  if (isLinkLabel && !isUrl) {
-                    continue;
+                  // Group by organization
+                  const groupsMap = new Map();
+                  for (const r of result) {
+                    const org = r.organization;
+                    if (!groupsMap.has(org)) groupsMap.set(org, { organization: org, categories: [] });
+                    groupsMap.get(org).categories.push({ category: null, contact: r.contact });
                   }
 
-                  // Otherwise preserve original rawContact
-                  normalizedContacts.push({ organization: org, category: c.category || null, contact: rawContact || null });
+                  return Array.from(groupsMap.values());
                 }
 
-                // Group contacts by organization so each organization has a single card
-                const groupsMap = new Map();
-                for (const c of normalizedContacts) {
-                  const org = c.organization;
-                  if (!groupsMap.has(org)) groupsMap.set(org, { organization: org, categories: [] });
-                  groupsMap.get(org).categories.push({ category: c.category || null, contact: c.contact || null });
-                }
-                const groupedContacts = Array.from(groupsMap.values());
+                const groupedContacts = normalizeAndDedupe(visibleContacts);
                 msg.groupedContacts = groupedContacts;
                 msg.visibleContacts = visibleContacts; // keep for backwards compatibility if needed
                 this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring(); });
