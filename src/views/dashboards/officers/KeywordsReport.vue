@@ -247,6 +247,7 @@
 
                           <!-- CENTER: Flow Animation -->
                           <div class="ai-flow-connector">
+                            <!-- Horizontal connector (desktop) -->
                             <svg class="flow-svg" viewBox="0 0 200 60" preserveAspectRatio="none">
                               <path class="path-track" d="M0,30 C60,30 80,30 100,30 C120,30 140,30 200,30" />
                               <circle class="energy-dot" r="4" fill="#1d1d1f">
@@ -261,6 +262,15 @@
                                 />
                               </circle>
                             </svg>
+
+                            <!-- Vertical connector (mobile) -->
+                            <svg class="flow-svg-vertical" viewBox="0 0 24 140" preserveAspectRatio="none">
+                              <path class="path-track-vertical" d="M12,0 L12,140" />
+                              <circle class="energy-dot" r="4" fill="#1d1d1f">
+                                <animateMotion dur="2s" repeatCount="indefinite" path="M12,0 L12,140" />
+                              </circle>
+                            </svg>
+
                             <div class="core-wrapper">
                               <div class="ai-core-pulse-clean"></div>
                               <div class="ai-core-ring-clean"></div>
@@ -710,7 +720,6 @@ function nextPage() { if (currentPage.value < totalPages.value) currentPage.valu
 /* Stronger selectors to override competing styles and ensure visibility */
 .stat-card .stat-icon.blue-glow {
   background: linear-gradient(135deg, #0071e3, #4facfe) !important;
-  color: var(--accent-blue) !important;
 }
 
 .stat-card .stat-icon.blue-glow i.bi,
@@ -816,8 +825,53 @@ function nextPage() { if (currentPage.value < totalPages.value) currentPage.valu
 .ai-content-wrapper {
   position: relative; z-index: 1;
   display: flex; align-items: center; justify-content: center;
-  gap: 0;
+  gap: 24px; /* give breathing room between columns */
+  flex-wrap: wrap; /* allow wrapping on small screens */
 }
+
+/* Make cards and connector responsive */
+.ai-card {
+  flex: 1 1 320px; /* flexible width with reasonable minimum */
+  max-width: 380px;
+  min-width: 220px;
+  box-sizing: border-box;
+}
+
+.ai-flow-connector {
+  flex: 0 0 140px; /* fixed connector width on desktop */
+  width: 140px; height: 80px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .ai-content-wrapper {
+    flex-direction: column; /* stack vertically */
+    gap: 18px;
+    align-items: center; /* center the stacked cards */
+  }
+
+  /* Explicit stacking order: user-card -> connector -> system-card */
+  .user-card { order: 1; }
+  .ai-flow-connector {
+    order: 2; /* connector between the two cards */
+    width: 100%; height: 44px; margin: 0 auto; padding: 0 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .system-card { order: 3; }
+
+  .flow-svg { width: 100%; height: 44px; }
+  .ai-card { max-width: 100%; margin: 0 auto; }
+  .matches-container { padding: 20px; }
+}
+
+@media (max-width: 576px) {
+  .ai-card { padding: 18px; border-radius: 18px; }
+  .card-body-text { font-size: 1rem; }
+  .ai-flow-connector { height: 36px; }
+  .matches-container { padding: 16px; }
+}
+
 
 /* Clean Cards */
 .ai-card {
@@ -872,14 +926,30 @@ function nextPage() { if (currentPage.value < totalPages.value) currentPage.valu
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   pointer-events: none; z-index: 1;
 }
+.flow-svg-vertical { display: none; }
 .path-track {
   fill: none; stroke: #e5e5ea; stroke-width: 2;
   stroke-dasharray: 6 6;
 }
+.path-track-vertical {
+  fill: none; stroke: #e5e5ea; stroke-width: 2; stroke-dasharray: 6 6; stroke-linecap: round;
+}
 .energy-dot { fill: #86868b; }
 
+/* Mobile: show vertical connector instead of horizontal */
+@media (max-width: 992px) {
+  .flow-svg { display: none; }
+  .flow-svg-vertical { display: block; position: relative; width: 24px; height: 140px; margin: 0 auto; }
+  .ai-flow-connector { height: 160px; display: flex; align-items: center; justify-content: center; }
+  .core-wrapper { position: relative; z-index: 2; margin-top: -18px; }
+}
+
+
 .core-wrapper {
-  position: relative; width: 48px; height: 48px; z-index: 2;
+  position: fixed; 
+  width: 48px; 
+  height: 48px; 
+  z-index: 2;
   display: flex; align-items: center; justify-content: center;
 }
 .ai-core-pulse-clean {
@@ -888,7 +958,10 @@ function nextPage() { if (currentPage.value < totalPages.value) currentPage.valu
   z-index: 2;
 }
 .ai-core-ring-clean {
-  position: absolute; width: 100%; height: 100%; border-radius: 50%;
+  position: absolute; 
+  width: 100%; 
+  height: 100%; 
+  border-radius: 50%;
   border: 1px solid #d1d1d6;
   border-top-color: #1d1d1f; 
   animation: spin 2s linear infinite;
