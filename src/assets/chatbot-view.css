@@ -95,16 +95,10 @@
 }
 
 .message-text {
-  color: inherit;
   word-break: break-word;
   overflow-wrap: anywhere;
 }
 
-/* Links in Messages */
-.message-text a {
-  color: #1a73e8; /* Use variable, fallback to Chrome Light Blue */
-  text-decoration: none;
-}
 .message-text a:hover { text-decoration: underline; }
 /* message link dark override moved to src/assets/dark-mode.css */
 
@@ -2570,7 +2564,6 @@ body.no-effects .apple-help-button::after { display: none !important; }
   margin: 0;
   font-size: 15px;
   line-height: 1.5;
-  color: inherit;
   letter-spacing: -0.1px;
   white-space: pre-wrap;
   
@@ -2580,14 +2573,12 @@ body.no-effects .apple-help-button::after { display: none !important; }
 }
 
 .message-bubble.user .message-text a.message-link {
-  color: white;
   text-decoration: underline;
   font-weight: 600;
 }
 
 .message-bubble.bot .message-text a.message-link {
   /* Use a color that is visible on the bot's light background */
-  color: #6B2C91; /* Same as the brand color */
   text-decoration: underline;
   font-weight: 600;
 }

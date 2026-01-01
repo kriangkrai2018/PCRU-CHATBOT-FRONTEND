@@ -274,3 +274,21 @@
   border-color: #8B4CB8;
   box-shadow: 0 0 0 3px rgba(139, 76, 184, 0.08);
 }
+
+[data-theme="light"] .message-text {
+  color: inherit;
+}
+
+/* Links in Messages */
+[data-theme="light"] .message-text a {
+  color: #1a73e8; /* Use variable, fallback to Chrome Light Blue */
+}
+
+[data-theme="light"] .message-bubble.user .message-text a.message-link {
+  color: white;
+}
+
+[data-theme="light"] .message-bubble.bot .message-text a.message-link {
+  /* Use a color that is visible on the bot's light background */
+  color: #6B2C91; /* Same as the brand color */
+}

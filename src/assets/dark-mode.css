@@ -42,8 +42,18 @@
   --cb-bg-panel: #100716;        /* panel backgrounds */
   --cb-bg-input: #111111;        /* input background */
   --cb-bg-card: #09040C;         /* cards */
-  --cb-bg-msg-bot: #2A1737;      /* dark purple bubble */
-  --cb-bg-msg-user: linear-gradient(135deg, #6B2C91 0%, #8B4CB8 100%); /* purple accent */
+
+  /* Accent colors */
+  --cb-accent-purple-1: #8B4CB8;
+  --cb-accent-purple-2: #6B2C91;
+  --cb-accent-purple-3: #B37BD1;
+  --cb-user-gradient: linear-gradient(135deg, var(--cb-accent-purple-2) 0%, var(--cb-accent-purple-1) 100%);
+
+  /* Message backgrounds */
+  --cb-bg-msg-bot-top: rgba(255,255,255,0.02);
+  --cb-bg-msg-bot-bottom: rgba(18,10,20,0.65);
+  --cb-bg-msg-bot: linear-gradient(180deg, var(--cb-bg-msg-bot-top) 0%, var(--cb-bg-msg-bot-bottom) 100%);
+  --cb-bg-msg-user: var(--cb-user-gradient);
   --cb-bg-hover: rgba(255,255,255,0.02);
 
   /* Text */
@@ -53,10 +63,24 @@
 
   /* Borders */
   --cb-border-color: #2A1737;    /* subtle dark purple border */
+  --cb-border-muted: #5f6368;
+  --cb-border-subtle: rgba(255,255,255,0.04);
+  --cb-border-purple: rgba(139,76,184,0.3);
+
+  /* Tooltips / overlays */
+  --cb-surface-bg: rgba(45,45,45,0.95);
+  --cb-surface-bg-strong: rgba(45,45,45,0.98);
+  --cb-like-tooltip-border: rgba(138,180,248,0.2);
+  --cb-like-tooltip-bg-start: rgba(40,45,50,0.98);
+  --cb-like-tooltip-bg-end: rgba(40,45,50,0.95);
 
   /* Shadows */
   --cb-shadow: 0 4px 8px rgba(0, 0, 0, 0.7);
-  --cb-shadow-msg: none;
+  --cb-shadow-30: rgba(0,0,0,0.3);
+  --cb-shadow-purple: rgba(139,76,184,0.2);
+  --cb-shadow-strong: 0 10px 30px rgba(0,0,0,0.6);
+  --cb-shadow-inset: 0 1px 0 rgba(255,255,255,0.02) inset;
+  --cb-shadow-50: rgba(0,0,0,0.5);
 
   /* Scrollbar */
   --cb-scrollbar-track: #000000;
@@ -65,57 +89,73 @@
   /* Icons */
   --cb-icon-primary: #808080;
   --cb-icon-hover: #FFFFFF;
+  --cb-icon-muted-60: rgba(154, 160, 166, 0.6);
+  --cb-icon-muted-40: rgba(154, 160, 166, 0.4);
+  --cb-icon-muted-30: rgba(154, 160, 166, 0.3);
+
+  /* Toggles / misc */
+  --cb-toggle-bg: rgba(255,255,255,0.05);
+  --cb-danger: #EF4444;
+  --cb-link: #8B4CB8;
+  --cb-link-blue: #8ab4f8;
+  --cb-accent-blue-10: rgba(138,180,248,0.1);
+  --cb-accent-blue-30: rgba(138,180,248,0.3);
+  --cb-surface-dim-50: rgba(45,45,45,0.5);
+  --cb-border-200: rgba(95,99,104,0.2);
+
+  /* Overlay gradient stops */
+  --cb-overlay-top: rgba(0,0,0,1);
+  --cb-overlay-mid: rgba(0,0,0,0.9);
+  --cb-overlay-low: rgba(0,0,0,0.2);
+  --cb-surface-dim: #141414;
+  --cb-surface-dim-hover: #3f4042;
+  --cb-panel-footer-bg: rgba(45,45,45,0.95);
+  --cb-placeholder-bg: rgba(45,45,45,0.9);
+  --cb-border-btn: rgba(95,99,104,0.3);
 }
-
-/* ==========================================================================
-   Dark Mode Specific Overrides
-   ========================================================================== */
-
-
-
-
 
 /* Remove glassmorphism in Dark Mode for authentic Chrome look */
 [data-theme="dark"] .chat-panel {
   backdrop-filter: none;
+  background-color: var(--cb-bg-color-black) !important;
   --cb-bg-color-black: !important;
   -webkit-backdrop-filter: none;
-  border-left: 1px solid #3c4043;
+  border-left: 1px solid var(--cb-border-muted);
 }
 
 /* Links in Dark Mode - use purple accent */
 [data-theme="dark"] .message-text a {
-  color: #8B4CB8 !important; /* purple acccent from palette */
-}
+  color: var(--cb-link) !important; /* purple acccent from palette */
+} 
 
 /* Contact Phone in Dark Mode - keep high contrast */
 [data-theme="dark"] .contact-phone {
-  color: #8B4CB8 !important;
-}
-.chat-panel { background: rgba(255, 255, 255, 0.95) !important; color: #ffffff !important; }
+  color: var(--cb-link) !important;
+} 
+.chat-panel { background: var(--cb-bg-panel) !important; color: var(--cb-text-primary) !important; } 
 /* Contact Phone in Dark Mode */
 [data-theme="dark"] .contact-phone {
-  color: #8ab4f8 !important;
-}
+  color: var(--cb-link) !important;
+} 
 
 /* Buttons in Dark Mode */
 [data-theme="dark"] .cat-sub-btn {
-    background-color: #35363a;
-    border-color: #5f6368;
-}
+    background-color: var(--cb-surface-dim);
+    border-color: var(--cb-border-muted);
+} 
 [data-theme="dark"] .cat-sub-btn:hover {
-    background-color: #3f4042;
+    background-color: var(--cb-surface-dim-hover);
 }
 [data-theme="dark"] .cat-sub-btn:hover .cat-sub-icon {
-    color: #e8eaed;
-}
+    color: var(--cb-text-primary);
+} 
 
 /* Headers in Dark Mode */
 [data-theme="dark"] .ai-greet-title {
     font-weight: 700;
     font-size: 18px;
-    background: linear-gradient(135deg, #6B2C91, #8B4CB8, #B37BD1);
-    background-size: 200% 200%;
+    background: linear-gradient(135deg, var(--cb-accent-purple-2), var(--cb-accent-purple-1), var(--cb-accent-purple-3));
+    background-size: 200% 200%; 
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -127,12 +167,12 @@
 
 /* Theme Toggle Button specific tweak */
 [data-theme="dark"] .theme-toggle-btn {
-    background: rgba(255,255,255,0.05);
-}
+    background: var(--cb-toggle-bg);
+} 
 
 /* Dark Mode Ghost Input Suggestions */
 [data-theme="dark"] .ghost-input .ghost-suffix {
-    color: #8ab4f8;
+    color: var(--cb-link-blue);
 }
 
 /* ==========================================================================
@@ -141,104 +181,104 @@
 
 /* Dark Mode Close Circle Button - Purple (same as light) */
 [data-theme="dark"] .close-circle {
-  background: #8B4CB8 !important;
-  border: 1px solid rgba(139, 76, 184, 0.3) !important;
-  box-shadow: 0 2px 8px rgba(139, 76, 184, 0.2);
-  color: #ffffff !important;
-}
+  background: var(--cb-accent-purple-1) !important;
+  border: 1px solid var(--cb-border-purple) !important;
+  box-shadow: 0 2px 8px var(--cb-shadow-purple);
+  color: var(--cb-text-inverse) !important;
+} 
 
 /* Dark Mode Theme Toggle Button - Light Gray */
 [data-theme="dark"] .theme-toggle-btn {
-  background: #35363a !important;
-  border: 1px solid rgba(95, 99, 104, 0.3) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  color: #e8eaed !important;
-}
+  background: var(--cb-surface-dim) !important;
+  border: 1px solid var(--cb-border-btn) !important;
+  box-shadow: 0 2px 8px var(--cb-shadow-30);
+  color: var(--cb-text-primary) !important;
+} 
 
 /* Dark Mode Button SVG Icons */
 [data-theme="dark"] .close-circle svg path,
 [data-theme="dark"] .theme-toggle-btn svg {
-  stroke: #e8eaed;
+  stroke: var(--cb-text-primary);
   stroke-width: 2;
 }
 
 /* Keep clear-chat-btn red in dark mode */
 [data-theme="dark"] .clear-chat-btn {
-  background: #EF4444 !important;
+  background: var(--cb-danger) !important;
   border: none !important;
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
-  color: #FFFFFF !important;
-}
+  color: var(--cb-text-inverse) !important;
+} 
 
 
 
 /* Dark Mode Input Pill */
 [data-theme="dark"] .input-pill {
-  border: 1px solid #5f6368 !important;
-}
+  border: 1px solid var(--cb-border-muted) !important;
+} 
 
 /* Dark Mode Contact Cards */
 [data-theme="dark"] .contact-card {
-  background: #292a2d !important;
-  border: 1px solid #5f6368;
+  background: var(--cb-surface-dim) !important;
+  border: 1px solid var(--cb-border-muted);
 }
 
 /* Dark Mode Tooltip */
 [data-theme="dark"] .chatbot-tooltip {
-  background: rgba(45, 45, 45, 0.95);
-  border: 1px solid #5f6368;
-  color: #e8eaed;
-}
+  background: var(--cb-surface-bg);
+  border: 1px solid var(--cb-border-muted);
+  color: var(--cb-text-primary);
+} 
 
 /* Dark Mode Unlike Tooltip */
 [data-theme="dark"] .unlike-tooltip {
-  background: linear-gradient(135deg, rgba(45,45,45,0.98) 0%, rgba(45,45,45,0.95) 100%);
-  border: 1px solid rgba(138, 180, 248, 0.2);
-}
+  background: linear-gradient(135deg, var(--cb-surface-bg-strong) 0%, var(--cb-surface-bg) 100%);
+  border: 1px solid var(--cb-like-tooltip-border);
+} 
 
 /* Dark Mode Like Tooltip */
 [data-theme="dark"] .like-tooltip {
-  background: linear-gradient(135deg, rgba(40, 45, 50, 0.98) 0%, rgba(40, 45, 50, 0.95) 100%);
-  border: 1px solid rgba(138, 180, 248, 0.2);
-}
+  background: linear-gradient(135deg, var(--cb-like-tooltip-bg-start) 0%, var(--cb-like-tooltip-bg-end) 100%);
+  border: 1px solid var(--cb-like-tooltip-border);
+} 
 
 /* Dark Mode Feedback Dropdown */
 [data-theme="dark"] .feedback-reason-dropdown {
-  background: rgba(45, 45, 45, 0.98);
-  border: 0.5px solid rgba(95, 99, 104, 0.3);
-}
+  background: var(--cb-surface-bg-strong);
+  border: 0.5px solid var(--cb-border-btn);
+} 
 
 /* Dark Mode Category Sub Buttons */
 [data-theme="dark"] .cat-sub-btn {
   background: rgba(45, 45, 45, 0.5);
   border: 0.5px solid rgba(95, 99, 104, 0.2);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  color: #e8eaed;
-}
+  box-shadow: 0 2px 8px var(--cb-shadow-30);
+  color: var(--cb-text-primary);
+} 
 [data-theme="dark"] .cat-sub-btn:hover {
-  background: rgba(138, 180, 248, 0.1);
-  color: #8ab4f8;
-  border-color: rgba(138, 180, 248, 0.3);
-  box-shadow: 0 2px 8px rgba(138, 180, 248, 0.1);
-}
+  background: var(--cb-accent-blue-10);
+  color: var(--cb-link);
+  border-color: var(--cb-accent-blue-30);
+  box-shadow: 0 2px 8px var(--cb-accent-blue-10);
+} 
 [data-theme="dark"] .cat-sub-btn:focus {
-  outline: 3px solid rgba(138, 180, 248, 0.3);
+  outline: 3px solid var(--cb-accent-blue-30);
   outline-offset: 2px;
 }
 [data-theme="dark"] .cat-sub-icon {
-  color: rgba(154, 160, 166, 0.6);
+  color: var(--cb-icon-muted-60);
 }
 [data-theme="dark"] .cat-sub-btn:hover .cat-sub-icon {
-  color: #8ab4f8;
-}
+  color: var(--cb-link-blue);
+} 
 [data-theme="dark"] .cat-sub-btn.disabled {
   background: rgba(0,0,0,0.2);
 }
 [data-theme="dark"] .cat-sub-btn.disabled .cat-sub-text {
-  color: rgba(154, 160, 166, 0.4);
+  color: var(--cb-icon-muted-40);
 }
 [data-theme="dark"] .cat-sub-btn.disabled .cat-sub-icon {
-  color: rgba(154, 160, 166, 0.3);
+  color: var(--cb-icon-muted-30);
 }
 [data-theme="dark"] .cat-sub-btn.disabled:hover {
   background: rgba(0,0,0,0.2);
@@ -247,119 +287,119 @@
 
 /* Dark Mode Panel Footer */
 [data-theme="dark"] .panel-footer {
-  background: rgba(45, 45, 45, 0.5);
+  background: var(--cb-panel-footer-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-}
+}  
 
 /* Dark Mode Chatbot Container */
 [data-theme="dark"] .chatbot-container {
-  background-color: #202124;
-  color: #e8eaed;
-}
+  background-color: var(--cb-bg-panel);
+  color: var(--cb-text-primary);
+} 
 
 
 /* Dark Mode Panel Footer Border */
 [data-theme="dark"] .panel-footer {
-  background: rgba(45, 45, 45, 0.95);
-  border-top: 1px solid #3c4043;
+  background: var(--cb-panel-footer-bg);
+  border-top: 1px solid var(--cb-border-muted);
 }
 
 /* Dark Mode Input Pill */
 [data-theme="dark"] .input-pill {
-  background-color: #202124 !important;
-  color: #e8eaed !important;
+  background-color: var(--cb-bg-input) !important;
+  color: var(--cb-text-primary) !important;
   border: 1px solid transparent !important;
 }
 [data-theme="dark"] .input-pill::placeholder {
-  color: #9aa0a6;
+  color: var(--cb-icon-primary);
 }
 [data-theme="dark"] .input-pill:focus {
-  border-color: #8ab4f8;
-  box-shadow: 0 0 0 3px rgba(138, 180, 248, 0.2);
-  background-color: #202124 !important;
-}
+  border-color: var(--cb-link-blue);
+  box-shadow: 0 0 0 3px var(--cb-like-tooltip-border);
+  background-color: var(--cb-bg-input) !important;
+} 
 
 /* Dark Mode Message Bubbles */
 [data-theme="dark"] .message-bubble.bot {
-  background: rgba(8, 0, 14, 0.768) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
-  border: 1px solid #5f6368;
-}
+  background: var(--cb-bg-msg-bot) !important;
+  backdrop-filter: blur(14px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
+  border: 1px solid var(--cb-border-muted);
+} 
 
 /* Dark Mode Bot with Categories */
 [data-theme="dark"] .bot-with-categories {
-  background: rgba(8, 0, 14, 0.768) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
-  border: 1px solid #5f6368;
-}
+  background: var(--cb-panel-footer-bg) !important;
+  backdrop-filter: blur(14px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
+  border: 1px solid var(--cb-border-muted);
+} 
 
 [data-theme="dark"] .message-bubble.user {
-  background: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%) !important;
-  color: #ffffff !important;
+  background: var(--cb-user-gradient) !important;
+  color: var(--cb-text-inverse) !important;
 }
 
 [data-theme="dark"] .ai-greet-sub,
 [data-theme="dark"] .message-bubble.bot { 
-  color: #abccff !important;
-}
+  color: var(--cb-link-blue) !important;
+} 
 
 /* Dark Mode Contact Cards */
 [data-theme="dark"] .contact-card {
-  background: #292a2d !important;
-  border: 1px solid #5f6368;
+  background: var(--cb-surface-dim) !important;
+  border: 1px solid var(--cb-border-muted);
 }
 [data-theme="dark"] .contact-card:hover {
-  background: #35363a !important;
-  border-color: #9aa0a6;
-}
+  background: var(--cb-surface-dim-hover) !important;
+  border-color: var(--cb-icon-primary);
+}  
 [data-theme="dark"] .contact-org {
-  color: #e8eaed;
+  color: var(--cb-text-primary);
 }
 [data-theme="dark"] .contact-officer {
-  color: #9aa0a6;
+  color: var(--cb-icon-primary);
 }
 [data-theme="dark"] .contact-phone {
-  color: #8ab4f8;
-}
+  color: var(--cb-link-blue);
+} 
 
 /* Dark Mode Tooltips */
 [data-theme="dark"] .chatbot-tooltip {
-  background: rgba(45, 45, 45, 0.95);
-  border: 1px solid #5f6368;
-  color: #e8eaed;
+  background: var(--cb-surface-bg);
+  border: 1px solid var(--cb-border-muted);
+  color: var(--cb-text-primary);
 }
 
 /* Dark Mode Mobile Tooltips */
 @media (max-width: 640px) {
   [data-theme="dark"] .unlike-tooltip,
   [data-theme="dark"] .like-tooltip {
-    background: black!important;
-    border: 1px solid #5f6368 !important;
-    color: #e8eaed !important;
+    background: var(--cb-bg-primary) !important;
+    border: 1px solid var(--cb-border-muted) !important;
+    color: var(--cb-text-primary) !important;
   }
-}
+} 
 
 
 
 /* Dark Mode Background Placeholder */
 [data-theme="dark"] .bg-placeholder-card {
-  background: rgba(45, 45, 45, 0.9);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  background: var(--cb-placeholder-bg);
+  box-shadow: 0 8px 30px var(--cb-shadow-50);
 }
 [data-theme="dark"] .bg-placeholder-title {
-  color: #e8eaed;
+  color: var(--cb-text-primary);
 }
 [data-theme="dark"] .bg-placeholder-desc {
-  color: #9aa0a6;
-}
+  color: var(--cb-icon-primary);
+} 
 
 /* Dark Mode Ghost Typed Text */
 [data-theme="dark"] .ghost-input .ghost-typed {
-  color: #e8eaed;
-}
+  color: var(--cb-text-primary);
+} 
 
 /* Dark Mode Overlay Backdrops: enforce pitch-black background like mock */
 [data-theme="dark"] .overlay-backdrop {
@@ -378,12 +418,12 @@
   pointer-events: none;
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 0.9) 40%,
-    rgba(0, 0, 0, 0.2) 80%,
+    var(--cb-overlay-top) 0%,
+    var(--cb-overlay-mid) 40%,
+    var(--cb-overlay-low) 80%,
     rgba(0, 0, 0, 0) 100%
   );
-}
+} 
 
 [data-theme="dark"] .suggestion-btn { 
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(247, 247, 248, 0.12) 100%) !important;
