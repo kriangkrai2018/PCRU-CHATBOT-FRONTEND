@@ -1,244 +1,248 @@
 <template>
-  <div class="sidebar d-flex flex-column flex-shrink-0 pt-3 ps-0 pe-0" :class="{ 'collapsed': isCollapsed }">
+  <div class="sidebar d-flex flex-column flex-shrink-0 pt-3 ps-0 pe-0" :class="{ 'collapsed': isCollapsed }" style="overflow: hidden !important;">
     <div class="sidebar-header d-flex align-items-center">
       <span class="fs-4 fw-bold pcru-text me-3" :class="{ 'collapsed-text': isCollapsed }">PCRU</span>
-      <button class="btn btn-link text-dark p-0 mx-3 toggle-btn" @click="toggleSidebar">
-        <i class="bi bi-list fs-3"></i>
+      <button class="btn btn-link text-dark p-0 mx-3 toggle-btn" @click="toggleSidebar" :title="isCollapsed ? 'เปิดเมนู' : 'ปิดเมนู'" :aria-expanded="!isCollapsed">
+        <i :class="['fs-3', isCollapsed ? 'bi bi-list' : 'bi bi-x-lg']" aria-hidden="true"></i>
       </button>
     </div>
     <hr>
-    <ul class="nav nav-pills flex-column mb-auto">
-      <li class="nav-item">
-        <router-link
-          to="/dashboard"
-          class="nav-link d-flex align-items-center gap-2"
-          :class="{ 'active': isDashboardActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
-          :aria-current="isDashboardActive ? 'page' : null"
-        >
-          <i :class="['bi bi-house-door fs-4', { 'ms-2': !isCollapsed }]"></i>
-          <span :class="{ 'collapsed-text': isCollapsed }">Dashboard</span>
-        </router-link>
-      </li>
+    <div style="overflow: auto !important;">
+      <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+          <router-link
+            to="/dashboard"
+            class="nav-link d-flex align-items-center gap-2"
+            :class="{ 'active': isDashboardActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
+            :aria-current="isDashboardActive ? 'page' : null"
+          >
+            <i :class="['bi bi-house-door fs-4', { 'ms-2': !isCollapsed }]"></i>
+            <span :class="{ 'collapsed-text': isCollapsed }">Dashboard</span>
+          </router-link>
+        </li>
 
-      <!-- Reports Dropdown (Officer only) -->
-      <li v-if="userType === 'Officer'" class="nav-item">
-        <div 
-          class="nav-link d-flex align-items-center gap-2 dropdown-toggle-custom"
-          :class="{ 'active': isReportsActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
-          @click="toggleReportsDropdown"
-          role="button"
-        >
-          <i :class="['bi bi-bar-chart-line fs-4', { 'ms-2': !isCollapsed }]"></i>
-          <span :class="{ 'collapsed-text': isCollapsed }" class="flex-grow-1">Reports</span>
-          <i v-if="!isCollapsed" :class="['bi', isReportsOpen ? 'bi-chevron-up' : 'bi-chevron-down', 'me-2']"></i>
-        </div>
-        <!-- Dropdown Menu -->
-        <ul v-show="isReportsOpen && !isCollapsed" class="nav flex-column ms-3 reports-dropdown">
-          <li class="nav-item">
-            <router-link to="/reports/categories" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/reports/categories' }">
-              <i class="bi bi-tags"></i>
-              <span>Categories</span>
-            </router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/reports/questionsanswers" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/reports/questionsanswers' }">
-              <i class="bi bi-question-circle"></i>
-              <span>Q&A</span>
-            </router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/reports/questions-need-review" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/reports/questions-need-review' }">
-              <i class="bi bi-exclamation-triangle"></i>
-              <span>Need Review</span>
-            </router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/reports/keywords" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/reports/keywords' }">
-              <i class="bi bi-key"></i>
-              <span>Keywords</span>
-            </router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/reports/chatlog-has-answers" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/reports/chatlog-has-answers' }">
-              <i class="bi bi-chat-left-text"></i>
-              <span>ChatLog (Answered)</span>
-            </router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/reports/feedbacks" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/reports/feedbacks' }">
-              <i class="bi bi-hand-thumbs-up"></i>
-              <span>Feedbacks</span>
-            </router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/reports/feedbacks-handled" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/reports/feedbacks-handled' }">
-              <i class="bi bi-check-circle"></i>
-              <span>Handled Feedbacks</span>
-            </router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/reports/chatlog-no-answers" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/reports/chatlog-no-answers' }">
-              <i class="bi bi-chat-left-dots"></i>
-              <span>ChatLog (No Answer)</span>
-            </router-link>
-          </li>
-        </ul>
-      </li>
+        <!-- Reports Dropdown (Officer only) -->
+        <li v-if="userType === 'Officer'" class="nav-item">
+          <div 
+            class="nav-link d-flex align-items-center gap-2 dropdown-toggle-custom"
+            :class="{ 'active': isReportsActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
+            @click="toggleReportsDropdown"
+            role="button"
+          >
+            <i :class="['bi bi-bar-chart-line fs-4', { 'ms-2': !isCollapsed }]"></i>
+            <span :class="{ 'collapsed-text': isCollapsed }" class="flex-grow-1">Reports</span>
+            <i v-if="!isCollapsed" :class="['bi', isReportsOpen ? 'bi-chevron-up' : 'bi-chevron-down', 'me-2']"></i>
+          </div>
+          <!-- Dropdown Menu -->
+          <ul v-show="isReportsOpen && !isCollapsed" class="nav flex-column ms-3 reports-dropdown">
+            <li class="nav-item">
+              <router-link to="/reports/categories" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/reports/categories' }">
+                <i class="bi bi-tags"></i>
+                <span>Categories</span>
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link to="/reports/questionsanswers" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/reports/questionsanswers' }">
+                <i class="bi bi-question-circle"></i>
+                <span>Q&A</span>
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link to="/reports/questions-need-review" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/reports/questions-need-review' }">
+                <i class="bi bi-exclamation-triangle"></i>
+                <span>Need Review</span>
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link to="/reports/keywords" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/reports/keywords' }">
+                <i class="bi bi-key"></i>
+                <span>Keywords</span>
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link to="/reports/chatlog-has-answers" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/reports/chatlog-has-answers' }">
+                <i class="bi bi-chat-left-text"></i>
+                <span>ChatLog (Answered)</span>
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link to="/reports/feedbacks" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/reports/feedbacks' }">
+                <i class="bi bi-hand-thumbs-up"></i>
+                <span>Feedbacks</span>
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link to="/reports/feedbacks-handled" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/reports/feedbacks-handled' }">
+                <i class="bi bi-check-circle"></i>
+                <span>Handled Feedbacks</span>
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link to="/reports/chatlog-no-answers" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/reports/chatlog-no-answers' }">
+                <i class="bi bi-chat-left-dots"></i>
+                <span>ChatLog (No Answer)</span>
+              </router-link>
+            </li>
+          </ul>
+        </li>
 
-      <li v-if="userType === 'Super Admin'" class="nav-item">
-        <router-link
-          to="/manageadminuser"
-          class="nav-link d-flex align-items-center gap-2"
-          :class="{ 'active': isManageAdminActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
-          :aria-current="isManageAdminActive ? 'page' : null"
-        >
-          <i :class="['bi bi-people fs-4', { 'ms-2': !isCollapsed }]"></i>
-          <span :class="{ 'collapsed-text': isCollapsed }">Manage Admins</span>
-        </router-link>
-      </li>
-      <li v-if="userType === 'Admin'" class="nav-item">
-        <router-link
-          to="/manageorganizations"
-          class="nav-link d-flex align-items-center gap-2"
-          :class="{ 'active': isManageOrganizationsActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
-          :aria-current="isManageOrganizationsActive ? 'page' : null"
-        >
-          <i :class="['bi bi-building fs-4', { 'ms-2': !isCollapsed }]"></i>
-          <span :class="{ 'collapsed-text': isCollapsed }">Manage Organizations</span>
-        </router-link>
-      </li>
-      <li v-if="userType === 'Admin'" class="nav-item">
-        <router-link
-          to="/manageofficers"
-          class="nav-link d-flex align-items-center gap-2"
-          :class="{ 'active': isManageOfficersActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
-          :aria-current="isManageOfficersActive ? 'page' : null"
-        >
-          <i :class="['bi bi-person-badge fs-4', { 'ms-2': !isCollapsed }]"></i>
-          <span :class="{ 'collapsed-text': isCollapsed }">Manage Officers</span>
-        </router-link>
-      </li>
-      <li v-if="userType === 'Admin'" class="nav-item">
-        <router-link
-          to="/manageaiimage"
-          class="nav-link d-flex align-items-center gap-2"
-          :class="{ 'active': isManageAIImageActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
-          :aria-current="isManageAIImageActive ? 'page' : null"
-        >
-          <i :class="['bi bi-robot fs-4', { 'ms-2': !isCollapsed }]"></i>
-          <span :class="{ 'collapsed-text': isCollapsed }">Manage AI Assistant</span>
-        </router-link>
-      </li>
+        <li v-if="userType === 'Super Admin'" class="nav-item">
+          <router-link
+            to="/manageadminuser"
+            class="nav-link d-flex align-items-center gap-2"
+            :class="{ 'active': isManageAdminActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
+            :aria-current="isManageAdminActive ? 'page' : null"
+          >
+            <i :class="['bi bi-people fs-4', { 'ms-2': !isCollapsed }]"></i>
+            <span :class="{ 'collapsed-text': isCollapsed }">Manage Admins</span>
+          </router-link>
+        </li>
+        <li v-if="userType === 'Admin'" class="nav-item">
+          <router-link
+            to="/manageorganizations"
+            class="nav-link d-flex align-items-center gap-2"
+            :class="{ 'active': isManageOrganizationsActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
+            :aria-current="isManageOrganizationsActive ? 'page' : null"
+          >
+            <i :class="['bi bi-building fs-4', { 'ms-2': !isCollapsed }]"></i>
+            <span :class="{ 'collapsed-text': isCollapsed }">Manage Organizations</span>
+          </router-link>
+        </li>
+        <li v-if="userType === 'Admin'" class="nav-item">
+          <router-link
+            to="/manageofficers"
+            class="nav-link d-flex align-items-center gap-2"
+            :class="{ 'active': isManageOfficersActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
+            :aria-current="isManageOfficersActive ? 'page' : null"
+          >
+            <i :class="['bi bi-person-badge fs-4', { 'ms-2': !isCollapsed }]"></i>
+            <span :class="{ 'collapsed-text': isCollapsed }">Manage Officers</span>
+          </router-link>
+        </li>
+        <li v-if="userType === 'Admin'" class="nav-item">
+          <router-link
+            to="/manageaiimage"
+            class="nav-link d-flex align-items-center gap-2"
+            :class="{ 'active': isManageAIImageActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
+            :aria-current="isManageAIImageActive ? 'page' : null"
+          >
+            <i :class="['bi bi-robot fs-4', { 'ms-2': !isCollapsed }]"></i>
+            <span :class="{ 'collapsed-text': isCollapsed }">Manage AI Assistant</span>
+          </router-link>
+        </li>
 
-      <!-- Manage Dropdown (Officer only) - 5 items -->
-      <li v-if="userType === 'Officer'" class="nav-item">
-        <div 
-          class="nav-link d-flex align-items-center gap-2 dropdown-toggle-custom"
-          :class="{ 'active': isManageActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
-          @click="toggleManageDropdown"
-          role="button"
-        >
-          <i :class="['bi bi-gear fs-4', { 'ms-2': !isCollapsed }]"></i>
-          <span :class="{ 'collapsed-text': isCollapsed }" class="flex-grow-1">Manage</span>
-          <i v-if="!isCollapsed" :class="['bi', isManageOpen ? 'bi-chevron-up' : 'bi-chevron-down', 'me-2']"></i>
-        </div>
-        <!-- Manage Dropdown Menu -->
-        <ul v-show="isManageOpen && !isCollapsed" class="nav flex-column ms-3 reports-dropdown manage-dropdown">
-          <li class="nav-item">
-            <router-link to="/managecategories" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/managecategories' }">
-              <i class="bi bi-tags"></i>
-              <span>Categories</span>
-            </router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/managequestionsanswers" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/managequestionsanswers' }">
-              <i class="bi bi-question-circle"></i>
-              <span>Q&A</span>
-            </router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/managestopwords" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/managestopwords' }">
-              <i class="bi bi-funnel"></i>
-              <span>Stopwords</span>
-            </router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/managenegativekeywords" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/managenegativekeywords' }">
-              <i class="bi bi-x-circle"></i>
-              <span>Negative Keywords</span>
-            </router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/managesynonyms" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/managesynonyms' }">
-              <i class="bi bi-link-45deg"></i>
-              <span>Synonyms</span>
-            </router-link>
-          </li>
-        </ul>
-      </li>
+        <!-- Manage Dropdown (Officer only) - 5 items -->
+        <li v-if="userType === 'Officer'" class="nav-item">
+          <div 
+            class="nav-link d-flex align-items-center gap-2 dropdown-toggle-custom"
+            :class="{ 'active': isManageActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
+            @click="toggleManageDropdown"
+            role="button"
+          >
+            <i :class="['bi bi-gear fs-4', { 'ms-2': !isCollapsed }]"></i>
+            <span :class="{ 'collapsed-text': isCollapsed }" class="flex-grow-1">Manage</span>
+            <i v-if="!isCollapsed" :class="['bi', isManageOpen ? 'bi-chevron-up' : 'bi-chevron-down', 'me-2']"></i>
+          </div>
+          <!-- Manage Dropdown Menu -->
+          <ul v-show="isManageOpen && !isCollapsed" class="nav flex-column ms-3 reports-dropdown manage-dropdown">
+            <li class="nav-item">
+              <router-link to="/managecategories" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/managecategories' }">
+                <i class="bi bi-tags"></i>
+                <span>Categories</span>
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link to="/managequestionsanswers" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/managequestionsanswers' }">
+                <i class="bi bi-question-circle"></i>
+                <span>Q&A</span>
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link to="/managestopwords" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/managestopwords' }">
+                <i class="bi bi-funnel"></i>
+                <span>Stopwords</span>
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link to="/managenegativekeywords" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/managenegativekeywords' }">
+                <i class="bi bi-x-circle"></i>
+                <span>Negative Keywords</span>
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link to="/managesynonyms" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/managesynonyms' }">
+                <i class="bi bi-link-45deg"></i>
+                <span>Synonyms</span>
+              </router-link>
+            </li>
+          </ul>
+        </li>
 
-      <!-- Ranking Dropdown (group Final Ranking + Ranking Simulator) -->
-      <li v-if="userType === 'Officer'" class="nav-item">
-        <div
-          class="nav-link d-flex align-items-center gap-2 dropdown-toggle-custom"
-          :class="{ 'active': isRankingActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
-          @click="toggleRankingDropdown"
-          role="button"
-        >
-          <i :class="['bi bi-bar-chart fs-4', { 'ms-2': !isCollapsed }]"></i>
-          <span :class="{ 'collapsed-text': isCollapsed }" class="flex-grow-1">Ranking</span>
-          <i v-if="!isCollapsed" :class="['bi', isRankingOpen ? 'bi-chevron-up' : 'bi-chevron-down', 'me-2']"></i>
-        </div>
-        <ul v-show="isRankingOpen && !isCollapsed" class="nav flex-column ms-3 reports-dropdown manage-dropdown">
-          <li class="nav-item">
-            <router-link to="/manageranking" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/manageranking' }">
-              <i class="bi bi-bar-chart-line"></i>
-              <span>Final Ranking</span>
+        <!-- Ranking Dropdown (group Final Ranking + Ranking Simulator) -->
+        <li v-if="userType === 'Officer'" class="nav-item">
+          <div
+            class="nav-link d-flex align-items-center gap-2 dropdown-toggle-custom"
+            :class="{ 'active': isRankingActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
+            @click="toggleRankingDropdown"
+            role="button"
+          >
+            <i :class="['bi bi-bar-chart fs-4', { 'ms-2': !isCollapsed }]"></i>
+            <span :class="{ 'collapsed-text': isCollapsed }" class="flex-grow-1">Ranking</span>
+            <i v-if="!isCollapsed" :class="['bi', isRankingOpen ? 'bi-chevron-up' : 'bi-chevron-down', 'me-2']"></i>
+          </div>
+          <ul v-show="isRankingOpen && !isCollapsed" class="nav flex-column ms-3 reports-dropdown manage-dropdown">
+            <li class="nav-item">
+              <router-link to="/manageranking" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/manageranking' }">
+                <i class="bi bi-bar-chart-line"></i>
+                <span>Final Ranking</span>
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link to="/ranking-simulator" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/ranking-simulator' }">
+                <i class="bi bi-cpu"></i>
+                <span>Ranking Simulator</span>
+              </router-link>
+            </li>
+          </ul>
+        </li>
+          <!-- <li v-if="userType === 'Officer'" class="nav-item">
+            <router-link
+              class="nav-link d-flex align-items-center gap-2"
+              to="/about-system"
+              :class="{ 'active': isAboutSystemActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
+              :aria-current="isAboutSystemActive ? 'page' : null"
+            >
+              <i :class="['bi bi-info-circle fs-4', { 'ms-2': !isCollapsed }]"></i>
+              <span :class="{ 'd-none': isCollapsed }">About System</span>
             </router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/ranking-simulator" class="nav-link py-2 d-flex align-items-center gap-2" :class="{ 'active': route.path === '/ranking-simulator' }">
-              <i class="bi bi-cpu"></i>
-              <span>Ranking Simulator</span>
-            </router-link>
-          </li>
-        </ul>
-      </li>
+          </li> -->
         <!-- <li v-if="userType === 'Officer'" class="nav-item">
           <router-link
+            to="/managethaipatterns"
             class="nav-link d-flex align-items-center gap-2"
-            to="/about-system"
-            :class="{ 'active': isAboutSystemActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
-            :aria-current="isAboutSystemActive ? 'page' : null"
+            :class="{ 'active': isManageThaiPatternsActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
+            :aria-current="isManageThaiPatternsActive ? 'page' : null"
           >
-            <i :class="['bi bi-info-circle fs-4', { 'ms-2': !isCollapsed }]"></i>
-            <span :class="{ 'd-none': isCollapsed }">About System</span>
+            <i :class="['bi bi-translate fs-4', { 'ms-2': !isCollapsed }]"></i>
+            <span :class="{ 'd-none': isCollapsed }">Thai Word Learning</span>
           </router-link>
         </li> -->
-      <!-- <li v-if="userType === 'Officer'" class="nav-item">
-        <router-link
-          to="/managethaipatterns"
-          class="nav-link d-flex align-items-center gap-2"
-          :class="{ 'active': isManageThaiPatternsActive, 'justify-content-flex-start': !isCollapsed, 'justify-content-center': isCollapsed }"
-          :aria-current="isManageThaiPatternsActive ? 'page' : null"
-        >
-          <i :class="['bi bi-translate fs-4', { 'ms-2': !isCollapsed }]"></i>
-          <span :class="{ 'd-none': isCollapsed }">Thai Word Learning</span>
-        </router-link>
-      </li> -->
-    </ul>
+      </ul>
+      
+    </div>
     <div
-      class="user-profile d-flex align-items-center justify-content-center gap-2  "
+      class="user-profile align-items-center justify-content-center gap-2  "
       @mouseenter="isHoveringProfile = true"
       @mouseleave="isHoveringProfile = false"
       role="button"
       tabindex="0"
+      style="position: absolute;"
     >
       <i v-if="isCollapsed && isHoveringProfile" class="bi bi-box-arrow-right fs-2" @click="handleLogout"></i>
       <i v-else :class="['bi bi-person-circle fs-2', { 'ms-2': !isCollapsed }]"></i>
         
       <div :class="{ 'collapsed-text': isCollapsed }" class="flex-grow-1">
-        <strong class="d-block">
+        <strong class="d-block" style="font-size: 0.8rem;">
           <!-- Officer: show full name, Admin: show first name, fallback 'Admin' -->
           {{ userType === 'Officer'
             ? (userInfoObject?.OfficerName || 'Officer')
@@ -442,7 +446,66 @@ const handleLogout = () => { logout(router); };
 }
 .nav-link:hover { background-color: rgba(0,0,0,0.03); }
 .nav-link.active { color: #000 !important; background-color: #D9D9D9 !important; }
-.user-profile { padding: 0.5rem; margin-top: auto; }
+.user-profile {
+  padding: 0.75rem 0.8rem;
+  margin: 0;
+  background: linear-gradient(to top, rgba(255,255,255,0.98), rgba(255,255,255,0.92));
+  border-top: 1px solid rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* Ensure sidebar reserves space for the fixed footer */
+.sidebar {
+  padding-bottom: 92px; /* room for user-profile height + spacing */
+  position: relative;
+}
+
+/* Make profile fixed to viewport bottom and align with sidebar width */
+.user-profile {
+  position: fixed; /* pin to viewport bottom */
+  left: 0;
+  bottom: env(safe-area-inset-bottom, 0);
+  z-index: 100100; /* above mobile sidebar overlay and handles */
+  width: 250px; /* default sidebar width */
+  box-shadow: 0 -6px 18px rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  transition: width 220ms cubic-bezier(.22,.9,.33,1);
+  margin: 0;
+  border-radius: 0 0 12px 12px;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0));
+}
+
+/* When sidebar is opened as mobile overlay, match its width */
+body.sidebar-open .user-profile,
+body.sidebar-mobile-expanded .user-profile {
+  width: 280px;
+}
+
+/* When collapsed, shrink profile to match collapsed sidebar */
+.sidebar.collapsed .user-profile {
+  width: 70px; /* match collapsed sidebar width */
+  justify-content: center;
+  padding: 8px 0;
+}
+
+/* hide long texts in collapsed profile */
+.sidebar.collapsed .user-profile .collapsed-text { display: none !important; }
+.sidebar.collapsed .user-profile i.ms-2 { margin-left: 0 !important; }
+
+/* Make sure profile sits above any mobile overlay */
+@media (max-width: 767px) {
+  /* Ensure profile is fixed to viewport bottom and flush against edge on mobile */
+  .user-profile { position: fixed !important; left: 0 !important; right: 0 !important; width: 100% !important; max-width: none; bottom: 0 !important; margin: 0 !important; border-radius: 0 !important; padding-bottom: env(safe-area-inset-bottom, 0) !important; box-shadow: none !important; transform: none !important; z-index: 100200 !important; }
+  .sidebar.collapsed .user-profile { width: 100%; }
+  /* When mobile overlay is open ensure profile is above overlay and touches bottom */
+  body.sidebar-open .user-profile,
+  body.sidebar-mobile-expanded .user-profile {
+    position: fixed !important; left: 0 !important; right: 0 !important; width: 100% !important; max-width: none; bottom: 0 !important; margin: 0 !important; border-radius: 0 !important; padding-bottom: env(safe-area-inset-bottom, 0) !important; box-shadow: none !important; z-index: 100200 !important; 
+  }
+}
 .manage-questions-answers-link {
   font-size: 0.75em !important;
 }
@@ -547,12 +610,9 @@ const handleLogout = () => { logout(router); };
   max-width: 0;
 }
 
-/* Toggle icon rotation to indicate action */
+/* Toggle icon transition */
 .toggle-btn i {
-  transition: transform 260ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-.sidebar.collapsed .toggle-btn i {
-  transform: rotate(180deg);
+  transition: transform 260ms cubic-bezier(0.4, 0, 0.2, 1), color 180ms ease;
 }
 
 /* Smooth icon movement when collapsing */
