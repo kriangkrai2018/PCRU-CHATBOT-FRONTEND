@@ -270,10 +270,10 @@
 
 /* Dark Mode Panel Footer */
 [data-theme="dark"] .panel-footer {
-  background: var(--cb-panel-footer-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}  
+    background: var(--cb-bg-msg-bot) !important;
+    backdrop-filter: blur(14px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
+}
 
 /* Dark Mode Chatbot Container */
 [data-theme="dark"] .chatbot-container {
@@ -283,10 +283,10 @@
 
 
 /* Dark Mode Panel Footer Border */
-[data-theme="dark"] .panel-footer {
+/* [data-theme="dark"] .panel-footer {
   background: var(--cb-panel-footer-bg);
   border-top: 1px solid var(--cb-border-muted);
-}
+} */
 
 /* Dark Mode Input Pill */
 [data-theme="dark"] .input-pill {
@@ -482,7 +482,7 @@
 
 
 [data-theme="dark"] .ai-greeting { 
-  background: linear-gradient(135deg, rgba(107,44,145,0.08) 0%, rgba(139,76,184,0.12) 100%);
+  background: linear-gradient(135deg, rgba(106, 44, 145, 0.259) 0%, rgba(139, 76, 184, 0.279) 100%);
   box-shadow: 0 4px 20px rgba(107, 44, 145, 0.08), 0 1px 0 rgba(255,255,255,0.3) inset;
 }
 
