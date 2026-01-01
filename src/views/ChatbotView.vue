@@ -54,8 +54,8 @@
             </button>
 
             <!-- Theme toggle button -->
-            <button class="theme-toggle-btn" @click.stop="toggleTheme" :title="theme === 'dark' ? 'สลับเป็นโหมดสว่าง' : 'สลับเป็นโหมดมืด'" :aria-pressed="theme === 'dark'">
-              <!-- Sun when dark (toggle to light) -->
+            <button class="theme-toggle-btn" @click.stop="toggleTheme" :title="getThemeButtonTitle()" :aria-pressed="theme === 'dark'">
+              <!-- Sun when dark (toggle to auto) -->
               <svg v-if="theme === 'dark'" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <circle cx="12" cy="12" r="4" fill="#FFD54F" />
                 <g stroke="#FFD54F" stroke-width="1.6" stroke-linecap="round">
@@ -70,8 +70,14 @@
                 </g>
               </svg>
               <!-- Moon when light (toggle to dark) -->
-              <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <svg v-else-if="theme === 'light'" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" fill="#000000" />
+              </svg>
+              <!-- Auto icon when auto (toggle to light) -->
+              <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                <path d="M12 4v2M12 18v2M4 12h2M18 12h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
               </svg>
             </button>
 
@@ -817,8 +823,10 @@ export default {
       viewportHeight: '100%',
       // Footer focus fallback to reliably move send button on mobile
       panelFocused: false,
-      // Theme: 'light' | 'dark' (initialized in mounted via initTheme)
+      // Theme: 'light' | 'dark' | 'auto' (initialized in mounted via initTheme)
       theme: 'light',
+      // Media query listener for system theme changes in auto mode
+      systemThemeMediaQuery: null,
       // Inline style object for fixed-position send button when focused (measured from input)
       sendBtnFixedStyle: null,
       // One-time simulation to stabilize mobile layout
@@ -1357,6 +1365,12 @@ export default {
       if (this.particleAnimationFrame) { cancelAnimationFrame(this.particleAnimationFrame); this.particleAnimationFrame = null }
       if (this.aiTiltRafId) { cancelAnimationFrame(this.aiTiltRafId); this.aiTiltRafId = null }
     } catch (e) { /* ignore */ }
+
+    // Listen for system theme changes when in auto mode
+    if (window.matchMedia) {
+      this.systemThemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      this.systemThemeMediaQuery.addEventListener('change', this.handleSystemThemeChange)
+    }
   },
 
   beforeUnmount() {
@@ -1413,6 +1427,12 @@ export default {
         window.removeEventListener('resize', this._viewportHandler)
       }
       this._viewportHandler = null
+    }
+    
+    // Remove system theme change listener
+    if (this.systemThemeMediaQuery) {
+      this.systemThemeMediaQuery.removeEventListener('change', this.handleSystemThemeChange)
+      this.systemThemeMediaQuery = null
     }
   },
   watch: {
@@ -1540,7 +1560,7 @@ export default {
     initTheme() {
       try {
         const stored = localStorage.getItem('chatbot_theme')
-        if (stored === 'dark' || stored === 'light') {
+        if (stored === 'dark' || stored === 'light' || stored === 'auto') {
           this.theme = stored
         } else {
           // Respect system preference if nothing persisted
@@ -1550,26 +1570,76 @@ export default {
       } catch (e) {
         this.theme = 'light'
       }
+      
+      // Determine actual theme to apply (resolve 'auto' to 'light' or 'dark')
+      let actualTheme = this.theme
+      if (this.theme === 'auto') {
+        const prefers = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        actualTheme = prefers ? 'dark' : 'light'
+      }
+      
       // Apply to document root
       try {
-        document.documentElement.setAttribute('data-theme', this.theme)
+        document.documentElement.setAttribute('data-theme', actualTheme)
         const meta = document.querySelector('meta[name="theme-color"]')
-        if (meta) meta.setAttribute('content', this.theme === 'dark' ? '#202124' : '#8B4CB8')
+        if (meta) meta.setAttribute('content', actualTheme === 'dark' ? '#202124' : '#8B4CB8')
         const cs = document.querySelector('meta[name="color-scheme"]')
-        if (cs) cs.setAttribute('content', this.theme === 'dark' ? 'dark' : 'light')
+        if (cs) cs.setAttribute('content', actualTheme === 'dark' ? 'dark' : 'light')
       } catch (e) { /* ignore */ }
     },
 
     toggleTheme() {
-      this.theme = this.theme === 'dark' ? 'light' : 'dark'
+      // Cycle through: light -> dark -> auto -> light
+      if (this.theme === 'light') {
+        this.theme = 'dark'
+      } else if (this.theme === 'dark') {
+        this.theme = 'auto'
+      } else {
+        this.theme = 'light'
+      }
+      
       try {
-        document.documentElement.setAttribute('data-theme', this.theme)
         localStorage.setItem('chatbot_theme', this.theme)
+        
+        // Determine actual theme to apply (resolve 'auto' to 'light' or 'dark')
+        let actualTheme = this.theme
+        if (this.theme === 'auto') {
+          const prefers = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+          actualTheme = prefers ? 'dark' : 'light'
+        }
+        
+        document.documentElement.setAttribute('data-theme', actualTheme)
         const meta = document.querySelector('meta[name="theme-color"]')
-        if (meta) meta.setAttribute('content', this.theme === 'dark' ? '#202124' : '#8B4CB8')
+        if (meta) meta.setAttribute('content', actualTheme === 'dark' ? '#202124' : '#8B4CB8')
         const cs = document.querySelector('meta[name="color-scheme"]')
-        if (cs) cs.setAttribute('content', this.theme === 'dark' ? 'dark' : 'light')
+        if (cs) cs.setAttribute('content', actualTheme === 'dark' ? 'dark' : 'light')
       } catch (e) { /* ignore */ }
+    },
+
+    getThemeButtonTitle() {
+      if (this.theme === 'light') {
+        return 'สลับเป็นโหมดมืด'
+      } else if (this.theme === 'dark') {
+        return 'สลับเป็นโหมดอัตโนมัติ'
+      } else {
+        return 'สลับเป็นโหมดสว่าง'
+      }
+    },
+
+    handleSystemThemeChange() {
+      // Only update if we're in auto mode
+      if (this.theme === 'auto') {
+        const prefers = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        const actualTheme = prefers ? 'dark' : 'light'
+        
+        try {
+          document.documentElement.setAttribute('data-theme', actualTheme)
+          const meta = document.querySelector('meta[name="theme-color"]')
+          if (meta) meta.setAttribute('content', actualTheme === 'dark' ? '#202124' : '#8B4CB8')
+          const cs = document.querySelector('meta[name="color-scheme"]')
+          if (cs) cs.setAttribute('content', actualTheme === 'dark' ? 'dark' : 'light')
+        } catch (e) { /* ignore */ }
+      }
     },
 
     parseContactParts(contactStr) {

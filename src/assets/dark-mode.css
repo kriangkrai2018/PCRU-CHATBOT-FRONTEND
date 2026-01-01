@@ -469,7 +469,7 @@
   color: var(--cb-text-purple-light) !important;
 }
 
-[data-theme="dark"] .read-more-count, [data-theme="dark"] .help-circle, .help-question {
+[data-theme="dark"] .read-more-count, [data-theme="dark"] .help-circle, [data-theme="dark"] .help-question {
   color: var(--cb-text-purple-light) !important;
 }
 
