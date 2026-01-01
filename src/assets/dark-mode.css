@@ -174,7 +174,7 @@
 
 /* Dark Mode Ghost Input Suggestions */
 [data-theme="dark"] .ghost-input .ghost-suffix {
-    color: var(--cb-link-blue);
+  color: var(--cb-text-purple-light) !important;
 }
 
 /* ==========================================================================
@@ -397,7 +397,7 @@
 
 /* Dark Mode Ghost Typed Text */
 [data-theme="dark"] .ghost-input, [data-theme="dark"] .ghost-typed {
-  color: var(--cb-text-primary);
+  color: var(--cb-text-purple);
 } 
 
 /* Dark Mode Overlay Backdrops: enforce pitch-black background like mock */

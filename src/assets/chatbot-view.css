@@ -4150,7 +4150,6 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
   display: inline-block;
 }
 .ghost-input .ghost-suffix {
-  color: rgb(189, 15, 192) !important;
   font-weight: 500;
   white-space: pre;
   pointer-events: none;
