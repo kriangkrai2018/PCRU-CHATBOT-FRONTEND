@@ -292,3 +292,8 @@
   /* Use a color that is visible on the bot's light background */
   color: #6B2C91; /* Same as the brand color */
 }
+
+
+[data-theme="light"] .read-more-count {
+  color: rgba(107,44,145,0.7);
+}

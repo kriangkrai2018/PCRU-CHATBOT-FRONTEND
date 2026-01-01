@@ -376,6 +376,37 @@ html.keyboard-open .close-circle {
   animation: trash-shake 480ms cubic-bezier(.2,.8,.2,1) both;
 }
 
+/* Theme toggle button: copy close button feel (hover nudge + active press) */
+.theme-toggle-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.theme-toggle-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+.theme-toggle-btn:active {
+  transform: scale(0.95);
+}
+.theme-toggle-btn svg {
+  display: block;
+  transform-origin: 50% 50%;
+  transition: transform .18s cubic-bezier(.2,.8,.2,1);
+}
+.theme-toggle-btn:hover svg {
+  animation: close-nudge 420ms cubic-bezier(.2,.8,.2,1) both;
+}
+.theme-toggle-btn:focus {
+  outline: 3px solid rgba(139,76,184,0.14);
+  outline-offset: 2px;
+}
+
 .clear-chat-btn { 
   position:absolute; 
   right: max(12px, calc(12px + env(safe-area-inset-right, 0px)));
@@ -2757,7 +2788,6 @@ body.no-effects .apple-help-button::after { display: none !important; }
 
 .read-more-count {
   font-size: 13px;
-  color: rgba(107,44,145,0.7);
   font-weight: 500;
   position: relative;
   z-index: 1;

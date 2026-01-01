@@ -59,7 +59,6 @@
   /* Text */
   --cb-text-primary: #E6E6E6;    /* off-white for primary text */
   --cb-text-secondary: #808080;  /* muted gray */
-  --cb-text-inverse: #000000;    /* for use on colored accents */
 
   /* Borders */
   --cb-border-color: #2A1737;    /* subtle dark purple border */
@@ -124,8 +123,13 @@
 }
 
 /* Links in Dark Mode - use purple accent */
+[data-theme="dark"] .message-text {
+  color: var(--cb-text-inverse) !important; /* purple acccent from palette */
+} 
+
+/* Links in Dark Mode - use purple accent */
 [data-theme="dark"] .message-text a {
-  color: var(--cb-link) !important; /* purple acccent from palette */
+  color: var(--cb-text-inverse) !important; /* purple acccent from palette */
 } 
 
 /* Contact Phone in Dark Mode - keep high contrast */
@@ -426,9 +430,12 @@
 } 
 
 [data-theme="dark"] .suggestion-btn { 
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(247, 247, 248, 0.12) 100%) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
+  background: linear-gradient(135deg, rgba(107, 44, 145, 0.08) 0%, rgba(139, 76, 184, 0.05) 100%) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  color: var(--cb-text-purple-light) !important; 
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  border: 0.5px solid rgba(107,44,145,0.1) !important;
 }
 
 [data-theme="dark"] .suggestion-btn::before {
@@ -437,7 +444,7 @@
 
 
 [data-theme="dark"] .suggestion-btn:hover { 
-  background: rgba(255,255,255,0.95) !important; 
+  background: linear-gradient(135deg, rgba(107, 44, 145, 0.08) 0%, rgba(139, 76, 184, 0.05) 100%) !important;
   color: var(--cb-text-purple) !important; 
   box-shadow: 0 6px 20px rgba(107,44,145,0.15) !important;
   border-color: rgba(107,44,145,0.2) !important;
@@ -450,13 +457,6 @@
   color: var(--cb-text-purple-light) !important
 }
 
-[data-theme="dark"] .suggestion-btn { 
-  color: var(--cb-text-purple-light) !important; 
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
-  border: 0.5px solid rgba(107,44,145,0.1) !important;
-}
-
-
 [data-theme="dark"] .read-more-text {
   color: var(--cb-text-purple-light) !important; 
 }
@@ -468,4 +468,9 @@
 [data-theme="dark"] .real-input:focus {
   border-color: var(--cb-border-purple) !important;
   box-shadow: 0 0 0 3px rgba(139, 76, 184, 0.08) !important;
+}
+
+
+[data-theme="dark"] .read-more-count {
+  color: var(--cb-text-purple) !important;
 }
