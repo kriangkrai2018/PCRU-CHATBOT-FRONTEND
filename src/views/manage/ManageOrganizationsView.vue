@@ -47,6 +47,7 @@
                     <th class="fw-bold py-3 ps-3">ID</th>
                     <th class="fw-bold py-3">ชื่อหน่วยงาน</th>
                     <th class="fw-bold py-3">คำอธิบาย</th>
+                    <th class="fw-bold py-3 text-center">จำนวนเจ้าหน้าที่</th>
                     <th class="fw-bold py-3 text-center">ACTIONS</th>
                   </tr>
                 </thead>
@@ -55,6 +56,7 @@
                     <td class="py-3 ps-3">{{ org.OrgID }}</td>
                     <td data-label="ชื่อ" class="py-3">{{ org.OrgName }}</td>
                     <td data-label="คำอธิบาย" class="py-3">{{ org.OrgDescription || '-' }}</td>
+                    <td class="py-3 text-center">{{ org.StaffCount || 0 }}</td>
                     <td class="py-3 text-center">
                       <div class="row-actions">
                         <button class="action-btn action-btn-edit" @click="openEditModal(org)" title="แก้ไข">
@@ -67,7 +69,7 @@
                     </td>
                   </tr>
                   <tr v-if="paginatedOrgs.length === 0">
-                    <td colspan="4" class="text-center text-muted py-3">ไม่พบข้อมูลหน่วยงาน</td>
+                    <td colspan="5" class="text-center text-muted py-3">ไม่พบข้อมูลหน่วยงาน</td>
                   </tr>
                 </tbody>
               </table>
