@@ -15,8 +15,15 @@
 
         <div v-else>
           <!-- Header Section -->
+          <!-- Mobile sidebar backdrop (click to close) -->
+          <div v-if="isMobileSidebarOpen" class="mobile-sidebar-backdrop" @click="toggleSidebar" aria-hidden="true"></div>
+
           <div class="d-block d-md-flex align-items-center justify-content-between mb-4">
             <div class="d-flex align-items-center gap-3">
+              <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
+                <i :class="isMobileSidebarOpen ? 'bi bi-x' : 'bi bi-list'"></i>
+              </button>
+
               <h2 class="page-title m-0">จัดการหมวดหมู่</h2>
               <button class="apple-btn-primary" @click="openCrudModal()">
                 <i class="bi bi-plus-lg me-2"></i>
@@ -360,7 +367,7 @@ import { ref, computed, watch, getCurrentInstance, onMounted, onUnmounted, nextT
 import { useRouter } from 'vue-router';
 import { Tooltip } from 'bootstrap';
 import Sidebar from '@/components/Sidebar.vue';
-import { bindSidebarResize } from '@/stores/sidebarState';
+import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import '@/assets/sidebar.css';
 import ex4Url from '@/assets/ex4.svg';
 
@@ -371,6 +378,7 @@ const { $axios, $swal } = appContext.config.globalProperties;
 const userInfoObject = ref({});
 const userType = ref("");
 let unbindSidebarResize = null;
+let _savedSidebarCollapsed = null;
 
 const searchQueryCategories = ref('');
 const expanded = ref({});
@@ -789,6 +797,29 @@ onMounted(() => {
   });
 });
 
+const toggleSidebar = () => {
+  const sb = document.querySelector('.sidebar');
+  const isOpen = !isMobileSidebarOpen.value;
+
+  if (isOpen) {
+    // Opening: save current collapsed state, force expand for mobile overlay
+    _savedSidebarCollapsed = isSidebarCollapsed.value;
+    isSidebarCollapsed.value = false;
+    if (sb) sb.classList.remove('collapsed');
+    document.body.classList.add('sidebar-open');
+    document.body.classList.add('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = true;
+  } else {
+    // Closing: restore previous collapsed state and hide overlay
+    isSidebarCollapsed.value = !!_savedSidebarCollapsed;
+    if (sb && _savedSidebarCollapsed) sb.classList.add('collapsed');
+    document.body.classList.remove('sidebar-open');
+    document.body.classList.remove('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = false;
+    _savedSidebarCollapsed = null;
+  }
+};
+
 onUnmounted(() => {
   if (unbindSidebarResize) unbindSidebarResize();
 });
@@ -798,6 +829,14 @@ onUnmounted(() => {
 @import '@/assets/dashboard-styles.css';
 @import '@/assets/main.css';
 @import '@/assets/sidebar.css';
+
+/* Mobile sidebar toggle button styles (inline here so it's local to this view) */
+.mobile-sidebar-toggle { display: none; border: none; background: #fff; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding: 0; }
+.mobile-sidebar-toggle i { font-size: 1.05rem; }
+.mobile-sidebar-toggle.mobile-inline-toggle { display: flex; margin-right: 8px; align-self: center; }
+@media (max-width: 768px) { .mobile-sidebar-toggle.mobile-inline-toggle { display: flex !important; } }
+.mobile-sidebar-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.36); z-index: 98; }
+
 
 /* =========================================
    Apple Design System - Colors & Variables

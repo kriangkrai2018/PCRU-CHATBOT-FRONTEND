@@ -60,11 +60,11 @@
                 </thead>
                 <tbody>
                   <tr v-for="(item, idx) in paginatedQuestions" :key="item.QuestionsAnswersID" class="align-middle apple-row" @click="openPreview(item)">
-                    <td class="ps-4 fw-medium text-secondary">{{ item.QuestionsAnswersID }}</td>
-                    <td class="py-3">
+                    <td data-label="ID" class="ps-4 fw-medium text-secondary">{{ item.QuestionsAnswersID }}</td>
+                    <td data-label="หัวข้อคำถาม" class="py-3">
                       <div class="question-title-cell line-clamp-2" :title="item.QuestionTitle">{{ item.QuestionTitle }}</div>
                     </td>
-                    <td class="py-3 review-date-cell text-center">
+                    <td data-label="วันหมดอายุ" class="py-3 review-date-cell text-center">
                       <div class="review-date-wrap">
                         <span 
                           :class="['badge-pill', getReviewDateBadgeClass(item.ReviewDate)]"
@@ -76,10 +76,10 @@
                         </span>
                       </div>
                     </td>
-                    <td class="py-3">
-                      <div class="question-text-cell line-clamp-2 text-muted" :title="item.QuestionText">{{ item.QuestionText }}</div>
+                    <td data-label="คำตอบ" class="py-3">
+                      <div class="question-text-cell line-clamp-3 text-muted" :title="item.QuestionText">{{ item.QuestionText }}</div>
                     </td>
-                    <td class="py-3">
+                    <td data-label="หมวดหมู่" class="py-3">
                       <span
                         class="category-badge"
                         :style="{ backgroundColor: tagColors[(item.CategoriesID || 0) % tagColors.length] + '20', color: tagColors[(item.CategoriesID || 0) % tagColors.length] }"
@@ -87,7 +87,7 @@
                         {{ categoriesNameMapSafe[item.CategoriesID] || item.CategoriesID }}
                       </span>
                     </td>
-                    <td class="py-3">
+                    <td data-label="Keywords" class="py-3">
                       <div class="d-flex flex-wrap gap-1" v-if="item.keywords && item.keywords.length">
                         <span
                           v-for="(k, i) in item.keywords.slice(0, 3)"
@@ -100,13 +100,13 @@
                       </div>
                       <span v-else class="text-muted small">-</span>
                     </td>
-                    <td class="py-3 text-center" @click.stop>
+                    <td data-label="Like" class="py-3 text-center" @click.stop>
                       <div class="stat-pill like" :class="{ 'active': item.likeCount > 0 }" @click="goToFeedbacks(item.QuestionsAnswersID)">
                         <i class="bi bi-hand-thumbs-up-fill"></i>
                         <span>{{ item.likeCount || 0 }}</span>
                       </div>
                     </td>
-                    <td class="py-3 text-center" @click.stop>
+                    <td data-label="Unlike" class="py-3 text-center" @click.stop>
                       <div class="stat-pill unlike" :class="{ 'active': item.unlikeCount > 0 }" @click="goToFeedbacks(item.QuestionsAnswersID)">
                         <i class="bi bi-hand-thumbs-down-fill"></i>
                         <span>{{ item.unlikeCount || 0 }}</span>
@@ -951,12 +951,21 @@ onUnmounted(() => { if (unbindSidebarResize) unbindSidebarResize(); });
   white-space: nowrap; /* prevent wrapping inside the badge */
 }
 .category-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
   font-weight: 600;
+  white-space: normal; /* allow wrapping for long text */
+  word-break: break-word; /* break long words */
+  overflow-wrap: anywhere; /* better for long Thai words */
+  min-width: 120px; /* ensure badges are not too narrow */
+  max-width: 260px; /* prevent badges from stretching too wide */
+  text-align: center;
 }
+.category-badge.large { font-size: 0.95rem; padding: 8px 14px; min-width: 160px; }
 .category-badge.large { font-size: 0.9rem; padding: 6px 12px; }
 
 /* Review date column: ensure enough space and center alignment */
@@ -967,6 +976,21 @@ onUnmounted(() => { if (unbindSidebarResize) unbindSidebarResize(); });
 @media (max-width: 768px) {
   .col-review-date { width: 120px; min-width: 100px; }
   .review-date-cell { min-width: 100px; }
+
+  /* Make table horizontally scrollable on small devices */
+  .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .apple-table { min-width: 800px; }
+
+  /* Convert table to stacked cards for very small screens */
+  @media (max-width: 480px) {
+    .apple-table thead { display: none; }
+    .apple-table tbody tr { display: block; margin-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.04); padding: 8px 0; }
+    .apple-table tbody td { display: flex; justify-content: space-between; padding: 10px 8px; align-items: center; }
+    .apple-table tbody td::before { content: attr(data-label); color: #6b6b6b; font-weight: 700; margin-right: 8px; }
+    .apple-table tbody td .question-title-cell, .apple-table tbody td .question-text-cell { max-width: 65%; }
+    .apple-table tbody td .category-badge { margin-left: 8px; }
+    .apple-table tbody td .stat-pill { margin-left: 8px; }
+  }
 }
 
 .keyword-tag {
@@ -1158,4 +1182,5 @@ onUnmounted(() => { if (unbindSidebarResize) unbindSidebarResize(); });
 
 .whitespace-prewrap { white-space: pre-wrap; }
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 </style>
