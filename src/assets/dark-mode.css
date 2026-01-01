@@ -14,7 +14,6 @@
   --cb-bg-panel: rgba(255, 255, 255, 0.95); /* Glassy */
   --cb-bg-input: #ffffff;
   --cb-bg-card: #ffffff;
-  --cb-bg-msg-bot: #ffffff;
   --cb-bg-msg-user: linear-gradient(135deg, #371c4a 0%, #6B2C91 100%);
   --cb-bg-hover: rgba(0, 0, 0, 0.05);
   
@@ -50,12 +49,12 @@
   --cb-user-gradient: linear-gradient(135deg, var(--cb-accent-purple-2) 0%, var(--cb-accent-purple-1) 100%);
 
   /* Message backgrounds */
-  --cb-bg-msg-bot-top: rgba(255,255,255,0.02);
-  --cb-bg-msg-bot-bottom: rgba(18,10,20,0.65);
+  --cb-bg-msg-bot-top: rgba(114, 1, 145, 0.511);
+  --cb-bg-msg-bot-bottom: rgb(0, 0, 0);
   --cb-bg-msg-bot: linear-gradient(180deg, var(--cb-bg-msg-bot-top) 0%, var(--cb-bg-msg-bot-bottom) 100%);
   --cb-bg-msg-user: var(--cb-user-gradient);
   --cb-bg-hover: rgba(255,255,255,0.02);
-  --cb-purple-sheen: linear-gradient(135deg, rgba(107, 44, 145, 0.08) 0%, rgba(139, 76, 184, 0.05) 100%);
+  --cb-purple-sheen: linear-gradient(135deg, rgba(106, 44, 145, 0.521) 0%, rgba(139, 76, 184, 0.463) 100%);
   --cb-purple-sheen-90: linear-gradient(90deg, transparent, rgba(107,44,145,0.08), transparent);
 
   /* Text */
@@ -507,6 +506,10 @@
 }
 
 
-[data-theme="dark"] .feedback-btn {
-  color: #ffffff !important;
+[data-theme="dark"] .feedback-btn, [data-theme="dark"] .feedback-reason-item {
+  color: var(--cb-text-inverse) !important;
+}
+
+[data-theme="dark"] .feedback-reason-item.active {
+  color: var(--cb-text-purple-light) !important;
 }
