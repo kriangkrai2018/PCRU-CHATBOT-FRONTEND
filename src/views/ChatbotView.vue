@@ -1172,7 +1172,7 @@ export default {
     this.loadError = ''
     try {
       if (!this.$axios) throw new Error('axios plugin not available as $axios')
-      const res = await this.$axios.get('/categories')
+      const res = await this.$axios.get('/categories', { params: { onlyWithAnswers: 1 } })
       let payload = res.data
 
       // support wrapper { categories: [...] } or { success: true, categories: [...], count: ... }

@@ -252,7 +252,7 @@ export default {
     async loadCategories() {
       try {
         this.categoriesLoading = true;
-        const res = await this.$axios.get('/categories');
+        const res = await this.$axios.get('/categories', { params: { onlyWithAnswers: 1 } });
         const raw = res.data?.data ?? res.data;
         const rows = Array.isArray(raw) ? raw : (raw?.categories || []);
 

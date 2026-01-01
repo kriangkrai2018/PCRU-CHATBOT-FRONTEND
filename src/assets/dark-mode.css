@@ -49,8 +49,8 @@
   --cb-user-gradient: linear-gradient(135deg, var(--cb-accent-purple-2) 0%, var(--cb-accent-purple-1) 100%);
 
   /* Message backgrounds */
-  --cb-bg-msg-bot-top: rgba(114, 1, 145, 0.511);
-  --cb-bg-msg-bot-bottom: rgb(0, 0, 0);
+  --cb-bg-msg-bot-top: #301b41c6;
+  --cb-bg-msg-bot-bottom: #201a24fe;
   --cb-bg-msg-bot: linear-gradient(180deg, var(--cb-bg-msg-bot-top) 0%, var(--cb-bg-msg-bot-bottom) 100%);
   --cb-bg-msg-user: var(--cb-user-gradient);
   --cb-bg-hover: rgba(255,255,255,0.02);
@@ -63,7 +63,7 @@
 
   /* Borders */
   --cb-border-color: #2A1737;    /* subtle dark purple border */
-  --cb-border-muted: #5f6368;
+  --cb-border-muted: #434343;
   --cb-border-subtle: rgba(255,255,255,0.04);
   --cb-border-purple: rgba(139,76,184,0.3);
 
@@ -94,7 +94,7 @@
   --cb-icon-muted-30: rgba(154, 160, 166, 0.3);
 
   /* Toggles / misc */
-  --cb-toggle-bg: rgba(255,255,255,0.05);
+  --cb-toggle-bg: rgba(230, 230, 230, 0.511);
   --cb-danger: #EF4444;
   --cb-link: #8B4CB8;
   --cb-link-blue: #8ab4f8;
@@ -170,10 +170,7 @@
     animation: gradientShift 5s ease-in-out infinite;
 }
 
-/* Theme Toggle Button specific tweak */
-[data-theme="dark"] .theme-toggle-btn {
-    background: var(--cb-toggle-bg);
-} 
+
 
 /* Dark Mode Ghost Input Suggestions */
 [data-theme="dark"] .ghost-input .ghost-suffix {
@@ -194,7 +191,7 @@
 
 /* Dark Mode Theme Toggle Button - Light Gray */
 [data-theme="dark"] .theme-toggle-btn {
-  background: var(--cb-surface-dim) !important;
+  background: var(--cb-surface-bg-strong) !important;
   border: 1px solid var(--cb-border-btn) !important;
   box-shadow: 0 2px 8px var(--cb-shadow-30);
   color: var(--cb-text-primary) !important;
@@ -329,7 +326,6 @@
   background: var(--cb-bg-msg-bot) !important;
   backdrop-filter: blur(14px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
-  border: 1px solid var(--cb-border-muted);
 } 
 
 /* Dark Mode Bot with Categories */
@@ -337,7 +333,6 @@
   background: var(--cb-panel-footer-bg) !important;
   backdrop-filter: blur(14px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
-  border: 1px solid var(--cb-border-muted);
 } 
 
 [data-theme="dark"] .message-bubble.user {
@@ -347,7 +342,7 @@
 
 [data-theme="dark"] .ai-greet-sub,
 [data-theme="dark"] .message-bubble.bot { 
-  color: var(--cb-link-blue) !important;
+  color: var(--cb-text-secondary) !important;
 } 
 
 /* Dark Mode Contact Cards */
@@ -513,3 +508,19 @@
 [data-theme="dark"] .feedback-reason-item.active {
   color: var(--cb-text-purple-light) !important;
 }
+
+
+
+[data-theme="dark"] .ai-greeting { 
+  background: linear-gradient(135deg, rgba(107,44,145,0.08) 0%, rgba(139,76,184,0.12) 100%);
+  box-shadow: 0 4px 20px rgba(107, 44, 145, 0.08), 0 1px 0 rgba(255,255,255,0.3) inset;
+}
+
+
+[data-theme="dark"] .category-title { 
+  color: var(--cb-text-purple-light); 
+}
+
+[data-theme="dark"] .ai-greet-sub { 
+  color: #6e6e73; 
+} 
