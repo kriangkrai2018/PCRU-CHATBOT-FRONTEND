@@ -2128,7 +2128,7 @@ html.keyboard-open .message-wrapper {
   backdrop-filter: blur(40px) saturate(180%);
   -webkit-backdrop-filter: blur(40px) saturate(180%);
   animation: overlayFadeIn 0.5s cubic-bezier(.2,.9,.2,1);
-  z-index: 160;
+  z-index: 999999999999 !important;
 }
 
 @keyframes overlayFadeIn {
