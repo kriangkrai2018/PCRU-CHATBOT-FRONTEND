@@ -839,9 +839,7 @@ html.keyboard-open .panel-footer {
 }
 
 /* Power Mode shake effect */
-.input-pill.shake {
-  animation: powerShake 0.1s ease-in-out;
-}
+
 
 @keyframes powerShake {
   0%, 100% { transform: translateX(0) translateY(-1px); }
@@ -853,7 +851,6 @@ html.keyboard-open .panel-footer {
   outline: none;
   box-shadow: 0 4px 20px rgba(107, 44, 145, 0.18), 0 0 0 3px rgba(107, 44, 145, 0.12);
   background: rgba(255, 255, 255, 1);
-  transform: translateY(-1px);
 }
 
 .input-pill::placeholder {
@@ -863,7 +860,6 @@ html.keyboard-open .panel-footer {
 
 .input-pill:focus::placeholder {
   opacity: 0.3;
-  transform: translateX(4px);
 }
 
 /* Footer layout: use flex so input and button sizes are predictable */
@@ -913,7 +909,7 @@ html.keyboard-open .panel-footer {
 
   /* When keyboard is open on mobile, nudge the input and send button up */
   html.keyboard-open .panel-footer { padding-bottom: max(12px, env(safe-area-inset-bottom, 12px)); }
-  html.keyboard-open .panel-footer .input-pill { transform: translateY(-6px); }
+
 
 
 
@@ -955,7 +951,6 @@ html.keyboard-open .panel-footer {
 /* Additional small-screen polish: add focus state for input to stay visible */
 @media (max-width: 420px) {
   .panel-footer .input-pill:focus {
-    transform: translateY(-8px);
     box-shadow: 0 6px 26px rgba(107, 44, 145, 0.18), 0 0 0 3px rgba(107, 44, 145, 0.12);
   }
 }
@@ -4008,7 +4003,7 @@ body.no-effects .scroll-icon {
   border-radius: 16px;
   padding: 12px 14px;
 }
-.org-card:hover { transform: translateY(-4px); box-shadow: 0 16px 30px rgba(20,20,20,0.08); }
+.org-card:hover { transform: translateY(-4px); }
 .org-card-inner { display: flex; flex-direction: column; gap: 6px; }
 .org-card-title { font-weight: 600; font-size: 14px; color: #111; }
 .org-card-sub { font-size: 12px; color: #6b6b6b; }
@@ -4135,7 +4130,7 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 0; /* sit behind floating tooltips */
+  z-index: 99999999; /* sit behind floating tooltips */
   background-color: transparent; /* don't obscure guides */
   border-color: transparent !important;
   pointer-events: none;
@@ -4143,24 +4138,22 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
   box-shadow: none !important;
   display: flex;
   align-items: center;
-  gap: 0.25rem;
   padding-left: 16px; /* align with input padding */
   font-size: 16px; /* match .input-pill */
   line-height: 1.4;
   font-family: inherit;
 }
 .ghost-input .ghost-typed {
-  color: transparent; /* reserve space so suffix aligns */
+  color: transparent !important; /* reserve space so suffix aligns */
   white-space: pre; /* preserve spaces */
   min-width: 0; /* allow shrinking */
   display: inline-block;
 }
 .ghost-input .ghost-suffix {
-  color: #c7c7cc;
+  color: rgb(189, 15, 192) !important;
   font-weight: 500;
   white-space: pre;
   pointer-events: none;
-  display: inline-block;
 }
 
 /* Hide ghost overlay entirely while typing tooltip is visible so guide text is never occluded */

@@ -610,7 +610,6 @@
                 </div>
                 <!-- ⌨️ Real Input -->
                 <input
-                  id="chatbot-query-input"
                   v-model="query"
                   class="input-pill real-input"
                   :class="{ 'shake': isTyping }"
