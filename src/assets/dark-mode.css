@@ -6,12 +6,16 @@
 :root {
   /* --- Light Mode (Default) --- */
   --cb-bg-primary: #ffffff;
+  --cb-text-purple: #6B2C91;
+  --cb-text-purple-light: #c86fff;
+  --cb-border-purple: #8B4CB8;
   --cb-bg-secondary: #f3f4f6; /* gray-100 */
+  --cb-bg-color-black: #000000;
   --cb-bg-panel: rgba(255, 255, 255, 0.95); /* Glassy */
   --cb-bg-input: #ffffff;
   --cb-bg-card: #ffffff;
   --cb-bg-msg-bot: #ffffff;
-  --cb-bg-msg-user: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%);
+  --cb-bg-msg-user: linear-gradient(135deg, #371c4a 0%, #6B2C91 100%);
   --cb-bg-hover: rgba(0, 0, 0, 0.05);
   
   --cb-text-primary: #1f2937; /* gray-800 */
@@ -30,55 +34,65 @@
   --cb-icon-hover: #202124;
 }
 
-/* --- Dark Mode Override (Chrome Native Match) --- */
+/* --- Dark Mode Override (Project Palette) --- */
 [data-theme="dark"] {
-  /* Backgrounds */
-  --cb-bg-primary: #202124; /* Chrome Default Dark Background */
-  --cb-bg-secondary: #292a2d; /* Chrome Toolbar/Surface */
-  --cb-bg-panel: #292a2d; /* Panel solid color */
-  --cb-bg-input: #202124; /* Input matches main bg */
-  --cb-bg-card: #292a2d; /* Cards match surface */
-  --cb-bg-msg-bot: #3c4043; /* Message bubble matches input/card */
-  --cb-bg-msg-user: #8ab4f8; /* Google Blue 300 */
-  --cb-bg-hover: rgba(232, 234, 237, 0.08); /* Standard hover overlay */
-  
+  /* Backgrounds (use provided palette) */
+  --cb-bg-primary: #000000;      /* pure black (used for page bg) */
+  --cb-bg-secondary: #0D0511;    /* deep near-black with purple tint */
+  --cb-bg-panel: #100716;        /* panel backgrounds */
+  --cb-bg-input: #111111;        /* input background */
+  --cb-bg-card: #09040C;         /* cards */
+  --cb-bg-msg-bot: #2A1737;      /* dark purple bubble */
+  --cb-bg-msg-user: linear-gradient(135deg, #6B2C91 0%, #8B4CB8 100%); /* purple accent */
+  --cb-bg-hover: rgba(255,255,255,0.02);
+
   /* Text */
-  --cb-text-primary: #e8eaed; /* Google Grey 100 (Primary Text) */
-  --cb-text-secondary: #9aa0a6; /* Google Grey 500 (Secondary Text) */
-  --cb-text-inverse: #202124; /* Black text on blue accent */
-  
+  --cb-text-primary: #E6E6E6;    /* off-white for primary text */
+  --cb-text-secondary: #808080;  /* muted gray */
+  --cb-text-inverse: #000000;    /* for use on colored accents */
+
   /* Borders */
-  --cb-border-color: #5f6368; /* Google Grey 700 */
-  
+  --cb-border-color: #2A1737;    /* subtle dark purple border */
+
   /* Shadows */
-  --cb-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-  --cb-shadow-msg: none; /* Flat design in dark mode */
-  
+  --cb-shadow: 0 4px 8px rgba(0, 0, 0, 0.7);
+  --cb-shadow-msg: none;
+
   /* Scrollbar */
-  --cb-scrollbar-track: #202124;
-  --cb-scrollbar-thumb: #5f6368;
-  
+  --cb-scrollbar-track: #000000;
+  --cb-scrollbar-thumb: #B3B3B3;
+
   /* Icons */
-  --cb-icon-primary: #9aa0a6; /* Muted icon color */
-  --cb-icon-hover: #e8eaed; /* Brighter on hover */
+  --cb-icon-primary: #808080;
+  --cb-icon-hover: #FFFFFF;
 }
 
 /* ==========================================================================
    Dark Mode Specific Overrides
    ========================================================================== */
 
+
+
+
+
 /* Remove glassmorphism in Dark Mode for authentic Chrome look */
 [data-theme="dark"] .chat-panel {
   backdrop-filter: none;
+  --cb-bg-color-black: !important;
   -webkit-backdrop-filter: none;
   border-left: 1px solid #3c4043;
 }
 
-/* Links in Dark Mode */
+/* Links in Dark Mode - use purple accent */
 [data-theme="dark"] .message-text a {
-  color: #8ab4f8; /* Chrome Blue (Dark) */
+  color: #8B4CB8 !important; /* purple acccent from palette */
 }
 
+/* Contact Phone in Dark Mode - keep high contrast */
+[data-theme="dark"] .contact-phone {
+  color: #8B4CB8 !important;
+}
+.chat-panel { background: rgba(255, 255, 255, 0.95) !important; color: #ffffff !important; }
 /* Contact Phone in Dark Mode */
 [data-theme="dark"] .contact-phone {
   color: #8ab4f8 !important;
@@ -98,13 +112,320 @@
 
 /* Headers in Dark Mode */
 [data-theme="dark"] .ai-greet-title {
-    text-shadow: none;
-    color: #e8eaed;
-    background: none;
-    -webkit-text-fill-color: initial;
+    font-weight: 700;
+    font-size: 18px;
+    background: linear-gradient(135deg, #6B2C91, #8B4CB8, #B37BD1);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: -0.3px;
+    position: relative;
+    z-index: 1;
+    animation: gradientShift 5s ease-in-out infinite;
 }
 
 /* Theme Toggle Button specific tweak */
 [data-theme="dark"] .theme-toggle-btn {
     background: rgba(255,255,255,0.05);
+}
+
+/* Dark Mode Ghost Input Suggestions */
+[data-theme="dark"] .ghost-input .ghost-suffix {
+    color: #8ab4f8;
+}
+
+/* ==========================================================================
+   Dark Mode Specific Overrides (Matching Light Mode Structure)
+   ========================================================================== */
+
+/* Dark Mode Close Circle Button - Purple (same as light) */
+[data-theme="dark"] .close-circle {
+  background: #8B4CB8 !important;
+  border: 1px solid rgba(139, 76, 184, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(139, 76, 184, 0.2);
+  color: #ffffff !important;
+}
+
+/* Dark Mode Theme Toggle Button - Light Gray */
+[data-theme="dark"] .theme-toggle-btn {
+  background: #35363a !important;
+  border: 1px solid rgba(95, 99, 104, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  color: #e8eaed !important;
+}
+
+/* Dark Mode Button SVG Icons */
+[data-theme="dark"] .close-circle svg path,
+[data-theme="dark"] .theme-toggle-btn svg {
+  stroke: #e8eaed;
+  stroke-width: 2;
+}
+
+/* Keep clear-chat-btn red in dark mode */
+[data-theme="dark"] .clear-chat-btn {
+  background: #EF4444 !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+  color: #FFFFFF !important;
+}
+
+
+
+/* Dark Mode Input Pill */
+[data-theme="dark"] .input-pill {
+  border: 1px solid #5f6368 !important;
+}
+
+/* Dark Mode Contact Cards */
+[data-theme="dark"] .contact-card {
+  background: #292a2d !important;
+  border: 1px solid #5f6368;
+}
+
+/* Dark Mode Tooltip */
+[data-theme="dark"] .chatbot-tooltip {
+  background: rgba(45, 45, 45, 0.95);
+  border: 1px solid #5f6368;
+  color: #e8eaed;
+}
+
+/* Dark Mode Unlike Tooltip */
+[data-theme="dark"] .unlike-tooltip {
+  background: linear-gradient(135deg, rgba(45,45,45,0.98) 0%, rgba(45,45,45,0.95) 100%);
+  border: 1px solid rgba(138, 180, 248, 0.2);
+}
+
+/* Dark Mode Like Tooltip */
+[data-theme="dark"] .like-tooltip {
+  background: linear-gradient(135deg, rgba(40, 45, 50, 0.98) 0%, rgba(40, 45, 50, 0.95) 100%);
+  border: 1px solid rgba(138, 180, 248, 0.2);
+}
+
+/* Dark Mode Feedback Dropdown */
+[data-theme="dark"] .feedback-reason-dropdown {
+  background: rgba(45, 45, 45, 0.98);
+  border: 0.5px solid rgba(95, 99, 104, 0.3);
+}
+
+/* Dark Mode Category Sub Buttons */
+[data-theme="dark"] .cat-sub-btn {
+  background: rgba(45, 45, 45, 0.5);
+  border: 0.5px solid rgba(95, 99, 104, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  color: #e8eaed;
+}
+[data-theme="dark"] .cat-sub-btn:hover {
+  background: rgba(138, 180, 248, 0.1);
+  color: #8ab4f8;
+  border-color: rgba(138, 180, 248, 0.3);
+  box-shadow: 0 2px 8px rgba(138, 180, 248, 0.1);
+}
+[data-theme="dark"] .cat-sub-btn:focus {
+  outline: 3px solid rgba(138, 180, 248, 0.3);
+  outline-offset: 2px;
+}
+[data-theme="dark"] .cat-sub-icon {
+  color: rgba(154, 160, 166, 0.6);
+}
+[data-theme="dark"] .cat-sub-btn:hover .cat-sub-icon {
+  color: #8ab4f8;
+}
+[data-theme="dark"] .cat-sub-btn.disabled {
+  background: rgba(0,0,0,0.2);
+}
+[data-theme="dark"] .cat-sub-btn.disabled .cat-sub-text {
+  color: rgba(154, 160, 166, 0.4);
+}
+[data-theme="dark"] .cat-sub-btn.disabled .cat-sub-icon {
+  color: rgba(154, 160, 166, 0.3);
+}
+[data-theme="dark"] .cat-sub-btn.disabled:hover {
+  background: rgba(0,0,0,0.2);
+  transform: none;
+}
+
+/* Dark Mode Panel Footer */
+[data-theme="dark"] .panel-footer {
+  background: rgba(45, 45, 45, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Dark Mode Chatbot Container */
+[data-theme="dark"] .chatbot-container {
+  background-color: #202124;
+  color: #e8eaed;
+}
+
+
+/* Dark Mode Panel Footer Border */
+[data-theme="dark"] .panel-footer {
+  background: rgba(45, 45, 45, 0.95);
+  border-top: 1px solid #3c4043;
+}
+
+/* Dark Mode Input Pill */
+[data-theme="dark"] .input-pill {
+  background-color: #202124 !important;
+  color: #e8eaed !important;
+  border: 1px solid transparent !important;
+}
+[data-theme="dark"] .input-pill::placeholder {
+  color: #9aa0a6;
+}
+[data-theme="dark"] .input-pill:focus {
+  border-color: #8ab4f8;
+  box-shadow: 0 0 0 3px rgba(138, 180, 248, 0.2);
+  background-color: #202124 !important;
+}
+
+/* Dark Mode Message Bubbles */
+[data-theme="dark"] .message-bubble.bot {
+  background: rgba(8, 0, 14, 0.768) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid #5f6368;
+}
+
+/* Dark Mode Bot with Categories */
+[data-theme="dark"] .bot-with-categories {
+  background: rgba(8, 0, 14, 0.768) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid #5f6368;
+}
+
+[data-theme="dark"] .message-bubble.user {
+  background: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .ai-greet-sub,
+[data-theme="dark"] .message-bubble.bot { 
+  color: #abccff !important;
+}
+
+/* Dark Mode Contact Cards */
+[data-theme="dark"] .contact-card {
+  background: #292a2d !important;
+  border: 1px solid #5f6368;
+}
+[data-theme="dark"] .contact-card:hover {
+  background: #35363a !important;
+  border-color: #9aa0a6;
+}
+[data-theme="dark"] .contact-org {
+  color: #e8eaed;
+}
+[data-theme="dark"] .contact-officer {
+  color: #9aa0a6;
+}
+[data-theme="dark"] .contact-phone {
+  color: #8ab4f8;
+}
+
+/* Dark Mode Tooltips */
+[data-theme="dark"] .chatbot-tooltip {
+  background: rgba(45, 45, 45, 0.95);
+  border: 1px solid #5f6368;
+  color: #e8eaed;
+}
+
+/* Dark Mode Mobile Tooltips */
+@media (max-width: 640px) {
+  [data-theme="dark"] .unlike-tooltip,
+  [data-theme="dark"] .like-tooltip {
+    background: black!important;
+    border: 1px solid #5f6368 !important;
+    color: #e8eaed !important;
+  }
+}
+
+
+
+/* Dark Mode Background Placeholder */
+[data-theme="dark"] .bg-placeholder-card {
+  background: rgba(45, 45, 45, 0.9);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+[data-theme="dark"] .bg-placeholder-title {
+  color: #e8eaed;
+}
+[data-theme="dark"] .bg-placeholder-desc {
+  color: #9aa0a6;
+}
+
+/* Dark Mode Ghost Typed Text */
+[data-theme="dark"] .ghost-input .ghost-typed {
+  color: #e8eaed;
+}
+
+/* Dark Mode Overlay Backdrops: enforce pitch-black background like mock */
+[data-theme="dark"] .overlay-backdrop {
+  background: #000 !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-theme="dark"] .overlay-backdrop-2 {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 10vh;
+  z-index: 150;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.9) 40%,
+    rgba(0, 0, 0, 0.2) 80%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+[data-theme="dark"] .suggestion-btn { 
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(247, 247, 248, 0.12) 100%) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+}
+
+[data-theme="dark"] .suggestion-btn::before {
+  background: linear-gradient(90deg, transparent, rgba(107,44,145,0.08), transparent) !important;
+}
+
+
+[data-theme="dark"] .suggestion-btn:hover { 
+  background: rgba(255,255,255,0.95) !important; 
+  color: var(--cb-text-purple) !important; 
+  box-shadow: 0 6px 20px rgba(107,44,145,0.15) !important;
+  border-color: rgba(107,44,145,0.2) !important;
+}
+
+[data-theme="dark"].suggestion-btn.selected { 
+  background: linear-gradient(135deg, rgba(107,44,145,0.1) 0%, rgba(139,76,184,0.08) 100%) !important;
+  box-shadow: 0 4px 16px rgba(107,44,145,0.1) !important; 
+  border: 1px solid rgba(107,44,145,0.2) !important; 
+  color: var(--cb-text-purple-light) !important
+}
+
+[data-theme="dark"] .suggestion-btn { 
+  color: var(--cb-text-purple-light) !important; 
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  border: 0.5px solid rgba(107,44,145,0.1) !important;
+}
+
+
+[data-theme="dark"] .read-more-text {
+  color: var(--cb-text-purple-light) !important; 
+}
+
+[data-theme="dark"] .read-more-icon {
+  color: var(--cb-text-purple-light) !important; 
+}
+
+[data-theme="dark"] .real-input:focus {
+  border-color: var(--cb-border-purple) !important;
+  box-shadow: 0 0 0 3px rgba(139, 76, 184, 0.08) !important;
 }

@@ -71,7 +71,7 @@
               </svg>
               <!-- Moon when light (toggle to dark) -->
               <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" fill="#C9B6F1" />
+                <path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" fill="#000000" />
               </svg>
             </button>
 
@@ -604,12 +604,13 @@
                 <!-- Typing tooltip is rendered on the bot avatar (avatar-anchored). Removed input-anchored tooltip so pointer correctly targets the avatar -->
 
                 <!-- 👻 Ghost overlay showing only the suggested suffix -->
-                <div :class="['input-pill', 'ghost-input', { 'ghost-hidden': showUserTypingTooltip }]" aria-hidden="true">
+                <div class="ghost-input" aria-hidden="true">
                   <span class="ghost-typed">{{ query }}</span>
                   <span class="ghost-suffix" v-if="suggestionText && suggestionText.length > (query || '').length">{{ suggestionText.slice((query || '').length) }}</span>
                 </div>
                 <!-- ⌨️ Real Input -->
                 <input
+                  id="chatbot-query-input"
                   v-model="query"
                   class="input-pill real-input"
                   :class="{ 'shake': isTyping }"
@@ -4735,213 +4736,7 @@ export default {
 </script>
 
 <style scoped>
-.rotate-180 { transform: rotate(180deg); transition: transform .15s ease; }
 
-@media (max-width: 600px) {
-  div[role="dialog"] { width: 100% !important; }
-}
-
-.contact-list {
-  animation: slideUpFade 0.5s ease-out forwards;
-}
-
-@keyframes slideUpFade {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Organization cards (Apple-like) */
-.org-cards {
-  display: grid;
-  grid-template-columns: 1fr; /* show as rows */
-  gap: 12px;
-  margin-top: 12px;
-}
-.org-card {
-  background: rgba(255,255,255,0.95);
-  border-radius: 16px;
-  padding: 12px 14px;
-  box-shadow: 0 8px 18px rgba(20,20,20,0.06);
-  border: 1px solid rgba(0,0,0,0.06);
-  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
-}
-.org-card:hover { transform: translateY(-4px); box-shadow: 0 16px 30px rgba(20,20,20,0.08); }
-.org-card-inner { display: flex; flex-direction: column; gap: 6px; }
-.org-card-title { font-weight: 600; font-size: 14px; color: #111; }
-.org-card-sub { font-size: 12px; color: #6b6b6b; }
-.org-card-phone { font-size: 13px; color: #0a66c2; margin-top: 6px; }
-  .category-badge { display: inline-block; background-color: #e0f2fe; color: #0369a1; font-size: 0.8rem; font-weight: 600; padding: 10px 16px; border-radius: 16px; }
-  .contact-detail { white-space: pre-wrap; word-break: break-word; font-size: 0.9rem; color: #374151; margin-top: 0.5rem; }
-  .contact-empty { color: #9ca3af; font-style: italic; font-size: 0.85rem; margin-top: 0.5rem; }
-@media (max-width: 520px) {
-  .org-cards { grid-template-columns: 1fr; }
-}
-
-/* Welcome card accessibility and help button */
-.ai-greet-img-wrapper[role="button"] { cursor: pointer; }
-.ai-greet-img-wrapper[role="button"]:focus { box-shadow: 0 0 0 3px rgba(139,76,184,0.12); outline: none; }
-.ai-help-link-wrapper { margin-top: 8px; position: relative; }
-.ai-help-link { all: unset; display:inline-flex; align-items:center; gap:8px; padding: 6px 10px; border-radius: 8px; background: rgba(107,44,145,0.08); color: #6B2C91; font-weight: 600; font-size: 13px; cursor: pointer; border: 1px solid rgba(107,44,145,0.12); position: relative; }
-.ai-help-link:hover { background: rgba(107,44,145,0.12); box-shadow: 0 4px 12px rgba(107,44,145,0.08); }
-.ai-help-link:focus { box-shadow: 0 0 0 3px rgba(139,76,184,0.12); outline: none; }
-
-/* Compact Apple-style helper for welcome card (restored purple theme) */
-.apple-help-mini { padding: 8px 12px; border-radius: 12px; background: rgba(107,44,145,0.08); border: 1px solid rgba(107,44,145,0.12); color: #6B2C91; box-shadow: 0 4px 12px rgba(107,44,145,0.06); transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease; }
-.apple-help-mini .help-btn-icon { width: 18px; height: 18px; }
-.apple-help-mini .help-circle { stroke-width: 1.2; stroke: currentColor; fill: transparent; }
-.apple-help-mini .help-question, .apple-help-mini .help-dot { stroke: currentColor; }
-.apple-help-mini:hover { transform: translateY(-2px) scale(1.02); background: rgba(107,44,145,0.12); box-shadow: 0 8px 24px rgba(107,44,145,0.12); }
-.apple-help-mini:active { transform: translateY(0) scale(0.98); }
-
-/* Small ripple support (uses existing .help-btn-ripple rules) */
-.apple-help-mini .help-btn-ripple::before { transition: width 0.5s ease, height 0.5s ease; }
-
-/* Respect no-effects toggle */
-body.no-effects .apple-help-mini { transform: none !important; animation: none !important; }
-body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::after { display: none !important; }
-
-/* Press animation for mini help button */
-
-/* Decorative mini close on the help button (top-left) */
-.ai-help-link.apple-help-mini .mini-help-close {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 20px;
-  height: 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #6B2C91; /* match button color */
-  color: #ffffff; /* white × */
-  border-radius: 50%;
-  font-size: 12px;
-  line-height: 1;
-  box-shadow: 0 6px 14px rgba(107,44,145,0.14);
-  pointer-events: auto;
-  cursor: pointer;
-}
-
-.ai-help-link.apple-help-mini .mini-help-close:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(139,76,184,0.18);
-}
-.apple-help-mini.pressed .help-btn-ripple::before { width: 220px; height: 220px; transition: width 0.35s ease, height 0.35s ease; }
-.apple-help-mini.pressed .help-btn-icon { transform: rotate(-10deg) scale(0.95); transition: transform 0.18s ease; }
-.apple-help-mini.pressed .help-btn-text { transform: translateY(1px) scale(0.98); transition: transform 0.18s ease; }
-
-/* Keyboard focus visual */
-.apple-help-mini:focus-visible { box-shadow: 0 0 0 4px rgba(107,44,145,0.12); outline: none; transform: translateY(-1px); }
-
-/* === Performance & GPU Hints (Apple-like 60fps) === */
-/* Force GPU Layer Creation */
-.chat-panel,
-.overlay-backdrop,
-.snowflake,
-.flying-text,
-.ai-intro-content {
-  will-change: transform, opacity;
-  transform: translate3d(0, 0, 0);
-  backface-visibility: hidden;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Limit layout recalcs for the containing panel */
-.chat-panel {
-  contain: content;
-}
-
-/* === Autocomplete Ghost Text (input layering) === */
-.input-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  position: relative;
-}
-
-.input-container {
-  position: relative;
-  flex: 1;
-  display: flex;
-}
-
-.input-pill {
-  width: 100%;
-  padding: 12px 16px;
-  border-radius: 24px;
-  border: 1px solid #e6e6e9;
-  font-size: 15px;
-  line-height: 1.4;
-  outline: none;
-  font-family: inherit;
-  transition: all 0.15s;
-  box-sizing: border-box;
-}
-
-.real-input {
-  position: relative;
-  z-index: 2;
-  background-color: transparent !important;
-  color: #111;
-}
-.real-input:focus {
-  border-color: #8B4CB8;
-  box-shadow: 0 0 0 3px rgba(139, 76, 184, 0.08);
-}
-
-.ghost-input {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0; /* sit behind floating tooltips */
-  background-color: transparent; /* don't obscure guides */
-  border-color: transparent !important;
-  pointer-events: none;
-  user-select: none;
-  box-shadow: none !important;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-.ghost-input .ghost-typed {
-  color: transparent; /* reserve space so suffix aligns */
-  white-space: pre; /* preserve spaces */
-}
-.ghost-input .ghost-suffix {
-  color: #c7c7cc;
-  font-weight: 500;
-  white-space: pre;
-  pointer-events: none;
-}
-
-/* Hide ghost overlay entirely while typing tooltip is visible so guide text is never occluded */
-.ghost-input.ghost-hidden {
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.18s ease;
-}
-
-/* Small layout tweak for very small screens to avoid overlapping */
-@media (max-width: 520px) {
-  .panel-footer .btn-send { right: 12px; }
-}
-
-.snowflakes {
-  pointer-events: none;
-  contain: strict;
-}
-
-/* Reduce heavy backdrop effects on iOS */
-.overlay-backdrop {
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-}
-
-.particle-canvas { pointer-events: none; }
-
-.message-list { -webkit-overflow-scrolling: touch; }
 </style>
 
 

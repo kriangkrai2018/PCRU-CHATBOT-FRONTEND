@@ -446,7 +446,7 @@ function formatDate(dateStr) {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-radius: 26px;
+  border-radius: 28px;
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 
     0 4px 24px rgba(0, 0, 0, 0.06),
@@ -1267,7 +1267,7 @@ function formatDate(dateStr) {
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.02);
-  border-radius: 26px;
+  border-radius: 28px;
   animation: emptyPulse 3s ease-in-out infinite;
 }
 

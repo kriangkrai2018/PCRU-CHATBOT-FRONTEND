@@ -2,14 +2,34 @@
    Light Mode Specific Overrides
    ========================================================================== */
 
-/* Light Mode Button Overrides - Ensure proper pill appearance */
-[data-theme="light"] .close-circle,
-[data-theme="light"] .clear-chat-btn,
+/* Light Mode Close Circle Button - Purple */
+[data-theme="light"] .close-circle {
+  background: #8B4CB8 !important;
+  border: 1px solid rgba(139, 76, 184, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(139, 76, 184, 0.2);
+  color: #ffffff !important;
+}
+
+/* Light Mode Theme Toggle Button - Black */
 [data-theme="light"] .theme-toggle-btn {
-  background: var(--cb-bg-input) !important;
-  border: 1px solid var(--cb-border-color) !important;
-  box-shadow: var(--cb-shadow-msg);
-  color: var(--cb-icon-primary) !important;
+  background: #ffffff !important;
+  box-shadow: rgba(0, 0, 0, 0.07) 0px 1px 2px, rgba(0, 0, 0, 0.07) 0px 2px 4px, rgba(0, 0, 0, 0.07) 0px 4px 8px, rgba(0, 0, 0, 0.07) 0px 8px 16px, rgba(0, 0, 0, 0.07) 0px 16px 32px, rgba(0, 0, 0, 0.07) 0px 32px 64px !important;
+  color: #ffffff !important;
+}
+
+/* Light Mode Button SVG Icons */
+[data-theme="light"] .close-circle svg path,
+[data-theme="light"] .theme-toggle-btn svg {
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+/* Keep clear-chat-btn red in light mode */
+[data-theme="light"] .clear-chat-btn {
+  background: #EF4444 !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+  color: #FFFFFF !important;
 }
 
 /* Light Mode Message Bubbles - Add subtle border */
@@ -65,4 +85,192 @@
   background: rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+}
+
+/* Light Mode Chatbot Container */
+[data-theme="light"] .chatbot-container {
+  background-color: #ffffff;
+  color: #1f2937;
+}
+
+/* Light Mode Chat Panel */
+[data-theme="light"] .chat-panel {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-left: 1px solid #e5e7eb;
+}
+
+/* Light Mode Panel Footer Border */
+[data-theme="light"] .panel-footer {
+  background: rgba(255, 255, 255, 0.95);
+  border-top: 1px solid #e5e7eb;
+}
+.chat-panel { background: rgba(255, 255, 255, 0.95) !important; color: #000000 !important; }
+
+/* Light Mode Input Pill */
+[data-theme="light"] .input-pill {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+  border: 1px solid transparent !important;
+}
+[data-theme="light"] .input-pill::placeholder {
+  color: #6b7280;
+}
+[data-theme="light"] .input-pill:focus {
+  border-color: #8B4CB8;
+  box-shadow: 0 0 0 3px rgba(139, 76, 184, 0.08);
+  background-color: #ffffff !important;
+}
+
+/* Light Mode Message Bubbles */
+[data-theme="light"] .message-bubble.bot {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+[data-theme="light"] .message-bubble.user {
+  background: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%) !important;
+  color: #ffffff !important;
+}
+
+/* Light Mode Contact Cards */
+[data-theme="light"] .contact-card {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb;
+}
+[data-theme="light"] .contact-card:hover {
+  background: #f9fafb !important;
+  border-color: #6b7280;
+}
+[data-theme="light"] .contact-org {
+  color: #1f2937;
+}
+[data-theme="light"] .contact-officer {
+  color: #6b7280;
+}
+[data-theme="light"] .contact-phone {
+  color: #1a73e8;
+}
+
+/* Light Mode Tooltips */
+[data-theme="light"] .chatbot-tooltip {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e5e7eb;
+  color: #1f2937;
+}
+
+/* Light Mode Mobile Tooltips */
+@media (max-width: 640px) {
+  [data-theme="light"] .unlike-tooltip,
+  [data-theme="light"] .like-tooltip {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid #e5e7eb !important;
+    color: #1f2937 !important;
+  }
+}
+
+/* Light Mode Category Buttons */
+[data-theme="light"] .cat-sub-btn {
+  background: rgba(255, 255, 255, 0.5);
+  border: 0.5px solid rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  color: #1d1d1f;
+}
+[data-theme="light"] .cat-sub-btn:hover {
+  background: rgba(107,44,145,0.08);
+  color: #6B2C91;
+  border-color: rgba(107,44,145,0.1);
+  box-shadow: 0 2px 8px rgba(107,44,145,0.08);
+}
+[data-theme="light"] .cat-sub-btn:focus {
+  outline: 3px solid rgba(107,44,145,0.14);
+  outline-offset: 2px;
+}
+[data-theme="light"] .cat-sub-icon {
+  color: rgba(0,0,0,0.45);
+}
+[data-theme="light"] .cat-sub-btn:hover .cat-sub-icon {
+  color: #6B2C91;
+}
+[data-theme="light"] .cat-sub-btn.disabled {
+  background: rgba(0,0,0,0.01);
+}
+[data-theme="light"] .cat-sub-btn.disabled .cat-sub-text {
+  color: rgba(0,0,0,0.38);
+}
+[data-theme="light"] .cat-sub-btn.disabled .cat-sub-icon {
+  color: rgba(0,0,0,0.22);
+}
+[data-theme="light"] .cat-sub-btn.disabled:hover {
+  background: rgba(0,0,0,0.01);
+  transform: none;
+}
+
+/* Light Mode Bot with Categories */
+[data-theme="light"] .bot-with-categories {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e5e7eb;
+}
+
+/* Light Mode Background Placeholder */
+[data-theme="light"] .bg-placeholder-card {
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+[data-theme="light"] .bg-placeholder-title {
+  color: #222;
+}
+[data-theme="light"] .bg-placeholder-desc {
+  color: #444;
+}
+
+/* Light Mode Ghost Input Suggestions */
+[data-theme="light"] .ghost-input .ghost-suffix {
+  color: #6B2C91;
+}
+
+/* Light Mode Ghost Typed Text */
+[data-theme="light"] .ghost-input .ghost-typed {
+  color: #1f2937;
+}
+
+[data-theme="light"] .suggestion-btn { 
+  background: rgba(255,255,255,0.8); 
+}
+
+[data-theme="light"] .suggestion-btn::before {
+  background: linear-gradient(90deg, transparent, rgba(107,44,145,0.08), transparent);
+}
+
+
+[data-theme="light"] .suggestion-btn:hover { 
+  background: rgba(255,255,255,0.95); 
+  color: #6B2C91; 
+  box-shadow: 0 6px 20px rgba(107,44,145,0.15);
+  border-color: rgba(107,44,145,0.2);
+}
+
+[data-theme="light"] .suggestion-btn.selected { 
+  background: linear-gradient(135deg, rgba(107,44,145,0.1) 0%, rgba(139,76,184,0.08) 100%);
+  box-shadow: 0 4px 16px rgba(107,44,145,0.1); 
+  border: 1px solid rgba(107,44,145,0.2); 
+  color: #6B2C91;
+}
+
+
+[data-theme="light"] .suggestion-btn { 
+  color: #1d1d1f; 
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 0.5px solid rgba(107,44,145,0.1);
+}
+
+[data-theme="light"] .read-more-text {
+  color: #6B2C91;
+}
+
+[data-theme="light"] .read-more-icon {
+  color: #6B2C91;
+}
+
+[data-theme="light"] .real-input:focus {
+  border-color: #8B4CB8;
+  box-shadow: 0 0 0 3px rgba(139, 76, 184, 0.08);
 }

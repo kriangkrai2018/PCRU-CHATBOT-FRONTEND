@@ -855,7 +855,7 @@ const categoriesBarChartData = computed(() => {
 /* Hero Header */
 .dashboard-hero {
   background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
-  border-radius: 26px;
+  border-radius: 28px;
   padding: 3rem 2rem;
   margin-bottom: 2rem;
   position: relative;

@@ -33,21 +33,7 @@
 }
 
 /* Animated gradient orbs background */
-.chat-panel::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(ellipse 600px 600px at 20% 10%, rgba(139,76,184,0.08), transparent 70%),
-    radial-gradient(ellipse 500px 500px at 80% 90%, rgba(107,44,145,0.06), transparent 70%),
-    radial-gradient(ellipse 400px 400px at 50% 50%, rgba(179,123,209,0.04), transparent 70%);
-  animation: orbFloat 20s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 0;
-}
+
 
 @keyframes orbFloat {
   0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.7; }
@@ -2922,7 +2908,7 @@ html.keyboard-open .message-wrapper {
   bottom: 100px;
   width: 48px;
   height: 48px;
-  border-radius: 26px;
+  border-radius: 28px;
   background: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%);
   border: none;
   display: flex;
