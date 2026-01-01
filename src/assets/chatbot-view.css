@@ -165,35 +165,22 @@
   }
 }
 
-/* Theme Toggle Button specific style */
-.theme-toggle-btn {
-  position: absolute;
-  top: max(12px, calc(12px + env(safe-area-inset-top, 0px)));
-  left: 64px; /* Position next to close button */
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 1001;
-  transition: all 0.3s ease;
-}
+/* Theme Toggle Button consolidated (moved/merged) */
+/* (Moved into the main .theme-toggle-btn rule below to avoid duplicates) */
 
 
 /* Apply variables to core elements */
 
 .chat-root { background-color: #ffffff; color: #1f2937; }
 
-/* Theme toggle button */
+/* Theme toggle button (consolidated) */
 .theme-toggle-btn {
   position: absolute;
   top: max(12px, calc(12px + env(safe-area-inset-top, 0px)));
-  right: 64px; /* sits between close and clear buttons */
+  left: 64px; /* position next to close button (consolidated) */
   width: 40px;
   height: 40px;
-  border-radius: 20px;
+  border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -205,7 +192,6 @@
   transition: background 0.18s ease, transform 0.12s ease;
 }
 .theme-toggle-btn:hover { transform: scale(1.06); }
-
 /* theme-toggle dark tweak moved to src/assets/dark-mode.css */
 
 /* Small utility to hide when not needed */
@@ -1556,10 +1542,7 @@ html.keyboard-open .bot-avatar-wrapper .typing-tooltip {
   padding: 12px 6px;
   margin-top: 12px;
   margin-left: 6px;
-  background: linear-gradient(135deg, rgba(139,76,184,0.08) 0%, rgba(107,44,145,0.06) 100%);
-  border: 1px solid rgba(139,76,184,0.15);
   border-radius: 12px;
-  color: #6B2C91;
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
@@ -4022,12 +4005,8 @@ body.no-effects .scroll-icon {
   margin-top: 12px;
 }
 .org-card {
-  background: rgba(255,255,255,0.95);
   border-radius: 16px;
   padding: 12px 14px;
-  box-shadow: 0 8px 18px rgba(20,20,20,0.06);
-  border: 1px solid rgba(0,0,0,0.06);
-  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 .org-card:hover { transform: translateY(-4px); box-shadow: 0 16px 30px rgba(20,20,20,0.08); }
 .org-card-inner { display: flex; flex-direction: column; gap: 6px; }
@@ -4050,7 +4029,7 @@ body.no-effects .scroll-icon {
 .ai-help-link:focus { box-shadow: 0 0 0 3px rgba(139,76,184,0.12); outline: none; }
 
 /* Compact Apple-style helper for welcome card (restored purple theme) */
-.apple-help-mini { padding: 8px 12px; border-radius: 12px; background: rgba(107,44,145,0.08); border: 1px solid rgba(107,44,145,0.12); color: #6B2C91; box-shadow: 0 4px 12px rgba(107,44,145,0.06); transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease; }
+.apple-help-mini { padding: 8px 12px; border-radius: 12px;}
 .apple-help-mini .help-btn-icon { width: 18px; height: 18px; }
 .apple-help-mini .help-circle { stroke-width: 1.2; stroke: currentColor; fill: transparent; }
 .apple-help-mini .help-question, .apple-help-mini .help-dot { stroke: currentColor; }

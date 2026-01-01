@@ -55,6 +55,8 @@
   --cb-bg-msg-bot: linear-gradient(180deg, var(--cb-bg-msg-bot-top) 0%, var(--cb-bg-msg-bot-bottom) 100%);
   --cb-bg-msg-user: var(--cb-user-gradient);
   --cb-bg-hover: rgba(255,255,255,0.02);
+  --cb-purple-sheen: linear-gradient(135deg, rgba(107, 44, 145, 0.08) 0%, rgba(139, 76, 184, 0.05) 100%);
+  --cb-purple-sheen-90: linear-gradient(90deg, transparent, rgba(107,44,145,0.08), transparent);
 
   /* Text */
   --cb-text-primary: #E6E6E6;    /* off-white for primary text */
@@ -144,14 +146,14 @@
 
 /* Buttons in Dark Mode */
 [data-theme="dark"] .cat-sub-btn {
-    background-color: var(--cb-surface-dim);
+    background-color: var(--cb-bg-dim);
     border-color: var(--cb-border-muted);
 } 
 [data-theme="dark"] .cat-sub-btn:hover {
-    background-color: var(--cb-surface-dim-hover);
+    background: var(--cb-purple-sheen) !important;
 }
 [data-theme="dark"] .cat-sub-btn:hover .cat-sub-icon {
-    color: var(--cb-text-primary);
+    color: var(--cb-text-purple-light) !important;
 } 
 
 /* Headers in Dark Mode */
@@ -254,15 +256,14 @@
 
 /* Dark Mode Category Sub Buttons */
 [data-theme="dark"] .cat-sub-btn {
-  background: rgba(45, 45, 45, 0.5);
-  border: 0.5px solid rgba(95, 99, 104, 0.2);
+  background: var(--cb-purple-sheen) !important;
+  border: 0.5px solid var(--cb-border-200);
   box-shadow: 0 2px 8px var(--cb-shadow-30);
   color: var(--cb-text-primary);
 } 
 [data-theme="dark"] .cat-sub-btn:hover {
   background: var(--cb-accent-blue-10);
   color: var(--cb-link);
-  border-color: var(--cb-accent-blue-30);
   box-shadow: 0 2px 8px var(--cb-accent-blue-10);
 } 
 [data-theme="dark"] .cat-sub-btn:focus {
@@ -430,22 +431,22 @@
 } 
 
 [data-theme="dark"] .suggestion-btn { 
-  background: linear-gradient(135deg, rgba(107, 44, 145, 0.08) 0%, rgba(139, 76, 184, 0.05) 100%) !important;
+  background: var(--cb-purple-sheen) !important;
   backdrop-filter: blur(10px) !important;
   -webkit-backdrop-filter: blur(10px) !important;
-  color: var(--cb-text-purple-light) !important; 
+  color: var(--cb-text-inverse) !important; 
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
   border: 0.5px solid rgba(107,44,145,0.1) !important;
 }
 
 [data-theme="dark"] .suggestion-btn::before {
-  background: linear-gradient(90deg, transparent, rgba(107,44,145,0.08), transparent) !important;
+  background: var(--cb-purple-sheen-90) !important;
 }
 
 
 [data-theme="dark"] .suggestion-btn:hover { 
-  background: linear-gradient(135deg, rgba(107, 44, 145, 0.08) 0%, rgba(139, 76, 184, 0.05) 100%) !important;
-  color: var(--cb-text-purple) !important; 
+  background: var(--cb-purple-sheen) !important;
+  color: var(--cb-text-purple-light) !important; 
   box-shadow: 0 6px 20px rgba(107,44,145,0.15) !important;
   border-color: rgba(107,44,145,0.2) !important;
 }
@@ -454,7 +455,7 @@
   background: linear-gradient(135deg, rgba(107,44,145,0.1) 0%, rgba(139,76,184,0.08) 100%) !important;
   box-shadow: 0 4px 16px rgba(107,44,145,0.1) !important; 
   border: 1px solid rgba(107,44,145,0.2) !important; 
-  color: var(--cb-text-purple-light) !important
+  color: var(--cb-text-inverse) !important
 }
 
 [data-theme="dark"] .read-more-text {
@@ -470,7 +471,31 @@
   box-shadow: 0 0 0 3px rgba(139, 76, 184, 0.08) !important;
 }
 
+[data-theme="dark"] .help-btn-text {
+  color: var(--cb-text-purple-light) !important;
+}
 
-[data-theme="dark"] .read-more-count {
-  color: var(--cb-text-purple) !important;
+[data-theme="dark"] .read-more-count, .help-circle, .help-question {
+  color: var(--cb-text-purple-light) !important;
+}
+
+[data-theme="dark"] .apple-help-mini { 
+    background: rgba(97, 40, 132, 0.325) !important; 
+    border: 1px solid rgba(107,44,145,0.12) !important; 
+    color: #6B2C91 !important; 
+    box-shadow: 0 4px 12px rgba(107,44,145,0.06) !important; 
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease !important; 
+}
+
+[data-theme="dark"] .read-more-btn {
+  background: rgba(97, 40, 132, 0.325) !important; 
+  border: 1px solid rgba(139,76,184,0.15);
+  color: #6B2C91;
+}
+
+[data-theme="dark"] .org-card {
+  background: var(--cb-purple-sheen) !important;
+  box-shadow: 0 8px 18px rgba(20,20,20,0.06);
+  border: 1px solid rgba(0,0,0,0.06);
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
