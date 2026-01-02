@@ -2,6 +2,7 @@
   <div class="dashboard-container">
     <!-- Sidebar -->
     <Sidebar :userType="userType" :userInfoObject="userInfoObject" />
+    <div v-if="isMobileSidebarOpen" class="mobile-sidebar-backdrop" @click="toggleSidebar" aria-hidden="true"></div>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -10,6 +11,9 @@
         <!-- Header -->
         <div class="d-flex align-items-center justify-content-between mb-4 fade-in-up">
           <div class="d-flex align-items-center gap-3">
+            <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
+              <i :class="isMobileSidebarOpen ? 'bi bi-x' : 'bi bi-list'"></i>
+            </button>
             <!-- Animated Icon Box (Green Gradient) -->
             <div class="apple-icon-box green-gradient">
               <svg class="check-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -26,7 +30,7 @@
           <div class="d-flex align-items-center gap-2">
             <div class="apple-status-badge" :class="{ 'online': wsConnected }">
               <span class="status-dot"></span>
-              <span>{{ wsConnected ? 'Live Updates' : 'Offline' }}</span>
+              <span>{{ wsConnected ? 'Live' : 'Offline' }}</span>
             </div>
           </div>
         </div>
@@ -321,7 +325,7 @@ import { createWebSocketConnection, WS_ENDPOINTS } from '@/config/websocket';
 import { formatRelativeTime } from '@/utils/formatTime';
 import { Tooltip } from 'bootstrap';
 import Sidebar from '@/components/Sidebar.vue';
-import { bindSidebarResize } from '@/stores/sidebarState';
+import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import '@/assets/sidebar.css';
 import '@/assets/dashboard-styles.css';
 
@@ -335,6 +339,28 @@ const $axios = appContext.config.globalProperties.$axios;
 const userInfoObject = ref({});
 const userType = ref('');
 let unbindSidebarResize = null;
+let _savedSidebarCollapsed = null;
+
+const toggleSidebar = () => {
+  const sb = document.querySelector('.sidebar');
+  const isOpen = !isMobileSidebarOpen.value;
+
+  if (isOpen) {
+    _savedSidebarCollapsed = isSidebarCollapsed.value;
+    isSidebarCollapsed.value = false;
+    if (sb) sb.classList.remove('collapsed');
+    document.body.classList.add('sidebar-open');
+    document.body.classList.add('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = true;
+  } else {
+    isSidebarCollapsed.value = !!_savedSidebarCollapsed;
+    if (sb && _savedSidebarCollapsed) sb.classList.add('collapsed');
+    document.body.classList.remove('sidebar-open');
+    document.body.classList.remove('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = false;
+    _savedSidebarCollapsed = null;
+  }
+};
 
 // State
 const items = ref([]);
@@ -366,6 +392,11 @@ onMounted(() => {
   if (type) userType.value = type;
   if (userInfoString) { try { userInfoObject.value = JSON.parse(userInfoString); } catch(e) {} }
 
+  // Close sidebar on mount
+  isMobileSidebarOpen.value = false;
+  document.body.classList.remove('sidebar-open');
+  document.body.classList.remove('sidebar-mobile-expanded');
+
   fetchData();
   
   ws = createWebSocketConnection(WS_ENDPOINTS.FEEDBACKS, {
@@ -384,6 +415,9 @@ onMounted(() => {
 onUnmounted(() => { 
   if (ws) ws.disconnect(); 
   if (typeof unbindSidebarResize === 'function') unbindSidebarResize();
+  isMobileSidebarOpen.value = false;
+  document.body.classList.remove('sidebar-open');
+  document.body.classList.remove('sidebar-mobile-expanded');
 });
 
 // Watchers
@@ -761,4 +795,53 @@ function initTooltips() {
 /* Empty State */
 .empty-state { display: flex; flex-direction: column; align-items: center; color: #86868b; }
 .empty-state i { font-size: 2.5rem; margin-bottom: 8px; opacity: 0.5; }
+
+.mobile-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+}
+
+.mobile-sidebar-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: currentColor;
+  cursor: pointer;
+  padding: 0.5rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  margin-right: 0.5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .main-content { grid-column: 1/-1; width: 100%; }
+  
+  .mobile-sidebar-toggle { display: flex; }
+  
+  .mobile-sidebar-backdrop {
+    display: block;
+  }
+  
+  :global(.sidebar) {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 999;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  :global(body.sidebar-open .sidebar) {
+    transform: translateX(0);
+  }
+}
 </style>

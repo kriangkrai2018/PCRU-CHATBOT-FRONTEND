@@ -1184,7 +1184,18 @@ function nextPage() { if (currentPage.value < totalPages.value) currentPage.valu
 }
 .mobile-sidebar-toggle i { font-size: 1.15rem; }
 
-/* Show inline toggle on mobile */
-@media (max-width: 768px) { .mobile-sidebar-toggle.mobile-inline-toggle { display: flex !important; } }
+/* Hide on desktop, show on mobile only */
+@media (min-width: 769px) { 
+  .mobile-sidebar-toggle,
+  .mobile-sidebar-toggle.mobile-inline-toggle { 
+    display: none !important; 
+  } 
+}
+
+@media (max-width: 768px) { 
+  .mobile-sidebar-toggle.mobile-inline-toggle { 
+    display: flex !important; 
+  } 
+}
 
 </style>

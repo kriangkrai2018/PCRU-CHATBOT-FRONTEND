@@ -19,7 +19,7 @@
         <div class="d-flex align-items-center gap-2">
           <div class="apple-status-badge" :class="{ 'online': wsConnected }">
             <span class="status-dot"></span>
-            <span>{{ wsConnected ? 'Live Updates' : 'Offline' }}</span>
+            <span>{{ wsConnected ? 'Live' : 'Offline' }}</span>
           </div>
         </div>
       </div>

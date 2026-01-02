@@ -1,10 +1,14 @@
 <template>
   <div class="report-page-container">
     <Sidebar :userType="userType" :userInfoObject="userInfoObject" />
+    <div v-if="isMobileSidebarOpen" class="mobile-sidebar-backdrop" @click="toggleSidebar" aria-hidden="true"></div>
     <main class="main-content flex-grow-1">
       <div class="apple-dashboard">
         <div class="dashboard-hero">
           <div class="hero-content">
+            <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
+              <i :class="isMobileSidebarOpen ? 'bi bi-x' : 'bi bi-list'"></i>
+            </button>
             <h1 class="hero-title">ChatLog Has Answers</h1>
             <p class="hero-subtitle">รายงานการสนทนาที่มีคำตอบ</p>
           </div>
@@ -26,7 +30,7 @@ import { ref, computed, onMounted, onUnmounted, getCurrentInstance } from 'vue';
 import { useRouter } from 'vue-router';
 import Sidebar from '@/components/Sidebar.vue';
 import ChatLogHasAnswersReport from '@/views/dashboards/officers/ChatLogHasAnswersReport.vue';
-import { bindSidebarResize } from '@/stores/sidebarState';
+import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import { Chart as ChartJS, registerables } from 'chart.js';
 import '@/assets/sidebar.css';
 import '@/assets/dashboard-styles.css';
@@ -40,6 +44,28 @@ const { $axios } = appContext.config.globalProperties;
 const userInfoObject = ref({});
 const userType = ref('');
 const questionsAnswers = ref([]);
+let _savedSidebarCollapsed = null;
+
+const toggleSidebar = () => {
+  const sb = document.querySelector('.sidebar');
+  const isOpen = !isMobileSidebarOpen.value;
+
+  if (isOpen) {
+    _savedSidebarCollapsed = isSidebarCollapsed.value;
+    isSidebarCollapsed.value = false;
+    if (sb) sb.classList.remove('collapsed');
+    document.body.classList.add('sidebar-open');
+    document.body.classList.add('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = true;
+  } else {
+    isSidebarCollapsed.value = !!_savedSidebarCollapsed;
+    if (sb && _savedSidebarCollapsed) sb.classList.add('collapsed');
+    document.body.classList.remove('sidebar-open');
+    document.body.classList.remove('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = false;
+    _savedSidebarCollapsed = null;
+  }
+};
 
 const chartOptions = ref({
   responsive: true, maintainAspectRatio: false, cutout: '65%',
@@ -79,7 +105,12 @@ onMounted(() => {
   fetchQuestionsAnswers();
 });
 
-onUnmounted(() => { if (typeof unbindSidebarResize === 'function') unbindSidebarResize(); });
+onUnmounted(() => {
+  if (typeof unbindSidebarResize === 'function') unbindSidebarResize();
+  isMobileSidebarOpen.value = false;
+  document.body.classList.remove('sidebar-open');
+  document.body.classList.remove('sidebar-mobile-expanded');
+});
 </script>
 
 <style scoped>
@@ -87,4 +118,53 @@ onUnmounted(() => { if (typeof unbindSidebarResize === 'function') unbindSidebar
 @import '@/assets/sidebar.css';
 .report-page-container { width: 100%; min-height: 100vh; display: grid; overflow-x: hidden; }
 .main-content { grid-column: 2/3; flex: 1 1 auto; min-width: 0; overflow: auto; padding: 1rem; }
+
+.mobile-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+}
+
+.mobile-sidebar-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: currentColor;
+  cursor: pointer;
+  padding: 0.5rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  margin-right: 0.5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .main-content { grid-column: 1/-1; }
+  
+  .mobile-sidebar-toggle { display: flex; }
+  
+  .mobile-sidebar-backdrop {
+    display: block;
+  }
+  
+  :global(.sidebar) {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 999;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  :global(body.sidebar-open .sidebar) {
+    transform: translateX(0);
+  }
+}
 </style>

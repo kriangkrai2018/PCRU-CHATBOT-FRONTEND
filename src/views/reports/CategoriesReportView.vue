@@ -263,6 +263,33 @@ onUnmounted(() => {
 
 /* Remove main-content padding on small screens to maximize usable space */
 @media (max-width: 768px) {
+  /* Hide sidebar by default on mobile */
+  .sidebar, .sidebar.collapsed {
+    display: none !important;
+  }
+
+  /* Show sidebar when explicitly opened */
+  body.sidebar-open .sidebar, 
+  body.sidebar-mobile-expanded .sidebar {
+    display: flex !important;
+    flex-direction: column !important;
+    position: fixed !important;
+    left: 0; 
+    top: 0; 
+    bottom: 0;
+    width: 280px !important;
+    z-index: 2600 !important;
+    background: #E3E3E3;
+    box-shadow: 0 12px 50px rgba(0,0,0,0.24);
+    transform: translateX(0) !important;
+    transition: transform 280ms cubic-bezier(.22,.9,.33,1), opacity 180ms ease;
+  }
+
+  /* Ensure backdrop is visible */
+  .mobile-sidebar-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.42); z-index: 2500;
+  }
+
   .main-content {
     padding: 0 !important;
   }

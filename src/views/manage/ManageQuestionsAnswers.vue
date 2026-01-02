@@ -2,6 +2,7 @@
   <div class="dashboard-container">
     <!-- Sidebar -->
     <Sidebar :userType="userType" :userInfoObject="userInfoObject" />
+    <div v-if="isMobileSidebarOpen" class="mobile-sidebar-backdrop" @click="toggleSidebar" aria-hidden="true"></div>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -17,6 +18,9 @@
           <!-- Header Section -->
           <div class="d-block d-md-flex align-items-center justify-content-between mb-4">
             <div class="d-flex align-items-center gap-3">
+              <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
+                <i :class="isMobileSidebarOpen ? 'bi bi-x' : 'bi bi-list'"></i>
+              </button>
               <h2 class="page-title m-0">จัดการคำถาม-คำตอบ</h2>
               <button class="btn-apple-primary" @click="openCrudModal" title="เพิ่มรายการใหม่">
                 <i class="bi bi-plus-lg me-2"></i>
@@ -382,7 +386,7 @@ import { ref, onMounted, onUnmounted, computed, nextTick, watch, getCurrentInsta
 import { useRouter } from 'vue-router';
 import { Modal, Tooltip } from 'bootstrap';
 import Sidebar from '@/components/Sidebar.vue';
-import { bindSidebarResize } from '@/stores/sidebarState';
+import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import { useAppleToast } from '@/composables/useAppleToast';
 import '@/assets/sidebar.css';
 import ex5Url from '@/assets/ex5.svg';
@@ -397,6 +401,28 @@ const { success: toastSuccess, error: toastError, warning: toastWarning } = useA
 const userInfoObject = ref({});
 const userType = ref("");
 let unbindSidebarResize = null;
+let _savedSidebarCollapsed = null;
+
+const toggleSidebar = () => {
+  const sb = document.querySelector('.sidebar');
+  const isOpen = !isMobileSidebarOpen.value;
+
+  if (isOpen) {
+    _savedSidebarCollapsed = isSidebarCollapsed.value;
+    isSidebarCollapsed.value = false;
+    if (sb) sb.classList.remove('collapsed');
+    document.body.classList.add('sidebar-open');
+    document.body.classList.add('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = true;
+  } else {
+    isSidebarCollapsed.value = !!_savedSidebarCollapsed;
+    if (sb && _savedSidebarCollapsed) sb.classList.add('collapsed');
+    document.body.classList.remove('sidebar-open');
+    document.body.classList.remove('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = false;
+    _savedSidebarCollapsed = null;
+  }
+};
 
 const questionsAnswers = ref([]);
 const loading = ref(true);
@@ -759,7 +785,12 @@ onMounted(() => {
   fetchCategories();
   nextTick(() => document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new Tooltip(el)));
 });
-onUnmounted(() => { if (unbindSidebarResize) unbindSidebarResize(); });
+onUnmounted(() => {
+  if (unbindSidebarResize) unbindSidebarResize();
+  isMobileSidebarOpen.value = false;
+  document.body.classList.remove('sidebar-open');
+  document.body.classList.remove('sidebar-mobile-expanded');
+});
 </script>
 
 <style scoped>
@@ -797,6 +828,55 @@ onUnmounted(() => { if (unbindSidebarResize) unbindSidebarResize(); });
 }
 
 .page-title {
+.mobile-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+}
+
+.mobile-sidebar-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: currentColor;
+  cursor: pointer;
+  padding: 0.5rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  margin-right: 0.5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .main-content { grid-column: 1/-1; width: 100%; }
+  
+  .mobile-sidebar-toggle { display: flex; }
+  
+  .mobile-sidebar-backdrop {
+    display: block;
+  }
+  
+  :global(.sidebar) {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 999;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  :global(body.sidebar-open .sidebar) {
+    transform: translateX(0);
+  }
+}
+
   font-weight: 700;
   letter-spacing: -0.02em;
   color: #1d1d1f;
