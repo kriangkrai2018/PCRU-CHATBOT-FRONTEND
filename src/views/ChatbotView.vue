@@ -1,5 +1,12 @@
 <template>
   <div class="chat-root" data-bs-no-js="true">
+    <!-- Theme transition circle overlay -->
+    <div 
+      v-if="showThemeTransition" 
+      class="theme-transition-circle"
+      :style="{ width: themeTransitionSize + 'px', height: themeTransitionSize + 'px' }"
+    ></div>
+
     <!-- overlay + drawer container -->
     <transition name="fade" @enter="animateOpen" @leave="animateClose">
       <div v-if="visible" class="chat-overlay" role="dialog" aria-label="Chat drawer">
@@ -791,6 +798,10 @@ export default {
       particles: [],
       particleAnimationFrame: null,
       // Thai notice bubble (auto-hide after 5s)
+      // Theme transition circle animation
+      showThemeTransition: false,
+      themeTransitionSize: 0,
+      themeTransitionTimer: null,
       showThaiNotice: true,
       thaiNoticeTimer: null,
       // 💤 Sleeping bot when idle
@@ -1605,6 +1616,9 @@ export default {
     },
 
     toggleTheme() {
+      // Start theme transition circle animation
+      this.startThemeTransition()
+      
       // Cycle through: light -> dark -> auto -> light
       if (this.theme === 'light') {
         this.theme = 'dark'
@@ -4830,6 +4844,56 @@ export default {
           console.warn('Failed to record no-answer log', err)
           return null
         })
+    },
+
+    startThemeTransition() {
+      // Show the transition circle and animate it expanding
+      this.showThemeTransition = true
+      this.themeTransitionSize = 0
+      
+      // Clear previous timer if exists
+      if (this.themeTransitionTimer) clearTimeout(this.themeTransitionTimer)
+      
+      // Get theme button position (center of circle)
+      const themeBtn = document.querySelector('.theme-toggle-btn')
+      if (!themeBtn) return
+      
+      const rect = themeBtn.getBoundingClientRect()
+      const centerX = rect.left + rect.width / 2
+      const centerY = rect.top + rect.height / 2
+      
+      // Store center position in CSS variables
+      document.documentElement.style.setProperty('--transition-x', centerX + 'px')
+      document.documentElement.style.setProperty('--transition-y', centerY + 'px')
+      
+      // Animate size expansion over 600ms
+      const startTime = Date.now()
+      const duration = 600
+      
+      const animate = () => {
+        const elapsed = Date.now() - startTime
+        const progress = Math.min(elapsed / duration, 1)
+        
+        // Calculate max size needed to cover entire viewport
+        const maxSize = Math.sqrt(
+          centerX * centerX + centerY * centerY + 
+          (window.innerWidth - centerX) ** 2 + 
+          (window.innerHeight - centerY) ** 2
+        ) * 2
+        
+        this.themeTransitionSize = maxSize * progress
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate)
+        } else {
+          // Animation complete - hide circle
+          this.themeTransitionTimer = setTimeout(() => {
+            this.showThemeTransition = false
+          }, 100)
+        }
+      }
+      
+      animate()
     }
   }
 }
