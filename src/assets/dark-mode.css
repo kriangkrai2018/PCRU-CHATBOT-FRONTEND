@@ -198,18 +198,28 @@
   -webkit-backdrop-filter: blur(8px) !important;
   border: 1px solid var(--cb-border-btn) !important;
   box-shadow: 0 2px 8px var(--cb-shadow-30);
-  /* ensure icons using currentColor become purple */
-  color: var(--cb-text-inverse) !important;
-} 
+  color: #c86fff !important;
+}
 
+/* Let inline SVG colors show in dark mode */
+[data-theme="dark"] .theme-toggle-btn svg circle[fill],
+[data-theme="dark"] .theme-toggle-btn svg path[fill] {
+  /* Preserve inline fill colors */
+}
 
+[data-theme="dark"] .theme-toggle-btn svg g[stroke],
+[data-theme="dark"] .theme-toggle-btn svg path[stroke] {
+  /* Preserve inline stroke colors */
+}
 
 /* Keep clear-chat-btn red in dark mode */
 [data-theme="dark"] .clear-chat-btn {
   background: rgba(255, 255, 255, 0.15) !important;
   border: none !important;
 } 
-
+[data-theme="dark"] .theme-label {
+  color: var(--cb-text-inverse) !important;
+}
 
 
 /* Dark Mode Input Pill */

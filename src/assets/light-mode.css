@@ -14,13 +14,23 @@
 [data-theme="light"] .theme-toggle-btn {
   background: #ffffff !important;
   box-shadow: rgba(0, 0, 0, 0.07) 0px 1px 2px, rgba(0, 0, 0, 0.07) 0px 2px 4px, rgba(0, 0, 0, 0.07) 0px 4px 8px, rgba(0, 0, 0, 0.07) 0px 8px 16px, rgba(0, 0, 0, 0.07) 0px 16px 32px, rgba(0, 0, 0, 0.07) 0px 32px 64px !important;
-  /* ensure icons using currentColor are visible against white background */
-  color: var(--cb-icon-primary) !important;
+  color: #1f2937 !important;
+}
+
+/* Let inline SVG colors show in light mode */
+[data-theme="light"] .theme-toggle-btn svg circle[fill],
+[data-theme="light"] .theme-toggle-btn svg path[fill] {
+  /* Preserve inline fill colors */
+}
+
+[data-theme="light"] .theme-toggle-btn svg g[stroke],
+[data-theme="light"] .theme-toggle-btn svg path[stroke] {
+  /* Preserve inline stroke colors */
 }
 
 /* Light Mode Button SVG Icons */
 [data-theme="light"] .close-circle svg path,
-[data-theme="light"] .theme-toggle-btn svg {
+[data-theme="light"] .theme-toggle-btn svg path {
   stroke: #ffffff;
   stroke-width: 2;
 }

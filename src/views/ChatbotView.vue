@@ -64,13 +64,23 @@
             <button class="theme-toggle-btn" :class="{ expanded: isExpanded }" @click.stop="toggleTheme" :title="getThemeButtonTitle()" :aria-pressed="theme === 'dark'">
               <div class="icon-wrapper">
                 <!-- Sun when dark (toggle to auto) -->
-                <svg v-if="theme === 'dark'" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <circle cx="12" cy="12" r="4" fill="#FFD54F" />
+                <svg v-if="theme === 'dark'" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="sun-icon">
+                  <circle cx="12" cy="12" r="4" fill="#FFD54F">
+                    <animate attributeName="r" values="4;5;4" dur="2s" repeatCount="indefinite"/>
+                  </circle>
                   <g stroke="#FFD54F" stroke-width="1.6" stroke-linecap="round">
-                    <path d="M12 2v2" />
-                    <path d="M12 20v2" />
-                    <path d="M2 12h2" />
-                    <path d="M20 12h2" />
+                    <path d="M12 2v2">
+                      <animate attributeName="d" values="M12 2v2;M12 1.5v3;M12 2v2" dur="2.5s" repeatCount="indefinite"/>
+                    </path>
+                    <path d="M12 20v2">
+                      <animate attributeName="d" values="M12 20v2;M12 19.5v3;M12 20v2" dur="2.5s" repeatCount="indefinite"/>
+                    </path>
+                    <path d="M2 12h2">
+                      <animate attributeName="d" values="M2 12h2;M1.5 12h3;M2 12h2" dur="2.5s" repeatCount="indefinite"/>
+                    </path>
+                    <path d="M20 12h2">
+                      <animate attributeName="d" values="M20 12h2;M19.5 12h3;M20 12h2" dur="2.5s" repeatCount="indefinite"/>
+                    </path>
                     <path d="M4.9 4.9l1.4 1.4" />
                     <path d="M17.7 17.7l1.4 1.4" />
                     <path d="M4.9 19.1l1.4-1.4" />
@@ -78,14 +88,27 @@
                   </g>
                 </svg>
                 <!-- Moon when light (toggle to dark) -->
-                <svg v-else-if="theme === 'light'" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" fill="#000000" />
+                <svg v-else-if="theme === 'light'" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="moon-icon">
+                  <path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" fill="#000000">
+                    <animate attributeName="opacity" values="0.8;1;0.8" dur="2.5s" repeatCount="indefinite"/>
+                  </path>
+                  <circle cx="15" cy="8" r="0.8" fill="#FFD54F" opacity="0.6">
+                    <animate attributeName="cy" values="8;7;8" dur="2s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0.4;0.8;0.4" dur="2s" repeatCount="indefinite"/>
+                  </circle>
                 </svg>
                 <!-- Auto icon when auto (toggle to light) -->
-                <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                  <circle cx="12" cy="12" r="2" fill="currentColor"/>
-                  <path d="M12 4v2M12 18v2M4 12h2M18 12h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="auto-icon">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none">
+                    <animate attributeName="r" values="9;10;9" dur="2s" repeatCount="indefinite"/>
+                    <animate attributeName="stroke-width" values="1.5;1;1.5" dur="2s" repeatCount="indefinite"/>
+                  </circle>
+                  <circle cx="12" cy="12" r="2" fill="currentColor">
+                    <animate attributeName="r" values="2;2.5;2" dur="2s" repeatCount="indefinite"/>
+                  </circle>
+                  <path d="M12 4v2M12 18v2M4 12h2M18 12h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                    <animate attributeName="stroke-width" values="1.5;2;1.5" dur="2s" repeatCount="indefinite"/>
+                  </path>
                 </svg>
               </div>
               <span class="theme-label">{{ themeDisplayOnly }}</span>
@@ -678,15 +701,19 @@
       <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="fab-icon" aria-hidden="true" focusable="false">
         <path class="fab-bubble" fill="white" d="M21 6a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h2v3l4-3h6a3 3 0 0 0 3-3V6z" stroke-dasharray="80" stroke-dashoffset="80">
           <animate attributeName="stroke-dashoffset" to="0" dur="0.6s" fill="freeze"/>
+          <animate attributeName="opacity" values="0.9;1;0.9" dur="2s" repeatCount="indefinite"/>
         </path>
         <circle class="fab-pulse" cx="8" cy="10" r="1.5" fill="rgba(107,44,145,0.5)">
           <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite"/>
+          <animate attributeName="r" values="1.5;2;1.5" dur="1.5s" repeatCount="indefinite"/>
         </circle>
         <circle class="fab-pulse" cx="12" cy="10" r="1.5" fill="rgba(107,44,145,0.5)">
           <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" begin="0.3s" repeatCount="indefinite"/>
+          <animate attributeName="r" values="1.5;2;1.5" dur="1.5s" begin="0.3s" repeatCount="indefinite"/>
         </circle>
         <circle class="fab-pulse" cx="16" cy="10" r="1.5" fill="rgba(107,44,145,0.5)">
           <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" begin="0.6s" repeatCount="indefinite"/>
+          <animate attributeName="r" values="1.5;2;1.5" dur="1.5s" begin="0.6s" repeatCount="indefinite"/>
         </circle>
       </svg>
     </button>
