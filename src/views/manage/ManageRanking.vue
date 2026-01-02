@@ -1,9 +1,15 @@
 <template>
   <div class="dashboard-container">
+    <!-- Mobile Sidebar Backdrop -->
+    <div v-if="isMobileSidebarOpen" class="mobile-sidebar-backdrop" @click="toggleSidebar" aria-hidden="true"></div>
     <!-- Sidebar -->
     <Sidebar :userType="userType" :userInfoObject="userInfoObject" />
     <!-- Main Content -->
     <main class="main-content">
+      <!-- Mobile Sidebar Toggle -->
+      <button v-if="isMobile" class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
+        <i class="bi bi-list"></i>
+      </button>
       <div class="container-fluid pt-4 px-4">
       <!-- Info Card / How to Use (Detailed) -->
       <div class="card synonyms-info-card synonyms-shadow-apple mb-3 apple-fade">
@@ -47,16 +53,45 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import Sidebar from '@/components/Sidebar.vue';
 import FinalRankingCard from '@/components/FinalRankingCard.vue';
 import { useRouter } from 'vue-router';
+import { isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 const cardRef = ref(null);
 
 // Load user info similar to other manage pages
 const router = useRouter();
 const userInfoObject = ref({});
 const userType = ref('');
+
+// Mobile sidebar
+const isMobile = ref(window.innerWidth <= 768);
+let _savedSidebarCollapsed = null;
+
+const toggleSidebar = () => {
+  const sb = document.querySelector('.sidebar');
+  const isOpen = !isMobileSidebarOpen.value;
+
+  if (isOpen) {
+    _savedSidebarCollapsed = isSidebarCollapsed.value;
+    isSidebarCollapsed.value = false;
+    if (sb) sb.classList.remove('collapsed');
+    document.body.classList.add('sidebar-open');
+    document.body.classList.add('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = true;
+  } else {
+    isSidebarCollapsed.value = !!_savedSidebarCollapsed;
+    if (sb && _savedSidebarCollapsed) sb.classList.add('collapsed');
+    document.body.classList.remove('sidebar-open');
+    document.body.classList.remove('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = false;
+    _savedSidebarCollapsed = null;
+  }
+};
+
+let resizeHandler = null;
+
 onMounted(() => {
   const token = localStorage.getItem("userToken");
   const type = localStorage.getItem("userType");
@@ -69,6 +104,27 @@ onMounted(() => {
   if (userInfoString) {
     try { userInfoObject.value = JSON.parse(userInfoString); } catch(e){ console.error(e); }
   }
+  
+  // Mobile resize listener
+  resizeHandler = () => {
+    const newIsMobile = window.innerWidth <= 768;
+    if (newIsMobile !== isMobile.value) {
+      isMobile.value = newIsMobile;
+      if (!newIsMobile && isMobileSidebarOpen.value) {
+        isMobileSidebarOpen.value = false;
+        document.body.classList.remove('sidebar-open', 'sidebar-mobile-expanded');
+        isSidebarCollapsed.value = _savedSidebarCollapsed ?? isSidebarCollapsed.value;
+        _savedSidebarCollapsed = null;
+      }
+    }
+  };
+  window.addEventListener('resize', resizeHandler);
+});
+
+onUnmounted(() => {
+  if (resizeHandler) window.removeEventListener('resize', resizeHandler);
+  isMobileSidebarOpen.value = false;
+  document.body.classList.remove('sidebar-open', 'sidebar-mobile-expanded');
 });
 </script>
 
@@ -76,6 +132,49 @@ onMounted(() => {
 @import '@/assets/dashboard-styles.css';
 @import '@/assets/main.css';
 @import '@/assets/manage-synonyms.css';
+
+.mobile-sidebar-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.mobile-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+}
+
+@media (max-width: 768px) {
+  .mobile-sidebar-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-sidebar-backdrop {
+    display: block;
+  }
+
+  .dashboard-container {
+    grid-template-columns: 1fr;
+  }
+
+  .main-content {
+    grid-column: 1 / -1;
+  }
+}
 
 .apple-fade {
   animation: apple-fade-in 380ms ease;
