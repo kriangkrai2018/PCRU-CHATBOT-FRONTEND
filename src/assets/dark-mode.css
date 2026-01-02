@@ -35,6 +35,7 @@
 
 /* --- Dark Mode Override (Project Palette) --- */
 [data-theme="dark"] {
+  --cb-bg-color-dark: #121212;    /* very dark gray for panels */
   /* Backgrounds (use provided palette) */
   --cb-bg-primary: #000000;      /* pure black (used for page bg) */
   --cb-bg-secondary: #0D0511;    /* deep near-black with purple tint */
@@ -112,6 +113,7 @@
   --cb-panel-footer-bg: rgba(45,45,45,0.95);
   --cb-placeholder-bg: rgba(45,45,45,0.9);
   --cb-border-btn: rgba(95,99,104,0.3);
+  --cb-text-black: #000000;
 }
 
 /* Remove glassmorphism in Dark Mode for authentic Chrome look */
@@ -183,33 +185,29 @@
 
 /* Dark Mode Close Circle Button - Purple (same as light) */
 [data-theme="dark"] .close-circle {
-  background: var(--cb-accent-purple-1) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
   border: 1px solid var(--cb-border-purple) !important;
   box-shadow: 0 2px 8px var(--cb-shadow-purple);
   color: var(--cb-text-inverse) !important;
 } 
 
-/* Dark Mode Theme Toggle Button - Light Gray */
+/* Dark Mode Theme Toggle Button - Light Gray (icon color becomes purple) */
 [data-theme="dark"] .theme-toggle-btn {
-  background: var(--cb-surface-bg-strong) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
   border: 1px solid var(--cb-border-btn) !important;
   box-shadow: 0 2px 8px var(--cb-shadow-30);
-  color: var(--cb-text-primary) !important;
+  /* ensure icons using currentColor become purple */
+  color: var(--cb-text-inverse) !important;
 } 
 
-/* Dark Mode Button SVG Icons */
-[data-theme="dark"] .close-circle svg path,
-[data-theme="dark"] .theme-toggle-btn svg {
-  stroke: var(--cb-text-primary);
-  stroke-width: 2;
-}
+
 
 /* Keep clear-chat-btn red in dark mode */
 [data-theme="dark"] .clear-chat-btn {
-  background: var(--cb-danger) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
   border: none !important;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
-  color: var(--cb-text-inverse) !important;
 } 
 
 
@@ -268,25 +266,11 @@
   transform: none;
 }
 
-/* Dark Mode Panel Footer */
-[data-theme="dark"] .panel-footer {
-    background: var(--cb-bg-msg-bot) !important;
-    backdrop-filter: blur(14px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
-}
-
 /* Dark Mode Chatbot Container */
 [data-theme="dark"] .chatbot-container {
   background-color: var(--cb-bg-panel);
   color: var(--cb-text-primary);
 } 
-
-
-/* Dark Mode Panel Footer Border */
-/* [data-theme="dark"] .panel-footer {
-  background: var(--cb-panel-footer-bg);
-  border-top: 1px solid var(--cb-border-muted);
-} */
 
 /* Dark Mode Input Pill */
 [data-theme="dark"] .input-pill {
@@ -305,9 +289,17 @@
 
 /* Dark Mode Message Bubbles */
 [data-theme="dark"] .message-bubble.bot {
-  background: var(--cb-bg-msg-bot) !important;
-  backdrop-filter: blur(14px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
+    position: relative;
+    z-index: 2;
+    width: var(--panel-width);
+    height: 100%;
+    background: rgb(13, 13, 13) !important;
+    backdrop-filter: blur(var(--blur-amt));
+    -webkit-backdrop-filter: blur(var(--blur-amt));
+    box-shadow: -10px 0 60px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
 } 
 
 /* Dark Mode Bot with Categories */
@@ -500,3 +492,37 @@
 [data-theme="dark"] .ai-greet-sub { 
   color: #6e6e73; 
 } 
+
+
+
+[data-theme="dark"] .close-btn, 
+[data-theme="dark"] .example-row .text,
+[data-theme="dark"] .section-header h3,
+[data-theme="dark"] .panel-header h1.title,
+[data-theme="dark"] .section-heading,
+[data-theme="dark"] .feature-card span,
+[data-theme="dark"] .faq-toggle,
+[data-theme="dark"] .mini-icon,
+[data-theme="dark"] .mini-icon svg line{
+  color: var(--cb-text-inverse) !important;
+}
+[data-theme="dark"] .faq-content{
+  color: rgb(201, 201, 201) !important;
+}
+
+
+
+
+[data-theme="dark"] .apple-panel,
+[data-theme="dark"] .faq-item.is-active,
+[data-theme="dark"] .faq-item,
+[data-theme="dark"] .feature-card,
+[data-theme="dark"] .panel-footer{
+    background: rgba(142, 142, 147, 0.08) !important;
+    border: 1px solid rgba(142, 142, 147, 0.15) !important;
+}
+
+[data-theme="dark"] .panel-content,
+[data-theme="dark"] .panel-header { 
+  background-color: rgba(0,0,0,0.1) !important; 
+}

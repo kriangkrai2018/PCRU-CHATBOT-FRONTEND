@@ -54,32 +54,36 @@
             </button>
 
             <!-- Theme toggle button -->
-            <button class="theme-toggle-btn" @click.stop="toggleTheme" :title="getThemeButtonTitle()" :aria-pressed="theme === 'dark'">
-              <!-- Sun when dark (toggle to auto) -->
-              <svg v-if="theme === 'dark'" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <circle cx="12" cy="12" r="4" fill="#FFD54F" />
-                <g stroke="#FFD54F" stroke-width="1.6" stroke-linecap="round">
-                  <path d="M12 2v2" />
-                  <path d="M12 20v2" />
-                  <path d="M2 12h2" />
-                  <path d="M20 12h2" />
-                  <path d="M4.9 4.9l1.4 1.4" />
-                  <path d="M17.7 17.7l1.4 1.4" />
-                  <path d="M4.9 19.1l1.4-1.4" />
-                  <path d="M17.7 6.3l1.4-1.4" />
-                </g>
-              </svg>
-              <!-- Moon when light (toggle to dark) -->
-              <svg v-else-if="theme === 'light'" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" fill="#000000" />
-              </svg>
-              <!-- Auto icon when auto (toggle to light) -->
-              <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                <circle cx="12" cy="12" r="2" fill="currentColor"/>
-                <path d="M12 4v2M12 18v2M4 12h2M18 12h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
+            <button class="theme-toggle-btn" :class="{ expanded: isExpanded }" @click.stop="toggleTheme" :title="getThemeButtonTitle()" :aria-pressed="theme === 'dark'">
+              <div class="icon-wrapper">
+                <!-- Sun when dark (toggle to auto) -->
+                <svg v-if="theme === 'dark'" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <circle cx="12" cy="12" r="4" fill="#FFD54F" />
+                  <g stroke="#FFD54F" stroke-width="1.6" stroke-linecap="round">
+                    <path d="M12 2v2" />
+                    <path d="M12 20v2" />
+                    <path d="M2 12h2" />
+                    <path d="M20 12h2" />
+                    <path d="M4.9 4.9l1.4 1.4" />
+                    <path d="M17.7 17.7l1.4 1.4" />
+                    <path d="M4.9 19.1l1.4-1.4" />
+                    <path d="M17.7 6.3l1.4-1.4" />
+                  </g>
+                </svg>
+                <!-- Moon when light (toggle to dark) -->
+                <svg v-else-if="theme === 'light'" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" fill="#000000" />
+                </svg>
+                <!-- Auto icon when auto (toggle to light) -->
+                <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                  <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                  <path d="M12 4v2M12 18v2M4 12h2M18 12h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <span class="theme-label">{{ themeDisplayOnly }}</span>
             </button>
+            
 
             <div class="overlay-backdrop-2"></div>
           </div>
@@ -101,7 +105,7 @@
             <!-- Chat Messages Area (always rendered so welcome content can show on first open) -->
             <div class="chat-messages" ref="messagesContainer">
               <!-- Welcome Bot Message with Categories -->
-              <div class="welcome-message" style="margin-top: 2rem;">
+              <div class="welcome-message">
                 <!-- Top welcome typing placeholder removed — use a temporary bottom typing message inside `messages` instead -->
                 
                 <div v-if="showTopCategories" class="message-wrapper bot">
@@ -825,6 +829,9 @@ export default {
       panelFocused: false,
       // Theme: 'light' | 'dark' | 'auto' (initialized in mounted via initTheme)
       theme: 'light',
+      // Theme toggle expansion state
+      isExpanded: false,
+      expandTimer: null,
       // Media query listener for system theme changes in auto mode
       systemThemeMediaQuery: null,
       // Inline style object for fixed-position send button when focused (measured from input)
@@ -960,6 +967,11 @@ export default {
     // Show clear (trash) button only if there are messages or the user has previously interacted
     showClearBtn() {
       return (Array.isArray(this.messages) && this.messages.length > 0) || !!this.hasAskedBot
+    },
+    themeDisplayOnly() {
+      if (this.theme === 'light') return 'Light';
+      if (this.theme === 'dark') return 'Dark';
+      return 'Auto';
     }
   },
   
@@ -1418,6 +1430,11 @@ export default {
       clearInterval(this.feedbackCooldownInterval)
       this.feedbackCooldownInterval = null
     }
+    // Clear theme toggle expansion timer
+    if (this.expandTimer) {
+      clearTimeout(this.expandTimer)
+      this.expandTimer = null
+    }
     // Remove visualViewport listeners if set
     if (this._viewportHandler) {
       if (window.visualViewport) {
@@ -1574,8 +1591,7 @@ export default {
       // Determine actual theme to apply (resolve 'auto' to 'light' or 'dark')
       let actualTheme = this.theme
       if (this.theme === 'auto') {
-        const prefers = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-        actualTheme = prefers ? 'dark' : 'light'
+        actualTheme = this.resolveAutoTheme()
       }
       
       // Apply to document root
@@ -1598,14 +1614,20 @@ export default {
         this.theme = 'light'
       }
       
+      // Expand button to show text for 3 seconds
+      this.isExpanded = true;
+      if (this.expandTimer) clearTimeout(this.expandTimer);
+      this.expandTimer = setTimeout(() => {
+        this.isExpanded = false;
+      }, 3000);
+      
       try {
         localStorage.setItem('chatbot_theme', this.theme)
         
         // Determine actual theme to apply (resolve 'auto' to 'light' or 'dark')
         let actualTheme = this.theme
         if (this.theme === 'auto') {
-          const prefers = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-          actualTheme = prefers ? 'dark' : 'light'
+          actualTheme = this.resolveAutoTheme()
         }
         
         document.documentElement.setAttribute('data-theme', actualTheme)
@@ -1626,11 +1648,20 @@ export default {
       }
     },
 
+    // Resolve 'auto' to an actual theme based on local time (day -> light, night -> dark)
+    resolveAutoTheme() {
+      try {
+        const hour = new Date().getHours()
+        return (hour >= 7 && hour < 19) ? 'light' : 'dark'
+      } catch (e) {
+        return 'light'
+      }
+    },
+
     handleSystemThemeChange() {
-      // Only update if we're in auto mode
+      // Only update if we're in auto mode — re-evaluate time-based theme (auto uses local time now)
       if (this.theme === 'auto') {
-        const prefers = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-        const actualTheme = prefers ? 'dark' : 'light'
+        const actualTheme = this.resolveAutoTheme()
         
         try {
           document.documentElement.setAttribute('data-theme', actualTheme)

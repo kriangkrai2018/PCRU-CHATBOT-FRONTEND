@@ -192,12 +192,7 @@
 
           </div>
 
-          <!-- Footer -->
-          <footer class="panel-footer">
-            <button class="apple-btn-primary" @click="closeHelp">
-              เข้าใจแล้ว
-            </button>
-          </footer>
+
 
         </div>
       </transition>
@@ -407,7 +402,7 @@ export default {
   margin-bottom: 24px;
 }
 .hero-icon-wrapper {
-  width: 64px;
+  width: 80.90px;
   height: 64px;
   border-radius: 20px;
   display: flex;
