@@ -16,11 +16,56 @@
 
         <div v-else>
           <!-- Header Section: Title + Action Buttons -->
-          <div class="header-section mb-4">
+          <div class="header-section my-4">
             <div class="header-top d-flex align-items-center gap-3 mb-3">
               <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
                 <i :class="isMobileSidebarOpen ? 'bi bi-x' : 'bi bi-list'"></i>
               </button>
+
+              <svg class="book-icon" width="40" height="40" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Background Circle -->
+                <circle cx="32" cy="32" r="30" fill="#7c3aed" opacity="0.08"/>
+                
+                <!-- Book Cover -->
+                <path class="brain-outline brain-left" 
+                  d="M 16 14 L 48 14 Q 50 14 50 16 L 50 50 Q 50 52 48 52 L 16 52 Q 14 52 14 50 L 14 16 Q 14 14 16 14 Z"
+                  stroke="#7c3aed" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                
+                <!-- Book Spine -->
+                <path class="brain-wrinkle wrinkle-1" 
+                  d="M 32 16 L 32 52" 
+                  stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                
+                <!-- Page Lines -->
+                <path class="brain-wrinkle wrinkle-2" 
+                  d="M 22 26 L 28 26" 
+                  stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                <path class="brain-wrinkle wrinkle-2" 
+                  d="M 22 32 L 28 32" 
+                  stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                <path class="brain-wrinkle wrinkle-2" 
+                  d="M 22 38 L 28 38" 
+                  stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                <path class="brain-wrinkle wrinkle-2" 
+                  d="M 36 26 L 42 26" 
+                  stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                <path class="brain-wrinkle wrinkle-2" 
+                  d="M 36 32 L 42 32" 
+                  stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                <path class="brain-wrinkle wrinkle-2" 
+                  d="M 36 38 L 42 38" 
+                  stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                
+                <!-- Dots -->
+                <g class="neuron-group">
+                  <circle class="neuron-glow" cx="25" cy="45" r="5" fill="#7c3aed" opacity="0.2"/>
+                  <circle class="neuron neuron-1" cx="25" cy="45" r="2.5" fill="#7c3aed"/>
+                </g>
+                <g class="neuron-group">
+                  <circle class="neuron-glow" cx="39" cy="45" r="5" fill="#a78bfa" opacity="0.2"/>
+                  <circle class="neuron neuron-2" cx="39" cy="45" r="2.5" fill="#a78bfa"/>
+                </g>
+              </svg>
 
               <h2 class="page-title m-0">Manage Question Answer</h2>
               
@@ -34,6 +79,61 @@
                   <i class="bi bi-cloud-upload"></i>
                 </button>
               </div>
+            </div>
+
+            <!-- Info Card: Guide -->
+            <div class="info-card apple-card mb-4 p-4 rounded-4 shadow-apple">
+              <!-- SVG Book Icon Animation -->
+              <svg class="book-icon float-start me-3" width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Book Cover/Background -->
+                <rect class="book-cover" x="12" y="12" width="48" height="48" rx="3" fill="#7c3aed" opacity="0.15"/>
+                <!-- Book Spine -->
+                <rect class="book-spine" x="12" y="12" width="6" height="48" rx="1" fill="#7c3aed" opacity="0.3"/>
+                <!-- Pages -->
+                <path class="book-page page-1" d="M22 20 L54 20" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round"/>
+                <path class="book-page page-2" d="M22 28 L54 28" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round"/>
+                <path class="book-page page-3" d="M22 36 L50 36" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round"/>
+                <path class="book-page page-4" d="M22 44 L48 44" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round"/>
+                <path class="book-page page-5" d="M22 52 L46 52" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round"/>
+                <!-- Book Border -->
+                <rect x="12" y="12" width="48" height="48" rx="3" stroke="#7c3aed" stroke-width="2" fill="none"/>
+                <!-- Bookmark -->
+                <rect class="bookmark" x="52" y="12" width="4" height="20" fill="#a78bfa"/>
+              </svg>
+              <h5 class="fw-bold mb-3">คำถาม-คำตอบคืออะไร?</h5>
+              <p class="mb-2 text-muted"><strong>คำถาม-คำตอบ</strong> คือข้อมูลที่ใช้สำหรับตอบกลับข้อความจากผู้ใช้ เมื่อระบบค้นหากับคำถามตรงกัน ก็จะแสดงคำตอบที่เหมาะสม</p>
+              <ul class="mb-3 text-muted small">
+                <li class="d-flex align-items-center gap-2 mb-2">
+                  <svg class="icon-svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <circle cx="10" cy="10" r="8" stroke="#7c3aed" stroke-width="2"/>
+                    <path d="M6 10 L9 13 L14 7" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <span>คำตอบจะถูกส่งไปหาผู้ใช้เมื่อมีการค้นหาตรงกับคำถาม</span>
+                </li>
+                <li class="d-flex align-items-center gap-2 mb-2">
+                  <svg class="icon-svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M7 4 L13 4 L15 8 L13 16 L7 16 L5 8 Z" stroke="#7c3aed" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M10 6 L10 12" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                  <span>สามารถกำหนดวันหมดอายุของคำถาม-คำตอบได้</span>
+                </li>
+                <li class="d-flex align-items-center gap-2">
+                  <svg class="icon-svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <circle cx="10" cy="10" r="8" stroke="#7c3aed" stroke-width="2"/>
+                    <path d="M10 6 V10 L13 13" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <span>เพิ่ม/ลบ หรืออัพเดตคำถาม-คำตอบได้ตลอด</span>
+                </li>
+              </ul>
+              <p class="mb-0 small text-success fw-bold d-flex align-items-center gap-2">
+                <svg class="icon-svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="8" stroke="#7c3aed" stroke-width="2"/>
+                  <path d="M10 6 L10 11" stroke="#ffd60a" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M8 14 L12 14" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"/>
+                  <circle cx="10" cy="8" r="4" fill="#ffd60a" opacity="0.3"/>
+                </svg>
+                <span>ระบบจะค้นหาคำถามที่เหมาะสมที่สุดสำหรับผู้ใช้อัตโนมัติ</span>
+              </p>
             </div>
 
             <!-- Search bar: Full width on mobile, normal on desktop -->
@@ -812,6 +912,170 @@ onUnmounted(() => {
 @import '@/assets/pagination-styles.css';
 @import '@/assets/sidebar.css';
 
+/* Mobile sidebar toggle button styles (inline here so it's local to this view) */
+button.mobile-sidebar-toggle.mobile-inline-toggle { display: none !important; border: none; background: #fff; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding: 0; }
+.mobile-sidebar-toggle i { font-size: 1.05rem; }
+@media (max-width: 768px) { button.mobile-sidebar-toggle.mobile-inline-toggle { display: flex !important; margin-right: 8px; align-self: center; } }
+.mobile-sidebar-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.36); z-index: 98; }
+
+/* Brain Icon Animation */
+.brain-icon {
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 4px 20px rgba(0, 122, 255, 0.3));
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Brain Outline */
+.brain-outline {
+  stroke-dasharray: 180;
+  stroke-dashoffset: 180;
+  animation: drawBrainOutline 2s ease-out forwards;
+}
+
+.brain-left {
+  animation-delay: 0s;
+}
+
+@keyframes drawBrainOutline {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Brain Wrinkles */
+.brain-wrinkle {
+  stroke-dasharray: 25;
+  stroke-dashoffset: 25;
+  animation: drawWrinkle 0.6s ease-out forwards;
+  opacity: 0.75;
+}
+
+.wrinkle-1 { animation-delay: 1s; }
+.wrinkle-2 { animation-delay: 1.2s; }
+
+@keyframes drawWrinkle {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Neurons */
+.neuron {
+  animation: neuronPulse 2s ease-in-out infinite;
+  opacity: 0;
+}
+
+.neuron-1 { animation-delay: 1.8s; }
+.neuron-2 { animation-delay: 2s; }
+
+@keyframes neuronPulse {
+  0%, 100% { 
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.3);
+  }
+}
+
+/* Neuron Glow */
+.neuron-glow {
+  animation: glowPulse 2s ease-in-out infinite;
+  opacity: 0;
+}
+
+@keyframes glowPulse {
+  0%, 100% { 
+    opacity: 0.2;
+    r: 6px;
+  }
+  50% { 
+    opacity: 0.4;
+    r: 10px;
+  }
+}
+
+/* Info Card Styles */
+.info-card {
+  background: linear-gradient(135deg, #ede9fe 0%, #f5f3ff 100%);
+  border-left: 4px solid #7c3aed;
+}
+
+.book-icon {
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 2px 8px rgba(124, 58, 237, 0.12));
+}
+
+.book-cover {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.book-spine {
+  animation: fadeIn 0.4s ease-out 0.1s forwards;
+}
+
+.book-page {
+  animation: slideIn 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+.page-1 { animation-delay: 0.2s; }
+.page-2 { animation-delay: 0.3s; }
+.page-3 { animation-delay: 0.4s; }
+.page-4 { animation-delay: 0.5s; }
+.page-5 { animation-delay: 0.6s; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { 
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.bookmark {
+  animation: bookmarkWave 2s ease-in-out infinite;
+  animation-delay: 0.8s;
+}
+
+@keyframes bookmarkWave {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(6px); }
+}
+
+.icon-svg {
+  animation: iconBounce 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.icon-svg:nth-child(n) { animation-delay: calc(0.1s * var(--svg-index, 1)); }
+
+@keyframes iconBounce {
+  0% { 
+    opacity: 0;
+    transform: scale(0.8) translateY(-4px);
+  }
+  100% { 
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Mobile sidebar toggle button styles (inline here so it's local to this view) */
+button.mobile-sidebar-toggle.mobile-inline-toggle { display: none !important; border: none; background: #fff; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding: 0; }
+.mobile-sidebar-toggle i { font-size: 1.05rem; }
+@media (max-width: 768px) { button.mobile-sidebar-toggle.mobile-inline-toggle { display: flex !important; margin-right: 8px; align-self: center; } }
+.mobile-sidebar-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.36); z-index: 98; }
+
 /* =========================================
    Apple Design System
    ========================================= */
@@ -852,29 +1116,8 @@ onUnmounted(() => {
   z-index: 998;
 }
 
-/* Mobile sidebar toggle button styles (same as ManageCategoriesView) */
-button.mobile-sidebar-toggle.mobile-inline-toggle { 
-  display: none !important; 
-  border: none !important; 
-  background: #fff !important; 
-  width: 36px !important; 
-  height: 36px !important; 
-  align-items: center; 
-  justify-content: center; 
-  border-radius: 8px !important; 
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08) !important; 
-  padding: 0 !important; 
-}
-.mobile-sidebar-toggle i { font-size: 1.05rem !important; color: #1d1d1f !important; }
-
 @media (max-width: 768px) {
   .main-content { grid-column: 1/-1; width: 100%; }
-  
-  button.mobile-sidebar-toggle.mobile-inline-toggle { 
-    display: flex !important; 
-    margin-right: 8px; 
-    align-self: center; 
-  }
   
   .mobile-sidebar-backdrop {
     display: block;
@@ -1445,16 +1688,4 @@ button.mobile-sidebar-toggle.mobile-inline-toggle {
 .whitespace-prewrap { white-space: pre-wrap; }
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-</style>
-
-<!-- Non-scoped styles for mobile sidebar toggle -->
-<style>
-.mobile-sidebar-toggle.mobile-inline-toggle {
-  display: none !important;
-}
-@media (max-width: 768px) {
-  .mobile-sidebar-toggle.mobile-inline-toggle {
-    display: flex !important;
-  }
-}
 </style>

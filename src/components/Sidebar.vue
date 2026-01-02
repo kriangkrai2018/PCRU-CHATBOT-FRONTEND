@@ -574,13 +574,8 @@ const handleLogout = () => { logout(router); };
   transition: opacity 180ms ease, transform 180ms ease;
 }
 
-/* Toggle button - only show on mobile */
+/* Toggle button - show on all sizes */
 .toggle-btn {
-  display: none;
-}
-@media (max-width: 768px) {
-  .toggle-btn {
-    display: block;
-  }
+  display: flex;
 }
 </style>

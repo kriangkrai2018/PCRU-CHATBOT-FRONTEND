@@ -9,11 +9,6 @@
     <!-- Main Content -->
     <main class="main-content">
       <div class="container-fluid">
-        <!-- Mobile Sidebar Toggle -->
-        <button v-if="isMobile" class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
-          <i class="bi bi-list"></i>
-        </button>
-        
         <!-- Loading State -->
         <div v-if="loading" class="text-center py-5">
           <div class="spinner-border text-primary" role="status">
@@ -23,11 +18,14 @@
         </div>
 
         <div v-else>
-          <!-- Header with SVG Animation -->
-            <div class="d-block d-md-flex align-items-center justify-content-between mb-4">
-            <div class="d-flex align-items-center gap-3">
-              <!-- SVG Filter Icon Animation -->
-              <svg class="brain-icon" width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Header Section -->
+          <div class="header-section my-4">
+            <div class="header-top d-flex align-items-center gap-3 mb-3">
+              <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
+                <i :class="isMobileSidebarOpen ? 'bi bi-x' : 'bi bi-list'"></i>
+              </button>
+
+              <svg class="brain-icon" width="40" height="40" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <!-- Background Circle -->
                 <circle cx="32" cy="32" r="30" fill="#007aff" opacity="0.08"/>
                 
@@ -54,14 +52,15 @@
                   <circle class="neuron neuron-2" cx="32" cy="40" r="3" fill="#ff9500"/>
                 </g>
               </svg>
+
               <h2 class="page-title m-0">Manage Stopwords</h2>
-            </div>
-            
-            <div class="mt-3 mt-md-0">
-              <button class="btn-add-apple" @click="openAddModal" title="เพิ่ม Stopword ใหม่">
-                <i class="bi bi-plus-lg"></i>
-                <span>Add Stopword</span>
-              </button>
+              
+              <div class="header-actions d-flex gap-2 ms-auto">
+                <button class="btn-add-apple" @click="openAddModal" title="เพิ่ม Stopword ใหม่">
+                  <i class="bi bi-plus-lg"></i>
+                  <span class="d-none d-sm-inline">Add Stopword</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -678,6 +677,12 @@ function showMessage(msg, type) {
 @import '@/assets/dashboard-styles.css';
 @import '@/assets/main.css';
 
+/* Mobile sidebar toggle button styles (inline here so it's local to this view) */
+button.mobile-sidebar-toggle.mobile-inline-toggle { display: none !important; border: none; background: #fff; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding: 0; }
+.mobile-sidebar-toggle i { font-size: 1.05rem; }
+@media (max-width: 768px) { button.mobile-sidebar-toggle.mobile-inline-toggle { display: flex !important; margin-right: 8px; align-self: center; } }
+.mobile-sidebar-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.36); z-index: 98; }
+
 .dashboard-container {
   display: flex;
   min-height: 100vh;
@@ -688,6 +693,29 @@ function showMessage(msg, type) {
   flex: 1;
   padding: 0.5rem !important;
   overflow-x: hidden;
+}
+
+.header-section {
+  width: 100%;
+}
+
+.header-top {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 0.5rem;
+}
+
+@media (max-width: 576px) {
+  .btn-add-apple span {
+    display: none !important;
+  }
 }
 
 .page-title {

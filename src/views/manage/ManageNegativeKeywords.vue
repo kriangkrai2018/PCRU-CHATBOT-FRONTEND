@@ -7,30 +7,103 @@
     
     <main class="main-content">
       <div class="negative-keywords-container">
-        <!-- Mobile Sidebar Toggle -->
-        <button v-if="isMobile" class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
-          <i class="bi bi-list"></i>
-        </button>
-        
         <!-- Header Section -->
-        <div class="header-section fade-in">
-      <div class="header-icon-wrapper pop-in">
-        <svg class="header-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-          <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <h1 class="page-title slide-in-down">Manage Negetive keyword</h1>
-      <p class="page-subtitle slide-in-up">Negative Keywords Management</p>
+        <div class="header-section my-4">
+          <div class="header-top d-flex align-items-center gap-3 mb-3">
+            <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
+              <i :class="isMobileSidebarOpen ? 'bi bi-x' : 'bi bi-list'"></i>
+            </button>
 
-      <!-- 🆕 ปุ่ม Seed (Auto-Fill) เพิ่มตรงนี้ -->
-      <div class="header-actions slide-in-up" :style="{animationDelay: '0.1s'}">
-        <button class="btn-seed" @click="confirmSeed" :disabled="isSeeding">
-          <i class="bi bi-magic me-2"></i>
-          {{ isSeeding ? 'กำลังเติมข้อมูล...' : 'เติมคำมาตรฐานอัตโนมัติ' }}
-        </button>
-      </div>
-    </div>
+            <svg class="brain-icon" width="40" height="40" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Background Circle -->
+              <circle cx="32" cy="32" r="30" fill="#dc2626" opacity="0.08"/>
+              
+              <!-- X mark / Negative symbol -->
+              <circle class="brain-outline brain-left" 
+                cx="32" cy="32" r="18"
+                stroke="#dc2626" stroke-width="3" stroke-linecap="round" fill="none"/>
+              
+              <!-- Diagonal lines forming X -->
+              <path class="brain-wrinkle wrinkle-1" 
+                d="M 18 18 L 46 46" 
+                stroke="#dc2626" stroke-width="3" stroke-linecap="round" fill="none"/>
+              <path class="brain-wrinkle wrinkle-2" 
+                d="M 46 18 L 18 46" 
+                stroke="#dc2626" stroke-width="3" stroke-linecap="round" fill="none"/>
+              
+              <!-- Dots -->
+              <g class="neuron-group">
+                <circle class="neuron-glow" cx="20" cy="20" r="5" fill="#dc2626" opacity="0.2"/>
+                <circle class="neuron neuron-1" cx="20" cy="20" r="2.5" fill="#dc2626"/>
+              </g>
+              <g class="neuron-group">
+                <circle class="neuron-glow" cx="44" cy="44" r="5" fill="#ef4444" opacity="0.2"/>
+                <circle class="neuron neuron-2" cx="44" cy="44" r="2.5" fill="#ef4444"/>
+              </g>
+            </svg>
+
+            <h2 class="page-title m-0">Manage Negative Keywords</h2>
+            
+            <!-- Action buttons group -->
+            <div class="header-actions d-flex gap-2">
+              <button class="btn-seed" @click="confirmSeed" :disabled="isSeeding" title="เติมคำมาตรฐานอัตโนมัติ">
+                <i class="bi bi-magic"></i>
+                <span class="d-none d-sm-inline">เติมอัตโนมัติ</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info Card: Guide -->
+        <div class="info-card apple-card mb-4 p-4 rounded-4 shadow-apple">
+          <!-- SVG X Icon Animation -->
+          <svg class="book-icon float-start me-3" width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Background Circle -->
+            <circle cx="36" cy="36" r="32" fill="#dc2626" opacity="0.08"/>
+            <!-- Circle -->
+            <circle cx="36" cy="36" r="20" stroke="#dc2626" stroke-width="2.5" fill="none"/>
+            <!-- X lines -->
+            <path d="M 22 22 L 50 50" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/>
+            <path d="M 50 22 L 22 50" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/>
+            <!-- Dots for animation -->
+            <circle cx="24" cy="24" r="3" fill="#dc2626" opacity="0.6"/>
+            <circle cx="48" cy="48" r="3" fill="#ef4444" opacity="0.6"/>
+          </svg>
+          <h5 class="fw-bold mb-3">Negative Keywords คืออะไร?</h5>
+          <p class="mb-2 text-muted"><strong>Negative Keywords</strong> คือคำที่ทำให้คะแนนลดลง หรือเป็นคำปฏิเสธที่ไม่ต้องการให้ระบบนำไปใช้ เช่น "ไม่", "ยกเว้น", "อย่า" เพื่อให้การค้นหาแม่นยำขึ้น</p>
+          <ul class="mb-3 text-muted small">
+            <li class="d-flex align-items-center gap-2 mb-2">
+              <svg class="icon-svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="8" stroke="#dc2626" stroke-width="2"/>
+                <path d="M6 10 L14 10" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <span>คำปฏิเสธจะลดคะแนนของผลลัพธ์ที่ค้นหา</span>
+            </li>
+            <li class="d-flex align-items-center gap-2 mb-2">
+              <svg class="icon-svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="8" stroke="#dc2626" stroke-width="2"/>
+                <path d="M6 10 L9 13 L14 7" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>ปรับตัวคูณคะแนน: -1.0 (ลบ), 0.0 (ศูนย์), -0.5 (ลดครึ่ง)</span>
+            </li>
+            <li class="d-flex align-items-center gap-2">
+              <svg class="icon-svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="8" stroke="#dc2626" stroke-width="2"/>
+                <path d="M10 6 V10 L13 13" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>เพิ่ม/ลบ/แก้ไข negative keywords ได้ตลอด</span>
+            </li>
+          </ul>
+          <p class="mb-0 small text-danger fw-bold d-flex align-items-center gap-2">
+            <svg class="icon-svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="8" stroke="#dc2626" stroke-width="2"/>
+              <path d="M10 6 L10 11" stroke="#ffd60a" stroke-width="2" stroke-linecap="round"/>
+              <path d="M8 14 L12 14" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="10" cy="8" r="4" fill="#ffd60a" opacity="0.3"/>
+            </svg>
+            <span>ใช้ "เติมคำมาตรฐานอัตโนมัติ" เพื่อโหลดข้อมูลเริ่มต้น</span>
+          </p>
+        </div>
 
     <!-- Stats Cards -->
     <div class="stats-row slide-in-up" :style="{animationDelay: '0.1s'}">
@@ -662,7 +735,7 @@ onUnmounted(() => {
 
 .negative-keywords-container {
   padding: 2rem;
-  max-width: 1400px;
+  width: 100%;
   margin: 0 auto;
 }
 
