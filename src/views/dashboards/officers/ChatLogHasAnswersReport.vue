@@ -2,27 +2,6 @@
   <div class="dashboard-container">
     <!-- Main Content -->
     <div class="container-fluid pt-2 px-4 pb-5">
-      <!-- Header -->
-      <div class="d-flex align-items-center justify-content-between mb-4 fade-in-up">
-        <div class="d-flex align-items-center gap-3">
-          <!-- Apple Icon Box (Indigo for Chat Logs) -->
-          <div class="apple-icon-box indigo-gradient">
-            <i class="bi bi-chat-text-fill text-white"></i>
-          </div>
-          <div>
-            <h3 class="page-title m-0">Chat Logs (Has Answers)</h3>
-            <span class="text-secondary small">User queries matched with answers</span>
-          </div>
-        </div>
-        
-        <!-- Live Status -->
-        <div class="d-flex align-items-center gap-2">
-          <div class="apple-status-badge" :class="{ 'online': wsConnected }">
-            <span class="status-dot"></span>
-            <span>{{ wsConnected ? 'Live' : 'Offline' }}</span>
-          </div>
-        </div>
-      </div>
 
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-5 fade-in">

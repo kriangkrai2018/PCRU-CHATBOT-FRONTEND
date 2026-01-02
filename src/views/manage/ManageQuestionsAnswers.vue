@@ -16,23 +16,21 @@
 
         <div v-else>
           <!-- Header Section -->
-          <div class="d-block d-md-flex align-items-center justify-content-between mb-4">
-            <div class="d-flex align-items-center gap-3">
-              <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
-                <i :class="isMobileSidebarOpen ? 'bi bi-x' : 'bi bi-list'"></i>
-              </button>
-              <h2 class="page-title m-0">จัดการคำถาม-คำตอบ</h2>
-              <button class="btn-apple-primary" @click="openCrudModal" title="เพิ่มรายการใหม่">
-                <i class="bi bi-plus-lg me-2"></i>
-                <span>เพิ่มคำถาม</span>
-              </button>
-              <button class="btn-apple-icon" @click="openUploadModal" title="อัพโหลด CSV">
-                <i class="bi bi-cloud-upload"></i>
-              </button>
-            </div>
+          <div class="d-flex align-items-center flex-wrap gap-2 mb-4">
+            <button class="mobile-sidebar-toggle mobile-inline-toggle d-md-none" style="background: #fff; border: none; width: 36px; height: 36px; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding: 0; display: flex; align-items: center; justify-content: center;" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
+              <i :class="isMobileSidebarOpen ? 'bi bi-x' : 'bi bi-list'" style="font-size: 1.05rem; color: #0071e3;"></i>
+            </button>
+            <h2 class="page-title m-0">จัดการคำถาม-คำตอบ</h2>
+            <button class="btn-apple-primary" @click="openCrudModal" title="เพิ่มรายการใหม่">
+              <i class="bi bi-plus-lg me-2"></i>
+              <span>เพิ่มคำถาม</span>
+            </button>
+            <button class="btn-apple-icon" @click="openUploadModal" title="อัพโหลด CSV">
+              <i class="bi bi-cloud-upload"></i>
+            </button>
 
             <!-- Search Bar -->
-            <div class="search-container mt-3 mt-md-0">
+            <div class="search-container ms-auto">
               <i class="bi bi-search search-icon"></i>
               <input
                 type="text"
@@ -845,25 +843,28 @@ onUnmounted(() => {
   z-index: 998;
 }
 
-.mobile-sidebar-toggle {
-  display: none !important;
-  background: none;
-  border: none;
-  color: currentColor;
-  cursor: pointer;
-  padding: 0.5rem;
-  font-size: 1.25rem;
-  line-height: 1;
-  margin-right: 0.5rem;
-  align-items: center;
-  justify-content: center;
+/* Mobile sidebar toggle button styles (same as ManageCategoriesView) */
+.mobile-sidebar-toggle { 
+  display: none !important; 
+  border: none !important; 
+  background: #fff !important; 
+  width: 36px !important; 
+  height: 36px !important; 
+  align-items: center; 
+  justify-content: center; 
+  border-radius: 8px !important; 
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08) !important; 
+  padding: 0 !important; 
 }
+.mobile-sidebar-toggle i { font-size: 1.05rem !important; color: #1d1d1f !important; }
 
 @media (max-width: 768px) {
   .main-content { grid-column: 1/-1; width: 100%; }
   
-  .mobile-sidebar-toggle { 
+  .mobile-sidebar-toggle.mobile-inline-toggle { 
     display: flex !important; 
+    margin-right: 8px; 
+    align-self: center; 
   }
   
   .mobile-sidebar-backdrop {

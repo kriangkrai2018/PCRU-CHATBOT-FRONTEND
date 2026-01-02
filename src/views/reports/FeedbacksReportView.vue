@@ -14,7 +14,7 @@
             <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
               <AnimatedToggleIcon :isOpen="isMobileSidebarOpen" />
             </button>
-            <div class="d-flex align-items-center gap-3">
+            <div class="hero-heading d-flex align-items-center gap-3">
               <!-- Animated Icon Box (Blue Gradient for General Feedbacks) -->
               <div class="apple-icon-box blue-gradient">
                 <svg class="chat-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -234,6 +234,10 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0;
+}
+
+.hero-heading {
+  margin-left: clamp(0.75rem, 2vw, 1.5rem);
 }
 
 .hero-title {

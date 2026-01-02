@@ -579,6 +579,17 @@ onMounted(() => {
     onOpen: () => wsConnected.value = true,
     onClose: () => wsConnected.value = false,
   });
+  
+  // Auto-expand the first keyword when component mounts
+  const timer = setTimeout(() => {
+    if (paginatedKeywords.value.length > 0) {
+      const firstKeyword = paginatedKeywords.value[0];
+      expandedId.value = firstKeyword.KeywordID;
+      fetchKeywordInsights(firstKeyword);
+    }
+  }, 300); // Small delay to ensure DOM is ready
+  
+  onUnmounted(() => clearTimeout(timer));
 });
 
 onUnmounted(() => {

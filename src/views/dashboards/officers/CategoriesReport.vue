@@ -136,7 +136,7 @@
                 <template v-for="(cat, idx) in visibleParents" :key="cat.CategoriesID">
                   <!-- Main Parent Row -->
                   <tr class="align-middle parent-row">
-                    <td class="ps-4">
+                    <td class="ps-4" data-label="Actions">
                       <button 
                         v-if="hasSubCategories(cat.CategoriesID, cat.CategoriesID)" 
                         class="expand-btn" 
@@ -145,20 +145,20 @@
                         <i class="bi" :class="expandedMap[cat.CategoriesID] ? 'bi-chevron-up' : 'bi-chevron-right'"></i>
                       </button>
                     </td>
-                    <td class="cat-id-cell fw-semibold text-primary">{{ cat.CategoriesID }}</td>
-                    <td class="fw-medium text-dark">{{ cat.CategoriesName }}</td>
-                    <td>
+                    <td class="cat-id-cell fw-semibold text-primary" data-label="ID">{{ cat.CategoriesID }}</td>
+                    <td class="fw-medium text-dark" data-label="Category">{{ cat.CategoriesName }}</td>
+                    <td data-label="Type">
                       <span :class="isMain(cat) ? 'apple-badge-blue' : 'apple-badge-gray'">
                         {{ isMain(cat) ? 'Main' : 'Sub' }}
                       </span>
                     </td>
-                    <td class="contact-cell">
+                    <td class="contact-cell" data-label="Contact">
                       <div v-if="(aggregatedContacts(cat.CategoriesID) || []).length">
                         <div v-for="(cc, i) in aggregatedContacts(cat.CategoriesID)" :key="i" class="small text-secondary">{{ cc }}</div>
                       </div>
                       <span v-else class="text-muted small">-</span>
                     </td>
-                    <td>
+                    <td data-label="File">
                       <template v-if="cat.CategoriesPDF">
                         <button @click.prevent="openFile(cat.CategoriesPDF, cat.CategoriesName)" class="file-link-btn">
                           <i :class="pdfIconClass(cat.CategoriesPDF)"></i>
@@ -177,18 +177,18 @@
                       class="sub-row"
                     >
                       <td></td>
-                      <td class="cat-id-cell ps-4 text-secondary">
+                      <td class="cat-id-cell ps-4 text-secondary" data-label="ID">
                         <span class="tree-line">└</span> {{ sub.CategoriesID }}
                       </td>
-                      <td class="ps-4 text-secondary">{{ sub.CategoriesName }}</td>
-                      <td><span class="apple-badge-gray-outline">Sub</span></td>
-                      <td class="contact-cell">
+                      <td class="ps-4 text-secondary" data-label="Category">{{ sub.CategoriesName }}</td>
+                      <td data-label="Type"><span class="apple-badge-gray-outline">Sub</span></td>
+                      <td class="contact-cell" data-label="Contact">
                         <div v-if="sub.Contact">
                           <div v-for="(cc, i) in parseContacts(sub.Contact).filter(p => !isContactCoveredByParent(cat.CategoriesID, p))" :key="i" class="small text-secondary">{{ cc }}</div>
                         </div>
                         <span v-else class="text-muted small">-</span>
                       </td>
-                      <td>
+                      <td data-label="File">
                         <template v-if="sub.CategoriesPDF">
                           <button @click.prevent="openFile(sub.CategoriesPDF, sub.CategoriesName)" class="file-link-btn">
                             <i :class="pdfIconClass(sub.CategoriesPDF)"></i>
@@ -738,6 +738,14 @@ function closeModal() { showFileModal.value = false; }
   background-color: var(--apple-light-bg);
 }
 
+.dashboard-container > .container-fluid {
+  padding-left: clamp(0.4rem, 2vw, 1.5rem);
+  padding-right: clamp(0.4rem, 2vw, 1.5rem);
+  padding-top: 1rem;
+  max-width: none;
+  margin: 0;
+}
+
 .page-title {
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -929,4 +937,101 @@ function closeModal() { showFileModal.value = false; }
 /* Pagination Override */
 .pagination .page-link { border: none; color: #1d1d1f; border-radius: 8px; margin: 0 2px; }
 .pagination .page-item.active .page-link { background: var(--apple-blue); color: white; box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3); }
+
+@media (max-width: 992px) {
+  .d-flex.align-items-center.justify-content-between.mb-4 {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .apple-status-badge {
+    align-self: center;
+  }
+
+  .row.mb-4.g-3 {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .row.mb-4.g-3 > .col-md-4 {
+    width: 100%;
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  .apple-card.chart-card {
+    padding: 16px;
+  }
+
+  .apple-card.table-wrapper {
+    padding: 0;
+  }
+
+  .card-header-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .search-container { width: 100%; }
+}
+
+@media (max-width: 768px) {
+  .apple-stat-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .apple-counter-capsule {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  .apple-table thead th, .apple-table tbody td { padding: 10px; }
+
+  .contact-cell { min-width: unset; }
+  .search-input { padding-right: 2.5rem; }
+
+  .apple-table thead { display: none; }
+  .apple-table tbody tr {
+    display: block;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+  }
+  .apple-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    gap: 1rem;
+    border: none;
+  }
+  .apple-table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #6f6f77;
+    flex: 0 0 130px;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+  }
+  .apple-table tbody td button.file-link-btn {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 576px) {
+  .container-fluid { padding: 0.5rem; }
+  .apple-status-badge { width: 100%; justify-content: center; }
+  .apple-card.chart-card { padding: 12px; }
+  .pagination { flex-wrap: wrap; gap: 0.5rem; }
+}
 </style>

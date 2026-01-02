@@ -200,6 +200,14 @@ onUnmounted(() => {
   justify-content: center;
 }
 
+.hero-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+}
+
 @media (max-width: 768px) {
   .report-page-container { grid-template-columns: 1fr; }
   .main-content { grid-column: 1/-1; padding: 0 !important; }

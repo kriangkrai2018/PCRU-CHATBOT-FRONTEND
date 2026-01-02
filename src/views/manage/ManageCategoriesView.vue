@@ -831,10 +831,9 @@ onUnmounted(() => {
 @import '@/assets/sidebar.css';
 
 /* Mobile sidebar toggle button styles (inline here so it's local to this view) */
-.mobile-sidebar-toggle { display: none; border: none; background: #fff; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding: 0; }
+.mobile-sidebar-toggle { display: none !important; border: none; background: #fff; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding: 0; }
 .mobile-sidebar-toggle i { font-size: 1.05rem; }
-.mobile-sidebar-toggle.mobile-inline-toggle { display: flex; margin-right: 8px; align-self: center; }
-@media (max-width: 768px) { .mobile-sidebar-toggle.mobile-inline-toggle { display: flex !important; } }
+@media (max-width: 768px) { .mobile-sidebar-toggle.mobile-inline-toggle { display: flex !important; margin-right: 8px; align-self: center; } }
 .mobile-sidebar-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.36); z-index: 98; }
 
 

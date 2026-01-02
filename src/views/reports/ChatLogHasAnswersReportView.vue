@@ -5,12 +5,20 @@
     <main class="main-content flex-grow-1">
       <div class="apple-dashboard">
         <div class="dashboard-hero">
-          <div class="hero-content">
-            <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
-              <AnimatedToggleIcon :isOpen="isMobileSidebarOpen" />
-            </button>
-            <h1 class="hero-title">ChatLog Has Answers</h1>
-            <p class="hero-subtitle">รายงานการสนทนาที่มีคำตอบ</p>
+          <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
+            <AnimatedToggleIcon :isOpen="isMobileSidebarOpen" />
+          </button>
+          <div class="hero-heading">
+            <div class="hero-icon apple-icon-box indigo-gradient">
+              <svg class="chat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                <path d="M9 10h6m-6 4h4" />
+              </svg>
+            </div>
+            <div class="hero-text">
+              <h3 class="page-title m-0">Chat Logs (Has Answers)</h3>
+              <span class="text-secondary small">User queries matched with answers</span>
+            </div>
           </div>
         </div>
         <div class="reports-grid">
@@ -120,6 +128,39 @@ onUnmounted(() => {
 .report-page-container { width: 100%; min-height: 100vh; display: grid; grid-template-columns: auto 1fr; overflow-x: hidden; }
 .main-content { grid-column: 2/3; flex: 1 1 auto; min-width: 0; overflow: auto;   padding: 0.5rem !important; }
 
+.hero-heading {
+  margin-left: clamp(0.75rem, 2vw, 1.5rem);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+}
+
+.dashboard-hero {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Apple Icon Box */
+.apple-icon-box {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(88, 86, 214, 0.3);
+}
+
+.indigo-gradient {
+  background: linear-gradient(135deg, #5856D6 0%, #a29bfe 100%);
+}
+
 .mobile-sidebar-toggle {
   display: none !important;
   background: none;
@@ -151,18 +192,19 @@ onUnmounted(() => {
     position: relative;
   }
 
-  :deep(.hero-content) {
+  :deep(.hero-heading) {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
+    margin-left: 0;
   }
 
   :deep(.mobile-sidebar-toggle) {
-    position: absolute;
-    left: 0;
-    top: 50%;
+    position: relative;
+    left: auto;
+    top: auto;
   }
 
   :deep(.hero-title) {
