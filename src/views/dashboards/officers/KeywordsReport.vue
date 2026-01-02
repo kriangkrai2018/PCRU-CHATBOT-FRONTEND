@@ -667,7 +667,7 @@ function nextPage() { if (currentPage.value < totalPages.value) currentPage.valu
   z-index: 0; pointer-events: none;
 }
 
-.content-layer { position: relative; z-index: 1; }
+.content-layer { position: relative; z-index: 1; margin-top: 1rem; }
 
 /* ---------------- HERO HEADER ---------------- */
 .header-animate {
