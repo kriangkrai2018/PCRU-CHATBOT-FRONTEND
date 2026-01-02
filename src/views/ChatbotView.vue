@@ -2949,16 +2949,52 @@ export default {
       const raw = (fullText || '').toString()
       if (!raw) return null
 
-      // Do not suggest if the cursor is effectively after whitespace (user just ended a token)
-      if (/\s$/.test(raw)) return null
+      // Treat whitespace + punctuation as token separators
+      const isSep = (ch) => {
+        // Includes common punctuation and Thai/Unicode punctuation variants
+        return /[\s.,!?;:()\[\]{}"'“”‘’。、，。·…—–\-/_\\]/.test(ch)
+      }
 
-      // Split by last whitespace so we autocomplete only the last token
-      const m = raw.match(/^(.*?)([^\s]+)$/)
-      if (!m) return null
-      const prefix = m[1] || ''
-      const token = m[2] || ''
-      if (!token || token.trim().length < 2) return null
-      return { prefix, token }
+      // If the last char is a separator, don't suggest (user just finished a token)
+      const lastChar = raw[raw.length - 1]
+      if (lastChar && isSep(lastChar)) return null
+
+      // Find last separator index
+      let sepIndex = -1
+      for (let i = raw.length - 1; i >= 0; i--) {
+        if (isSep(raw[i])) { sepIndex = i; break }
+      }
+
+      const basePrefix = raw.slice(0, sepIndex + 1)
+      const baseToken = raw.slice(sepIndex + 1)
+      if (!baseToken || baseToken.trim().length < 1) return null
+
+      // Fallback: if user types everything stuck together (no spaces/punct),
+      // try to autocomplete a short suffix at the end (e.g., ...กย -> ...กยศ)
+      // We only attempt this when the current "token" is long enough.
+      const tokenTrim = baseToken.trim()
+      const shouldTrySuffix = sepIndex === -1 && tokenTrim.length > 3
+      if (shouldTrySuffix) {
+        const tokenLower = tokenTrim.toLowerCase()
+        const maxLen = Math.min(10, tokenLower.length)
+        // Prefer longer suffixes first
+        for (let len = maxLen; len >= 2; len--) {
+          const subToken = tokenTrim.slice(tokenTrim.length - len)
+          const subLower = subToken.toLowerCase()
+          const hasMatch = (this.autocompleteKeywords || []).some(k => {
+            if (!k) return false
+            const kw = k.toString()
+            const kwLower = kw.toLowerCase()
+            return kwLower.startsWith(subLower) && kwLower !== subLower
+          })
+          if (hasMatch) {
+            const leading = tokenTrim.slice(0, tokenTrim.length - len)
+            return { prefix: basePrefix + leading, token: subToken }
+          }
+        }
+      }
+
+      return { prefix: basePrefix, token: baseToken }
     },
 
     applyLocalAutocomplete(fullText) {
@@ -2966,6 +3002,13 @@ export default {
         const raw = (fullText || '').toString()
         const ctx = this.getAutocompleteContext(raw)
         if (!ctx) {
+          this.suggestionText = ''
+          return
+        }
+
+        // Keep local autocomplete conservative: require 2+ chars.
+        // Single-char suggestions are handled via remote stopword-only endpoint.
+        if ((ctx.token || '').toString().trim().length < 2) {
           this.suggestionText = ''
           return
         }
