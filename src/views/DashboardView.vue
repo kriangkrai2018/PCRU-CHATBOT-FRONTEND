@@ -173,12 +173,7 @@ onUnmounted(() => {
   box-sizing: border-box;
 }
 
-/* Reduce container-fluid padding */
-:deep(.main-content .container-fluid) {
-  padding-left: 0.5rem !important;
-  padding-right: 0.5rem !important;
-  padding-top: 0.5rem !important;
-}
+
 
 @media (max-width: 768px) {
   .main-content {

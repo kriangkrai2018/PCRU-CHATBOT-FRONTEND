@@ -8,7 +8,7 @@
 
     <!-- Main Content -->
     <main class="main-content">
-      <div class="container-fluid pt-4 px-4">
+      <div class="container-fluid">
         <!-- Mobile Sidebar Toggle -->
         <button v-if="isMobile" class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
           <i class="bi bi-list"></i>

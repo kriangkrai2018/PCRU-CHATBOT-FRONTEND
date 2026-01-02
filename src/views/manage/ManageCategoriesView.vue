@@ -5,7 +5,7 @@
 
     <!-- Main Content -->
     <main class="main-content">
-      <div class="container-fluid pt-4 px-4">
+      <div class="container-fluid">
         <div v-if="categoriesLoading" class="text-center py-5">
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>

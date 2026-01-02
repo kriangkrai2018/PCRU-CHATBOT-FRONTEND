@@ -4,7 +4,7 @@
     <div class="ambient-background"></div>
 
     <!-- Main Content -->
-    <div class="container-fluid pt-4 px-4 pb-5 content-layer">
+    <div class="container-fluid pb-5 content-layer">
 
       
       <!-- Header Section -->
@@ -670,7 +670,10 @@ function nextPage() { if (currentPage.value < totalPages.value) currentPage.valu
 .content-layer { position: relative; z-index: 1; }
 
 /* ---------------- HERO HEADER ---------------- */
-.header-animate { animation: fadeInDown 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.header-animate {
+  animation: fadeInDown 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+  margin-top: 1.5rem;
+}
 
 .display-title {
   font-weight: 700; font-size: 2.5rem; letter-spacing: -0.03em;

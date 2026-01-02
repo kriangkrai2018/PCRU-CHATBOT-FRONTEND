@@ -8,7 +8,7 @@
       <button v-if="isMobile" class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
         <i class="bi bi-list"></i>
       </button>
-      <div class="container-fluid pt-4 px-4">
+      <div class="container-fluid">
         <div class="card synonyms-info-card synonyms-shadow-apple mb-3 apple-fade">
           <div class="card-body">
             <div class="fw-bold mb-2">ใช้อย่างไร</div>

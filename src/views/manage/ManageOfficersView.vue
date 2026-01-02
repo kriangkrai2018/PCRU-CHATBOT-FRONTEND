@@ -11,7 +11,7 @@
       <button v-if="isMobile" class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
         <i class="bi bi-list"></i>
       </button>
-      <div class="container-fluid pt-4 px-4">
+      <div class="container-fluid">
         <div v-if="loading" class="text-center py-5">
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
@@ -21,7 +21,7 @@
 
         <div v-else>
           <div class="d-block d-md-flex align-items-center justify-content-between mb-3">
-            <div class="d-flex align-items-center justify-content-center gap-3">
+            <div class="d-flex align-items-center justify-content-center gap-3 header-buttons">
               <h2 class="page-title">Manage Officers</h2>
               <button class="btn-add-apple" @click="openCrudModal">
                 <i class="bi bi-plus-lg me-1"></i> เพิ่มเจ้าหน้าที่
@@ -776,6 +776,20 @@ onUnmounted(() => {
   .main-content {
     grid-column: 1 / -1;
   }
+
+  .header-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-buttons h2 {
+    width: 100%;
+    text-align: center;
+  }
+
+  .header-buttons button {
+    width: 100%;
+  }
 }
 
 /* Apple Design System Variables */
@@ -813,6 +827,12 @@ onUnmounted(() => {
   font-weight: 700;
   color: #1d1d1f;
   margin: 0;
+}
+.header-buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 /* Apple Style Buttons */

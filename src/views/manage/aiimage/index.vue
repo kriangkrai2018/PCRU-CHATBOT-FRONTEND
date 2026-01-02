@@ -20,7 +20,7 @@
         <div class="gradient-mesh"></div>
       </div>
 
-      <div class="container-fluid pt-4 px-4">
+      <div class="container-fluid">
         <!-- Header with animated title -->
         <div class="page-header">
           <div class="header-content">
