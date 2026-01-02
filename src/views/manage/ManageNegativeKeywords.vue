@@ -20,7 +20,7 @@
           <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
       </div>
-      <h1 class="page-title slide-in-down">จัดการคำปฏิเสธ</h1>
+      <h1 class="page-title slide-in-down">Manage Negetive keyword</h1>
       <p class="page-subtitle slide-in-up">Negative Keywords Management</p>
 
       <!-- 🆕 ปุ่ม Seed (Auto-Fill) เพิ่มตรงนี้ -->

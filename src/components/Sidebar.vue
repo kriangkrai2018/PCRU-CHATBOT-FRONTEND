@@ -235,7 +235,7 @@
       tabindex="0"
     >
       <!-- Icon on top -->
-      <div class="w-100 d-flex align-items-center justify-content-center position-relative">
+      <div class="w-100 d-flex align-items-center justify-content-start position-relative ps-2">
         <i v-if="isCollapsed && isHoveringProfile" class="bi bi-box-arrow-right fs-5" @click="handleLogout"></i>
         <i v-else class="bi bi-person-circle fs-2"></i>
         <i v-if="!isCollapsed" class="bi bi-box-arrow-right fs-5 position-absolute end-0 me-2" @click="handleLogout" style="cursor: pointer;"></i>
@@ -572,5 +572,15 @@ const handleLogout = () => { logout(router); };
 /* Smoothly reveal dropdown when sidebar expands */
 .reports-dropdown {
   transition: opacity 180ms ease, transform 180ms ease;
+}
+
+/* Toggle button - only show on mobile */
+.toggle-btn {
+  display: none;
+}
+@media (max-width: 768px) {
+  .toggle-btn {
+    display: block;
+  }
 }
 </style>

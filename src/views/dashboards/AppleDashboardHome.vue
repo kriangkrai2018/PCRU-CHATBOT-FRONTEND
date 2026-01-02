@@ -220,7 +220,7 @@ const roleDescription = computed(() => {
   switch (normalizedRole.value) {
     case 'superadmin': return 'คุณมีสิทธิ์เข้าถึงแค่ฟังค์ชันของผู้ดูแลระบบสูงสุด';
     case 'admin': return 'จัดการข้อมูลและดูรายงานต่างๆ';
-    case 'officer': return 'ดูรายงานและจัดการคำถาม-คำตอบ';
+    case 'officer': return 'ดูรายงานและManage Question Answer';
     default: return 'ยินดีต้อนรับสู่ระบบ';
   }
 });
@@ -472,8 +472,8 @@ const allManageActions = [
   { key: 'manage-admins', icon: 'officers', title: 'Manage Admins', desc: 'จัดการผู้ดูแลระบบ', link: '/manageadminuser', color: 'linear-gradient(135deg, #FF9500, #FFCC00)', allowed: ['superadmin','admin'] },
   { key: 'manage-orgs', icon: 'organizations', title: 'Manage Organizations', desc: 'จัดการองค์กร', link: '/manageorganizations', color: 'linear-gradient(135deg, #007AFF, #5AC8FA)', allowed: ['superadmin','admin'] },
   { key: 'manage-officers', icon: 'officers', title: 'Manage Officers', desc: 'จัดการเจ้าหน้าที่', link: '/manageofficers', color: 'linear-gradient(135deg, #34C759, #30D158)', allowed: ['superadmin','admin'] },
-  { key: 'manage-categories', icon: 'categories', title: 'Manage Categories', desc: 'จัดการหมวดหมู่', link: '/managecategories', color: 'linear-gradient(135deg, #AF52DE, #BF5AF2)', allowed: ['admin','officer'] },
-  { key: 'manage-qa', icon: 'qa', title: 'Manage Q&A', desc: 'จัดการคำถาม-คำตอบ', link: '/managequestionsanswers', color: 'linear-gradient(135deg, #007AFF, #5AC8FA)', allowed: ['admin','officer'] },
+  { key: 'manage-categories', icon: 'categories', title: 'Manage Categories', desc: 'Manage Categories', link: '/managecategories', color: 'linear-gradient(135deg, #AF52DE, #BF5AF2)', allowed: ['admin','officer'] },
+  { key: 'manage-qa', icon: 'qa', title: 'Manage Q&A', desc: 'Manage Question Answer', link: '/managequestionsanswers', color: 'linear-gradient(135deg, #007AFF, #5AC8FA)', allowed: ['admin','officer'] },
   { key: 'manage-ai', icon: 'ai', title: 'Manage AI Images', desc: 'จัดการรูปภาพ AI', link: '/manageaiimage', color: 'linear-gradient(135deg, #5856D6, #5AC8FA)', allowed: ['superadmin','admin'] },
   { key: 'managethaipatterns', icon: 'patterns', title: 'Manage Thai Patterns', desc: 'จัดการแพตเทิร์นภาษาไทย', link: '/managethaipatterns', color: 'linear-gradient(135deg, #FFCC00, #FF9500)', allowed: ['officer'] },
   { key: 'managestopwords', icon: 'stopwords', title: 'Manage Stopwords', desc: 'จัดการ Stopwords', link: '/managestopwords', color: 'linear-gradient(135deg, #FF3B30, #FF7A7A)', allowed: ['officer'] },

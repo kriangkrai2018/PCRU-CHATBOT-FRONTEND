@@ -18,33 +18,41 @@
           <!-- Mobile sidebar backdrop (click to close) -->
           <div v-if="isMobileSidebarOpen" class="mobile-sidebar-backdrop" @click="toggleSidebar" aria-hidden="true"></div>
 
-          <div class="d-block d-md-flex align-items-center justify-content-between mb-4">
-            <div class="d-flex align-items-center gap-3">
+          <!-- Header Section: Title + Action Buttons -->
+          <div class="header-section mb-4">
+            <div class="header-top d-flex align-items-center gap-3 mb-3">
               <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
                 <i :class="isMobileSidebarOpen ? 'bi bi-x' : 'bi bi-list'"></i>
               </button>
 
-              <h2 class="page-title m-0">จัดการหมวดหมู่</h2>
-              <button class="apple-btn-primary" @click="openCrudModal()">
-                <i class="bi bi-plus-lg me-2"></i>
-                <span>เพิ่มหมวดหมู่</span>
-              </button>
-              <button class="apple-icon-btn-large" @click="openUploadModal" title="อัพโหลด CSV">
-                <i class="bi bi-cloud-upload"></i>
-              </button>
+              <h2 class="page-title m-0">Manage Categories</h2>
+              
+              <!-- Action buttons group -->
+              <div class="header-actions d-flex gap-2">
+                <button class="apple-btn-primary" @click="openCrudModal()">
+                  <i class="bi bi-plus-lg"></i>
+                  <span class="d-none d-sm-inline">เพิ่มหมวดหมู่</span>
+                </button>
+                <button class="apple-icon-btn-large" @click="openUploadModal" title="อัพโหลด CSV">
+                  <i class="bi bi-cloud-upload"></i>
+                </button>
+              </div>
             </div>
 
-            <div class="search-container mt-3 mt-md-0">
-              <i class="bi bi-search search-icon"></i>
-              <input
-                type="text"
-                class="search-input"
-                placeholder="ค้นหาหมวดหมู่..."
-                v-model="searchQueryCategories"
-              />
-              <button v-if="searchQueryCategories" class="search-clear" @click="searchQueryCategories = ''">
-                <i class="bi bi-x-circle-fill"></i>
-              </button>
+            <!-- Search bar: Full width on mobile, normal on desktop -->
+            <div class="search-container-wrapper">
+              <div class="search-container">
+                <i class="bi bi-search search-icon"></i>
+                <input
+                  type="text"
+                  class="search-input"
+                  placeholder="ค้นหาหมวดหมู่..."
+                  v-model="searchQueryCategories"
+                />
+                <button v-if="searchQueryCategories" class="search-clear" @click="searchQueryCategories = ''">
+                  <i class="bi bi-x-circle-fill"></i>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -831,9 +839,9 @@ onUnmounted(() => {
 @import '@/assets/sidebar.css';
 
 /* Mobile sidebar toggle button styles (inline here so it's local to this view) */
-.mobile-sidebar-toggle { display: none !important; border: none; background: #fff; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding: 0; }
+button.mobile-sidebar-toggle.mobile-inline-toggle { display: none !important; border: none; background: #fff; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding: 0; }
 .mobile-sidebar-toggle i { font-size: 1.05rem; }
-@media (max-width: 768px) { .mobile-sidebar-toggle.mobile-inline-toggle { display: flex !important; margin-right: 8px; align-self: center; } }
+@media (max-width: 768px) { button.mobile-sidebar-toggle.mobile-inline-toggle { display: flex !important; margin-right: 8px; align-self: center; } }
 .mobile-sidebar-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.36); z-index: 98; }
 
 
@@ -961,6 +969,147 @@ onUnmounted(() => {
   border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 600;
+}
+
+/* =========================================
+   Header Section (Apple Responsive)
+   ========================================= */
+.header-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  letter-spacing: -0.5px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.search-container-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  align-items: center;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .header-section {
+    gap: 12px;
+  }
+
+  .header-top {
+    gap: 8px;
+    width: 100%;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .header-actions {
+    gap: 6px;
+  }
+
+  .apple-btn-primary {
+    padding: 8px 14px;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }
+
+  .apple-btn-primary i {
+    margin-right: 0;
+  }
+
+  .apple-icon-btn-large {
+    width: 38px;
+    height: 38px;
+    font-size: 0.95rem;
+  }
+
+  .search-container-wrapper {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .search-container {
+    max-width: 100%;
+  }
+
+  .search-input {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .header-top {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .page-title {
+    font-size: 1.25rem;
+    min-width: auto;
+  }
+
+  .header-actions {
+    gap: 4px;
+  }
+
+  .apple-btn-primary {
+    padding: 7px 12px;
+    font-size: 0.85rem;
+    border-radius: 10px;
+  }
+
+  .apple-btn-primary span {
+    display: none;
+  }
+
+  .apple-icon-btn-large {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+
+  .search-input {
+    padding: 8px 36px;
+    font-size: 0.95rem;
+  }
+
+  .search-icon {
+    left: 10px;
+  }
+
+  .search-clear {
+    right: 10px;
+  }
 }
 
 /* =========================================
@@ -1321,4 +1470,16 @@ onUnmounted(() => {
 }
 .empty-state i { font-size: 2.5rem; margin-bottom: 0.5rem; opacity: 0.5; }
 
+</style>
+
+<!-- Non-scoped styles for mobile sidebar toggle -->
+<style>
+.mobile-sidebar-toggle.mobile-inline-toggle {
+  display: none !important;
+}
+@media (max-width: 768px) {
+  .mobile-sidebar-toggle.mobile-inline-toggle {
+    display: flex !important;
+  }
+}
 </style>
