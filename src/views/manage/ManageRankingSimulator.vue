@@ -296,14 +296,18 @@ async function testNegation() {
 
 .mobile-sidebar-toggle {
   display: none;
-  background: none;
+  background: #fff;
   border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   cursor: pointer;
-  padding: 0.5rem;
-  font-size: 1.5rem;
+  padding: 0.6rem 0.8rem;
+  font-size: 1.4rem;
   line-height: 1;
+  margin-left: 1rem;
+  margin-top: 1rem;
   margin-bottom: 1rem;
-  color: #333;
+  color: #007AFF;
 }
 
 .mobile-sidebar-backdrop {

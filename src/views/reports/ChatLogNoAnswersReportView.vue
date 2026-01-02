@@ -281,7 +281,7 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
-  .main-content { grid-column: 1/-1; padding: 0 !important; }
+  .main-content { grid-column: 1/-1; padding: 0.5rem !important; }
   
   .mobile-sidebar-toggle { display: flex; }
   

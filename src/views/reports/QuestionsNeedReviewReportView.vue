@@ -117,7 +117,7 @@ onUnmounted(() => {
 @import '@/assets/dashboard-styles.css';
 @import '@/assets/sidebar.css';
 .report-page-container { width: 100%; min-height: 100vh; display: grid; grid-template-columns: auto 1fr; overflow-x: hidden; }
-.main-content { grid-column: 2/3; flex: 1 1 auto; min-width: 0; overflow: auto; padding: 1rem; }
+.main-content { grid-column: 2/3; flex: 1 1 auto; min-width: 0; overflow: auto; padding: 0.5rem !important; }
 
 .mobile-sidebar-toggle {
   display: none !important;

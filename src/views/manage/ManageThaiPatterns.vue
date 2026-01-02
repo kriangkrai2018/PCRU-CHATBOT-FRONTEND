@@ -651,7 +651,7 @@ function getSuccessRateClass(rate) {
 
 .main-content {
   flex: 1;
-  padding: 1rem;
+  padding: 0.5rem !important;
   overflow-x: hidden;
 }
 

@@ -1150,7 +1150,6 @@ onUnmounted(() => {
   .apple-hero .mobile-sidebar-toggle.mobile-inline-toggle {
     margin: 0 0 10px 0 !important;
     align-self: flex-start !important;
-    margin-left: -12px !important;
   }
   
   .stats-grid {
@@ -1230,6 +1229,8 @@ onUnmounted(() => {
   justify-content: center;
   color: #007AFF; /* Apple Blue */
   transition: all 0.2s ease;
+  margin-left: 0rem;
+  margin-top: 0rem;
 }
 
 .mobile-sidebar-toggle.mobile-inline-toggle:hover {

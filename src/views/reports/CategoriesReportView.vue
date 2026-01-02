@@ -229,7 +229,7 @@ onUnmounted(() => {
   min-width: 0;
   overflow: auto;
   transition: all 0.3s ease;
-  padding: 1rem;
+  padding: 0.5rem !important;
 }
 
 /* Mobile Sidebar Toggle & Backdrop */

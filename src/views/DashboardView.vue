@@ -159,9 +159,7 @@ onUnmounted(() => {
 }
 
 /* When sidebar is collapsed */
-:deep(.sidebar.collapsed) ~ .main-content {
-  padding-left: 24px !important;
-}
+
 
 :deep(.sidebar.collapsed) ~ .main-content .container-fluid {
   padding-left: 0.25rem !important;
@@ -184,7 +182,7 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .main-content {
-    padding: 0 !important;
+    padding: 0.5rem !important;
   }
   
   /* Keep flex layout even on small screens so sidebar and content stay side-by-side */

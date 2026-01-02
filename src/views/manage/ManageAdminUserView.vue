@@ -1,10 +1,16 @@
 <template>
   <div class="dashboard-container ">
+    <!-- Mobile Sidebar Backdrop -->
+    <div v-if="isMobileSidebarOpen" class="mobile-sidebar-backdrop" @click="toggleSidebar" aria-hidden="true"></div>
     <!-- Sidebar -->
     <Sidebar :userType="userType" :userInfoObject="userInfoObject" />
 
     <!-- Main Content -->
     <main class="main-content">
+      <!-- Mobile Sidebar Toggle -->
+      <button v-if="isMobile" class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
+        <i class="bi bi-list"></i>
+      </button>
       <div class="container-fluid pt-4 px-4">
         <div v-if="loading" class="text-center py-5">
           <div class="spinner-border text-primary" role="status">
@@ -248,7 +254,7 @@ import { useRouter } from 'vue-router';
 import { Modal, Tooltip } from 'bootstrap';
 
 import Sidebar from '@/components/Sidebar.vue';
-import { bindSidebarResize } from '@/stores/sidebarState';
+import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import '@/assets/sidebar.css';
 
 const { appContext } = getCurrentInstance();
@@ -259,6 +265,32 @@ const router = useRouter();
 const userInfoObject = ref({});
 const userType = ref("");
 
+// Mobile sidebar
+const isMobile = ref(window.innerWidth <= 768);
+let _savedSidebarCollapsed = null;
+
+const toggleSidebar = () => {
+  const sb = document.querySelector('.sidebar');
+  const isOpen = !isMobileSidebarOpen.value;
+
+  if (isOpen) {
+    _savedSidebarCollapsed = isSidebarCollapsed.value;
+    isSidebarCollapsed.value = false;
+    if (sb) sb.classList.remove('collapsed');
+    document.body.classList.add('sidebar-open');
+    document.body.classList.add('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = true;
+  } else {
+    isSidebarCollapsed.value = !!_savedSidebarCollapsed;
+    if (sb && _savedSidebarCollapsed) sb.classList.add('collapsed');
+    document.body.classList.remove('sidebar-open');
+    document.body.classList.remove('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = false;
+    _savedSidebarCollapsed = null;
+  }
+};
+
+let resizeHandler = null;
 let unbindSidebarResize = null;
 
 const admins = ref([]);
@@ -618,11 +650,29 @@ onMounted(() => {
     try { userInfoObject.value = JSON.parse(userInfoString); } catch(e) { console.error(e); }
   }
 
+  // Mobile resize listener
+  resizeHandler = () => {
+    const newIsMobile = window.innerWidth <= 768;
+    if (newIsMobile !== isMobile.value) {
+      isMobile.value = newIsMobile;
+      if (!newIsMobile && isMobileSidebarOpen.value) {
+        isMobileSidebarOpen.value = false;
+        document.body.classList.remove('sidebar-open', 'sidebar-mobile-expanded');
+        isSidebarCollapsed.value = _savedSidebarCollapsed ?? isSidebarCollapsed.value;
+        _savedSidebarCollapsed = null;
+      }
+    }
+  };
+  window.addEventListener('resize', resizeHandler);
+
   fetchAdmins();
 });
 
 onUnmounted(() => {
   if (typeof unbindSidebarResize === 'function') unbindSidebarResize();
+  if (resizeHandler) window.removeEventListener('resize', resizeHandler);
+  isMobileSidebarOpen.value = false;
+  document.body.classList.remove('sidebar-open', 'sidebar-mobile-expanded');
   if (bsModalInstance) { try { bsModalInstance.dispose(); } catch(e) {} bsModalInstance = null; }
   if (templateModalInstance) { try { templateModalInstance.dispose(); } catch(e) {} templateModalInstance = null; }
   if (crudModalInstance) { try { crudModalInstance.dispose(); } catch(e) {} crudModalInstance = null; }
@@ -634,6 +684,53 @@ onUnmounted(() => {
 @import '@/assets/main.css';
 @import '@/assets/pagination-styles.css';
 @import '@/assets/sidebar.css';
+
+.mobile-sidebar-toggle {
+  display: none;
+  background: #fff;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  padding: 0.6rem 0.8rem;
+  font-size: 1.4rem;
+  line-height: 1;
+  margin-left: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  color: #007AFF;
+}
+
+.mobile-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+}
+
+@media (max-width: 768px) {
+  .mobile-sidebar-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-sidebar-backdrop {
+    display: block;
+  }
+
+  .dashboard-container {
+    grid-template-columns: 1fr;
+  }
+
+  .main-content {
+    grid-column: 1 / -1;
+  }
+}
 
 /* ===== Apple-Style Design System ===== */
 :root {
@@ -659,7 +756,7 @@ onUnmounted(() => {
   flex-grow: 1;
   background-color: var(--apple-light-gray);
   overflow-x: hidden;
-  padding-top: 0.5rem;
+  padding: 0.5rem !important;
 }
 
 .main-content .container-fluid {
@@ -1132,7 +1229,7 @@ onUnmounted(() => {
   min-width: 0;
   background: #ffffff;
   overflow: auto;
-  padding: 0.5rem 0 0 0;
+  padding: 0.5rem !important;
   transition: all 0.3s ease;
 }
 
