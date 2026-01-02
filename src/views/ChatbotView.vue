@@ -11,30 +11,38 @@
     <transition name="fade" @enter="animateOpen" @leave="animateClose">
       <div v-if="visible" class="chat-overlay" role="dialog" aria-label="Chat drawer">
         <div class="overlay-backdrop" @click="visible = false"></div>
-        <aside class="chat-panel" :style="{ width: drawerWidth, height: viewportHeight }">
-
-          <!-- Snowflakes (only in winter season: Nov-Feb) and if enabled -->
-          <div v-if="isWinterSeason && snowEnabled" class="snowflakes" aria-hidden="true" :style="{ zIndex: snowZIndex }">
-            <div 
-              v-for="(flake, i) in snowflakeStyles" 
-              :key="i" 
-              class="snowflake"
-              :style="{
-                left: flake.left,
-                animationDuration: flake.animationDuration,
-                animationDelay: flake.animationDelay,
-                fontSize: flake.fontSize,
-                opacity: flake.opacity,
-                '--wind1': flake['--wind1'],
-                '--wind2': flake['--wind2'],
-                '--wind3': flake['--wind3'],
-                '--wind4': flake['--wind4']
-              }"
-            >
-              {{ flake.symbol }}
-            </div>
+        
+        <!-- Snowflakes - positioned to match chat-panel bounds -->
+        <div v-if="isWinterSeason && snowEnabled" class="snowflakes-container" :style="{ width: drawerWidth, height: viewportHeight }" aria-hidden="true">
+          <div 
+            v-for="(flake, i) in snowflakeStyles" 
+            :key="i" 
+            class="snowflake"
+            :class="{ 'snowflake-dragging': draggedSnowflakeIndex === i }"
+            :style="getSnowflakeStyle(flake, i)"
+            @mousedown.stop.prevent="onSnowflakeMouseDown($event, i)"
+            @touchstart.stop.prevent="onSnowflakeTouchStart($event, i)"
+            v-show="!isSnowflakeFloating(i)"
+          >
+            {{ flake.symbol }}
           </div>
-          
+        </div>
+        
+        <!-- Dragged/Falling snowflakes rendered OUTSIDE container to avoid overflow:hidden clipping -->
+        <template v-if="isWinterSeason && snowEnabled">
+          <div 
+            v-for="(flake, i) in snowflakeStyles"
+            :key="'float-' + i"
+            v-show="isSnowflakeFloating(i)"
+            class="snowflake snowflake-floating"
+            :class="{ 'snowflake-dragging': draggedSnowflakeIndex === i }"
+            :style="getFloatingSnowflakeStyle(flake, i)"
+          >
+            {{ flake.symbol }}
+          </div>
+        </template>
+        
+        <aside class="chat-panel" :style="{ width: drawerWidth, height: viewportHeight }">
           <div class="panel-top">
             <button class="close-circle" @click="visible = false" aria-label="close">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="close-icon">
@@ -862,6 +870,9 @@ export default {
       snowOpacity: parseFloat(import.meta.env.VITE_SNOW_OPACITY || '0.7'),
       // Pre-generated snowflake styles to prevent re-render jank
       snowflakeStyles: [],
+      // Snowflake drag state
+      draggedSnowflakeIndex: null,
+      snowflakeDragOffsets: {}, // { index: { x, y } }
       categories: [],
       // Suggestions pagination: track visible count per message
       suggestionVisibleCounts: {}, // { messageIndex: visibleCount }
@@ -2062,6 +2073,171 @@ export default {
       // Freeze styles to avoid Vue creating reactive proxies for this array (big perf win)
       this.snowflakeStyles = Object.freeze(styles)
     },
+
+    // Compute snowflake inline style (with drag offset if applicable)
+    getSnowflakeStyle(flake, index) {
+      const offset = this.snowflakeDragOffsets[index]
+      const base = {
+        left: flake.left,
+        animationDuration: flake.animationDuration,
+        animationDelay: flake.animationDelay,
+        fontSize: flake.fontSize,
+        opacity: flake.opacity,
+        '--wind1': flake['--wind1'],
+        '--wind2': flake['--wind2'],
+        '--wind3': flake['--wind3'],
+        '--wind4': flake['--wind4'],
+        cursor: 'grab'
+      }
+      if (offset) {
+        // When dragged or released at custom position
+        const isDragging = this.draggedSnowflakeIndex === index
+        return {
+          ...base,
+          animationPlayState: 'paused',
+          animation: 'none', // Stop animation completely when placed
+          position: 'fixed',
+          left: `${offset.x}px`,
+          top: `${offset.y}px`,
+          cursor: isDragging ? 'grabbing' : 'grab',
+          zIndex: isDragging ? 99999 : 99991
+        }
+      }
+      return base
+    },
+
+    // Check if snowflake should be rendered outside container (dragging or falling)
+    isSnowflakeFloating(index) {
+      if (this.draggedSnowflakeIndex === index) return true
+      const offset = this.snowflakeDragOffsets[index]
+      return offset && offset.falling
+    },
+
+    // Style for floating snowflakes (dragged or falling, rendered outside container)
+    getFloatingSnowflakeStyle(flake, index) {
+      const offset = this.snowflakeDragOffsets[index]
+      if (!flake || !offset) return { display: 'none' }
+      const isDragging = this.draggedSnowflakeIndex === index
+      return {
+        position: 'fixed',
+        left: `${offset.x}px`,
+        top: `${offset.y}px`,
+        fontSize: flake.fontSize,
+        opacity: flake.opacity,
+        cursor: isDragging ? 'grabbing' : 'default',
+        zIndex: isDragging ? 999999 : 99999,
+        animation: 'none',
+        pointerEvents: isDragging ? 'none' : 'auto'
+      }
+    },
+
+    // Mouse drag handlers
+    onSnowflakeMouseDown(e, index) {
+      e.stopPropagation()
+      this.draggedSnowflakeIndex = index
+      // Use mouse position as initial snowflake position (centered on cursor)
+      const x = e.clientX - 15
+      const y = e.clientY - 15
+      this.snowflakeDragOffsets = {
+        ...this.snowflakeDragOffsets,
+        [index]: { x, y }
+      }
+      // Bind move/up to window
+      window.addEventListener('mousemove', this.onSnowflakeMouseMove)
+      window.addEventListener('mouseup', this.onSnowflakeMouseUp)
+    },
+    onSnowflakeMouseMove(e) {
+      if (this.draggedSnowflakeIndex == null) return
+      const index = this.draggedSnowflakeIndex
+      this.snowflakeDragOffsets = {
+        ...this.snowflakeDragOffsets,
+        [index]: { x: e.clientX - 15, y: e.clientY - 15 }
+      }
+    },
+    onSnowflakeMouseUp() {
+      this.releaseSnowflake()
+      window.removeEventListener('mousemove', this.onSnowflakeMouseMove)
+      window.removeEventListener('mouseup', this.onSnowflakeMouseUp)
+    },
+
+    // Touch drag handlers
+    onSnowflakeTouchStart(e, index) {
+      if (!e.touches || e.touches.length === 0) return
+      e.stopPropagation()
+      this.draggedSnowflakeIndex = index
+      const touch = e.touches[0]
+      // Use touch position as initial snowflake position (centered on finger)
+      const x = touch.clientX - 15
+      const y = touch.clientY - 15
+      this.snowflakeDragOffsets = {
+        ...this.snowflakeDragOffsets,
+        [index]: { x, y }
+      }
+      window.addEventListener('touchmove', this.onSnowflakeTouchMove, { passive: false })
+      window.addEventListener('touchend', this.onSnowflakeTouchEnd)
+      window.addEventListener('touchcancel', this.onSnowflakeTouchEnd)
+    },
+    onSnowflakeTouchMove(e) {
+      if (this.draggedSnowflakeIndex == null) return
+      if (!e.touches || e.touches.length === 0) return
+      e.preventDefault()
+      const touch = e.touches[0]
+      const index = this.draggedSnowflakeIndex
+      this.snowflakeDragOffsets = {
+        ...this.snowflakeDragOffsets,
+        [index]: { x: touch.clientX - 15, y: touch.clientY - 15 }
+      }
+    },
+    onSnowflakeTouchEnd() {
+      this.releaseSnowflake()
+      window.removeEventListener('touchmove', this.onSnowflakeTouchMove)
+      window.removeEventListener('touchend', this.onSnowflakeTouchEnd)
+      window.removeEventListener('touchcancel', this.onSnowflakeTouchEnd)
+    },
+
+    // Release snowflake: start falling from dropped position
+    releaseSnowflake() {
+      if (this.draggedSnowflakeIndex == null) return
+      const index = this.draggedSnowflakeIndex
+      const offset = this.snowflakeDragOffsets[index]
+      this.draggedSnowflakeIndex = null
+      
+      if (!offset) return
+      
+      // Mark as "falling" from current position
+      this.snowflakeDragOffsets = {
+        ...this.snowflakeDragOffsets,
+        [index]: { ...offset, falling: true, startY: offset.y }
+      }
+      
+      // Animate falling
+      const fallSpeed = 3 // pixels per frame
+      const animateFall = () => {
+        const current = this.snowflakeDragOffsets[index]
+        if (!current || !current.falling) return
+        
+        const newY = current.y + fallSpeed
+        
+        // If fallen off screen, reset to normal animation
+        if (newY > window.innerHeight + 50) {
+          const newOffsets = { ...this.snowflakeDragOffsets }
+          delete newOffsets[index]
+          this.snowflakeDragOffsets = newOffsets
+          return
+        }
+        
+        // Update position
+        this.snowflakeDragOffsets = {
+          ...this.snowflakeDragOffsets,
+          [index]: { ...current, y: newY }
+        }
+        
+        requestAnimationFrame(animateFall)
+      }
+      
+      requestAnimationFrame(animateFall)
+    },
+
     // Ensure only one tooltip is visible at a time
     hideAllTooltips() {
       try {
