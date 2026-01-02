@@ -2945,23 +2945,42 @@ export default {
     },
 
     // --- Autocomplete helpers ---
-    applyLocalAutocomplete(input) {
+    getAutocompleteContext(fullText) {
+      const raw = (fullText || '').toString()
+      if (!raw) return null
+
+      // Do not suggest if the cursor is effectively after whitespace (user just ended a token)
+      if (/\s$/.test(raw)) return null
+
+      // Split by last whitespace so we autocomplete only the last token
+      const m = raw.match(/^(.*?)([^\s]+)$/)
+      if (!m) return null
+      const prefix = m[1] || ''
+      const token = m[2] || ''
+      if (!token || token.trim().length < 2) return null
+      return { prefix, token }
+    },
+
+    applyLocalAutocomplete(fullText) {
       try {
-        const inputStr = (input || '').toString()
-        if (!inputStr || inputStr.trim().length < 2) {
+        const raw = (fullText || '').toString()
+        const ctx = this.getAutocompleteContext(raw)
+        if (!ctx) {
           this.suggestionText = ''
           return
         }
-        const inputLower = inputStr.toLowerCase()
+
+        const { prefix, token } = ctx
+        const tokenLower = token.toLowerCase()
         const match = (this.autocompleteKeywords || []).find(k => {
           if (!k) return false
           const kw = k.toString()
           const kwLower = kw.toLowerCase()
-          return kwLower.startsWith(inputLower) && kwLower !== inputLower
+          return kwLower.startsWith(tokenLower) && kwLower !== tokenLower
         })
         if (match) {
           const matchStr = match.toString()
-          this.suggestionText = inputStr + matchStr.slice(inputStr.length)
+          this.suggestionText = prefix + token + matchStr.slice(token.length)
         } else {
           this.suggestionText = ''
         }
@@ -2970,11 +2989,13 @@ export default {
       }
     },
 
-    pickAutocompleteSuggestionText(input, suggestions) {
-      const inputStr = (input || '').toString()
-      if (!inputStr) return ''
+    pickAutocompleteSuggestionText(fullText, suggestions) {
+      const raw = (fullText || '').toString()
+      const ctx = this.getAutocompleteContext(raw)
+      if (!ctx) return ''
 
-      const inputLower = inputStr.toLowerCase()
+      const { prefix, token } = ctx
+      const tokenLower = token.toLowerCase()
       const arr = Array.isArray(suggestions) ? suggestions : []
 
       for (const item of arr) {
@@ -2982,15 +3003,15 @@ export default {
         if (!text) continue
         const s = text.toString()
         const sLower = s.toLowerCase()
-        if (sLower.startsWith(inputLower) && sLower !== inputLower) {
-          return inputStr + s.slice(inputStr.length)
+        if (sLower.startsWith(tokenLower) && sLower !== tokenLower) {
+          return prefix + token + s.slice(token.length)
         }
       }
       return ''
     },
 
-    queueAutocompleteSuggestion(input) {
-      const inputStr = (input || '').toString()
+    queueAutocompleteSuggestion(fullText) {
+      const inputStr = (fullText || '').toString()
 
       // Instant local suggestion for responsiveness (fallback)
       this.applyLocalAutocomplete(inputStr)
@@ -3001,8 +3022,10 @@ export default {
         this.autocompleteSuggestTimer = null
       }
 
-      const trimmed = inputStr.trim()
-      if (trimmed.length < 2) return
+      const ctx = this.getAutocompleteContext(inputStr)
+      if (!ctx) return
+
+      const { token } = ctx
 
       const seq = ++this.autocompleteSuggestSeq
       this.autocompleteSuggestTimer = setTimeout(async () => {
@@ -3012,9 +3035,13 @@ export default {
         const currentInput = (this.query || '').toString()
         if (!currentInput || currentInput !== inputStr) return
 
+        // Recompute token at request time (in case whitespace changed)
+        const liveCtx = this.getAutocompleteContext(currentInput)
+        if (!liveCtx) return
+
         try {
           const res = await this.$axios.get('/autocomplete/suggest', {
-            params: { q: currentInput, limit: 20 }
+            params: { q: liveCtx.token, limit: 20 }
           })
 
           // Ignore stale results
