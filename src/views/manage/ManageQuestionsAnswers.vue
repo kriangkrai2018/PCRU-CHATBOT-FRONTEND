@@ -781,6 +781,12 @@ onMounted(() => {
   const info = localStorage.getItem("userInfo");
   if (info) userInfoObject.value = JSON.parse(info);
   userType.value = localStorage.getItem("userType") || "";
+  
+  // Close sidebar on mount
+  isMobileSidebarOpen.value = false;
+  document.body.classList.remove('sidebar-open');
+  document.body.classList.remove('sidebar-mobile-expanded');
+  
   fetchQuestionsAnswers();
   fetchCategories();
   nextTick(() => document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new Tooltip(el)));
@@ -840,7 +846,7 @@ onUnmounted(() => {
 }
 
 .mobile-sidebar-toggle {
-  display: none;
+  display: none !important;
   background: none;
   border: none;
   color: currentColor;
@@ -856,24 +862,29 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .main-content { grid-column: 1/-1; width: 100%; }
   
-  .mobile-sidebar-toggle { display: flex; }
+  .mobile-sidebar-toggle { 
+    display: flex !important; 
+  }
   
   .mobile-sidebar-backdrop {
     display: block;
   }
   
   :global(.sidebar) {
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100vh;
-    z-index: 999;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    display: none;
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 250px !important;
+    height: 100vh !important;
+    z-index: 999 !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.3s ease !important;
   }
   
   :global(body.sidebar-open .sidebar) {
-    transform: translateX(0);
+    display: block !important;
+    transform: translateX(0) !important;
   }
 }
 

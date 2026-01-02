@@ -7,7 +7,7 @@
         <div class="dashboard-hero">
           <div class="hero-content">
             <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
-              <i :class="isMobileSidebarOpen ? 'bi bi-x' : 'bi bi-list'"></i>
+              <AnimatedToggleIcon :isOpen="isMobileSidebarOpen" />
             </button>
             <h1 class="hero-title">QuestionsAnswers Report</h1>
             <p class="hero-subtitle">รายงานคำถาม-คำตอบ</p>
@@ -35,6 +35,7 @@
 import { ref, computed, onMounted, onUnmounted, getCurrentInstance } from 'vue';
 import { useRouter } from 'vue-router';
 import Sidebar from '@/components/Sidebar.vue';
+import AnimatedToggleIcon from '@/components/AnimatedToggleIcon.vue';
 import QuestionsAnswersReport from '@/views/dashboards/officers/QuestionsAnswersReport.vue';
 import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import { Chart as ChartJS, registerables } from 'chart.js';
@@ -150,6 +151,12 @@ onMounted(() => {
   if (!token) { router.replace({ name: 'login' }); return; }
   if (type) userType.value = type;
   if (userInfoString) { try { userInfoObject.value = JSON.parse(userInfoString); } catch(e) {} }
+  
+  // Close sidebar on mount
+  isMobileSidebarOpen.value = false;
+  document.body.classList.remove('sidebar-open');
+  document.body.classList.remove('sidebar-mobile-expanded');
+  
   fetchQuestionsAnswers();
   fetchCategories();
 });
@@ -165,7 +172,7 @@ onUnmounted(() => {
 <style scoped>
 @import '@/assets/dashboard-styles.css';
 @import '@/assets/sidebar.css';
-.report-page-container { width: 100%; min-height: 100vh; display: grid; overflow-x: hidden; }
+.report-page-container { width: 100%; min-height: 100vh; display: grid; grid-template-columns: auto 1fr; overflow-x: hidden; }
 .main-content { grid-column: 2/3; flex: 1 1 auto; min-width: 0; overflow: auto; padding: 1rem; }
 
 .mobile-sidebar-backdrop {
@@ -180,7 +187,7 @@ onUnmounted(() => {
 }
 
 .mobile-sidebar-toggle {
-  display: none;
+  display: none !important;
   background: none;
   border: none;
   color: currentColor;
@@ -194,26 +201,60 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
-  .main-content { grid-column: 1/-1; }
+  .report-page-container { grid-template-columns: 1fr; }
+  .main-content { grid-column: 1/-1; padding: 0 !important; }
   
-  .mobile-sidebar-toggle { display: flex; }
+  .mobile-sidebar-toggle { 
+    display: flex !important; 
+  }
   
   .mobile-sidebar-backdrop {
     display: block;
   }
+
+  :deep(.dashboard-hero) {
+    border-radius: 0;
+    position: relative;
+  }
+
+  :deep(.hero-content) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  :deep(.mobile-sidebar-toggle) {
+    position: absolute;
+    left: 0;
+    top: 50%;
+  }
+
+  :deep(.hero-title) {
+    text-align: center;
+    font-size: 1.75rem;
+  }
+
+  :deep(.hero-subtitle) {
+    text-align: center;
+  }
   
   :global(.sidebar) {
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100vh;
-    z-index: 999;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    display: none;
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 250px !important;
+    height: 100vh !important;
+    z-index: 999 !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.3s ease !important;
   }
   
   :global(body.sidebar-open .sidebar) {
-    transform: translateX(0);
+    display: block !important;
+    transform: translateX(0) !important;
   }
 }
 </style>

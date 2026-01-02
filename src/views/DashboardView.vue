@@ -2,6 +2,7 @@
   <div class="dashboard-container">
     <!-- Sidebar -->
     <Sidebar :userType="userType" :userInfoObject="userInfoObject" />
+    <div v-if="isMobileSidebarOpen" class="mobile-sidebar-backdrop" @click="closeMobileSidebar" aria-hidden="true"></div>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -12,7 +13,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { isSidebarCollapsed } from '@/stores/sidebarState';
+import { isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import { useRouter } from 'vue-router';
 import Sidebar from '@/components/Sidebar.vue';
 import AppleDashboardHome from '@/views/dashboards/AppleDashboardHome.vue';
@@ -22,6 +23,12 @@ import '@/assets/sidebar.css';
 const router = useRouter();
 const userInfoObject = ref({});
 const userType = ref('');
+
+const closeMobileSidebar = () => {
+  isMobileSidebarOpen.value = false;
+  document.body.classList.remove('sidebar-open');
+  document.body.classList.remove('sidebar-mobile-expanded');
+};
 
 // bind sidebar resize handler
 let unbindSidebarResize = null;
@@ -50,6 +57,9 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (typeof unbindSidebarResize === 'function') unbindSidebarResize();
+  isMobileSidebarOpen.value = false;
+  document.body.classList.remove('sidebar-open');
+  document.body.classList.remove('sidebar-mobile-expanded');
 });
 </script>
 
@@ -87,7 +97,51 @@ onUnmounted(() => {
 /* keep sidebar collapsed widths consistent */
 
 :deep(.sidebar.collapsed) {
-  width: 70px !important;
+ 
+
+.mobile-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+  
+  :deep(.sidebar) {
+    display: none;
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 250px !important;
+    min-width: 250px !important;
+    height: 100vh !important;
+    z-index: 999 !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.3s ease !important;
+  }
+  
+  :deep(body.sidebar-open .sidebar) {
+    display: block !important;
+    transform: translateX(0) !important;
+  }
+  
+  .mobile-sidebar-backdrop {
+    display: block;
+  }
+
+  .main-content {
+    width: 100% !important;
+  }
+} width: 70px !important;
   min-width: 70px !important;
   flex: 0 0 70px !important;
 }
@@ -130,7 +184,7 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .main-content {
-    padding: 20px 16px;
+    padding: 0 !important;
   }
   
   /* Keep flex layout even on small screens so sidebar and content stay side-by-side */

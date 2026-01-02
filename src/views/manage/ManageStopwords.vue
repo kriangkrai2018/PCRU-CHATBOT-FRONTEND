@@ -2,10 +2,18 @@
   <div class="dashboard-container">
     <!-- Sidebar -->
     <Sidebar :userType="userType" :userInfoObject="userInfoObject" />
+    
+    <!-- Mobile Sidebar Backdrop -->
+    <div v-if="isMobileSidebarOpen" class="mobile-sidebar-backdrop" @click="toggleSidebar" aria-hidden="true"></div>
 
     <!-- Main Content -->
     <main class="main-content">
       <div class="container-fluid pt-4 px-4">
+        <!-- Mobile Sidebar Toggle -->
+        <button v-if="isMobile" class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
+          <i class="bi bi-list"></i>
+        </button>
+        
         <!-- Loading State -->
         <div v-if="loading" class="text-center py-5">
           <div class="spinner-border text-primary" role="status">
@@ -351,7 +359,7 @@
 import { ref, onMounted, onUnmounted, computed, getCurrentInstance } from 'vue';
 import { Modal } from 'bootstrap';
 import Sidebar from '@/components/Sidebar.vue';
-import { bindSidebarResize } from '@/stores/sidebarState';
+import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import { useAppleToast } from '@/composables/useAppleToast';
 import '@/assets/sidebar.css';
 
@@ -365,6 +373,31 @@ const { success: toastSuccess, error: toastError } = useAppleToast();
 // User info
 const userType = ref('Officer');
 const userInfoObject = ref({});
+
+// Mobile sidebar
+const isMobile = ref(window.innerWidth <= 768);
+let _savedSidebarCollapsed = null;
+
+const toggleSidebar = () => {
+  const sb = document.querySelector('.sidebar');
+  const isOpen = !isMobileSidebarOpen.value;
+
+  if (isOpen) {
+    _savedSidebarCollapsed = isSidebarCollapsed.value;
+    isSidebarCollapsed.value = false;
+    if (sb) sb.classList.remove('collapsed');
+    document.body.classList.add('sidebar-open');
+    document.body.classList.add('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = true;
+  } else {
+    isSidebarCollapsed.value = !!_savedSidebarCollapsed;
+    if (sb && _savedSidebarCollapsed) sb.classList.add('collapsed');
+    document.body.classList.remove('sidebar-open');
+    document.body.classList.remove('sidebar-mobile-expanded');
+    isMobileSidebarOpen.value = false;
+    _savedSidebarCollapsed = null;
+  }
+};
 
 let unbindSidebarResize = null;
 
@@ -444,6 +477,16 @@ onMounted(async () => {
   
   unbindSidebarResize = bindSidebarResize();
   await refreshData();
+  
+  // Handle window resize for mobile detection
+  const handleResize = () => {
+    isMobile.value = window.innerWidth <= 768;
+  };
+  window.addEventListener('resize', handleResize);
+  
+  return () => {
+    window.removeEventListener('resize', handleResize);
+  };
 });
 
 onUnmounted(() => {
@@ -452,6 +495,9 @@ onUnmounted(() => {
     crudModalInstance.dispose();
     crudModalInstance = null;
   }
+  isMobileSidebarOpen.value = false;
+  document.body.classList.remove('sidebar-open');
+  document.body.classList.remove('sidebar-mobile-expanded');
 });
 
 // API calls
@@ -1457,6 +1503,50 @@ function showMessage(msg, type) {
   .stat-svg {
     width: 48px;
     height: 48px;
+  }
+}
+
+/* Mobile sidebar toggle */
+.mobile-sidebar-toggle {
+  background: none;
+  border: none;
+  color: currentColor;
+  cursor: pointer;
+  padding: 0.5rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  margin-bottom: 1rem;
+  display: none;
+}
+
+.mobile-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+}
+
+@media (max-width: 768px) {
+  .mobile-sidebar-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-sidebar-backdrop {
+    display: block;
+  }
+
+  .dashboard-container {
+    grid-template-columns: 1fr;
+  }
+
+  .main-content {
+    grid-column: 1 / -1;
   }
 }
 

@@ -73,7 +73,6 @@
 
 .main-content {
   flex: 1;
-  padding: 1rem;
   overflow-x: hidden;
   overflow-y: auto;
   max-height: 100vh;
@@ -603,3 +602,24 @@
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.15); }
 }
+
+/* Hero Title - ensure centered on all pages */
+.hero-title {
+  text-align: center !important;
+}
+
+.hero-subtitle {
+  text-align: center !important;
+}
+
+/* Mobile responsive hero section */
+@media (max-width: 768px) {
+  .dashboard-hero {
+    border-radius: 0;
+  }
+  
+  .hero-title {
+    font-size: 1.5rem !important;
+  }
+}
+

@@ -12,7 +12,7 @@
         <div class="d-flex align-items-center justify-content-between mb-4 fade-in-up">
           <div class="d-flex align-items-center gap-3">
             <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
-              <i :class="isMobileSidebarOpen ? 'bi bi-x' : 'bi bi-list'"></i>
+              <AnimatedToggleIcon :isOpen="isMobileSidebarOpen" />
             </button>
             <!-- Animated Icon Box (Green Gradient) -->
             <div class="apple-icon-box green-gradient">
@@ -325,6 +325,7 @@ import { createWebSocketConnection, WS_ENDPOINTS } from '@/config/websocket';
 import { formatRelativeTime } from '@/utils/formatTime';
 import { Tooltip } from 'bootstrap';
 import Sidebar from '@/components/Sidebar.vue';
+import AnimatedToggleIcon from '@/components/AnimatedToggleIcon.vue';
 import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import '@/assets/sidebar.css';
 import '@/assets/dashboard-styles.css';
@@ -822,12 +823,43 @@ function initTooltips() {
 }
 
 @media (max-width: 768px) {
-  .main-content { grid-column: 1/-1; width: 100%; }
+  .main-content { padding: 0 !important; grid-column: 1/-1; width: 100%; }
   
   .mobile-sidebar-toggle { display: flex; }
   
   .mobile-sidebar-backdrop {
     display: block;
+  }
+
+  .dashboard-hero {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0;
+    position: relative;
+  }
+
+  .hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .mobile-sidebar-toggle {
+    position: absolute;
+    left: 0;
+    top: 50%;
+  }
+
+  .hero-title {
+    text-align: center;
+    font-size: 1.5rem;
+  }
+
+  .hero-subtitle {
+    text-align: center;
   }
   
   :global(.sidebar) {

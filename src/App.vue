@@ -1,6 +1,15 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
 import AppleToast from '@/components/AppleToast.vue'
+import { onMounted } from 'vue'
+import { isMobileSidebarOpen } from '@/stores/sidebarState'
+
+// Reset mobile sidebar state on app load
+onMounted(() => {
+  isMobileSidebarOpen.value = false
+  document.body.classList.remove('sidebar-open')
+  document.body.classList.remove('sidebar-mobile-expanded')
+})
 </script>
 
 <template>

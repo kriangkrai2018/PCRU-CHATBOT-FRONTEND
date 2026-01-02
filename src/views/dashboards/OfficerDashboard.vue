@@ -897,6 +897,7 @@ const categoriesBarChartData = computed(() => {
   color: #FFFFFF;
   margin: 0 0 0.5rem 0;
   letter-spacing: -0.5px;
+  text-align: center;
 }
 
 .hero-subtitle {
@@ -1068,9 +1069,33 @@ const categoriesBarChartData = computed(() => {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .apple-dashboard { padding: 1rem; }
-  .dashboard-hero { padding: 2rem 1.5rem; }
-  .hero-title { font-size: 2rem; }
+  .apple-dashboard { 
+    padding: 1rem; 
+  }
+  .dashboard-hero { 
+    padding: 2rem 1.5rem;
+    border-radius: 20px;
+    position: relative;
+  }
+  .hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .mobile-sidebar-toggle {
+    position: absolute;
+    left: 1rem;
+    top: 1rem;
+  }
+  .hero-title { 
+    font-size: 1.75rem;
+    text-align: center;
+  }
+  .hero-subtitle {
+    text-align: center;
+  }
 }
 
 /* Reduced Motion */

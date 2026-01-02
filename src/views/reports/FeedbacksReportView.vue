@@ -12,7 +12,7 @@
         <div class="dashboard-hero fade-in-up">
           <div class="hero-content">
             <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
-              <i :class="isMobileSidebarOpen ? 'bi bi-x' : 'bi bi-list'"></i>
+              <AnimatedToggleIcon :isOpen="isMobileSidebarOpen" />
             </button>
             <div class="d-flex align-items-center gap-3">
               <!-- Animated Icon Box (Blue Gradient for General Feedbacks) -->
@@ -60,6 +60,7 @@
 import { ref, computed, onMounted, onUnmounted, getCurrentInstance } from 'vue';
 import { useRouter } from 'vue-router';
 import Sidebar from '@/components/Sidebar.vue';
+import AnimatedToggleIcon from '@/components/AnimatedToggleIcon.vue';
 import FeedbacksReport from '@/views/dashboards/officers/FeedbacksReport.vue';
 import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import { Chart as ChartJS, registerables } from 'chart.js';
@@ -227,7 +228,7 @@ onUnmounted(() => {
 /* Dashboard Hero */
 .dashboard-hero {
   background: #ffffff;
-  padding: 30px 40px;
+  padding: 3px 4px;
   border-bottom: 1px solid rgba(0,0,0,0.05);
   display: flex;
   justify-content: space-between;
@@ -328,12 +329,43 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
-  .main-content { grid-column: 1/-1; }
+  .main-content { grid-column: 1/-1; padding: 0 !important; }
   
   .mobile-sidebar-toggle { display: flex; }
   
   .mobile-sidebar-backdrop {
     display: block;
+  }
+
+  .dashboard-hero {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0;
+    position: relative;
+  }
+
+  .hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .mobile-sidebar-toggle {
+    position: absolute;
+    left: 0;
+    top: 50%;
+  }
+
+  .hero-title {
+    text-align: center;
+    font-size: 1.5rem;
+  }
+
+  .hero-subtitle {
+    text-align: center;
   }
   
   :global(.sidebar) {
@@ -377,7 +409,7 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
-  .main-content { grid-column: 1/-1; }
+  .main-content { grid-column: 1/-1; padding: 0 !important; }
   
   .mobile-sidebar-toggle { display: flex; }
   

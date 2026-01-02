@@ -29,7 +29,7 @@
         <!-- Glass Status Capsule -->
         <div class="status-capsule glass-panel" :class="{ 'is-live': wsConnected }">
           <div class="pulse-ring"></div>
-          <span class="status-text">{{ wsConnected ? 'Live Sync' : 'Connecting...' }}</span>
+          <span class="status-text">{{ wsConnected ? 'Live' : 'Connecting...' }}</span>
         </div>
       </div>
 

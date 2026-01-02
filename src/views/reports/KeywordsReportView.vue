@@ -8,7 +8,7 @@
         <div class="dashboard-hero">
           <div class="hero-content">
           <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
-            <i :class="isMobileSidebarOpen ? 'bi bi-x' : 'bi bi-list'"></i>
+            <AnimatedToggleIcon :isOpen="isMobileSidebarOpen" />
           </button>
             <h1 class="hero-title">
               Keywords Report</h1>
@@ -35,6 +35,7 @@
 import { ref, computed, onMounted, onUnmounted, getCurrentInstance } from 'vue';
 import { useRouter } from 'vue-router';
 import Sidebar from '@/components/Sidebar.vue';
+import AnimatedToggleIcon from '@/components/AnimatedToggleIcon.vue';
 import KeywordsReport from '@/views/dashboards/officers/KeywordsReport.vue';
 import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import { Chart as ChartJS, registerables } from 'chart.js';
@@ -180,7 +181,7 @@ onUnmounted(() => {
     position: fixed; inset: 0; background: rgba(0,0,0,0.42); z-index: 2500;
   }
 
-  .main-content[data-v-94d38d8e] {
+  .main-content {
     padding: 0 !important;
   }
 

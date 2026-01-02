@@ -1,10 +1,10 @@
 <template>
   <div class="sidebar d-flex flex-column flex-shrink-0 pt-3 ps-0 pe-0" :class="{ 'collapsed': isCollapsed }">
     <div class="sidebar-header d-flex align-items-center">
-      <span class="fs-4 fw-bold pcru-text me-3" :class="{ 'collapsed-text': isCollapsed }">PCRU</span>
-      <button class="btn btn-link text-dark p-0 mx-3 toggle-btn" @click="toggleSidebar">
-        <i class="bi bi-list fs-3"></i>
+      <button class="btn btn-link text-dark p-0 toggle-btn" @click="toggleSidebar">
+        <AnimatedToggleIcon :isOpen="!isCollapsed" />
       </button>
+      <span class="fs-4 fw-bold pcru-text" :class="{ 'collapsed-text': isCollapsed }">PCRU</span>
     </div>
     <hr>
     <ul class="nav nav-pills flex-column mb-auto">
@@ -257,6 +257,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { logout } from '@/utils/auth';
+import AnimatedToggleIcon from '@/components/AnimatedToggleIcon.vue';
 import { isSidebarCollapsed, isReportsOpen, isManageOpen, isRankingOpen } from '@/stores/sidebarState';
 
 const props = defineProps({
@@ -414,16 +415,15 @@ const handleLogout = () => { logout(router); };
   min-height: 50px; 
   display: flex;
   align-items: center;
-  justify-content: center;
-  position: relative;
+  justify-content: flex-start;
+  padding-left: 0.75rem;
+  gap: 0.5rem;
 }
 .pcru-text {
   flex: 1;
-  text-align: center;
+  text-align: left;
 }
 .toggle-btn { 
-  position: absolute;
-  right: 0;
   flex-shrink: 0;
   z-index: 10;
   width: 2.5rem;
@@ -433,7 +433,6 @@ const handleLogout = () => { logout(router); };
   justify-content: center;
   padding: 0;
   margin: 0;
-  margin-right: -0.75rem;
 }
 .nav-link { 
   color: rgba(0,0,0,0.65);

@@ -24,15 +24,6 @@
         </div>
       </div>
 
-      <!-- Retention Warning Alert -->
-      <div class="alert apple-alert-warning d-flex align-items-center fade-in-up" role="alert" style="animation-delay: 0.05s;">
-        <i class="bi bi-info-circle-fill me-2 fs-5"></i>
-        <div>
-          <strong>Data Retention Policy:</strong> Logs are automatically deleted after 7 days.
-        </div>
-        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-5 fade-in">
         <div class="apple-spinner"></div>
