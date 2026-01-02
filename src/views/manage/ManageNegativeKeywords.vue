@@ -354,6 +354,7 @@ const toggleSidebar = () => {
 
 // State
 const keywords = ref([]);
+const existingKeywords = ref([]); // Keywords from Keywords table to prevent adding them as negative keywords
 const stats = ref({});
 const pagination = ref({ page: 1, limit: 50, total: 0, totalPages: 1 });
 const searchQuery = ref('');
@@ -441,6 +442,19 @@ const fetchKeywords = async () => {
 // Add keyword
 const addKeyword = async () => {
   if (!newKeyword.word.trim()) return;
+  
+  // Check if word is already a keyword
+  const wordsToAdd = newKeyword.word.includes(',') 
+    ? newKeyword.word.split(',').map(w => w.trim().toLowerCase()).filter(w => w)
+    : [newKeyword.word.trim().toLowerCase()];
+  
+  const existingKwSet = new Set(existingKeywords.value.map(k => (k.KeywordText || '').toLowerCase()));
+  const conflictWords = wordsToAdd.filter(w => existingKwSet.has(w));
+  
+  if (conflictWords.length > 0) {
+    showToast(`ไม่สามารถเพิ่มได้: "${conflictWords.join(', ')}" เป็น Keyword อยู่แล้ว`, 'error');
+    return;
+  }
   
   isAdding.value = true;
   try {
@@ -600,7 +614,7 @@ const showToast = (message, type = 'success') => {
 };
 
 // Init
-onMounted(() => {
+onMounted(async () => {
   const token = localStorage.getItem('userToken');
   const type = localStorage.getItem('userType');
   const userInfoString = localStorage.getItem('userInfo');
@@ -615,6 +629,14 @@ onMounted(() => {
   
   bindSidebarResize();
   fetchKeywords();
+  
+  // Fetch existing keywords to prevent conflicts
+  try {
+    const kwRes = await axiosInstance.get('/keywords/public');
+    existingKeywords.value = kwRes.data?.data || kwRes.data || [];
+  } catch (e) {
+    console.warn('Could not load existing keywords:', e.message);
+  }
   
   // Handle window resize for mobile detection
   const handleResize = () => {

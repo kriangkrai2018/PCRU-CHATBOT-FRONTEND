@@ -126,7 +126,7 @@
 
           <!-- Stats Cards with SVG Icons -->
           <div class="row g-4 mb-4">
-            <div class="col-md-4">
+            <div class="col-md-3">
               <div class="stat-card apple-card p-4 rounded-4 shadow-apple text-center">
                 <!-- SVG Total Icon -->
                 <svg class="stat-svg" width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -144,7 +144,7 @@
                 <div class="stat-label">Stopwords ทั้งหมด</div>
               </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <div class="stat-card apple-card p-4 rounded-4 shadow-apple text-center">
                 <!-- SVG Protected Icon -->
                 <svg class="stat-svg" width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -160,7 +160,23 @@
                 <div class="stat-label">ป้องกันโดย Keywords</div>
               </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
+              <div class="stat-card apple-card p-4 rounded-4 shadow-apple text-center">
+                <!-- SVG Negative Keyword Icon -->
+                <svg class="stat-svg" width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle class="stat-circle-bg" cx="32" cy="32" r="24" fill="#af52de" opacity="0.2"/>
+                  <circle class="stat-circle" cx="32" cy="32" r="18" stroke="#af52de" stroke-width="3" fill="none"/>
+                  <path d="M24 32 L40 32" stroke="#af52de" stroke-width="4" stroke-linecap="round"/>
+                </svg>
+                <div class="stat-number">
+                  <transition name="number-change" mode="out-in">
+                    <span :key="stats.negativeProtected">{{ stats.negativeProtected || 0 }}</span>
+                  </transition>
+                </div>
+                <div class="stat-label">ป้องกันโดย คำปฏิเสธ</div>
+              </div>
+            </div>
+            <div class="col-md-3">
               <div class="stat-card apple-card p-4 rounded-4 shadow-apple text-center">
                 <!-- SVG Filter Icon -->
                 <svg class="stat-svg" width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -225,12 +241,17 @@
                       <td class="py-3">{{ item.StopwordID }}</td>
                       <td class="py-3 fw-bold">{{ item.StopwordText }}</td>
                       <td class="py-3">
-                        <span v-if="item.isProtected" class="badge bg-success">
-                          <i class="bi bi-shield-check me-1"></i> ป้องกันโดย Keywords
-                        </span>
-                        <span v-else class="badge bg-warning text-dark">
-                          <i class="bi bi-funnel me-1"></i> กำลังกรอง
-                        </span>
+                        <div class="d-flex flex-column gap-1">
+                          <span v-if="item.isProtected" class="badge bg-success">
+                            <i class="bi bi-shield-check me-1"></i> ป้องกันโดย Keywords
+                          </span>
+                          <span v-if="item.isNegativeKeyword" class="badge bg-danger">
+                            <i class="bi bi-dash-circle me-1"></i> ป้องกันโดย Negative Keywords
+                          </span>
+                          <span v-if="!item.isProtected && !item.isNegativeKeyword" class="badge bg-warning text-dark">
+                            <i class="bi bi-funnel me-1"></i> กำลังกรอง
+                          </span>
+                        </div>
                       </td>
                       <td class="py-3">
                         <div class="d-flex gap-2">
@@ -405,7 +426,7 @@ let unbindSidebarResize = null;
 const loading = ref(true);
 const stopwords = ref([]);
 const keywords = ref([]);
-const stats = ref({ total: 0, protected: 0, active: 0 });
+const stats = ref({ total: 0, protected: 0, negativeProtected: 0, active: 0 });
 const searchQuery = ref('');
 
 // Pagination
@@ -510,15 +531,36 @@ async function refreshData() {
       $axios.get('/keywords/public')
     ]);
     
+    // Try to get negative keywords (may need auth)
+    let negativeKeywordsData = [];
+    try {
+      const negativeKeywordsRes = await $axios.get('/negativekeywords');
+      negativeKeywordsData = negativeKeywordsRes.data?.data || negativeKeywordsRes.data || [];
+    } catch (nkErr) {
+      console.warn('Could not load negative keywords:', nkErr.message);
+    }
+    
     // API returns { success: true, data: [...] }
     const stopwordsData = stopwordsRes.data?.data || stopwordsRes.data || [];
     const keywordsData = keywordsRes.data?.data || keywordsRes.data || [];
     
     const kwSet = new Set((Array.isArray(keywordsData) ? keywordsData : []).map(k => (k.KeywordText || '').toLowerCase()));
+    // Negative keywords use "Word" field and "IsActive" field
+    const nkwList = (Array.isArray(negativeKeywordsData) ? negativeKeywordsData : [])
+      .filter(k => k.IsActive === 1)
+      .map(k => (k.Word || '').toLowerCase())
+      .filter(w => w.length > 0);
+    
+    // Helper function to check if stopword contains any negative keyword
+    const containsNegativeKeyword = (stopwordText) => {
+      const text = (stopwordText || '').toLowerCase();
+      return nkwList.some(nkw => text.includes(nkw));
+    };
     
     stopwords.value = (Array.isArray(stopwordsData) ? stopwordsData : []).map(s => ({
       ...s,
-      isProtected: kwSet.has((s.StopwordText || '').toLowerCase())
+      isProtected: kwSet.has((s.StopwordText || '').toLowerCase()),
+      isNegativeKeyword: containsNegativeKeyword(s.StopwordText)
     }));
     
     keywords.value = Array.isArray(keywordsData) ? keywordsData : [];
@@ -527,7 +569,8 @@ async function refreshData() {
     stats.value = {
       total: stopwords.value.length,
       protected: stopwords.value.filter(s => s.isProtected).length,
-      active: stopwords.value.filter(s => !s.isProtected).length
+      negativeProtected: stopwords.value.filter(s => s.isNegativeKeyword && !s.isProtected).length,
+      active: stopwords.value.filter(s => !s.isProtected && !s.isNegativeKeyword).length
     };
     
     showMessage('โหลดข้อมูลสำเร็จ', 'success');
