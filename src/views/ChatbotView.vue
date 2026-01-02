@@ -916,6 +916,7 @@ export default {
       welcomeInstruction: '',
       stopwords: [],
       protectedKeywords: new Set(),
+      allProtectedWords: new Set(), // 🛡️ All protected words from keywords, negative keywords, synonyms
       segmenter: null,
     }
   },
@@ -1602,35 +1603,84 @@ export default {
     },
     async fetchStopwordsAndKeywords() {
       try {
-        const [stopwordsRes, keywordsRes] = await Promise.all([
+        // 🛡️ Fetch all protected word sources: stopwords, keywords, negative keywords, synonyms
+        const [stopwordsRes, keywordsRes, negativeRes, synonymsRes] = await Promise.all([
           this.$axios.get('/stopwords/public'),
-          this.$axios.get('/keywords/public')
+          this.$axios.get('/keywords/public'),
+          this.$axios.get('/negativekeywords').catch(() => ({ data: [] })),
+          this.$axios.get('/synonyms').catch(() => ({ data: [] }))
         ]);
         
         const stopwordsData = stopwordsRes.data?.data || stopwordsRes.data || [];
         const keywordsData = keywordsRes.data?.data || keywordsRes.data || [];
+        const negativeData = negativeRes.data?.data || negativeRes.data || [];
+        const synonymsData = synonymsRes.data?.data || synonymsRes.data || [];
 
+        // 🛡️ Build protected words set from multiple sources
+        const protectedWords = new Set();
+        
+        // 1. Keywords - protect all keyword text
         if (Array.isArray(keywordsData)) {
+          for (const k of keywordsData) {
+            const text = (k.KeywordText || k.keyword || k.text || '').toLowerCase().trim();
+            if (text) {
+              protectedWords.add(text);
+              // Also tokenize multi-word keywords
+              text.split(/\s+/).forEach(t => t && protectedWords.add(t));
+            }
+          }
           this.protectedKeywords = new Set(keywordsData.map(k => (k.KeywordText || '').toLowerCase()));
 
-          // Fill autocomplete keywords from backend-provided keywords
-          // Support both object with KeywordText and plain string entries
+          // Fill autocomplete keywords
           this.autocompleteKeywords = Array.from(new Set(
             keywordsData
               .map(k => (k && (k.KeywordText || k.keyword || k.text || k)).toString().trim())
               .filter(Boolean)
-          ))
-          // Sort using Thai locale where possible for stable suggestions
+          ));
           try { this.autocompleteKeywords.sort((a, b) => a.localeCompare(b, 'th')); } catch (e) { /* ignore */ }
         } else {
           this.autocompleteKeywords = [];
         }
+        
+        // 2. Negative Keywords - protect all tokens in negative patterns (e.g., "ไม่เอา" → protect "ไม่" and "เอา")
+        if (Array.isArray(negativeData)) {
+          for (const n of negativeData) {
+            const word = (n.Word || n.word || n.keyword || '').toLowerCase().trim();
+            if (word) {
+              protectedWords.add(word);
+              // Tokenize using Intl.Segmenter if available, else split by common patterns
+              if (this.segmenter) {
+                try {
+                  const segments = Array.from(this.segmenter.segment(word));
+                  segments.forEach(seg => seg.isWordLike && protectedWords.add(seg.segment.toLowerCase()));
+                } catch (e) { /* ignore */ }
+              } else {
+                // Fallback: split Thai compound words manually
+                word.split(/\s+/).forEach(t => t && protectedWords.add(t));
+              }
+            }
+          }
+        }
+        
+        // 3. Synonyms - protect both original and synonym words
+        if (Array.isArray(synonymsData)) {
+          for (const s of synonymsData) {
+            const original = (s.OriginalWord || s.original || '').toLowerCase().trim();
+            const synonym = (s.SynonymWord || s.synonym || '').toLowerCase().trim();
+            if (original) protectedWords.add(original);
+            if (synonym) protectedWords.add(synonym);
+          }
+        }
+        
+        // Store protected words for use in stopword filtering
+        this.allProtectedWords = protectedWords;
+        console.log('🛡️ Protected words loaded:', protectedWords.size, 'words');
 
         if (Array.isArray(stopwordsData)) {
-          // An "active" stopword is one that is in the stopwords list but NOT in the protected keywords list.
+          // An "active" stopword is one that is NOT in any protected list
           this.stopwords = stopwordsData
             .map(s => (s.StopwordText || '').toLowerCase())
-            .filter(sw => sw && !this.protectedKeywords.has(sw));
+            .filter(sw => sw && !protectedWords.has(sw));
         }
       } catch (error) {
         console.warn('Could not fetch stopwords/keywords for frontend filtering. This is not critical.', error);
@@ -3501,13 +3551,25 @@ export default {
       const originalUserMessage = this.query.trim()
       let processedUserMessage = originalUserMessage;
 
-      // Frontend stopword removal as a workaround for backend inconsistency.
+      // 🛡️ Frontend stopword removal - but respect protected words (keywords, negative keywords, synonyms)
+      // If a stopword matches any protected word, it will NOT be removed
       if (this.segmenter && this.stopwords && this.stopwords.length > 0) {
         try {
           const segments = Array.from(this.segmenter.segment(originalUserMessage));
-          const filteredSegments = segments.filter(seg => {
-            // Keep non-word segments (spaces, punctuation) and words that are NOT active stopwords.
-            return !seg.isWordLike || !this.stopwords.includes(seg.segment.toLowerCase());
+          
+          const filteredSegments = segments.filter((seg) => {
+            // Keep non-word segments (spaces, punctuation)
+            if (!seg.isWordLike) return true;
+            
+            const word = seg.segment.toLowerCase();
+            
+            // 🛡️ If this word is in the protected set (keywords, negative keywords, synonyms), keep it
+            if (this.allProtectedWords && this.allProtectedWords.has(word)) {
+              return true;
+            }
+            
+            // Standard stopword filtering - only remove if not protected
+            return !this.stopwords.includes(word);
           });
           processedUserMessage = filteredSegments.map(s => s.segment).join('').replace(/\s+/g, ' ').trim();
         } catch (e) {
