@@ -303,7 +303,7 @@
     z-index: 2;
     width: var(--panel-width);
     height: 100%;
-    background: rgb(13, 13, 13) !important;
+    background: rgb(13 13 13 / 92%) !important;
     backdrop-filter: blur(var(--blur-amt));
     -webkit-backdrop-filter: blur(var(--blur-amt));
     box-shadow: -10px 0 60px rgba(0, 0, 0, 0.15);

@@ -661,7 +661,7 @@
                   :class="{ 'shake': isTyping }"
                   :style="typingStyle"
                   :placeholder="placeholderText"
-                  @keyup.enter="onSend"
+                  @keydown.enter.prevent="onEnterKey"
                   @keydown.tab.prevent="acceptSuggestion"
                   @keydown.arrow-right.prevent="checkAcceptSuggestion"
                   @compositionstart="onCompositionStart"
@@ -827,6 +827,9 @@ export default {
       suggestionText: '',
       // Populated from backend `/keywords/public` on mount
       autocompleteKeywords: [],
+      // Debounced remote autocomplete (keywords + synonyms + stopwords)
+      autocompleteSuggestTimer: null,
+      autocompleteSuggestSeq: 0,
       // Power mode particles
       particles: [],
       particleAnimationFrame: null,
@@ -1479,6 +1482,12 @@ export default {
       clearTimeout(this.expandTimer)
       this.expandTimer = null
     }
+
+    // Clear pending autocomplete request timer
+    if (this.autocompleteSuggestTimer) {
+      clearTimeout(this.autocompleteSuggestTimer)
+      this.autocompleteSuggestTimer = null
+    }
     // Remove visualViewport listeners if set
     if (this._viewportHandler) {
       if (window.visualViewport) {
@@ -1565,6 +1574,21 @@ export default {
     }
   },
   methods: {
+    onEnterKey() {
+      // Ignore enter while IME composition is active
+      if (this.isComposing) return
+
+      // If a ghost suggestion exists, Enter should first accept it (fill input)
+      // Press Enter again to actually send.
+      const input = (this.query || '').toString().trim()
+      const suggestion = (this.suggestionText || '').toString().trim()
+      if (input && suggestion && suggestion.toLowerCase() !== input.toLowerCase()) {
+        this.acceptSuggestion()
+        return
+      }
+
+      this.onSend()
+    },
     async fetchStopwordsAndKeywords() {
       try {
         const [stopwordsRes, keywordsRes] = await Promise.all([
@@ -2905,16 +2929,12 @@ export default {
         const input = (this.query || '').toString()
         if (!input || input.trim().length < 2) {
           this.suggestionText = ''
-        } else {
-          const match = this.autocompleteKeywords.find(k => {
-            return k && k.toLowerCase().startsWith(input.toLowerCase()) && k.toLowerCase() !== input.toLowerCase()
-          })
-          if (match) {
-            const suffix = match.slice(input.length)
-            this.suggestionText = input + suffix
-          } else {
-            this.suggestionText = ''
+          if (this.autocompleteSuggestTimer) {
+            clearTimeout(this.autocompleteSuggestTimer)
+            this.autocompleteSuggestTimer = null
           }
+        } else {
+          this.queueAutocompleteSuggestion(input)
         }
       } catch (e) { this.suggestionText = '' }
 
@@ -2922,6 +2942,96 @@ export default {
       this.typingTimeout = setTimeout(() => {
         this.isTyping = false
       }, 300)
+    },
+
+    // --- Autocomplete helpers ---
+    applyLocalAutocomplete(input) {
+      try {
+        const inputStr = (input || '').toString()
+        if (!inputStr || inputStr.trim().length < 2) {
+          this.suggestionText = ''
+          return
+        }
+        const inputLower = inputStr.toLowerCase()
+        const match = (this.autocompleteKeywords || []).find(k => {
+          if (!k) return false
+          const kw = k.toString()
+          const kwLower = kw.toLowerCase()
+          return kwLower.startsWith(inputLower) && kwLower !== inputLower
+        })
+        if (match) {
+          const matchStr = match.toString()
+          this.suggestionText = inputStr + matchStr.slice(inputStr.length)
+        } else {
+          this.suggestionText = ''
+        }
+      } catch (e) {
+        this.suggestionText = ''
+      }
+    },
+
+    pickAutocompleteSuggestionText(input, suggestions) {
+      const inputStr = (input || '').toString()
+      if (!inputStr) return ''
+
+      const inputLower = inputStr.toLowerCase()
+      const arr = Array.isArray(suggestions) ? suggestions : []
+
+      for (const item of arr) {
+        const text = typeof item === 'string' ? item : (item && item.text)
+        if (!text) continue
+        const s = text.toString()
+        const sLower = s.toLowerCase()
+        if (sLower.startsWith(inputLower) && sLower !== inputLower) {
+          return inputStr + s.slice(inputStr.length)
+        }
+      }
+      return ''
+    },
+
+    queueAutocompleteSuggestion(input) {
+      const inputStr = (input || '').toString()
+
+      // Instant local suggestion for responsiveness (fallback)
+      this.applyLocalAutocomplete(inputStr)
+
+      // Debounce remote requests
+      if (this.autocompleteSuggestTimer) {
+        clearTimeout(this.autocompleteSuggestTimer)
+        this.autocompleteSuggestTimer = null
+      }
+
+      const trimmed = inputStr.trim()
+      if (trimmed.length < 2) return
+
+      const seq = ++this.autocompleteSuggestSeq
+      this.autocompleteSuggestTimer = setTimeout(async () => {
+        // Ignore autocomplete while IME composition active
+        if (this.isComposing) return
+
+        const currentInput = (this.query || '').toString()
+        if (!currentInput || currentInput !== inputStr) return
+
+        try {
+          const res = await this.$axios.get('/autocomplete/suggest', {
+            params: { q: currentInput, limit: 20 }
+          })
+
+          // Ignore stale results
+          if (seq !== this.autocompleteSuggestSeq) return
+
+          const payload = res && res.data ? res.data : null
+          const suggestions = payload?.data?.suggestions || payload?.suggestions || []
+          const picked = this.pickAutocompleteSuggestionText(currentInput, suggestions)
+
+          // Only apply if input hasn't changed since request was queued
+          if ((this.query || '').toString() === inputStr) {
+            this.suggestionText = picked
+          }
+        } catch (e) {
+          // Network/backend failure: keep local suggestion
+        }
+      }, 120)
     },
     createParticles() {
       const inputBox = this.$refs.inputBox
@@ -2969,7 +3079,6 @@ export default {
       }
     },
 
-    // --- Autocomplete helpers ---
     acceptSuggestion() {
       if (!this.suggestionText) return
       this.query = this.suggestionText
