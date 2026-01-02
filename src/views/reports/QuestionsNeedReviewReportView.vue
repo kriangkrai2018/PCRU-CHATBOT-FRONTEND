@@ -185,8 +185,9 @@ onUnmounted(() => {
 
   :deep(.mobile-sidebar-toggle) {
     position: absolute;
-    left: 0;
+    left: 1rem;
     top: 50%;
+    transform: translateY(-50%);
   }
 
   :deep(.hero-title) {

@@ -137,11 +137,11 @@
               <tbody>
                 <template v-for="qa in paginatedQuestions" :key="qa.QuestionsAnswersID">
                   <tr class="align-middle apple-row">
-                    <td class="ps-4 fw-medium text-secondary">{{ qa.QuestionsAnswersID }}</td>
-                    <td class="py-3">
+                    <td class="ps-4 fw-medium text-secondary" data-label="ID">{{ qa.QuestionsAnswersID }}</td>
+                    <td class="py-3" data-label="Question Title">
                       <div class="question-text-cell fw-medium text-dark" :title="qa.QuestionTitle">{{ qa.QuestionTitle }}</div>
                     </td>
-                    <td class="py-3">
+                    <td class="py-3" data-label="Review Date">
                       <span 
                         :class="['apple-badge', getReviewDateBadgeClass(qa.ReviewDate)]"
                         data-bs-toggle="tooltip" 
@@ -151,10 +151,10 @@
                         {{ formatRelativeTime(qa.ReviewDate) }}
                       </span>
                     </td>
-                    <td class="py-3">
+                    <td class="py-3" data-label="Answer Preview">
                       <div class="question-text-cell text-muted small" :title="qa.QuestionText">{{ truncateText(qa.QuestionText, 60) }}</div>
                     </td>
-                    <td class="py-3">
+                    <td class="py-3" data-label="Category">
                       <span
                         class="tag-badge"
                         :style="{ backgroundColor: tagColors[(qa.CategoriesID || 0) % tagColors.length] + '20', color: tagColors[(qa.CategoriesID || 0) % tagColors.length] }"
@@ -162,7 +162,7 @@
                         {{ categoriesNameMapSafe[qa.CategoriesID] || qa.CategoriesID }}
                       </span>
                     </td>
-                    <td class="py-3">
+                    <td class="py-3" data-label="Keywords">
                       <div class="d-flex flex-wrap gap-1" v-if="qa.keywords && qa.keywords.length">
                         <span
                           v-for="(k, i) in qa.keywords.slice(0, 3)"
@@ -175,7 +175,7 @@
                       </div>
                       <span v-else class="text-muted small opacity-50">—</span>
                     </td>
-                    <td class="py-3 text-center">
+                    <td class="py-3 text-center" data-label="Like">
                       <div class="feedback-stat-container justify-content-center">
                         <div
                           class="feedback-stat like-stat"
@@ -189,7 +189,7 @@
                         </div>
                       </div>
                     </td>
-                    <td class="py-3 text-center">
+                    <td class="py-3 text-center" data-label="Unlike">
                       <div class="feedback-stat-container justify-content-center">
                         <div
                           class="feedback-stat unlike-stat"
@@ -353,8 +353,8 @@ const paginatedQuestions = computed(() => {
 });
 
 // stats totals
-const totalLikes = computed(() => allQuestions.value.reduce((acc, curr) => acc + (curr.likeCount || 0), 0));
-const totalUnlikes = computed(() => allQuestions.value.reduce((acc, curr) => acc + (curr.unlikeCount || 0), 0));
+const totalLikes = computed(() => allQuestions.value.reduce((acc, curr) => acc + (Number(curr.likeCount) || 0), 0));
+const totalUnlikes = computed(() => allQuestions.value.reduce((acc, curr) => acc + (Number(curr.unlikeCount) || 0), 0));
 
 // pages to show (max 4)
 const pagesToShow = computed(() => {
@@ -697,4 +697,22 @@ function goToFeedbacks(questionId) {
 /* Empty State */
 .empty-state { display: flex; flex-direction: column; align-items: center; color: var(--apple-gray); }
 .empty-state i { font-size: 2.5rem; margin-bottom: 8px; opacity: 0.5; }
+
+@media (max-width: 992px) {
+  .table-wrapper .table-responsive { overflow-x: auto; }
+}
+
+@media (max-width: 768px) {
+  .table-wrapper .table-responsive { box-shadow: none; }
+  .table-wrapper table { display: block; border: none; }
+  .table-wrapper thead { display: none; }
+  .table-wrapper tbody tr { display: block; margin-bottom: 1rem; border-radius: 18px; background: white; box-shadow: 0 10px 24px rgba(15, 15, 15, 0.08); border: 1px solid rgba(0, 0, 0, 0.05); }
+  .table-wrapper tbody td { display: flex; justify-content: space-between; gap: 1rem; padding: 0.85rem 1rem; border: none; border-bottom: 1px solid rgba(0, 0, 0, 0.05); }
+  .table-wrapper tbody td:last-child { border-bottom: none; }
+  .table-wrapper tbody td::before { content: attr(data-label); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: #8c8c92; font-weight: 600; flex: 1; }
+  .table-wrapper tbody td .question-text-cell { max-width: 60%; }
+  .table-wrapper tbody td .feedback-stat-container { justify-content: flex-end; }
+  .table-wrapper tbody td .feedback-stat { width: auto; }
+  .table-wrapper tbody td[data-label="Keywords"] { flex-wrap: wrap; }
+}
 </style>

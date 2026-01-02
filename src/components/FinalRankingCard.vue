@@ -69,6 +69,7 @@
               <label>Domain Weight</label>
               <input type="number" step="0.01" min="0" max="2" v-model.number="weights.domain_support" />
             </div>
+
             <div class="input-item">
               <label>Application Weight</label>
               <input type="number" step="0.01" min="0" max="2" v-model.number="weights.application_support" />
@@ -290,8 +291,14 @@ async function saveWeights() {
 }
 .ranking-body .inputs-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .ranking-body .inputs-grid {
+    grid-template-columns: 1fr;
+  }
 }
 .two-column {
   display: grid;
@@ -303,11 +310,41 @@ async function saveWeights() {
   grid-template-columns: 1fr;
 }
 .breakdown-grid.single-row {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+@media (max-width: 992px) {
+  .breakdown-grid.single-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .breakdown-grid.single-row {
+    grid-template-columns: 1fr;
+  }
 }
 .section-label {
   font-weight: 700;
   margin: 8px 0 6px;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .section-label {
+    font-size: 0.85rem;
+  }
+  
+  .btn-preset {
+    padding: 8px 14px;
+    font-size: 0.8rem;
+  }
+  
+  .d-flex.justify-content-between.align-items-center {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
 }
 .helper-text {
   font-size: 0.8rem;
@@ -384,22 +421,149 @@ async function saveWeights() {
   box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
 }
 .breakdown-grid {
-  margin-top: 12px;
+  margin-top: 16px;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 992px) {
+  .breakdown-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (max-width: 576px) {
+  .breakdown-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 }
 .breakdown-item {
   background: #f5f7fa;
   border-radius: 12px;
-  padding: 10px;
+  padding: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
+  min-height: 60px;
 }
 .breakdown-item .label {
   color: #86868b;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  flex: 1;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
+.breakdown-item .value {
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  min-width: 50px;
+  text-align: right;
+}
+
+@media (max-width: 992px) {
+  .breakdown-item {
+    padding: 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    min-height: auto;
+  }
+  .breakdown-item .label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    width: 100%;
+  }
+  .breakdown-item .value {
+    font-size: 1.4rem;
+    width: 100%;
+    text-align: left;
+  }
+}
+
+@media (max-width: 576px) {
+  .breakdown-item {
+    padding: 12px;
+  }
+  .breakdown-item .label {
+    font-size: 0.65rem;
+  }
+  .breakdown-item .value {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .two-column {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .ranking-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .score-pill {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .ranking-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.75rem 1.2rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .ranking-card {
+    padding: 12px;
+  }
+
+  .input-item label {
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+    display: block;
+  }
+  
+  .input-item input {
+    padding: 10px 12px;
+    font-size: 1rem;
+  }
+
+  .score-pill {
+    padding: 8px 14px;
+  }
+  
+  .score-pill .value {
+    font-size: 1.1rem;
+  }
+  
+  .ranking-header h5 {
+    font-size: 1.1rem;
+  }
+  
+  .sample-text {
+    font-size: 0.95rem;
+  }
+}
+
 .fade-enter-active, .fade-leave-active {
   transition: opacity .3s;
 }

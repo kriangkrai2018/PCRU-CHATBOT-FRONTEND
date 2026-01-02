@@ -66,7 +66,7 @@
                 <tbody>
                   <template v-for="(cat, idx) in visibleParents" :key="cat.CategoriesID">
                     <tr class="align-middle parent-row">
-                      <td class="ps-4">
+                      <td class="ps-4" data-label="">
                         <button 
                           v-if="hasSubCategories(cat.CategoriesID, cat.CategoriesID)" 
                           class="expand-btn" 
@@ -75,22 +75,22 @@
                           <i class="bi" :class="expandedMap[cat.CategoriesID] ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
                         </button>
                       </td>
-                      <td class="cat-id-cell fw-semibold text-primary">
+                      <td class="cat-id-cell fw-semibold text-primary" data-label="CategoriesID">
                         {{ cat.CategoriesID }}
                       </td>
-                      <td class="fw-medium text-dark">{{ cat.CategoriesName }}</td>
-                      <td>
+                      <td class="fw-medium text-dark" data-label="CategoriesName">{{ cat.CategoriesName }}</td>
+                      <td data-label="Type">
                         <span :class="isMain(cat) ? 'apple-badge-blue' : 'apple-badge-gray'">
                           {{ isMain(cat) ? 'Main' : 'Sub' }}
                         </span>
                       </td>
-                      <td class="contact-cell">
+                      <td class="contact-cell" data-label="Contact">
                         <div v-if="cat.Contact">
                           <div v-for="(cc, i) in parseContacts(cat.Contact)" :key="i" class="small text-secondary text-truncate" style="max-width: 200px;">{{ cc }}</div>
                         </div>
                         <span v-else class="text-muted small">-</span>
                       </td>
-                      <td>
+                      <td data-label="File">
                         <template v-if="cat.CategoriesPDF">
                           <button @click.prevent="openFile(cat.CategoriesPDF, cat.CategoriesName)" class="file-link-btn">
                             <i :class="pdfIconClass(cat.CategoriesPDF)"></i>
@@ -99,7 +99,7 @@
                         </template>
                         <span v-else class="text-muted small">-</span>
                       </td>
-                      <td class="text-center">
+                      <td class="text-center" data-label="Actions">
                         <div class="row-actions">
                           <button class="action-btn edit" @click.stop="openEditModal(cat)" title="แก้ไข">
                             <i class="bi bi-pencil-square"></i>
@@ -117,19 +117,19 @@
                       :key="sub.CategoriesID"
                       class="sub-row"
                     >
-                      <td></td>
-                      <td class="cat-id-cell ps-4 text-secondary">
+                      <td data-label=""></td>
+                      <td class="cat-id-cell ps-4 text-secondary" data-label="CategoriesID">
                         <span class="tree-line">└</span> {{ sub.CategoriesID }}
                       </td>
-                      <td class="ps-4 text-dark">{{ sub.CategoriesName }}</td>
-                      <td><span class="apple-badge-gray">Sub</span></td>
-                      <td class="contact-cell">
+                      <td class="ps-4 text-dark" data-label="CategoriesName">{{ sub.CategoriesName }}</td>
+                      <td data-label="Type"><span class="apple-badge-gray">Sub</span></td>
+                      <td class="contact-cell" data-label="Contact">
                         <div v-if="sub.Contact">
                           <div v-for="(cc, i) in parseContacts(sub.Contact)" :key="i" class="small text-secondary text-truncate">{{ cc }}</div>
                         </div>
                         <span v-else class="text-muted small">-</span>
                       </td>
-                      <td>
+                      <td data-label="File">
                         <template v-if="sub.CategoriesPDF">
                           <button @click.prevent="openFile(sub.CategoriesPDF, sub.CategoriesName)" class="file-link-btn">
                             <i :class="pdfIconClass(sub.CategoriesPDF)"></i>
@@ -138,7 +138,7 @@
                         </template>
                         <span v-else class="text-muted small">-</span>
                       </td>
-                      <td class="text-center">
+                      <td class="text-center" data-label="Actions">
                         <div class="row-actions">
                           <button class="action-btn edit" @click.stop="openEditModal(sub)" title="แก้ไข">
                             <i class="bi bi-pencil-square"></i>
@@ -909,6 +909,33 @@ onUnmounted(() => {
 
 .sub-row {
   background-color: #FAFAFC;
+}
+
+@media (max-width: 1024px) {
+  .table-responsive { overflow-x: auto; }
+}
+
+@media (max-width: 768px) {
+  .table-responsive { box-shadow: none; }
+  .apple-table { display: block; border: none; }
+  .apple-table thead { display: none; }
+  .apple-table tbody { display: flex; flex-direction: column; gap: 1rem; }
+  .apple-table tbody tr { display: block; background: white; border-radius: 16px; border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08); margin: 0; }
+  .apple-table tbody td { display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1rem; border: none; font-size: 0.9rem; }
+  .apple-table tbody td::before {
+    content: attr(data-label);
+    flex: 1;
+    font-size: 0.65rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #8c8c92;
+    font-weight: 600;
+    margin-right: 0.75rem;
+  }
+  .apple-table tbody td[data-label=""]::before { display: none; }
+  .apple-table tbody td:last-child { border-bottom: none; }
+  .apple-table tbody td .row-actions { gap: 6px; }
+  .contact-cell > div > div { max-width: 100%; }
 }
 
 .tree-line {

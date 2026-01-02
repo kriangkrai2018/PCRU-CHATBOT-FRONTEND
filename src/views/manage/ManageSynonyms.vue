@@ -245,8 +245,8 @@
                 <tbody>
                   <transition-group name="row-fade">
                     <tr v-for="item in paginatedSynonyms" :key="item.SynonymID" class="apple-row">
-                      <td class="py-3">{{ item.SynonymID }}</td>
-                      <td class="py-3">
+                      <td class="py-3" data-label="ID">{{ item.SynonymID }}</td>
+                      <td class="py-3" data-label="คำที่ผู้ใช้พิมพ์ → Keyword เป้าหมาย">
                         <div class="d-flex align-items-center gap-1">
                           <span class="input-word">{{ item.InputWord }}</span>
                           <svg class="arrow-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -255,7 +255,7 @@
                           <span class="target-word">{{ item.TargetKeyword || 'N/A' }}</span>
                         </div>
                       </td>
-                      <td class="py-3">
+                      <td class="py-3" data-label="คะแนน">
                         <span 
                           class="synonyms-score-badge"
                           :class="getScoreClass(item.SimilarityScore)"
@@ -266,10 +266,10 @@
                           {{ parseFloat(item.SimilarityScore).toFixed(2) }}
                         </span>
                       </td>
-                      <td class="py-3">
+                      <td class="py-3" data-label="บทบาท">
                         <span class="synonyms-role-tag">{{ item.RoleDescription || 'คำพ้อง' }}</span>
                       </td>
-                      <td class="py-3">
+                      <td class="py-3" data-label="สถานะ">
                         <span 
                           class="synonyms-status-badge"
                           :class="item.IsActive ? 'active' : 'inactive'"
@@ -278,7 +278,7 @@
                           {{ item.IsActive ? 'Active' : 'Inactive' }}
                         </span>
                       </td>
-                      <td class="py-3">
+                      <td class="py-3" data-label="การดำเนินการ">
                         <div class="d-flex gap-2">
                           <button 
                             class="btn-action"
@@ -921,6 +921,86 @@ async function confirmDelete(item) {
 
   .main-content {
     grid-column: 1 / -1;
+  }
+}
+
+.table-responsive {
+  overflow-x: hidden;
+}
+
+.apple-table {
+  min-width: 0;
+}
+
+@media (max-width: 992px) {
+  .table-responsive {
+    overflow-x: hidden;
+  }
+}
+
+@media (max-width: 768px) {
+  .apple-table {
+    display: block;
+    border: none;
+  }
+  .apple-table thead {
+    display: none;
+  }
+  .apple-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .apple-table tbody tr {
+    display: block;
+    background: white;
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+    padding: 0.75rem 0;
+  }
+  .apple-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    text-align: left;
+  }
+  .apple-table tbody td:last-child {
+    border-bottom: none;
+  }
+  .apple-table tbody td::before {
+    content: attr(data-label);
+    flex: 1;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8c8c92;
+    font-weight: 600;
+    margin-right: 0.8rem;
+    white-space: nowrap;
+  }
+  .apple-table tbody td[data-label=""]::before {
+    display: none;
+  }
+  .apple-table tbody td .d-flex {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .apple-table tbody td {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .apple-table tbody td::before {
+    margin-bottom: 0.35rem;
+  }
+  .apple-table tbody td .btn-action {
+    width: 42px;
+    height: 42px;
   }
 }
 </style>

@@ -177,6 +177,33 @@ onUnmounted(() => {
 
   .main-content {
     grid-column: 1 / -1;
+    padding: 0.75rem;
+  }
+  
+  .container-fluid {
+    padding: 0.5rem;
+  }
+  
+  .synonyms-info-card .card-body {
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .synonyms-info-card h5 {
+    font-size: 1rem;
+  }
+  
+  .synonyms-info-card ul {
+    padding-left: 1.25rem;
+  }
+  
+  .synonyms-info-card li {
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+  }
+  
+  .synonyms-apple-card {
+    padding: 1rem !important;
   }
 }
 

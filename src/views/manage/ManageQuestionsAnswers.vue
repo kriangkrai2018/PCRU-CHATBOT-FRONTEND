@@ -1065,24 +1065,44 @@ onUnmounted(() => {
 .review-date-cell { min-width: 140px; }
 .review-date-wrap { display: flex; justify-content: center; align-items: center; }
 
-@media (max-width: 768px) {
-  .col-review-date { width: 120px; min-width: 100px; }
-  .review-date-cell { min-width: 100px; }
-
-  /* Make table horizontally scrollable on small devices */
+@media (max-width: 992px) {
   .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .apple-table { min-width: 800px; }
+  .apple-table { min-width: 860px; }
+}
 
-  /* Convert table to stacked cards for very small screens */
-  @media (max-width: 480px) {
-    .apple-table thead { display: none; }
-    .apple-table tbody tr { display: block; margin-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.04); padding: 8px 0; }
-    .apple-table tbody td { display: flex; justify-content: space-between; padding: 10px 8px; align-items: center; }
-    .apple-table tbody td::before { content: attr(data-label); color: #6b6b6b; font-weight: 700; margin-right: 8px; }
-    .apple-table tbody td .question-title-cell, .apple-table tbody td .question-text-cell { max-width: 65%; }
-    .apple-table tbody td .category-badge { margin-left: 8px; }
-    .apple-table tbody td .stat-pill { margin-left: 8px; }
+@media (max-width: 768px) {
+  .col-review-date { width: 180px; min-width: 140px; }
+  .review-date-cell { min-width: 140px; }
+
+  .table-responsive { box-shadow: none; }
+  .apple-table { min-width: 0; }
+  .apple-table thead { display: none; }
+  .apple-table tbody { display: flex; flex-direction: column; gap: 1rem; }
+  .apple-table tbody tr { display: block; background: white; border-radius: 16px; border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08); padding: 0.75rem 0; }
+  .apple-table tbody td { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border: none; border-bottom: 1px solid rgba(0,0,0,0.04); }
+  .apple-table tbody td:last-child { border-bottom: none; }
+  .apple-table tbody td::before {
+    content: attr(data-label);
+    flex: 1;
+    font-size: 0.65rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #8c8c92;
+    font-weight: 600;
+    margin-right: 0.75rem;
+    white-space: nowrap;
   }
+  .apple-table tbody td[data-label=""]::before { display: none; }
+  .apple-table tbody td .question-title-cell,
+  .apple-table tbody td .question-text-cell { max-width: 60%; }
+  .apple-table tbody td .category-badge { margin-left: 8px; }
+  .apple-table tbody td .stat-pill { margin-left: 8px; }
+}
+
+@media (max-width: 480px) {
+  .apple-table tbody td { flex-direction: column; align-items: flex-start; }
+  .apple-table tbody td::before { margin-bottom: 0.25rem; }
+  .stat-pill { width: 100%; justify-content: flex-start; }
 }
 
 .keyword-tag {

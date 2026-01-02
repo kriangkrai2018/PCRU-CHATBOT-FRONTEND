@@ -164,8 +164,8 @@
               </td>
             </tr>
             <tr v-for="(keyword, index) in keywords" :key="keyword.NegativeKeywordID" class="keyword-row pop-in" :style="{animationDelay: `${0.05 * index}s`}">
-              <td class="text-muted">{{ (pagination.page - 1) * pagination.limit + index + 1 }}</td>
-              <td>
+              <td class="text-muted" data-label="#">{{ (pagination.page - 1) * pagination.limit + index + 1 }}</td>
+              <td data-label="คำปฏิเสธ">
                 <span v-if="editingId !== keyword.NegativeKeywordID" class="keyword-word">{{ keyword.Word }}</span>
                 <input v-else v-model="editForm.word" class="form-control form-control-sm" />
               </td>
@@ -179,11 +179,11 @@
                   <option :value="-0.5">-0.5</option>
                 </select>
               </td>
-              <td>
+              <td data-label="คำอธิบาย">
                 <span v-if="editingId !== keyword.NegativeKeywordID" class="text-muted">{{ keyword.Description || '-' }}</span>
                 <input v-else v-model="editForm.description" class="form-control form-control-sm" />
               </td>
-              <td>
+              <td data-label="สถานะ">
                 <button 
                   class="status-toggle" 
                   :class="{ active: keyword.IsActive }"
@@ -193,7 +193,7 @@
                   {{ keyword.IsActive ? 'ใช้งาน' : 'ปิด' }}
                 </button>
               </td>
-              <td>
+              <td data-label="จัดการ">
                 <div class="action-buttons">
                   <template v-if="editingId !== keyword.NegativeKeywordID">
                     <button class="btn-icon btn-edit" @click="startEdit(keyword)" title="แก้ไข">
@@ -949,6 +949,10 @@ onUnmounted(() => {
   overflow-x: auto;
 }
 
+@media (max-width: 992px) {
+  .table-responsive { box-shadow: none; }
+}
+
 .keywords-table {
   width: 100%;
   border-collapse: collapse;
@@ -981,6 +985,47 @@ onUnmounted(() => {
 
 .keyword-row:hover {
   background: #FAFAFA;
+}
+
+@media (max-width: 768px) {
+  .keywords-table thead { display: none; }
+  .keywords-table { display: block; }
+  .keywords-table tbody { display: flex; flex-direction: column; gap: 1rem; }
+  .keywords-table tbody tr {
+    display: block;
+    background: white;
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+    padding: 0.75rem 0;
+  }
+  .keywords-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    border: none;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+  }
+  .keywords-table td:last-child { border-bottom: none; }
+  .keywords-table td::before {
+    content: attr(data-label);
+    flex: 1;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8c8c92;
+    font-weight: 600;
+    margin-right: 0.8rem;
+    white-space: nowrap;
+  }
+  .keywords-table td[data-label=""]::before { display: none; }
+}
+
+@media (max-width: 480px) {
+  .keywords-table td { flex-direction: column; align-items: flex-start; }
+  .keywords-table td::before { margin-bottom: 0.3rem; }
+  .keywords-table td .action-buttons { width: 100%; justify-content: flex-start; }
 }
 
 .keyword-word {
