@@ -759,11 +759,7 @@ onUnmounted(() => {
   padding: 0.5rem !important;
 }
 
-.main-content .container-fluid {
-  padding-top: 0.5rem !important;
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
+
 
 /* ===== Apple Card Style ===== */
 .bg-white.shadow-apple {

@@ -744,9 +744,6 @@ onUnmounted(() => {
   padding: 0.6rem 0.8rem;
   font-size: 1.4rem;
   line-height: 1;
-  margin-left: 1rem;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
   color: #007AFF;
 }
 
@@ -806,9 +803,8 @@ onUnmounted(() => {
 }
 
 .main-content .container-fluid {
-  padding-top: 0.5rem !important;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  padding: 0 !important;
+  margin: 0;
 }
 
 /* Page Title */

@@ -21,7 +21,7 @@
 
         <div v-else>
           <div class="d-block d-md-flex align-items-center justify-content-between mb-3">
-            <div class="d-flex align-items-center justify-content-center gap-3">
+            <div class="d-flex align-items-center justify-content-center gap-3 header-buttons">
               <h2 class="page-title">Manage Organizations</h2>
               <button class="btn-add-apple" @click="openCrudModal">
                 <i class="bi bi-plus-lg me-1"></i> เพิ่มหน่วยงาน
@@ -651,10 +651,7 @@ onUnmounted(() => {
   cursor: pointer;
   padding: 0.6rem 0.8rem;
   font-size: 1.4rem;
-  line-height: 1;
-  margin-left: 1rem;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+  line-height: 1; 
   color: #007AFF;
 }
 
@@ -687,6 +684,17 @@ onUnmounted(() => {
   .main-content {
     grid-column: 1 / -1;
   }
+
+  .header-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-buttons .btn-add-apple,
+  .header-buttons .btn-upload-apple {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* Apple Design System Variables */
@@ -715,6 +723,11 @@ onUnmounted(() => {
 
 .main-content .container-fluid {
   padding: 0 !important;
+}
+
+.header-buttons {
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 /* Page Title */
