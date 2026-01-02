@@ -217,7 +217,8 @@
 
 /* Light Mode Bot with Categories */
 [data-theme="light"] .bot-with-categories {
-  background: rgba(255, 255, 255, 0.95);
+  /* Keep semi-transparent so backdrop-filter blur is visible */
+  background: rgba(255, 255, 255, 0.55);
   border: 1px solid #e5e7eb;
 }
 

@@ -37,12 +37,18 @@
           
           <div class="panel-top">
             <button class="close-circle" @click="visible = false" aria-label="close">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="close-icon">
-                <path class="close-line-1" d="M6 6L18 18" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="20" stroke-dashoffset="20">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="close-icon">
+                <!-- Line 1 with bold animations -->
+                <path class="close-line-1" d="M6 6L18 18" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="20" stroke-dashoffset="20">
                   <animate attributeName="stroke-dashoffset" to="0" dur="0.3s" fill="freeze"/>
+                  <animate attributeName="stroke-width" values="3;4;3" dur="0.6s" repeatCount="indefinite" begin="0.3s"/>
+                  <animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite"/>
                 </path>
-                <path class="close-line-2" d="M6 18L18 6" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="20" stroke-dashoffset="20">
+                <!-- Line 2 with bold animations -->
+                <path class="close-line-2" d="M6 18L18 6" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="20" stroke-dashoffset="20">
                   <animate attributeName="stroke-dashoffset" to="0" dur="0.3s" begin="0.15s" fill="freeze"/>
+                  <animate attributeName="stroke-width" values="3;4;3" dur="0.6s" repeatCount="indefinite" begin="0.3s"/>
+                  <animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite"/>
                 </path>
               </svg>
             </button>
@@ -1496,7 +1502,7 @@ export default {
         // Initialize welcome text
         if (this.messages.length > 0 || this.welcomeTypingShown) {
           // If history exists or already shown, show immediately
-          this.welcomeTitle = `สวัสดี 👋 ${this.botPronoun}ชื่อ ${this.botName} <br> ผู้ช่วย AI ของ PCRU ค่ะ`
+          this.welcomeTitle = `สวัสดี <span class="wave-hand" aria-hidden="true">👋</span> ${this.botPronoun}ชื่อ ${this.botName} <br> ผู้ช่วย AI ของ PCRU ค่ะ`
           this.welcomeSub = `ยินดีที่ได้ช่วยคุณ! มาหาคำตอบที่คุณต้องการกันเลยค่ะ ✨`
           this.welcomeInstruction = `เลือกหมวดหมู่ด้านล่าง <br> หรือพิมพ์คำถามได้เลยค่ะ 😊`
           this.welcomeTyping = false
@@ -1964,7 +1970,7 @@ export default {
     },
     async typeWelcomeMessage() {
       // Construct text with current bot settings
-      const title = `สวัสดี 👋 ${this.botPronoun}ชื่อ ${this.botName} <br> ผู้ช่วย AI ของ PCRU ค่ะ`
+      const title = `สวัสดี <span class="wave-hand" aria-hidden="true">👋</span> ${this.botPronoun}ชื่อ ${this.botName} <br> ผู้ช่วย AI ของ PCRU ค่ะ`
       const sub = `ยินดีที่ได้ช่วยคุณ! มาหาคำตอบที่คุณต้องการกันเลยค่ะ ✨`
       const instr = `เลือกหมวดหมู่ด้านล่าง <br> หรือพิมพ์คำถามได้เลยค่ะ 😊`
       

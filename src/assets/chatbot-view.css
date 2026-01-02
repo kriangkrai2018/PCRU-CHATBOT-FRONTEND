@@ -397,8 +397,8 @@ html.keyboard-open .close-circle {
   background: rgba(255, 255, 255, 0.15);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) ;
   overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   cursor: pointer;
 }
 .theme-toggle-btn.expanded {
@@ -407,6 +407,7 @@ html.keyboard-open .close-circle {
   border-radius: 30px;
   padding: 0 16px 0 12px;
   gap: 8px;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) ;
 }
 .theme-toggle-btn:hover {
   background: rgba(255, 255, 255, 0.25);
@@ -446,7 +447,7 @@ html.keyboard-open .close-circle {
   max-width: 0;
   opacity: 0;
   transform: translateX(-10px);
-  transition: all 0.3s ease;
+  transition: opacity 3s cubic-bezier(0.25, 0.46, 0.45, 0.94), max-width 3s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   flex-shrink: 0;
 }
 .theme-toggle-btn.expanded .theme-label {
@@ -2102,12 +2103,12 @@ html.keyboard-open .message-wrapper {
   gap: 12px; 
   margin-bottom: 12px; 
   padding: 24px 16px;
-  background: linear-gradient(135deg, rgba(107,44,145,0.08) 0%, rgba(139,76,184,0.12) 100%);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-radius: 20px;
-  border: 0.5px solid rgba(107,44,145,0.12);
-  box-shadow: 0 4px 20px rgba(107, 44, 145, 0.08), 0 1px 0 rgba(255,255,255,0.3) inset;
+  border: 0.5px solid rgba(107,44,145,0.15);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15), inset 0 1px 0 rgba(255,255,255,0.2);
   position: relative;
   overflow: visible;
 }
@@ -3275,6 +3276,7 @@ body.no-effects .apple-help-button::after { display: none !important; }
   .feedback-btn, .feedback-btn.anim { transition: none !important; animation: none !important; transform: none !important; }
   .feedback-btn::before { transition: none !important; }
   .feedback-icon, .thumb-outline { animation: none !important; }
+  .wave-hand { animation: none !important; transform: none !important; filter: none !important; }
 }
 
 /* SVG Icon styling */
@@ -4088,6 +4090,28 @@ body.no-effects .scroll-icon {
 .ai-help-link:hover { background: rgba(107,44,145,0.12); box-shadow: 0 4px 12px rgba(107,44,145,0.08); }
 .ai-help-link:focus { box-shadow: 0 0 0 3px rgba(139,76,184,0.12); outline: none; }
 
+/* Futuristic waving hand in welcome title */
+.wave-hand {
+  display: inline-block;
+  transform-origin: 70% 70%;
+  animation: waveHand 1.6s cubic-bezier(.2,.9,.2,1) infinite;
+  filter: drop-shadow(0 6px 16px rgba(107,44,145,0.22));
+  will-change: transform, filter;
+  color: orange !important;
+}
+
+@keyframes waveHand {
+  0% { transform: rotate(0deg) translateY(0) scale(1); filter: drop-shadow(0 6px 16px rgba(107,44,145,0.22)); }
+  12% { transform: rotate(18deg) translateY(-1px) scale(1.06); }
+  24% { transform: rotate(-14deg) translateY(0) scale(1.04); }
+  36% { transform: rotate(16deg) translateY(-1px) scale(1.06); }
+  48% { transform: rotate(-10deg) translateY(0) scale(1.03); }
+  64% { transform: rotate(6deg) translateY(0) scale(1.01); }
+  100% { transform: rotate(0deg) translateY(0) scale(1); filter: drop-shadow(0 6px 16px rgba(107,44,145,0.22)); }
+}
+
+body.no-effects .wave-hand { animation: none !important; transform: none !important; filter: none !important; }
+
 /* Compact Apple-style helper for welcome card (restored purple theme) */
 .apple-help-mini { padding: 8px 12px; border-radius: 12px;}
 .apple-help-mini .help-btn-icon { width: 18px; height: 18px; }
@@ -4098,6 +4122,21 @@ body.no-effects .scroll-icon {
 
 /* Small ripple support (uses existing .help-btn-ripple rules) */
 .apple-help-mini .help-btn-ripple::before { transition: width 0.5s ease, height 0.5s ease; }
+
+/* Mini help button shine (use ripple layer so close badge won't be clipped) */
+.ai-help-link.apple-help-mini .help-btn-ripple { border-radius: inherit; }
+.ai-help-link.apple-help-mini:hover .help-btn-ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  pointer-events: none;
+  will-change: transform;
+  transform: translateX(-120%);
+  animation: shine 0.5s ease-in-out;
+}
+
+body.no-effects .ai-help-link.apple-help-mini .help-btn-ripple::after { display: none !important; }
 
 /* Respect no-effects toggle */
 body.no-effects .apple-help-mini { transform: none !important; animation: none !important; }
@@ -4271,6 +4310,41 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
 /* =========================================
    Modern SVG Animations (ล้ำสมัย)
    ========================================= */
+
+/* Close Button Bold X Animation */
+@keyframes closeXPulse {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.15) rotate(15deg);
+  }
+}
+
+@keyframes closeXGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.8));
+  }
+}
+
+.close-icon {
+  animation: closeXPulse 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) infinite,
+             closeXGlow 2s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform, filter;
+}
+
+.close-circle:hover .close-icon {
+  animation: closeXPulse 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite,
+             closeXGlow 1s ease-in-out infinite;
+}
+
+.close-circle:active .close-icon {
+  animation: closeXPulse 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
 
 /* Rotating Sun Animation */
 @keyframes rotateSun {
@@ -4497,23 +4571,24 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
 
 /* Category Button Shine Effect */
 @keyframes shine {
-  0% { background-position: -1000px 0; }
-  100% { background-position: 1000px 0; }
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
 }
 
 .cat-sub-btn {
-  background-size: 200% 100%;
   position: relative;
+  overflow: hidden;
 }
 
 .cat-sub-btn:hover::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  border-radius: inherit;
+  pointer-events: none;
+  will-change: transform;
+  transform: translateX(-120%);
   animation: shine 0.5s ease-in-out;
 }
 

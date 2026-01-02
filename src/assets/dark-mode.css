@@ -314,7 +314,8 @@
 
 /* Dark Mode Bot with Categories */
 [data-theme="dark"] .bot-with-categories {
-  background: var(--cb-panel-footer-bg) !important;
+  /* Keep semi-transparent so backdrop-filter blur is visible */
+  background: var(--cb-surface-dim-50) !important;
   backdrop-filter: blur(14px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
 } 
