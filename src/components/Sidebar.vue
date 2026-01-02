@@ -228,27 +228,34 @@
       </li> -->
     </ul>
     <div
-      class="user-profile d-flex align-items-center justify-content-center gap-2  "
+      class="user-profile d-flex flex-column align-items-center justify-content-center gap-2"
       @mouseenter="isHoveringProfile = true"
       @mouseleave="isHoveringProfile = false"
       role="button"
       tabindex="0"
     >
-      <i v-if="isCollapsed && isHoveringProfile" class="bi bi-box-arrow-right fs-2" @click="handleLogout"></i>
-      <i v-else :class="['bi bi-person-circle fs-2', { 'ms-2': !isCollapsed }]"></i>
-        
-      <div :class="{ 'collapsed-text': isCollapsed }" class="flex-grow-1">
-        <strong class="d-block">
+      <!-- Icon on top -->
+      <div class="w-100 d-flex align-items-center justify-content-center position-relative">
+        <i v-if="isCollapsed && isHoveringProfile" class="bi bi-box-arrow-right fs-5" @click="handleLogout"></i>
+        <i v-else class="bi bi-person-circle fs-2"></i>
+        <i v-if="!isCollapsed" class="bi bi-box-arrow-right fs-5 position-absolute end-0 me-2" @click="handleLogout" style="cursor: pointer;"></i>
+      </div>
+      
+      <!-- Text info below icon -->
+      <div v-if="!isCollapsed" class="w-100">
+        <strong class="d-block" style="font-size: 13px; line-height: 1.3;">
           <!-- Officer: show full name, Admin: show first name, fallback 'Admin' -->
           {{ userType === 'Officer'
             ? (userInfoObject?.OfficerName || 'Officer')
             : ((userInfoObject?.AdminName?.split(' ')[0]) || 'Admin')
           }}
         </strong>
-        <small class="text-muted">{{ userType }}</small>
+        <small class="text-muted d-block" style="font-size: 11px;">{{ userType }}</small>
+        <!-- Show Organization for Officers -->
+        <small v-if="userType === 'Officer' && userInfoObject?.OrgName" class="text-muted d-block" style="font-size: 10px; margin-top: 2px;">
+          {{ userInfoObject.OrgName }}
+        </small>
       </div>
-
-      <i v-if="!isCollapsed" class="bi bi-box-arrow-right fs-5 m-3 ms-auto" @click="handleLogout"></i>
     </div>
   </div>
 </template>

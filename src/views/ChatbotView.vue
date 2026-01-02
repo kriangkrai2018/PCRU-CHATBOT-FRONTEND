@@ -3551,9 +3551,14 @@ export default {
       const originalUserMessage = this.query.trim()
       let processedUserMessage = originalUserMessage;
 
-      // 🛡️ Frontend stopword removal - but respect protected words (keywords, negative keywords, synonyms)
-      // If a stopword matches any protected word, it will NOT be removed
-      if (this.segmenter && this.stopwords && this.stopwords.length > 0) {
+      // 🛡️ Check if message contains negation patterns - if so, skip stopword filtering entirely
+      // Backend handles negation parsing and needs the full message intact
+      const negationPatterns = ['ไม่เอา', 'ไม่ต้องการ', 'ไม่อยาก', 'ไม่สนใจ', 'ไม่ต้อง', 'ไม่', 'บ่เอา', 'ยกเว้น', 'แต่หนูจะเอา', 'แต่จะเอา', 'แต่เอา'];
+      const hasNegation = negationPatterns.some(pattern => originalUserMessage.toLowerCase().includes(pattern));
+      
+      // 🛡️ Frontend stopword removal - but respect protected words and skip entirely for negation messages
+      // If message contains negation, let backend handle everything
+      if (!hasNegation && this.segmenter && this.stopwords && this.stopwords.length > 0) {
         try {
           const segments = Array.from(this.segmenter.segment(originalUserMessage));
           
@@ -3711,8 +3716,15 @@ export default {
                   if (potentialResults.length > 1) {
                     results = potentialResults
                     multipleResults = true
-                    // For multiple results, don't set botText - let the buttons be the response
-                    botText = ''
+                    // 🔧 For multiple results with a message (e.g., rejection+search), keep the message
+                    // Only clear botText if there's no explicit message from backend
+                    if (!res.data.message) {
+                      botText = ''
+                    } else {
+                      // Keep the rejection message and show results below
+                      botText = res.data.message
+                      console.log('📋 Mixed mode: showing message + multiple results:', botText)
+                    }
                   } else {
                     // Also capture PDF from single result if provided
                     const firstRes = potentialResults[0]

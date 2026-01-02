@@ -153,6 +153,47 @@
               </div>
             </section>
 
+            <!-- 🆕 Section: Advanced Search with Rejection & Want -->
+            <section class="apple-section fade-in-stagger" style="--delay: 0.45s">
+              <div class="section-header">
+                <div class="mini-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                    <path d="M3 6h18v3H3z" />
+                  </svg>
+                </div>
+                <h3>วิธีการพิมพ์แบบปฏิเสธ + ค้นหา</h3>
+              </div>
+
+              <div class="example-container">
+                <div class="example-row good">
+                  <div class="indicator">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z" />
+                    </svg>
+                  </div>
+                  <div class="text">
+                    <strong>ปฏิเสธก่อน:</strong> พิมพ์ "ไม่เอา <span style="color:#e74c3c">ทุน</span> และ <span style="color:#e74c3c">หอพัก</span> แต่หนูจะเอา <span style="color:#27ae60">เกณฑ์</span> และ <span style="color:#27ae60">กยศ</span>"
+                  </div>
+                </div>
+                <div class="example-row good">
+                  <div class="indicator">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z" />
+                    </svg>
+                  </div>
+                  <div class="text">
+                    <strong>หลายคำปฏิเสธ:</strong> "ไม่ต้องการ <span style="color:#e74c3c">ทุนเรียนดี</span> ไม่เอา <span style="color:#e74c3c">หอพัก</span> แต่อยากรู้ <span style="color:#27ae60">IT</span> กับ <span style="color:#27ae60">คอมพิวเตอร์</span>"
+                  </div>
+                </div>
+                <p class="helper-text" style="margin-top: 12px;">
+                  🔴 <strong>สีแดง = คำที่ปฏิเสธ</strong> (ไม่แสดง)<br/>
+                  🟢 <strong>สีเขียว = คำที่ต้องการค้นหา</strong> (แสดงผล)
+                </p>
+              </div>
+            </section>
+
             <!-- Section: FAQ -->
             <section class="apple-section fade-in-stagger" style="--delay: 0.5s">
                <div class="section-header">
