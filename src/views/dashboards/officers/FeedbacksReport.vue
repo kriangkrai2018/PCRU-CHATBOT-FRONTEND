@@ -73,7 +73,7 @@
         </div>
 
         <div class="table-responsive">
-          <table class="table table-striped table-hover">
+          <table class="table table-striped table-hover feedbacks-table">
             <thead>
               <tr>
                 <th>FeedbackID</th>
@@ -109,8 +109,12 @@
                 <td data-label="เวลา">
                   <span class="badge" :class="getTimeBadgeClass(fb.Timestamp)">{{ formatRelativeTime(fb.Timestamp) }}</span>
                 </td>
-                <td data-label="คำถามผู้ใช้">{{ fb.UserQuery || '-' }}</td>
-                <td data-label="คำตอบ">{{ fb.QuestionText || '-' }}</td>
+                <td data-label="คำถามผู้ใช้">
+                  <div class="cell-ellipsis" :title="fb.UserQuery || ''">{{ fb.UserQuery || '-' }}</div>
+                </td>
+                <td data-label="คำตอบ">
+                  <div class="cell-ellipsis" :title="fb.QuestionText || ''">{{ fb.QuestionText || '-' }}</div>
+                </td>
                 <td data-label="เหตุผล">
                   <span v-if="fb.FeedbackReason" class="reason-badge" :class="getReasonClass(fb.FeedbackReason)">
                     {{ formatReason(fb.FeedbackReason) }}
@@ -147,31 +151,35 @@
           </nav>
         </div>
 
-        <!-- Inline Edit Modal (Apple Style) -->
-        <transition name="apple-zoom">
-          <div v-if="showInlineEdit" class="apple-modal-overlay" @click.self="closeInlineEdit">
-            <div class="apple-modal-content wide-modal">
-              <div class="apple-modal-header">
-                <div class="d-flex flex-column">
-                  <h5 class="apple-modal-title">Edit Question</h5>
-                  <span class="apple-modal-subtitle">Update review details inline</span>
-                </div>
-                <button class="apple-close-btn" @click="closeInlineEdit" aria-label="Close">
-                  <i class="bi bi-x-lg"></i>
-                </button>
+      </div>
+    </div>
+    
+    <!-- Inline Edit Modal (Apple Style) - Teleported to body for proper z-index layering -->
+    <Teleport to="body">
+      <transition name="apple-zoom">
+        <div v-if="showInlineEdit" class="apple-modal-overlay" @click.self="closeInlineEdit">
+          <div class="apple-modal-content wide-modal">
+            <div class="apple-modal-header">
+              <div class="d-flex flex-column">
+                <h5 class="apple-modal-title">Edit Question</h5>
+                <span class="apple-modal-subtitle">Update review details inline</span>
               </div>
+              <button class="apple-close-btn" @click="closeInlineEdit" aria-label="Close">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
 
-              <div class="apple-modal-body">
-                <div v-if="editLoading" class="text-center py-5">
-                  <div class="apple-spinner mx-auto mb-3"></div>
-                  <p class="text-secondary">Loading details...</p>
+            <div class="apple-modal-body">
+              <div v-if="editLoading" class="text-center py-5">
+                <div class="apple-spinner mx-auto mb-3"></div>
+                <p class="text-secondary">Loading details...</p>
+              </div>
+              <div v-else class="apple-form-container">
+                
+                <div class="apple-input-group">
+                  <label>Question Title</label>
+                  <input type="text" class="apple-input" v-model="inlineForm.questionTitle" />
                 </div>
-                <div v-else class="apple-form-container">
-                  
-                  <div class="apple-input-group">
-                    <label>Question Title</label>
-                    <input type="text" class="apple-input" v-model="inlineForm.questionTitle" />
-                  </div>
 
                   <div class="apple-input-group">
                     <label>Question Text</label>
@@ -233,8 +241,7 @@
             </div>
           </div>
         </transition>
-      </div>
-    </div>
+      </Teleport>
     
     <!-- Comment Modal -->
     <transition name="modal-fade">
@@ -294,10 +301,11 @@
       </div>
     </transition>
 
-    <!-- Preview Drawer (Sidebar) -->
-    <div class="drawer-overlay" v-if="showDrawer" @click="closeDrawer"></div>
-    <div class="apple-drawer" :class="{ 'drawer-open': showDrawer }">
-      <div class="drawer-header">
+    <!-- Preview Drawer (Sidebar) - Teleported to body for proper z-index layering -->
+    <Teleport to="body">
+      <div class="drawer-overlay" v-if="showDrawer" @click="closeDrawer"></div>
+      <div class="apple-drawer" :class="{ 'drawer-open': showDrawer }">
+        <div class="drawer-header">
         <h5 class="drawer-title">รายละเอียด Feedback</h5>
         <button class="btn-close-drawer" @click="closeDrawer">
           <i class="bi bi-x-lg"></i>
@@ -374,6 +382,7 @@
         </div>
       </div>
     </div>
+    </Teleport>
   </div>
 </template>
 
@@ -1118,6 +1127,44 @@ async function handleFeedback(fb) {
 .input-group.search-input-group {
   position: relative;
 }
+
+/* Feedbacks table: force single-line rows + ellipsis */
+.feedbacks-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.feedbacks-table th,
+.feedbacks-table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.cell-ellipsis {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Column widths (will overflow horizontally on smaller screens via .table-responsive) */
+.feedbacks-table th:nth-child(1),
+.feedbacks-table td:nth-child(1) { width: 90px; }
+.feedbacks-table th:nth-child(2),
+.feedbacks-table td:nth-child(2) { width: 130px; }
+.feedbacks-table th:nth-child(3),
+.feedbacks-table td:nth-child(3) { width: 120px; }
+.feedbacks-table th:nth-child(4),
+.feedbacks-table td:nth-child(4) { width: 220px; }
+.feedbacks-table th:nth-child(5),
+.feedbacks-table td:nth-child(5) { width: 360px; }
+.feedbacks-table th:nth-child(6),
+.feedbacks-table td:nth-child(6) { width: 160px; }
+.feedbacks-table th:nth-child(7),
+.feedbacks-table td:nth-child(7) { width: 200px; }
 
 /* Segmented filter (Apple-style) */
 .segmented-filter {
@@ -2013,7 +2060,7 @@ table td:last-child {
 }
 .clickable-row:hover {
   background-color: rgba(0, 113, 227, 0.06) !important;
-  transform: scale(1.002);
+  transform: none;
 }
 
 /* Drawer (Sidebar) Styles */
@@ -2025,8 +2072,8 @@ table td:last-child {
   max-width: 100vw;
   height: 100vh;
   background: white;
-  box-shadow: -4px 0 24px rgba(0,0,0,0.1);
-  z-index: 1050;
+  box-shadow: -8px 0 32px rgba(0,0,0,0.15);
+  z-index: 100001;
   transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
@@ -2036,10 +2083,16 @@ table td:last-child {
 }
 .drawer-overlay {
   position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.3);
-  backdrop-filter: blur(4px);
-  z-index: 1049;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 100000;
 }
 .drawer-header {
   padding: 20px 24px;
@@ -2047,28 +2100,28 @@ table td:last-child {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(0,0,0,0.05);
-  background: linear-gradient(135deg, #FF9500 0%, #FF6B00 100%);
-  color: white;
+  background: white;
 }
 .drawer-title {
   font-size: 1.1rem;
   font-weight: 700;
   margin: 0;
+  color: #1d1d1f;
 }
 .btn-close-drawer {
   border: none;
-  background: rgba(255,255,255,0.2);
+  background: rgba(0,0,0,0.05);
   width: 32px;
   height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: #1d1d1f;
   transition: background 0.2s;
 }
 .btn-close-drawer:hover {
-  background: rgba(255,255,255,0.3);
+  background: rgba(0,0,0,0.1);
 }
 .drawer-body {
   flex: 1;

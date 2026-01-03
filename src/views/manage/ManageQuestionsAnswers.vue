@@ -156,7 +156,7 @@
           <!-- Table Section -->
           <div class="bg-white shadow-apple rounded-4 overflow-hidden apple-card">
             <div class="table-responsive">
-              <table class="table apple-table mb-0">
+              <table class="table apple-table qa-table mb-0">
                 <thead>
                   <tr>
                     <th class="ps-4">ID</th>
@@ -173,7 +173,7 @@
                   <tr v-for="(item, idx) in paginatedQuestions" :key="item.QuestionsAnswersID" class="align-middle apple-row" @click="openPreview(item)">
                     <td data-label="ID" class="ps-4 fw-medium text-secondary">{{ item.QuestionsAnswersID }}</td>
                     <td data-label="หัวข้อคำถาม" class="py-3">
-                      <div class="question-title-cell line-clamp-2" :title="item.QuestionTitle">{{ item.QuestionTitle }}</div>
+                      <div class="question-title-cell cell-ellipsis" :title="item.QuestionTitle">{{ item.QuestionTitle }}</div>
                     </td>
                     <td data-label="วันหมดอายุ" class="py-3 review-date-cell text-center">
                       <div class="review-date-wrap">
@@ -188,18 +188,18 @@
                       </div>
                     </td>
                     <td data-label="คำตอบ" class="py-3">
-                      <div class="question-text-cell line-clamp-3 text-muted" :title="item.QuestionText">{{ item.QuestionText }}</div>
+                      <div class="question-text-cell cell-ellipsis text-muted" :title="item.QuestionText">{{ item.QuestionText }}</div>
                     </td>
                     <td data-label="หมวดหมู่" class="py-3">
                       <span
                         class="category-badge"
                         :style="{ backgroundColor: tagColors[(item.CategoriesID || 0) % tagColors.length] + '20', color: tagColors[(item.CategoriesID || 0) % tagColors.length] }"
                       >
-                        {{ categoriesNameMapSafe[item.CategoriesID] || item.CategoriesID }}
+                        <span class="cell-ellipsis">{{ categoriesNameMapSafe[item.CategoriesID] || item.CategoriesID }}</span>
                       </span>
                     </td>
                     <td data-label="Keywords" class="py-3">
-                      <div class="d-flex flex-wrap gap-1" v-if="item.keywords && item.keywords.length">
+                      <div class="d-flex flex-nowrap gap-1 keywords-nowrap" v-if="item.keywords && item.keywords.length">
                         <span
                           v-for="(k, i) in item.keywords.slice(0, 3)"
                           :key="k.KeywordID || (k.KeywordText + i)"
@@ -1792,6 +1792,38 @@ button.mobile-sidebar-toggle.mobile-inline-toggle { display: none !important; bo
   border: 1px solid rgba(0,0,0,0.02);
 }
 
+.qa-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.qa-table th,
+.qa-table td {
+  overflow: hidden;
+}
+
+.qa-table tbody td {
+  white-space: nowrap;
+}
+
+.cell-ellipsis {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.keywords-nowrap {
+  flex-wrap: nowrap !important;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.keywords-nowrap > * {
+  flex: 0 0 auto;
+}
+
 .apple-table thead th {
   background: #F9F9FB;
   font-weight: 600;
@@ -1831,9 +1863,9 @@ button.mobile-sidebar-toggle.mobile-inline-toggle { display: none !important; bo
   border-radius: 8px;
   font-size: 0.9rem;
   font-weight: 600;
-  white-space: normal; /* allow wrapping for long text */
-  word-break: break-word; /* break long words */
-  overflow-wrap: anywhere; /* better for long Thai words */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   min-width: 120px; /* ensure badges are not too narrow */
   max-width: 260px; /* prevent badges from stretching too wide */
   text-align: center;
@@ -1875,7 +1907,7 @@ button.mobile-sidebar-toggle.mobile-inline-toggle { display: none !important; bo
   }
   .apple-table tbody td[data-label=""]::before { display: none; }
   .apple-table tbody td .question-title-cell,
-  .apple-table tbody td .question-text-cell { max-width: 60%; }
+  .apple-table tbody td .question-text-cell { max-width: 60%; min-width: 0; }
   .apple-table tbody td .category-badge { margin-left: 8px; }
   .apple-table tbody td .stat-pill { margin-left: 8px; }
 }

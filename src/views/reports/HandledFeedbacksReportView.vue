@@ -56,7 +56,7 @@
           
           <!-- Stats Cards -->
           <div class="row mb-4 g-3">
-            <div class="col-md-4">
+            <div class="col-md-6">
               <div class="apple-stat-card">
                 <div class="stat-icon-wrapper green-gradient">
                   <i class="bi bi-check2-circle"></i>
@@ -67,18 +67,7 @@
                 </div>
               </div>
             </div>
-            <div class="col-md-4">
-              <div class="apple-stat-card">
-                <div class="stat-icon-wrapper blue-gradient">
-                  <i class="bi bi-hand-thumbs-up-fill"></i>
-                </div>
-                <div class="stat-content">
-                  <div class="stat-value">{{ likeCount }}</div>
-                  <div class="stat-label">Resolved Likes</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
               <div class="apple-stat-card">
                 <div class="stat-icon-wrapper red-gradient">
                   <i class="bi bi-hand-thumbs-down-fill"></i>
@@ -162,7 +151,6 @@
                     <th>วันที่</th>
                     <th>คำถามผู้ใช้</th>
                     <th>เหตุผล & ความเห็น</th>
-                    <th class="text-center" style="width: 120px;">การดำเนินการ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -200,17 +188,7 @@
                       </div>
                       <span v-else class="text-muted small opacity-50">-</span>
                     </td>
-                    <td data-label="" class="py-3 text-center">
-                      <div class="action-buttons">
-                        <button class="btn-icon-circle" @click.stop="openDetails(item)" title="ดูรายละเอียด">
-                          <i class="bi bi-eye"></i>
-                        </button>
-                        <button class="restore-btn" @click.stop="restoreFeedback(item)" :disabled="restoringId === item.FeedbackID" title="กู้คืน">
-                          <span v-if="restoringId === item.FeedbackID" class="spinner-border spinner-border-sm"></span>
-                          <i v-else class="bi bi-arrow-counterclockwise"></i>
-                        </button>
-                      </div>
-                    </td>
+
                   </tr>
                   <tr v-if="filteredItems.length === 0">
                     <td colspan="6" class="text-center text-muted py-5">
@@ -253,11 +231,13 @@
         </div>
       </div>
 
-      <!-- Details Modal (Apple Style) -->
+    </main>
+
+    <!-- Details Modal (Apple Style) - Teleported to body for proper z-index layering -->
+    <Teleport to="body">
       <transition name="apple-zoom">
         <div v-if="showDetailModal" class="apple-modal-overlay" @click.self="closeDetailModal">
           <div class="apple-modal-content">
-            <div class="apple-modal-header-bg"></div>
             <div class="apple-modal-header">
               <div class="d-flex flex-column">
                 <h5 class="apple-modal-title">รายละเอียด Feedback</h5>
@@ -318,13 +298,21 @@
                </div>
             </div>
             <div class="apple-modal-footer">
-               <button class="btn-apple-primary w-100" @click="closeDetailModal">ปิดหน้าต่าง</button>
+               <button class="btn-apple-secondary" @click="closeDetailModal">ปิดหน้าต่าง</button>
+               <button 
+                  class="btn-apple-primary" 
+                  @click="restoreFeedbackAndClose(selectedItem)" 
+                  :disabled="restoringId === selectedItem?.FeedbackID"
+               >
+                  <span v-if="restoringId === selectedItem?.FeedbackID" class="spinner-border spinner-border-sm me-2"></span>
+                  <i v-else class="bi bi-arrow-counterclockwise me-2"></i>
+                  กู้คืน Feedback
+               </button>
             </div>
           </div>
         </div>
       </transition>
-
-    </main>
+    </Teleport>
   </div>
 </template>
 
@@ -610,11 +598,20 @@ async function restoreFeedback(item) {
     items.value = items.value.filter(i => i.FeedbackID !== item.FeedbackID);
     // Show success notification (optional - use toast if available)
     console.log('Feedback restored successfully');
+    return true;
   } catch (err) {
     console.error('Failed to restore feedback:', err);
     alert('กู้คืนไม่สำเร็จ');
+    return false;
   } finally {
     restoringId.value = null;
+  }
+}
+
+async function restoreFeedbackAndClose(item) {
+  const success = await restoreFeedback(item);
+  if (success) {
+    closeDetailModal();
   }
 }
 
@@ -806,9 +803,12 @@ function initTooltips() {
 .apple-close-btn { border: none; background: rgba(0,0,0,0.05); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1d1d1f; transition: 0.2s; }
 .apple-close-btn:hover { background: rgba(0,0,0,0.1); }
 .apple-modal-body { padding: 24px; }
-.apple-modal-footer { padding: 16px 24px; border-top: 1px solid rgba(0,0,0,0.05); background: #F9F9FB; }
-.btn-apple-primary { background: linear-gradient(180deg, #007AFF 0%, #0051D4 100%); color: white; border: none; border-radius: 10px; padding: 12px 20px; font-weight: 600; transition: 0.2s; cursor: pointer; }
+.apple-modal-footer { padding: 16px 24px; border-top: 1px solid rgba(0,0,0,0.05); background: #F9F9FB; display: flex; gap: 12px; justify-content: flex-end; }
+.btn-apple-primary { background: linear-gradient(180deg, #007AFF 0%, #0051D4 100%); color: white; border: none; border-radius: 10px; padding: 12px 20px; font-weight: 600; transition: 0.2s; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 .btn-apple-primary:hover { background: linear-gradient(180deg, #0066E6 0%, #0044B8 100%); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 122, 255, 0.35); }
+.btn-apple-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-apple-secondary { background: rgba(0,0,0,0.05); color: #1d1d1f; border: none; border-radius: 10px; padding: 12px 20px; font-weight: 600; transition: 0.2s; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.btn-apple-secondary:hover { background: rgba(0,0,0,0.1); }
 
 .detail-section { margin-bottom: 16px; }
 .detail-section label { display: block; font-size: 0.75rem; color: #86868b; text-transform: uppercase; font-weight: 600; margin-bottom: 4px; }
