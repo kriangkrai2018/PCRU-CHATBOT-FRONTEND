@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-root" data-bs-no-js="true">
+  <div class="chat-root" data-bs-no-js="true" :class="{ 'intro-playing': showIntroAnimation }">
     <!-- 🎬 First-time Intro Animation (Genshin-style) -->
     <transition name="intro-fade">
       <div v-if="showIntroAnimation" class="intro-overlay">

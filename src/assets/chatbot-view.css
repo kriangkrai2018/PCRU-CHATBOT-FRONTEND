@@ -151,6 +151,66 @@ html.theme-transitioning div {
   }
 }
 
+/* ==========================================================================
+   INTRO ANIMATION PERFORMANCE MODE
+   Pause all background effects while intro is playing
+   ========================================================================== */
+
+/* Pause chat panel orb animations */
+.intro-playing .chat-panel::before,
+.intro-playing .chat-panel::after {
+  animation: none !important;
+  opacity: 0 !important;
+}
+
+/* Hide snowflakes */
+.intro-playing .snowflakes-container,
+.intro-playing .snowflake {
+  display: none !important;
+}
+
+/* Hide welcome tooltip/speech bubble */
+.intro-playing .ai-speech-bubble {
+  display: none !important;
+}
+
+/* Pause backdrop-card glow animations */
+.intro-playing .backdrop-card::before {
+  animation: none !important;
+  opacity: 0 !important;
+}
+
+/* Pause message bubble glow effects */
+.intro-playing .message-bubble.bot::before {
+  opacity: 0 !important;
+}
+
+.intro-playing .message-bubble.bot {
+  box-shadow: none !important;
+}
+
+/* Hide sleeping/wake animations */
+.intro-playing .bot-sleeping-zzz,
+.intro-playing .bot-wake-up {
+  display: none !important;
+}
+
+/* Pause any wave-hand animations */
+.intro-playing .wave-hand {
+  animation: none !important;
+}
+
+/* Disable all transitions during intro for performance */
+.intro-playing * {
+  transition-duration: 0s !important;
+}
+
+/* Keep intro animations running */
+.intro-playing .intro-overlay,
+.intro-playing .intro-overlay * {
+  transition-duration: unset !important;
+}
+
 /* Dark-mode panel overrides moved to src/assets/dark-mode.css */
 
 /* Header */
