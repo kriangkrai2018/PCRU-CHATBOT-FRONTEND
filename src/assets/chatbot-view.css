@@ -201,12 +201,41 @@ html.theme-transitioning div {
 
 /* Message Bubbles */
 .message-bubble.bot {
-  border: 1px solid transparent; /* Remove border in dark mode */
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  position: relative;
+  border: 1px solid rgba(139, 76, 184, 0.15);
+  box-shadow: 
+    0 0 20px rgba(139, 76, 184, 0.1),
+    0 0 40px rgba(107, 44, 145, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
   
   /* Fix Width Issue */
   width: fit-content !important;
   max-width: 85%;
+}
+
+.message-bubble.bot::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(139, 76, 184, 0.15), rgba(59, 130, 246, 0.15));
+  filter: blur(8px);
+  opacity: 0;
+  z-index: -1;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.message-bubble.bot:hover::before {
+  opacity: 0.5;
+}
+
+.message-bubble.bot:hover {
+  box-shadow: 
+    0 0 25px rgba(139, 76, 184, 0.15),
+    0 0 50px rgba(107, 44, 145, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .message-bubble.user {

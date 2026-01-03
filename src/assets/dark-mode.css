@@ -121,7 +121,7 @@
   backdrop-filter: none;
   background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%) !important;
   -webkit-backdrop-filter: none;
-  border-left: 1px solid var(--cb-border-muted);
+  border-left: none !important;
 }
 
 /* Links in Dark Mode - use purple accent */
@@ -304,19 +304,39 @@
   background-color: var(--cb-bg-input) !important;
 } 
 
+[data-theme="dark"] .feedback-comment-input {
+  background-color: none !important;
+}
+
 /* Dark Mode Message Bubbles */
 [data-theme="dark"] .message-bubble.bot {
     position: relative;
     z-index: 2;
-    width: var(--panel-width);
-    height: 100%;
     background: #12011c52 !important;
+    box-shadow: 
+      0 0 25px rgba(139, 76, 184, 0.15),
+      0 0 50px rgba(107, 44, 145, 0.1),
+      0 0 80px rgba(59, 130, 246, 0.08);
     backdrop-filter: blur(var(--blur-amt));
     -webkit-backdrop-filter: blur(var(--blur-amt));
-    box-shadow: -10px 0 60px rgba(0, 0, 0, 0.15);
-    display: flex;
-    flex-direction: column;
-    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+} 
+
+[data-theme="dark"] .message-bubble.bot::before {
+  background: linear-gradient(135deg, rgba(139, 76, 184, 0.2), rgba(59, 130, 246, 0.2));
+  filter: blur(10px);
+  opacity: 0;
+}
+
+[data-theme="dark"] .message-bubble.bot:hover::before {
+  opacity: 0.6;
+}
+
+[data-theme="dark"] .message-bubble.bot:hover {
+  box-shadow: 
+    0 0 30px rgba(139, 76, 184, 0.2),
+    0 0 60px rgba(107, 44, 145, 0.15),
+    0 0 100px rgba(59, 130, 246, 0.1);
 } 
 
 /* Dark Mode Bot with Categories */
