@@ -710,7 +710,16 @@
     </transition>
 
     <!-- Floating re-open button when hidden -->
-    <button v-if="!visible" class="fab-open" @click="visible = true" aria-label="open chat">
+    <button 
+      v-if="!visible" 
+      class="fab-open" 
+      @pointerdown.prevent="onFabPointerDown"
+      @pointerup="onFabPointerUp"
+      @pointerleave="onFabPointerUp"
+      @pointercancel="onFabPointerUp"
+      @contextmenu.prevent
+      aria-label="open chat"
+    >
       <!-- Animated chat bubble with pulse -->
       <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="fab-icon" aria-hidden="true" focusable="false">
         <path class="fab-bubble" fill="white" d="M21 6a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h2v3l4-3h6a3 3 0 0 0 3-3V6z" stroke-dasharray="80" stroke-dashoffset="80">
@@ -731,6 +740,32 @@
         </circle>
       </svg>
     </button>
+
+    <!-- 🔐 Long Press Countdown Overlay -->
+    <transition name="fade-blur">
+      <div 
+        v-if="showLongPressOverlay" 
+        class="long-press-overlay" 
+        @pointerup="cancelLongPressOverlay"
+        @click="cancelLongPressOverlay"
+      >
+        <div class="countdown-container">
+          <div class="countdown-ring">
+            <svg viewBox="0 0 100 100">
+              <circle class="ring-bg" cx="50" cy="50" r="45"/>
+              <circle 
+                class="ring-progress" 
+                cx="50" cy="50" r="45"
+                :style="{ strokeDashoffset: (1 - (3 - longPressCountdown) / 3) * 283 }"
+              />
+            </svg>
+            <div class="countdown-number">{{ longPressCountdown }}</div>
+          </div>
+          <div class="countdown-text">กำลังเข้าสู่ระบบ...</div>
+          <div class="countdown-hint">ปล่อยเพื่อยกเลิก</div>
+        </div>
+      </div>
+    </transition>
 
     <!-- ChatbotHelpView Component -->
     <ChatbotHelpView :visible="showHelpModal" @close="closeHelpModal" />
@@ -918,6 +953,13 @@ export default {
       protectedKeywords: new Set(),
       allProtectedWords: new Set(), // 🛡️ All protected words from keywords, negative keywords, synonyms
       segmenter: null,
+      // 🔐 Long press to admin login
+      longPressTimer: null,
+      longPressCountdown: 0,
+      showLongPressOverlay: false,
+      longPressDuration: 3000, // 3 seconds
+      longPressStartTimer: null, // Timer to detect long press vs normal click
+      isLongPressing: false, // Track if we're in long press mode
     }
   },
   computed: {
@@ -1442,6 +1484,9 @@ export default {
       this.systemThemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
       this.systemThemeMediaQuery.addEventListener('change', this.handleSystemThemeChange)
     }
+    
+    // 🔐 Setup FAB long press listeners after next tick
+    // (Now using v-on directives instead, no setup needed)
   },
 
   beforeUnmount() {
@@ -1516,6 +1561,8 @@ export default {
       this.systemThemeMediaQuery.removeEventListener('change', this.handleSystemThemeChange)
       this.systemThemeMediaQuery = null
     }
+    
+    // Clean up FAB long press watcher (no longer needed)
   },
   watch: {
     visible(newVal) {
@@ -1586,6 +1633,89 @@ export default {
     }
   },
   methods: {
+    // 🔐 FAB Long Press Handlers (using Pointer Events)
+    onFabPointerDown(e) {
+      console.log('[FAB] pointerdown', e.pointerType);
+      
+      // Clear any existing timers
+      if (this.longPressStartTimer) clearTimeout(this.longPressStartTimer);
+      if (this.longPressTimer) clearInterval(this.longPressTimer);
+      
+      this.isLongPressing = false;
+      
+      // Wait 500ms before starting countdown
+      this.longPressStartTimer = setTimeout(() => {
+        console.log('[FAB] Long press triggered!');
+        this.isLongPressing = true;
+        this.longPressCountdown = 3;
+        this.showLongPressOverlay = true;
+        
+        // Start countdown
+        this.longPressTimer = setInterval(() => {
+          this.longPressCountdown--;
+          console.log('[FAB] Countdown:', this.longPressCountdown);
+          if (this.longPressCountdown <= 0) {
+            this.completeLongPress();
+          }
+        }, 1000);
+      }, 500);
+    },
+    onFabPointerUp(e) {
+      console.log('[FAB] pointerup/leave', e?.type, 'isLongPressing:', this.isLongPressing, 'showOverlay:', this.showLongPressOverlay);
+      
+      // If overlay is showing, don't cancel on pointerleave (overlay covers the button)
+      if (e?.type === 'pointerleave' && this.showLongPressOverlay) {
+        console.log('[FAB] Ignoring pointerleave while overlay is shown');
+        return;
+      }
+      
+      // Clear timers
+      if (this.longPressStartTimer) {
+        clearTimeout(this.longPressStartTimer);
+        this.longPressStartTimer = null;
+      }
+      if (this.longPressTimer) {
+        clearInterval(this.longPressTimer);
+        this.longPressTimer = null;
+      }
+      
+      // If we were in long press mode, just cancel (don't open chat)
+      if (this.isLongPressing || this.showLongPressOverlay) {
+        console.log('[FAB] Cancelling long press');
+        this.showLongPressOverlay = false;
+        this.longPressCountdown = 0;
+        this.isLongPressing = false;
+        return;
+      }
+      
+      // Normal click - open chatbot
+      console.log('[FAB] Normal click - opening chatbot');
+      this.visible = true;
+      this.isLongPressing = false;
+    },
+    completeLongPress() {
+      console.log('[FAB] completeLongPress - navigating to login');
+      // Clear timers
+      if (this.longPressStartTimer) clearTimeout(this.longPressStartTimer);
+      if (this.longPressTimer) clearInterval(this.longPressTimer);
+      this.longPressStartTimer = null;
+      this.longPressTimer = null;
+      this.showLongPressOverlay = false;
+      
+      // Navigate to login page
+      window.location.href = '/login';
+    },
+    cancelLongPressOverlay() {
+      console.log('[FAB] cancelLongPressOverlay - user released on overlay');
+      // Clear timers
+      if (this.longPressStartTimer) clearTimeout(this.longPressStartTimer);
+      if (this.longPressTimer) clearInterval(this.longPressTimer);
+      this.longPressStartTimer = null;
+      this.longPressTimer = null;
+      this.showLongPressOverlay = false;
+      this.longPressCountdown = 0;
+      this.isLongPressing = false;
+    },
     onEnterKey() {
       // Ignore enter while IME composition is active
       if (this.isComposing) return
@@ -5446,7 +5576,113 @@ export default {
 </script>
 
 <style scoped>
+/* 🔐 Long Press Countdown Overlay */
+.long-press-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
+.countdown-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.countdown-ring {
+  position: relative;
+  width: 160px;
+  height: 160px;
+}
+
+.countdown-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.countdown-ring .ring-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.15);
+  stroke-width: 6;
+}
+
+.countdown-ring .ring-progress {
+  fill: none;
+  stroke: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  stroke: url(#countdown-gradient);
+  stroke: #764ba2;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 283;
+  stroke-dashoffset: 283;
+  transition: stroke-dashoffset 1s linear;
+  filter: drop-shadow(0 0 8px rgba(118, 75, 162, 0.6));
+}
+
+.countdown-number {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 72px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: countdown-pulse 1s ease-in-out infinite;
+}
+
+@keyframes countdown-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.1); }
+}
+
+.countdown-text {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
+}
+
+.countdown-hint {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: -8px;
+}
+
+/* Fade Blur Transition */
+.fade-blur-enter-active {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.fade-blur-leave-active {
+  transition: all 0.2s ease-out;
+}
+.fade-blur-enter-from,
+.fade-blur-leave-to {
+  opacity: 0;
+  backdrop-filter: blur(0px);
+}
+.fade-blur-enter-from .countdown-container,
+.fade-blur-leave-to .countdown-container {
+  transform: scale(0.8);
+  opacity: 0;
+}
+.fade-blur-enter-to .countdown-container,
+.fade-blur-leave-from .countdown-container {
+  transform: scale(1);
+  opacity: 1;
+}
 </style>
 
 
