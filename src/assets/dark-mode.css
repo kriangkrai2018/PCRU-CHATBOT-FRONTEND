@@ -116,11 +116,10 @@
   --cb-text-black: #000000;
 }
 
-/* Remove glassmorphism in Dark Mode for authentic Chrome look */
+/* Remove glassmorphism in Dark Mode for authentic Chrome look - but keep gradient and orbs visible */
 [data-theme="dark"] .chat-panel {
   backdrop-filter: none;
-  background-color: var(--cb-bg-color-black) !important;
-  --cb-bg-color-black: !important;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%) !important;
   -webkit-backdrop-filter: none;
   border-left: 1px solid var(--cb-border-muted);
 }
@@ -190,6 +189,14 @@
   box-shadow: 0 2px 8px var(--cb-shadow-purple);
   color: var(--cb-text-inverse) !important;
 } 
+
+/* Dark Mode Panel Top - Semi-transparent to show orbs */
+[data-theme="dark"] .panel-top {
+  background-color: rgba(26, 26, 46, 0.3) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(148, 163, 197, 0.2);
+}
 
 /* Dark Mode Theme Toggle Button - Light Gray (icon color becomes purple) */
 [data-theme="dark"] .theme-toggle-btn {
@@ -303,7 +310,7 @@
     z-index: 2;
     width: var(--panel-width);
     height: 100%;
-    background: rgb(13 13 13 / 92%) !important;
+    background: #12011c52 !important;
     backdrop-filter: blur(var(--blur-amt));
     -webkit-backdrop-filter: blur(var(--blur-amt));
     box-shadow: -10px 0 60px rgba(0, 0, 0, 0.15);

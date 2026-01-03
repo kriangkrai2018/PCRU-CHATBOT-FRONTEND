@@ -212,7 +212,7 @@
                       </transition>
                     </div>
                   </div>
-                  <div class="message-bubble bot bot-with-categories" style="margin-top: 3rem !important;">
+                  <div class="message-bubble bot bot-with-categories backdrop-card" style="margin-top: 3rem !important;">
                     <div class="ai-greeting">
                       <div class="ai-greet-img-wrapper" role="button" tabindex="0" @click.stop="openAiIntro" @keydown.enter.stop="openAiIntro" @keydown.space.prevent.stop="openAiIntro" title="เปิด AI: ดูรายละเอียดและวิธีใช้งาน" aria-label="เปิด AI">
                         <img :src="botAvatar" alt="PCRU AI" class="ai-greet-img" />
@@ -6110,5 +6110,6 @@ export default {
 
 
 <style src="../assets/chatbot-view.css"></style>
+<style src="../assets/backdrop.css"></style>
 <style src="../assets/dark-mode.css"></style>
 <style src="../assets/light-mode.css"></style>
