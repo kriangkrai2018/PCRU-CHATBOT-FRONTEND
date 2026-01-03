@@ -151,6 +151,25 @@
                 </button>
               </div>
             </div>
+            
+            <!-- Apple Filters -->
+            <AppleFilters
+              v-model="qaFilters"
+              :show-sort="true"
+              :sort-options="qaSortOptions"
+              default-sort-by="date"
+              default-sort-order="desc"
+              :categories="categoryOptions"
+              category-label="หมวดหมู่"
+              :statuses="qaStatuses"
+              status-label="สถานะ"
+              :show-date-presets="true"
+              :show-number-range="true"
+              number-range-label="Like/Unlike"
+              min-placeholder="ต่ำสุด"
+              max-placeholder="สูงสุด"
+              @change="onQaFiltersChange"
+            />
           </div>
 
           <!-- Table Section -->
@@ -590,6 +609,7 @@ import { ref, onMounted, onUnmounted, computed, nextTick, watch, getCurrentInsta
 import { useRouter } from 'vue-router';
 import { Modal, Tooltip } from 'bootstrap';
 import Sidebar from '@/components/Sidebar.vue';
+import AppleFilters from '@/components/AppleFilters.vue';
 import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import { useAppleToast } from '@/composables/useAppleToast';
 import { useConfirm } from '@/composables/useConfirm';
@@ -634,6 +654,45 @@ const questionsAnswers = ref([]);
 const loading = ref(true);
 const error = ref(null);
 const searchQuery = ref('');
+
+// Apple Filters Configuration
+const qaFilters = ref({
+  sortBy: 'date',
+  sortOrder: 'desc',
+  category: '',
+  status: '',
+  datePreset: 'all',
+  dateFrom: '',
+  dateTo: '',
+  minValue: null,
+  maxValue: null
+});
+
+const qaSortOptions = [
+  { value: 'date', label: 'วันหมดอายุ' },
+  { value: 'id', label: 'รหัส' },
+  { value: 'title', label: 'หัวข้อ' },
+  { value: 'likes', label: 'Likes' },
+  { value: 'unlikes', label: 'Unlikes' }
+];
+
+const qaStatuses = [
+  { value: 'active', label: 'ยังใช้งาน', icon: 'bi bi-check-circle-fill', color: 'success' },
+  { value: 'expired', label: 'หมดอายุ', icon: 'bi bi-exclamation-circle-fill', color: 'danger' },
+  { value: 'expiring', label: 'ใกล้หมดอายุ', icon: 'bi bi-clock-fill', color: 'warning' }
+];
+
+// Category options for filter (computed from categoriesList)
+const categoryOptions = computed(() => {
+  return categoriesList.value.map(cat => ({
+    value: cat.CategoriesID,
+    label: cat.CategoriesName || cat.CategoriesID
+  }));
+});
+
+function onQaFiltersChange() {
+  currentPage.value = 1;
+}
 
 const currentPage = ref(1);
 const itemsPerPage = ref(5);
@@ -1005,22 +1064,107 @@ const fetchQuestionsAnswers = async () => {
 };
 
 const allQuestions = computed(() => Array.isArray(questionsAnswers.value) ? questionsAnswers.value : []);
+
+// Helper to check if a question is expired/expiring
+function getQuestionStatus(item) {
+  if (!item.ReviewDate) return 'active';
+  const now = new Date();
+  const reviewDate = new Date(item.ReviewDate);
+  if (isNaN(reviewDate.getTime())) return 'active';
+  
+  const diffMs = reviewDate - now;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+  if (diffMs <= 0) return 'expired';
+  if (diffDays <= 14) return 'expiring';
+  return 'active';
+}
+
 const filteredQuestions = computed(() => {
+  let arr = allQuestions.value;
+  
+  // Apply category filter
+  if (qaFilters.value.category) {
+    arr = arr.filter(item => String(item.CategoriesID) === String(qaFilters.value.category));
+  }
+  
+  // Apply status filter (active/expired/expiring)
+  if (qaFilters.value.status) {
+    arr = arr.filter(item => getQuestionStatus(item) === qaFilters.value.status);
+  }
+  
+  // Apply date range filter (based on ReviewDate)
+  if (qaFilters.value.dateFrom) {
+    const fromDate = new Date(qaFilters.value.dateFrom);
+    fromDate.setHours(0, 0, 0, 0);
+    arr = arr.filter(item => {
+      if (!item.ReviewDate) return false;
+      return new Date(item.ReviewDate) >= fromDate;
+    });
+  }
+  if (qaFilters.value.dateTo) {
+    const toDate = new Date(qaFilters.value.dateTo);
+    toDate.setHours(23, 59, 59, 999);
+    arr = arr.filter(item => {
+      if (!item.ReviewDate) return false;
+      return new Date(item.ReviewDate) <= toDate;
+    });
+  }
+  
+  // Apply min/max likes filter
+  if (qaFilters.value.minValue !== null) {
+    arr = arr.filter(item => (item.likeCount || 0) >= qaFilters.value.minValue);
+  }
+  if (qaFilters.value.maxValue !== null) {
+    arr = arr.filter(item => (item.likeCount || 0) <= qaFilters.value.maxValue);
+  }
+  
+  // Apply search filter
   const q = (searchQuery.value || '').toString().trim().toLowerCase();
-  if (!q) return allQuestions.value;
-  return allQuestions.value.filter(item => {
-    const str = JSON.stringify(item).toLowerCase();
-    return str.includes(q);
+  if (q) {
+    arr = arr.filter(item => {
+      const str = JSON.stringify(item).toLowerCase();
+      return str.includes(q);
+    });
+  }
+  
+  return arr;
+});
+
+// Sort filtered questions based on AppleFilters settings
+const sortedQuestions = computed(() => {
+  const arr = filteredQuestions.value.slice();
+  const { sortBy, sortOrder } = qaFilters.value;
+  const order = sortOrder === 'asc' ? 1 : -1;
+  
+  return arr.sort((a, b) => {
+    let comparison = 0;
+    
+    if (sortBy === 'date') {
+      const aTime = a?.ReviewDate ? new Date(a.ReviewDate).getTime() : 0;
+      const bTime = b?.ReviewDate ? new Date(b.ReviewDate).getTime() : 0;
+      comparison = aTime - bTime;
+    } else if (sortBy === 'id') {
+      comparison = (a?.QuestionsAnswersID || 0) - (b?.QuestionsAnswersID || 0);
+    } else if (sortBy === 'title') {
+      comparison = (a?.QuestionTitle || '').localeCompare(b?.QuestionTitle || '', 'th');
+    } else if (sortBy === 'likes') {
+      comparison = (a?.likeCount || 0) - (b?.likeCount || 0);
+    } else if (sortBy === 'unlikes') {
+      comparison = (a?.unlikeCount || 0) - (b?.unlikeCount || 0);
+    }
+    
+    return comparison * order;
   });
 });
 
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredQuestions.value.length / itemsPerPage.value)));
-const totalEntries = computed(() => filteredQuestions.value.length);
+const totalPages = computed(() => Math.max(1, Math.ceil(sortedQuestions.value.length / itemsPerPage.value)));
+const totalEntries = computed(() => sortedQuestions.value.length);
 const startIndex = computed(() => totalEntries.value === 0 ? 0 : (currentPage.value - 1) * itemsPerPage.value + 1);
 const endIndex = computed(() => totalEntries.value === 0 ? 0 : Math.min(currentPage.value * itemsPerPage.value, totalEntries.value));
 const paginatedQuestions = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value;
-  return filteredQuestions.value.slice(start, start + itemsPerPage.value);
+  return sortedQuestions.value.slice(start, start + itemsPerPage.value);
 });
 
 const pagesToShow = computed(() => {
@@ -1039,6 +1183,7 @@ function firstPage() { goToPage(1); }
 function lastPage() { goToPage(totalPages.value); }
 
 watch(searchQuery, () => { currentPage.value = 1; });
+watch(qaFilters, () => { currentPage.value = 1; }, { deep: true });
 
 // Category Logic
 const mainCategories = computed(() => {

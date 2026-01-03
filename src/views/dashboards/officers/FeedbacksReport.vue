@@ -36,41 +36,26 @@
           </div>
         </div>
         
-        <!-- Controls: Total, Type Filter, Search -->
+        <!-- Controls: Apple Filters + Search -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
           <div class="small text-muted">Total: {{ totalEntries }}</div>
-          <div class="segmented-filter" role="group" aria-label="Filter by type">
-            <button 
-              type="button" 
-              class="segment-btn" 
-              :class="{ active: feedbackTypeFilter === 'all' }" 
-              @click="feedbackTypeFilter = 'all'"
-            >
-              ทั้งหมด
-            </button>
-            <button 
-              type="button" 
-              class="segment-btn" 
-              :class="{ active: feedbackTypeFilter === 'unlike' }" 
-              @click="feedbackTypeFilter = 'unlike'"
-            >
-              <i class="bi bi-hand-thumbs-down-fill me-1 text-danger"></i> Unlike
-              <span class="badge rounded-pill ms-2 bg-danger-subtle text-danger">{{ unlikeCount }}</span>
-            </button>
-            <button 
-              type="button" 
-              class="segment-btn" 
-              :class="{ active: feedbackTypeFilter === 'like' }" 
-              @click="feedbackTypeFilter = 'like'"
-            >
-              <i class="bi bi-hand-thumbs-up-fill me-1 text-success"></i> Like
-              <span class="badge rounded-pill ms-2 bg-success-subtle text-success">{{ likeCount }}</span>
-            </button>
-          </div>
           <div class="search-wrapper ms-auto">
             <ReportSearch v-model="localSearch" placeholder="ค้นหา feedback หรือ chatlog..." />
           </div>
         </div>
+        
+        <AppleFilters
+          v-model="filters"
+          :show-sort="true"
+          :sort-options="feedbackSortOptions"
+          default-sort-by="date"
+          default-sort-order="desc"
+          :statuses="feedbackStatuses"
+          status-label="ประเภท"
+          :show-date-presets="true"
+          :show-date-range="true"
+          @change="onFiltersChange"
+        />
 
         <div class="table-responsive">
           <table class="table table-striped table-hover feedbacks-table">
@@ -391,6 +376,7 @@ import { formatRelativeTime } from '@/utils/formatTime';
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import ReportSearch from '@/components/ReportSearch.vue';
+import AppleFilters from '@/components/AppleFilters.vue';
 // Updated: Import Chart.js directly
 import Chart from 'chart.js/auto';
 // Import WebSocket utilities
@@ -429,7 +415,33 @@ watch(localSearch, () => { currentPage.value = 1; });
 
 const all = computed(() => Array.isArray(props.feedbacks) ? props.feedbacks : []);
 
-const feedbackTypeFilter = ref('all'); // 'all' | 'like' | 'unlike' (default all)
+// Apple Filters Configuration
+const filters = ref({
+  sortBy: 'date',
+  sortOrder: 'desc',
+  status: '',
+  datePreset: 'all',
+  dateFrom: '',
+  dateTo: ''
+});
+
+const feedbackSortOptions = [
+  { value: 'date', label: 'วันที่' },
+  { value: 'id', label: 'รหัส' },
+  { value: 'type', label: 'ประเภท' }
+];
+
+const feedbackStatuses = [
+  { value: 'unlike', label: 'Unlike', icon: 'bi bi-hand-thumbs-down-fill', color: 'danger' },
+  { value: 'like', label: 'Like', icon: 'bi bi-hand-thumbs-up-fill', color: 'success' }
+];
+
+function onFiltersChange(newFilters) {
+  currentPage.value = 1;
+}
+
+// Legacy filter for backward compatibility
+const feedbackTypeFilter = computed(() => filters.value.status || 'all');
 
 function isLikeValue(v) {
   const s = (v ?? '').toString().toLowerCase().trim();
@@ -446,12 +458,31 @@ const filteredFeedbacks = computed(() => {
   if (questionIdFilter.value) {
     arr = arr.filter(fb => String(fb?.QuestionsAnswersID || '') === String(questionIdFilter.value));
   }
-  // If questionIdFilter is present, ignore type filter and show all feedbacks for that question
-  const effectiveType = questionIdFilter.value ? 'all' : feedbackTypeFilter.value;
+  
+  // Apply type/status filter from AppleFilters
+  const effectiveType = questionIdFilter.value ? 'all' : (filters.value.status || 'all');
   if (effectiveType === 'like') {
     arr = arr.filter(fb => isLikeValue(fb?.FeedbackValue));
   } else if (effectiveType === 'unlike') {
     arr = arr.filter(fb => isUnlikeValue(fb?.FeedbackValue));
+  }
+  
+  // Apply date range filter
+  if (filters.value.dateFrom) {
+    const fromDate = new Date(filters.value.dateFrom);
+    fromDate.setHours(0, 0, 0, 0);
+    arr = arr.filter(fb => {
+      if (!fb.Timestamp) return false;
+      return new Date(fb.Timestamp) >= fromDate;
+    });
+  }
+  if (filters.value.dateTo) {
+    const toDate = new Date(filters.value.dateTo);
+    toDate.setHours(23, 59, 59, 999);
+    arr = arr.filter(fb => {
+      if (!fb.Timestamp) return false;
+      return new Date(fb.Timestamp) <= toDate;
+    });
   }
 
   // Apply search filter
@@ -468,7 +499,7 @@ const filteredFeedbacks = computed(() => {
   );
 });
 
-watch(feedbackTypeFilter, () => { currentPage.value = 1; });
+watch(filters, () => { currentPage.value = 1; }, { deep: true });
 
 // pagination
 const currentPage = ref(1);
@@ -477,17 +508,29 @@ const totalEntries = computed(() => filteredFeedbacks.value.length);
 const totalPages = computed(() => Math.max(1, Math.ceil(totalEntries.value / itemsPerPage.value)));
 const startIndex = computed(() => totalEntries.value === 0 ? 0 : (currentPage.value - 1) * itemsPerPage.value + 1);
 const endIndex = computed(() => totalEntries.value === 0 ? 0 : Math.min(currentPage.value * itemsPerPage.value, totalEntries.value));
-// Sort so that Unlike appears before Like
+
+// Sort feedbacks based on AppleFilters settings
 const sortedFeedbacks = computed(() => {
   const arr = filteredFeedbacks.value.slice();
+  const { sortBy, sortOrder } = filters.value;
+  const order = sortOrder === 'asc' ? 1 : -1;
+  
   return arr.sort((a, b) => {
-    const aUnlike = isUnlikeValue(a?.FeedbackValue) ? 1 : 0;
-    const bUnlike = isUnlikeValue(b?.FeedbackValue) ? 1 : 0;
-    if (aUnlike !== bUnlike) return bUnlike - aUnlike; // put unlike first
-    // Secondary sort: newest first by Timestamp if available
-    const aTime = a?.Timestamp ? new Date(a.Timestamp).getTime() : 0;
-    const bTime = b?.Timestamp ? new Date(b.Timestamp).getTime() : 0;
-    return bTime - aTime;
+    let comparison = 0;
+    
+    if (sortBy === 'date') {
+      const aTime = a?.Timestamp ? new Date(a.Timestamp).getTime() : 0;
+      const bTime = b?.Timestamp ? new Date(b.Timestamp).getTime() : 0;
+      comparison = aTime - bTime;
+    } else if (sortBy === 'id') {
+      comparison = (a?.FeedbackID || 0) - (b?.FeedbackID || 0);
+    } else if (sortBy === 'type') {
+      const aUnlike = isUnlikeValue(a?.FeedbackValue) ? 1 : 0;
+      const bUnlike = isUnlikeValue(b?.FeedbackValue) ? 1 : 0;
+      comparison = aUnlike - bUnlike;
+    }
+    
+    return comparison * order;
   });
 });
 

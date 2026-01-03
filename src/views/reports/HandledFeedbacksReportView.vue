@@ -141,6 +141,20 @@
                 </button>
               </div>
             </div>
+            
+            <!-- Apple Filters -->
+            <AppleFilters
+              v-model="handledFilters"
+              :show-sort="true"
+              :sort-options="handledSortOptions"
+              default-sort-by="date"
+              default-sort-order="desc"
+              :statuses="handledStatuses"
+              status-label="ประเภท"
+              :show-date-presets="true"
+              :show-date-range="true"
+              @change="onHandledFiltersChange"
+            />
 
             <div class="table-responsive">
               <table class="table apple-table mb-0">
@@ -326,6 +340,7 @@ import { formatRelativeTime } from '@/utils/formatTime';
 import { Tooltip } from 'bootstrap';
 import Sidebar from '@/components/Sidebar.vue';
 import AnimatedToggleIcon from '@/components/AnimatedToggleIcon.vue';
+import AppleFilters from '@/components/AppleFilters.vue';
 import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import '@/assets/sidebar.css';
 import '@/assets/dashboard-styles.css';
@@ -371,6 +386,31 @@ const localSearch = ref('');
 const wsConnected = ref(false);
 const restoringId = ref(null);
 let ws = null;
+
+// Apple Filters Configuration
+const handledFilters = ref({
+  sortBy: 'date',
+  sortOrder: 'desc',
+  status: '',
+  datePreset: 'all',
+  dateFrom: '',
+  dateTo: ''
+});
+
+const handledSortOptions = [
+  { value: 'date', label: 'วันที่' },
+  { value: 'id', label: 'รหัส' },
+  { value: 'reason', label: 'เหตุผล' }
+];
+
+const handledStatuses = [
+  { value: 'unlike', label: 'Unlike', icon: 'bi bi-hand-thumbs-down-fill', color: 'danger' },
+  { value: 'like', label: 'Like', icon: 'bi bi-hand-thumbs-up-fill', color: 'success' }
+];
+
+function onHandledFiltersChange() {
+  currentPage.value = 1;
+}
 
 // Modal State
 const showDetailModal = ref(false);
@@ -425,6 +465,7 @@ onUnmounted(() => {
 // Watchers
 watch(localSearch, () => { currentPage.value = 1; });
 watch(items, () => { nextTick(() => initTooltips()); });
+watch(handledFilters, () => { currentPage.value = 1; }, { deep: true });
 
 // Fetch Data
 const fetchData = async () => {
@@ -456,14 +497,67 @@ const fetchData = async () => {
 
 // Computed
 const filteredItems = computed(() => {
-  const base = Array.isArray(items.value) ? items.value : [];
+  let arr = Array.isArray(items.value) ? items.value : [];
+  
+  // Apply status filter
+  if (handledFilters.value.status === 'like') {
+    arr = arr.filter(i => isLike(i));
+  } else if (handledFilters.value.status === 'unlike') {
+    arr = arr.filter(i => !isLike(i));
+  }
+  
+  // Apply date range filter
+  if (handledFilters.value.dateFrom) {
+    const fromDate = new Date(handledFilters.value.dateFrom);
+    fromDate.setHours(0, 0, 0, 0);
+    arr = arr.filter(i => {
+      if (!i.Timestamp) return false;
+      return new Date(i.Timestamp) >= fromDate;
+    });
+  }
+  if (handledFilters.value.dateTo) {
+    const toDate = new Date(handledFilters.value.dateTo);
+    toDate.setHours(23, 59, 59, 999);
+    arr = arr.filter(i => {
+      if (!i.Timestamp) return false;
+      return new Date(i.Timestamp) <= toDate;
+    });
+  }
+  
+  // Apply search filter
   const q = (localSearch.value || '').toLowerCase().trim();
-  if (!q) return base;
-  return base.filter(i => 
-    String(i.UserQuery || '').toLowerCase().includes(q) ||
-    String(i.FeedbackComment || '').toLowerCase().includes(q) ||
-    String(i.FeedbackReason || '').toLowerCase().includes(q)
-  );
+  if (q) {
+    arr = arr.filter(i => 
+      String(i.UserQuery || '').toLowerCase().includes(q) ||
+      String(i.FeedbackComment || '').toLowerCase().includes(q) ||
+      String(i.FeedbackReason || '').toLowerCase().includes(q)
+    );
+  }
+  
+  return arr;
+});
+
+// Sort filtered items based on AppleFilters settings
+const sortedItems = computed(() => {
+  const arr = filteredItems.value.slice();
+  const { sortBy, sortOrder } = handledFilters.value;
+  const order = sortOrder === 'asc' ? 1 : -1;
+  
+  return arr.sort((a, b) => {
+    let comparison = 0;
+    
+    if (sortBy === 'date') {
+      const aTime = a?.Timestamp ? new Date(a.Timestamp).getTime() : 0;
+      const bTime = b?.Timestamp ? new Date(b.Timestamp).getTime() : 0;
+      comparison = aTime - bTime;
+    } else if (sortBy === 'id') {
+      comparison = (a?.FeedbackID || 0) - (b?.FeedbackID || 0);
+    } else if (sortBy === 'reason') {
+      comparison = (a?.FeedbackReason || '').localeCompare(b?.FeedbackReason || '', 'th');
+    }
+    
+    return comparison * order;
+  });
 });
 
 // Helper for check like
@@ -543,7 +637,7 @@ const totalPages = computed(() => Math.ceil(totalEntries.value / itemsPerPage.va
 const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value + 1);
 const endIndex = computed(() => Math.min(currentPage.value * itemsPerPage.value, totalEntries.value));
 const paginatedItems = computed(() => {
-  const arr = Array.isArray(filteredItems.value) ? filteredItems.value : [];
+  const arr = Array.isArray(sortedItems.value) ? sortedItems.value : [];
   const start = (currentPage.value - 1) * itemsPerPage.value;
   return arr.slice(start, start + itemsPerPage.value);
 });

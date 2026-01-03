@@ -92,6 +92,18 @@
               </button>
             </div>
           </div>
+          
+          <!-- Apple Filters -->
+          <AppleFilters
+            v-model="chatFilters"
+            :show-sort="true"
+            :sort-options="chatSortOptions"
+            default-sort-by="date"
+            default-sort-order="desc"
+            :show-date-presets="true"
+            :show-date-range="true"
+            @change="onChatFiltersChange"
+          />
 
           <div class="table-responsive">
             <table class="table apple-table mb-0">
@@ -176,6 +188,7 @@ import { BarChart } from 'vue-chart-3';
 import { createWebSocketConnection, WS_ENDPOINTS } from '@/config/websocket';
 import { Tooltip } from 'bootstrap';
 import { Chart, registerables } from 'chart.js';
+import AppleFilters from '@/components/AppleFilters.vue';
 
 Chart.register(...registerables);
 
@@ -198,6 +211,27 @@ let ws = null;
 
 const localSearch = ref('');
 watch(localSearch, () => { currentPage.value = 1; });
+
+// Apple Filters Configuration
+const chatFilters = ref({
+  sortBy: 'date',
+  sortOrder: 'desc',
+  datePreset: 'all',
+  dateFrom: '',
+  dateTo: ''
+});
+
+const chatSortOptions = [
+  { value: 'date', label: 'วันที่' },
+  { value: 'id', label: 'รหัส' },
+  { value: 'query', label: 'คำถาม' }
+];
+
+function onChatFiltersChange() {
+  currentPage.value = 1;
+}
+
+watch(chatFilters, () => { currentPage.value = 1; }, { deep: true });
 
 // Format full date time for tooltip
 function formatFullDateTime(timestamp) {
@@ -226,16 +260,63 @@ const topQuestion = computed(() => {
 
 // Filter logic
 const filtered = computed(() => {
+  let arr = Array.isArray(items.value) ? items.value : [];
+  
+  // Apply date range filter
+  if (chatFilters.value.dateFrom) {
+    const fromDate = new Date(chatFilters.value.dateFrom);
+    fromDate.setHours(0, 0, 0, 0);
+    arr = arr.filter(log => {
+      if (!log.Timestamp) return false;
+      return new Date(log.Timestamp) >= fromDate;
+    });
+  }
+  if (chatFilters.value.dateTo) {
+    const toDate = new Date(chatFilters.value.dateTo);
+    toDate.setHours(23, 59, 59, 999);
+    arr = arr.filter(log => {
+      if (!log.Timestamp) return false;
+      return new Date(log.Timestamp) <= toDate;
+    });
+  }
+  
+  // Apply search filter
   const q = (localSearch.value || '').toString().trim().toLowerCase();
-  if (!q) return Array.isArray(items.value) ? items.value : [];
-  return (items.value || []).filter(log => {
-    const id = log.ChatLogID != null ? String(log.ChatLogID).toLowerCase() : '';
-    const ts = log.Timestamp ? String(log.Timestamp).toLowerCase() : '';
-    const uq = log.UserQuery ? String(log.UserQuery).toLowerCase() : '';
-    const title = (props.questionsTitleMap && props.questionsTitleMap[log.QuestionsAnswersID])
-      ? String(props.questionsTitleMap[log.QuestionsAnswersID]).toLowerCase()
-      : (log.QuestionsAnswersID != null ? String(log.QuestionsAnswersID).toLowerCase() : '');
-    return id.includes(q) || ts.includes(q) || uq.includes(q) || title.includes(q);
+  if (q) {
+    arr = arr.filter(log => {
+      const id = log.ChatLogID != null ? String(log.ChatLogID).toLowerCase() : '';
+      const ts = log.Timestamp ? String(log.Timestamp).toLowerCase() : '';
+      const uq = log.UserQuery ? String(log.UserQuery).toLowerCase() : '';
+      const title = (props.questionsTitleMap && props.questionsTitleMap[log.QuestionsAnswersID])
+        ? String(props.questionsTitleMap[log.QuestionsAnswersID]).toLowerCase()
+        : (log.QuestionsAnswersID != null ? String(log.QuestionsAnswersID).toLowerCase() : '');
+      return id.includes(q) || ts.includes(q) || uq.includes(q) || title.includes(q);
+    });
+  }
+  
+  return arr;
+});
+
+// Sort filtered items based on AppleFilters settings
+const sorted = computed(() => {
+  const arr = filtered.value.slice();
+  const { sortBy, sortOrder } = chatFilters.value;
+  const order = sortOrder === 'asc' ? 1 : -1;
+  
+  return arr.sort((a, b) => {
+    let comparison = 0;
+    
+    if (sortBy === 'date') {
+      const aTime = a?.Timestamp ? new Date(a.Timestamp).getTime() : 0;
+      const bTime = b?.Timestamp ? new Date(b.Timestamp).getTime() : 0;
+      comparison = aTime - bTime;
+    } else if (sortBy === 'id') {
+      comparison = (a?.ChatLogID || 0) - (b?.ChatLogID || 0);
+    } else if (sortBy === 'query') {
+      comparison = (a?.UserQuery || '').localeCompare(b?.UserQuery || '', 'th');
+    }
+    
+    return comparison * order;
   });
 });
 
@@ -255,13 +336,13 @@ const fetchData = async () => {
 // pagination
 const currentPage = ref(1);
 const itemsPerPage = ref(5);
-const totalEntries = computed(() => filtered.value.length);
+const totalEntries = computed(() => sorted.value.length);
 const totalPages = computed(() => Math.max(1, Math.ceil(totalEntries.value / itemsPerPage.value)));
 const startIndex = computed(() => totalEntries.value === 0 ? 0 : (currentPage.value - 1) * itemsPerPage.value + 1);
 const endIndex = computed(() => totalEntries.value === 0 ? 0 : Math.min(currentPage.value * itemsPerPage.value, totalEntries.value));
 const paginated = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value;
-  return filtered.value.slice(start, start + itemsPerPage.value);
+  return sorted.value.slice(start, start + itemsPerPage.value);
 });
 const pagesToShow = computed(() => {
   const total = totalPages.value; const current = currentPage.value; const maxButtons=4;

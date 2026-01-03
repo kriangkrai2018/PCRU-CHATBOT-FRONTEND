@@ -42,6 +42,18 @@
             <ReportSearch v-model="localSearch" placeholder="ค้นหา chatlog..." />
           </div>
         </div>
+        
+        <!-- Apple Filters -->
+        <AppleFilters
+          v-model="noAnswerFilters"
+          :show-sort="true"
+          :sort-options="noAnswerSortOptions"
+          default-sort-by="date"
+          default-sort-order="desc"
+          :show-date-presets="true"
+          :show-date-range="true"
+          @change="onNoAnswerFiltersChange"
+        />
 
         <div class="table-responsive mt-3">
           <table class="table table-striped table-hover">
@@ -99,6 +111,7 @@ import { createWebSocketConnection, WS_ENDPOINTS } from '@/config/websocket';
 import { Tooltip } from 'bootstrap';
 import Chart from 'chart.js/auto';
 import ReportSearch from '@/components/ReportSearch.vue';
+import AppleFilters from '@/components/AppleFilters.vue';
 
 const props = defineProps({
   chartOptions: Object,
@@ -124,6 +137,27 @@ let ws = null;
 
 const localSearch = ref('');
 watch(localSearch, () => { currentPage.value = 1; });
+
+// Apple Filters Configuration
+const noAnswerFilters = ref({
+  sortBy: 'date',
+  sortOrder: 'desc',
+  datePreset: 'all',
+  dateFrom: '',
+  dateTo: ''
+});
+
+const noAnswerSortOptions = [
+  { value: 'date', label: 'วันที่' },
+  { value: 'id', label: 'รหัส' },
+  { value: 'query', label: 'คำถาม' }
+];
+
+function onNoAnswerFiltersChange() {
+  currentPage.value = 1;
+}
+
+watch(noAnswerFilters, () => { currentPage.value = 1; }, { deep: true });
 
 // Format full date time for tooltip (date only, no time)
 function formatFullDateTime(timestamp) {
@@ -175,18 +209,71 @@ const fetchData = async () => {
 // pagination
 const currentPage = ref(1);
 const itemsPerPage = ref(5);
+
 const filtered = computed(() => {
+  let arr = Array.isArray(items.value) ? items.value : [];
+  
+  // Apply date range filter
+  if (noAnswerFilters.value.dateFrom) {
+    const fromDate = new Date(noAnswerFilters.value.dateFrom);
+    fromDate.setHours(0, 0, 0, 0);
+    arr = arr.filter(log => {
+      if (!log.Timestamp) return false;
+      return new Date(log.Timestamp) >= fromDate;
+    });
+  }
+  if (noAnswerFilters.value.dateTo) {
+    const toDate = new Date(noAnswerFilters.value.dateTo);
+    toDate.setHours(23, 59, 59, 999);
+    arr = arr.filter(log => {
+      if (!log.Timestamp) return false;
+      return new Date(log.Timestamp) <= toDate;
+    });
+  }
+  
+  // Apply search filter
   const q = (localSearch.value || '').toString().trim().toLowerCase();
-  if (!q) return items.value;
-  return items.value.filter(log => log.ChatLogID != null && String(log.ChatLogID).toLowerCase().includes(q));
+  if (q) {
+    arr = arr.filter(log => {
+      const id = log.ChatLogID != null ? String(log.ChatLogID).toLowerCase() : '';
+      const uq = log.UserQuery ? String(log.UserQuery).toLowerCase() : '';
+      return id.includes(q) || uq.includes(q);
+    });
+  }
+  
+  return arr;
 });
-const totalEntries = computed(() => filtered.value.length);
+
+// Sort filtered items based on AppleFilters settings
+const sorted = computed(() => {
+  const arr = filtered.value.slice();
+  const { sortBy, sortOrder } = noAnswerFilters.value;
+  const order = sortOrder === 'asc' ? 1 : -1;
+  
+  return arr.sort((a, b) => {
+    let comparison = 0;
+    
+    if (sortBy === 'date') {
+      const aTime = a?.Timestamp ? new Date(a.Timestamp).getTime() : 0;
+      const bTime = b?.Timestamp ? new Date(b.Timestamp).getTime() : 0;
+      comparison = aTime - bTime;
+    } else if (sortBy === 'id') {
+      comparison = (a?.ChatLogID || 0) - (b?.ChatLogID || 0);
+    } else if (sortBy === 'query') {
+      comparison = (a?.UserQuery || '').localeCompare(b?.UserQuery || '', 'th');
+    }
+    
+    return comparison * order;
+  });
+});
+
+const totalEntries = computed(() => sorted.value.length);
 const totalPages = computed(() => Math.max(1, Math.ceil(totalEntries.value / itemsPerPage.value)));
 const startIndex = computed(() => totalEntries.value === 0 ? 0 : (currentPage.value - 1) * itemsPerPage.value + 1);
 const endIndex = computed(() => totalEntries.value === 0 ? 0 : Math.min(currentPage.value * itemsPerPage.value, totalEntries.value));
 const paginated = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value;
-  return filtered.value.slice(start, start + itemsPerPage.value);
+  return sorted.value.slice(start, start + itemsPerPage.value);
 });
 const pagesToShow = computed(() => {
   const total = totalPages.value; const current = currentPage.value; const maxButtons = 4;

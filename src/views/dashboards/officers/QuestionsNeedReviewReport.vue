@@ -127,6 +127,21 @@
               </button>
             </div>
           </div>
+          
+          <!-- Apple Filters -->
+          <AppleFilters
+            v-model="reviewFilters"
+            :show-sort="true"
+            :sort-options="reviewSortOptions"
+            default-sort-by="date"
+            default-sort-order="asc"
+            :categories="reviewCategoryOptions"
+            category-label="หมวดหมู่"
+            :statuses="reviewStatuses"
+            status-label="สถานะ"
+            :show-date-presets="true"
+            @change="onReviewFiltersChange"
+          />
 
           <div class="table-responsive">
             <table class="table apple-table mb-0">
@@ -310,6 +325,7 @@ import { createWebSocketConnection, WS_ENDPOINTS } from '@/config/websocket';
 import { Tooltip } from 'bootstrap';
 import Chart from 'chart.js/auto';
 import ReportSearch from '@/components/ReportSearch.vue';
+import AppleFilters from '@/components/AppleFilters.vue';
 
 const props = defineProps({
   categoriesNameMap: { type: Object, default: () => ({}) },
@@ -375,7 +391,43 @@ const localSearch = ref('');
 const currentPage = ref(1);
 const itemsPerPage = ref(5);
 
+// Apple Filters Configuration
+const reviewFilters = ref({
+  sortBy: 'date',
+  sortOrder: 'asc',
+  category: '',
+  status: '',
+  datePreset: 'all',
+  dateFrom: '',
+  dateTo: ''
+});
+
+const reviewSortOptions = [
+  { value: 'date', label: 'วันหมดอายุ' },
+  { value: 'id', label: 'รหัส' },
+  { value: 'title', label: 'หัวข้อ' }
+];
+
+const reviewStatuses = [
+  { value: 'overdue', label: 'Overdue', icon: 'bi bi-exclamation-circle-fill', color: 'danger' },
+  { value: 'urgent', label: 'Urgent', icon: 'bi bi-exclamation-triangle-fill', color: 'warning' },
+  { value: 'soon', label: 'Review Soon', icon: 'bi bi-clock-fill', color: 'info' }
+];
+
+const reviewCategoryOptions = computed(() => {
+  const catMap = props.categoriesNameMap || {};
+  return Object.entries(catMap).map(([id, name]) => ({
+    value: id,
+    label: name || id
+  }));
+});
+
+function onReviewFiltersChange() {
+  currentPage.value = 1;
+}
+
 watch(localSearch, () => { currentPage.value = 1; });
+watch(reviewFilters, () => { currentPage.value = 1; }, { deep: true });
 
 const categoriesNameMapSafe = computed(() => props.categoriesNameMap || {});
 
@@ -586,19 +638,89 @@ const fetchData = async () => {
   }
 };
 
+// Helper to get item status
+function getItemStatus(qa) {
+  if (!qa.ReviewDate) return 'no-date';
+  const reviewDate = new Date(qa.ReviewDate);
+  const today = new Date();
+  const diffTime = reviewDate - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 0) return 'overdue';
+  if (diffDays <= 7) return 'urgent';
+  return 'soon';
+}
+
 const filteredQuestions = computed(() => {
+  let arr = items.value;
+  
+  // Apply category filter
+  if (reviewFilters.value.category) {
+    arr = arr.filter(qa => String(qa.CategoriesID) === String(reviewFilters.value.category));
+  }
+  
+  // Apply status filter
+  if (reviewFilters.value.status) {
+    arr = arr.filter(qa => getItemStatus(qa) === reviewFilters.value.status);
+  }
+  
+  // Apply date range filter
+  if (reviewFilters.value.dateFrom) {
+    const fromDate = new Date(reviewFilters.value.dateFrom);
+    fromDate.setHours(0, 0, 0, 0);
+    arr = arr.filter(qa => {
+      if (!qa.ReviewDate) return false;
+      return new Date(qa.ReviewDate) >= fromDate;
+    });
+  }
+  if (reviewFilters.value.dateTo) {
+    const toDate = new Date(reviewFilters.value.dateTo);
+    toDate.setHours(23, 59, 59, 999);
+    arr = arr.filter(qa => {
+      if (!qa.ReviewDate) return false;
+      return new Date(qa.ReviewDate) <= toDate;
+    });
+  }
+  
+  // Apply search filter
   const q = (localSearch.value || '').toString().trim().toLowerCase();
-  if (!q) return items.value;
-  return items.value.filter(qa => {
-    const id = String(qa.QuestionsAnswersID || '').toLowerCase();
-    const title = String(qa.QuestionTitle || '').toLowerCase();
-    const text = String(qa.QuestionText || '').toLowerCase();
-    const cat = String(categoriesNameMapSafe.value[qa.CategoriesID] || '').toLowerCase();
-    return id.includes(q) || title.includes(q) || text.includes(q) || cat.includes(q);
+  if (q) {
+    arr = arr.filter(qa => {
+      const id = String(qa.QuestionsAnswersID || '').toLowerCase();
+      const title = String(qa.QuestionTitle || '').toLowerCase();
+      const text = String(qa.QuestionText || '').toLowerCase();
+      const cat = String(categoriesNameMapSafe.value[qa.CategoriesID] || '').toLowerCase();
+      return id.includes(q) || title.includes(q) || text.includes(q) || cat.includes(q);
+    });
+  }
+  
+  return arr;
+});
+
+// Sort filtered questions based on AppleFilters settings
+const sortedQuestions = computed(() => {
+  const arr = filteredQuestions.value.slice();
+  const { sortBy, sortOrder } = reviewFilters.value;
+  const order = sortOrder === 'asc' ? 1 : -1;
+  
+  return arr.sort((a, b) => {
+    let comparison = 0;
+    
+    if (sortBy === 'date') {
+      const aTime = a?.ReviewDate ? new Date(a.ReviewDate).getTime() : 0;
+      const bTime = b?.ReviewDate ? new Date(b.ReviewDate).getTime() : 0;
+      comparison = aTime - bTime;
+    } else if (sortBy === 'id') {
+      comparison = (a?.QuestionsAnswersID || 0) - (b?.QuestionsAnswersID || 0);
+    } else if (sortBy === 'title') {
+      comparison = (a?.QuestionTitle || '').localeCompare(b?.QuestionTitle || '', 'th');
+    }
+    
+    return comparison * order;
   });
 });
 
-const totalEntries = computed(() => filteredQuestions.value.length);
+const totalEntries = computed(() => sortedQuestions.value.length);
 const totalPages = computed(() => Math.max(1, Math.ceil(totalEntries.value / itemsPerPage.value)));
 
 const startIndex = computed(() => {
@@ -614,7 +736,7 @@ const endIndex = computed(() => {
 const paginatedQuestions = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value;
   const end = start + itemsPerPage.value;
-  return filteredQuestions.value.slice(start, end);
+  return sortedQuestions.value.slice(start, end);
 });
 
 const pagesToShow = computed(() => {
