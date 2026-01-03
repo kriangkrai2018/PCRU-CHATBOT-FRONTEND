@@ -152,6 +152,19 @@
           </div>
         </div>
 
+        <!-- Filters Section -->
+        <AppleFilters
+          v-model="kwFilters"
+          :sort-options="kwSortOptions"
+          :statuses="kwStatuses"
+          status-label="สถานะ"
+          :show-date-range="false"
+          :show-date-presets="false"
+          :show-number-range="false"
+          class="mb-4"
+          @change="onFiltersChange"
+        />
+
         <!-- Master-Detail Table Section -->
         <div class="glass-panel main-table-panel">
           <!-- Toolbar -->
@@ -362,6 +375,7 @@ import { ref, computed, watch, onMounted, onUnmounted, getCurrentInstance } from
 import { PieChart, BarChart } from 'vue-chart-3';
 import { createWebSocketConnection, WS_ENDPOINTS } from '@/config/websocket';
 import { Chart, registerables } from 'chart.js';
+import AppleFilters from '@/components/AppleFilters.vue';
 
 Chart.register(...registerables);
 
@@ -378,6 +392,29 @@ const props = defineProps({
 
 const emit = defineEmits(['update:searchQueryKeywords', 'refresh']);
 const wsConnected = ref(false);
+
+// Filters state
+const kwFilters = ref({
+  sortBy: 'id',
+  sortOrder: 'asc',
+  status: ''
+});
+
+const kwSortOptions = [
+  { value: 'id', label: 'ID' },
+  { value: 'keyword', label: 'Keyword' },
+  { value: 'matches', label: 'จำนวน Matches' },
+];
+
+const kwStatuses = [
+  { value: 'has_matches', label: 'มี Matches', icon: 'bi bi-check-circle-fill', color: 'status-green' },
+  { value: 'no_matches', label: 'ไม่มี Matches', icon: 'bi bi-x-circle', color: 'status-gray' },
+];
+
+const onFiltersChange = () => {
+  currentPage.value = 1;
+};
+
 const expandedId = ref(null); 
 const { appContext } = getCurrentInstance();
 const $axios = appContext.config.globalProperties.$axios;
@@ -611,13 +648,60 @@ const topKeyword = computed(() => {
   return 'None';
 });
 
+// Helper to get matches count
+const getMatchesCount = (kw) => {
+  if (kw && (kw.MatchesCount != null)) return Number(kw.MatchesCount) || 0;
+  const matches = getMatches(kw);
+  return matches.length;
+};
+
 const filteredKeywords = computed(() => {
+  let result = [...allKeywords.value];
+  
+  // Search filter
   const q = (localSearch.value || '').toString().trim().toLowerCase();
-  if (!q) return allKeywords.value;
-  return allKeywords.value.filter(k =>
-    (k.KeywordID != null && String(k.KeywordID).includes(q)) ||
-    (k.KeywordText && String(k.KeywordText).toLowerCase().includes(q))
-  );
+  if (q) {
+    result = result.filter(k =>
+      (k.KeywordID != null && String(k.KeywordID).includes(q)) ||
+      (k.KeywordText && String(k.KeywordText).toLowerCase().includes(q))
+    );
+  }
+  
+  // Status filter
+  if (kwFilters.value.status === 'has_matches') {
+    result = result.filter(k => getMatchesCount(k) > 0);
+  } else if (kwFilters.value.status === 'no_matches') {
+    result = result.filter(k => getMatchesCount(k) === 0);
+  }
+  
+  // Sorting
+  const sortBy = kwFilters.value.sortBy;
+  const sortOrder = kwFilters.value.sortOrder;
+  result.sort((a, b) => {
+    let valA, valB;
+    switch (sortBy) {
+      case 'id':
+        valA = Number(a.KeywordID) || 0;
+        valB = Number(b.KeywordID) || 0;
+        break;
+      case 'keyword':
+        valA = (a.KeywordText || '').toLowerCase();
+        valB = (b.KeywordText || '').toLowerCase();
+        break;
+      case 'matches':
+        valA = getMatchesCount(a);
+        valB = getMatchesCount(b);
+        break;
+      default:
+        valA = a.KeywordID;
+        valB = b.KeywordID;
+    }
+    if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+    if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+  
+  return result;
 });
 
 const currentPage = ref(1);
@@ -820,6 +904,22 @@ function nextPage() { if (currentPage.value < totalPages.value) currentPage.valu
 .search-capsule:focus-within { background: white; box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15); }
 .search-capsule input { border: none; background: transparent; flex: 1; padding-left: 10px; font-size: 0.95rem; outline: none; }
 .search-capsule i { color: var(--text-secondary); }
+
+.clear-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 4px;
+  color: #8e8e93;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+.clear-btn:hover {
+  color: #3a3a3c;
+}
 
 /* Stack title and search on narrower screens so they appear on separate lines */
 @media (max-width: 992px) {

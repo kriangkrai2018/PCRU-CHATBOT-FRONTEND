@@ -95,6 +95,19 @@
           </div>
         </div>
 
+        <!-- Filters Section -->
+        <AppleFilters
+          v-model="qaFilters"
+          :sort-options="qaSortOptions"
+          :statuses="qaStatuses"
+          status-label="สถานะ"
+          :show-date-range="true"
+          :show-date-presets="true"
+          date-preset-direction="future"
+          :show-number-range="false"
+          @change="onFiltersChange"
+        />
+
         <!-- Table Section -->
         <div class="apple-card table-wrapper">
           <div class="card-header-actions p-3 d-flex justify-content-between align-items-center">
@@ -257,6 +270,7 @@ import { createWebSocketConnection, WS_ENDPOINTS } from '@/config/websocket';
 import { Tooltip } from 'bootstrap';
 import Chart from 'chart.js/auto';
 import ReportSearch from '@/components/ReportSearch.vue';
+import AppleFilters from '@/components/AppleFilters.vue';
 
 const scatterCanvas = ref(null);
 const barCanvas = ref(null);
@@ -276,6 +290,34 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['refresh']);
+
+// Filters state
+const qaFilters = ref({
+  sortBy: 'date',
+  sortOrder: 'desc',
+  status: '',
+  dateFrom: '',
+  dateTo: '',
+  datePreset: ''
+});
+
+const qaSortOptions = [
+  { value: 'date', label: 'วันที่ตรวจสอบ' },
+  { value: 'id', label: 'ID' },
+  { value: 'title', label: 'หัวข้อคำถาม' },
+  { value: 'likes', label: 'ถูกใจมากสุด' },
+  { value: 'unlikes', label: 'ไม่พอใจมากสุด' },
+];
+
+const qaStatuses = [
+  { value: 'ok', label: 'ปกติ', icon: 'bi bi-check-circle-fill', color: 'status-green' },
+  { value: 'expiring', label: 'ใกล้หมดอายุ', icon: 'bi bi-exclamation-triangle-fill', color: 'status-orange' },
+  { value: 'expired', label: 'หมดอายุ', icon: 'bi bi-x-circle-fill', color: 'status-red' },
+];
+
+const onFiltersChange = () => {
+  currentPage.value = 1;
+};
 
 // WebSocket state
 const wsConnected = ref(false);
@@ -323,20 +365,93 @@ const allQuestions = computed(() => Array.isArray(props.questionsAnswers) ? prop
 // categories name safe map
 const categoriesNameMapSafe = computed(() => props.categoriesNameMap || {});
 
-// filtered by search: search in all table columns
+// Helper to get item status based on ReviewDate
+const getItemStatus = (item) => {
+  if (!item.ReviewDate) return 'ok';
+  const now = new Date();
+  const reviewDate = new Date(item.ReviewDate);
+  const diffDays = Math.floor((reviewDate - now) / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) return 'expired';
+  if (diffDays <= 7) return 'expiring';
+  return 'ok';
+};
+
+// filtered by search and filters
 const filteredQuestions = computed(() => {
+  let result = [...allQuestions.value];
+  
+  // Search filter
   const q = (localSearch.value || '').toString().trim().toLowerCase();
-  if (!q) return allQuestions.value;
-  return allQuestions.value.filter(item => {
-    const id = item.QuestionsAnswersID != null ? String(item.QuestionsAnswersID).toLowerCase() : '';
-    const title = item.QuestionTitle ? String(item.QuestionTitle).toLowerCase() : '';
-    const text = item.QuestionText ? String(item.QuestionText).toLowerCase() : '';
-    const catName = (categoriesNameMapSafe.value[item.CategoriesID] || item.CategoriesID || '').toString().toLowerCase();
-    const keywordsStr = item.keywords ? item.keywords.map(k => k.KeywordText).join(' ').toLowerCase() : '';
-    const reviewDate = item.ReviewDate ? String(item.ReviewDate).toLowerCase() : '';
-    // search in all columns
-    return id.includes(q) || title.includes(q) || text.includes(q) || keywordsStr.includes(q) || catName.includes(q) || reviewDate.includes(q);
+  if (q) {
+    result = result.filter(item => {
+      const id = item.QuestionsAnswersID != null ? String(item.QuestionsAnswersID).toLowerCase() : '';
+      const title = item.QuestionTitle ? String(item.QuestionTitle).toLowerCase() : '';
+      const text = item.QuestionText ? String(item.QuestionText).toLowerCase() : '';
+      const catName = (categoriesNameMapSafe.value[item.CategoriesID] || item.CategoriesID || '').toString().toLowerCase();
+      const keywordsStr = item.keywords ? item.keywords.map(k => k.KeywordText).join(' ').toLowerCase() : '';
+      const reviewDate = item.ReviewDate ? String(item.ReviewDate).toLowerCase() : '';
+      return id.includes(q) || title.includes(q) || text.includes(q) || keywordsStr.includes(q) || catName.includes(q) || reviewDate.includes(q);
+    });
+  }
+  
+  // Status filter
+  if (qaFilters.value.status) {
+    result = result.filter(item => getItemStatus(item) === qaFilters.value.status);
+  }
+  
+  // Date range filter
+  if (qaFilters.value.dateFrom) {
+    const fromDate = new Date(qaFilters.value.dateFrom);
+    result = result.filter(item => {
+      if (!item.ReviewDate) return false;
+      return new Date(item.ReviewDate) >= fromDate;
+    });
+  }
+  if (qaFilters.value.dateTo) {
+    const toDate = new Date(qaFilters.value.dateTo);
+    toDate.setHours(23, 59, 59, 999);
+    result = result.filter(item => {
+      if (!item.ReviewDate) return false;
+      return new Date(item.ReviewDate) <= toDate;
+    });
+  }
+  
+  // Sorting
+  const sortBy = qaFilters.value.sortBy;
+  const sortOrder = qaFilters.value.sortOrder;
+  result.sort((a, b) => {
+    let valA, valB;
+    switch (sortBy) {
+      case 'date':
+        valA = a.ReviewDate ? new Date(a.ReviewDate).getTime() : 0;
+        valB = b.ReviewDate ? new Date(b.ReviewDate).getTime() : 0;
+        break;
+      case 'id':
+        valA = Number(a.QuestionsAnswersID) || 0;
+        valB = Number(b.QuestionsAnswersID) || 0;
+        break;
+      case 'title':
+        valA = (a.QuestionTitle || '').toLowerCase();
+        valB = (b.QuestionTitle || '').toLowerCase();
+        break;
+      case 'likes':
+        valA = Number(a.likeCount) || 0;
+        valB = Number(b.likeCount) || 0;
+        break;
+      case 'unlikes':
+        valA = Number(a.unlikeCount) || 0;
+        valB = Number(b.unlikeCount) || 0;
+        break;
+      default:
+        valA = a.QuestionsAnswersID;
+        valB = b.QuestionsAnswersID;
+    }
+    if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+    if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
   });
+  
+  return result;
 });
 
 // pagination

@@ -56,7 +56,7 @@
           
           <!-- Stats Cards -->
           <div class="row mb-4 g-3">
-            <div class="col-md-6">
+            <div class="col-12">
               <div class="apple-stat-card">
                 <div class="stat-icon-wrapper green-gradient">
                   <i class="bi bi-check2-circle"></i>
@@ -64,17 +64,6 @@
                 <div class="stat-content">
                   <div class="stat-value">{{ totalEntries }}</div>
                   <div class="stat-label">จัดการแล้วทั้งหมด</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="apple-stat-card">
-                <div class="stat-icon-wrapper red-gradient">
-                  <i class="bi bi-hand-thumbs-down-fill"></i>
-                </div>
-                <div class="stat-content">
-                  <div class="stat-value">{{ unlikeCount }}</div>
-                  <div class="stat-label">Resolved Unlikes</div>
                 </div>
               </div>
             </div>
@@ -149,8 +138,6 @@
               :sort-options="handledSortOptions"
               default-sort-by="date"
               default-sort-order="desc"
-              :statuses="handledStatuses"
-              status-label="ประเภท"
               :show-date-presets="true"
               :show-date-range="true"
               @change="onHandledFiltersChange"
@@ -171,10 +158,7 @@
                   <tr v-for="item in paginatedItems" :key="item.FeedbackID" class="align-middle apple-row" @click="openDetails(item)">
                     <td data-label="ID" class="ps-4 fw-medium text-secondary">{{ item.FeedbackID }}</td>
                     <td data-label="สถานะ" class="py-3">
-                       <span v-if="isLike(item)" class="feedback-pill like">
-                          <i class="bi bi-hand-thumbs-up-fill me-1"></i> Like
-                       </span>
-                       <span v-else class="feedback-pill unlike">
+                       <span class="feedback-pill unlike">
                           <i class="bi bi-hand-thumbs-down-fill me-1"></i> Unlike
                        </span>
                     </td>
@@ -280,10 +264,7 @@
                      <div class="detail-section">
                         <label>สถานะ (Status)</label>
                         <div>
-                           <span v-if="isLike(selectedItem)" class="feedback-pill like">
-                             <i class="bi bi-hand-thumbs-up-fill me-1"></i> Like
-                           </span>
-                           <span v-else class="feedback-pill unlike">
+                           <span class="feedback-pill unlike">
                              <i class="bi bi-hand-thumbs-down-fill me-1"></i> Unlike
                            </span>
                         </div>
@@ -403,11 +384,6 @@ const handledSortOptions = [
   { value: 'reason', label: 'เหตุผล' }
 ];
 
-const handledStatuses = [
-  { value: 'unlike', label: 'Unlike', icon: 'bi bi-hand-thumbs-down-fill', color: 'danger' },
-  { value: 'like', label: 'Like', icon: 'bi bi-hand-thumbs-up-fill', color: 'success' }
-];
-
 function onHandledFiltersChange() {
   currentPage.value = 1;
 }
@@ -499,12 +475,8 @@ const fetchData = async () => {
 const filteredItems = computed(() => {
   let arr = Array.isArray(items.value) ? items.value : [];
   
-  // Apply status filter
-  if (handledFilters.value.status === 'like') {
-    arr = arr.filter(i => isLike(i));
-  } else if (handledFilters.value.status === 'unlike') {
-    arr = arr.filter(i => !isLike(i));
-  }
+  // Force filter: Only Unlikes (This page is for handled unlikes only)
+  arr = arr.filter(i => !isLike(i));
   
   // Apply date range filter
   if (handledFilters.value.dateFrom) {

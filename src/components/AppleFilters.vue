@@ -229,6 +229,7 @@ const props = defineProps({
   // Date range
   showDateRange: { type: Boolean, default: false },
   showDatePresets: { type: Boolean, default: true },
+  datePresetDirection: { type: String, default: 'past' }, // 'past' or 'future'
 
   // Number range
   showNumberRange: { type: Boolean, default: false },
@@ -354,30 +355,55 @@ function setDatePreset(preset) {
   
   // Calculate actual date range based on preset
   const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
   let from = '';
-  let to = now.toISOString().split('T')[0];
+  let to = '';
 
   if (preset === 'all') {
     from = '';
     to = '';
-  } else if (preset === 'today') {
-    from = to;
-  } else if (preset === 'week') {
-    const d = new Date(now);
-    d.setDate(d.getDate() - 7);
-    from = d.toISOString().split('T')[0];
-  } else if (preset === 'month') {
-    const d = new Date(now);
-    d.setDate(d.getDate() - 30);
-    from = d.toISOString().split('T')[0];
-  } else if (preset === 'quarter') {
-    const d = new Date(now);
-    d.setMonth(d.getMonth() - 3);
-    from = d.toISOString().split('T')[0];
-  } else if (preset === 'year') {
-    const d = new Date(now);
-    d.setFullYear(d.getFullYear() - 1);
-    from = d.toISOString().split('T')[0];
+  } else {
+    if (props.datePresetDirection === 'future') {
+      // Future: from Today to Future Date
+      from = todayStr;
+      const d = new Date(now);
+      
+      if (preset === 'today') {
+        to = todayStr;
+      } else if (preset === 'week') {
+        d.setDate(d.getDate() + 7);
+        to = d.toISOString().split('T')[0];
+      } else if (preset === 'month') {
+        d.setDate(d.getDate() + 30);
+        to = d.toISOString().split('T')[0];
+      } else if (preset === 'quarter') {
+        d.setMonth(d.getMonth() + 3);
+        to = d.toISOString().split('T')[0];
+      } else if (preset === 'year') {
+        d.setFullYear(d.getFullYear() + 1);
+        to = d.toISOString().split('T')[0];
+      }
+    } else {
+      // Past: from Past Date to Today (Default)
+      to = todayStr;
+      const d = new Date(now);
+
+      if (preset === 'today') {
+        from = todayStr;
+      } else if (preset === 'week') {
+        d.setDate(d.getDate() - 7);
+        from = d.toISOString().split('T')[0];
+      } else if (preset === 'month') {
+        d.setDate(d.getDate() - 30);
+        from = d.toISOString().split('T')[0];
+      } else if (preset === 'quarter') {
+        d.setMonth(d.getMonth() - 3);
+        from = d.toISOString().split('T')[0];
+      } else if (preset === 'year') {
+        d.setFullYear(d.getFullYear() - 1);
+        from = d.toISOString().split('T')[0];
+      }
+    }
   }
 
   localFilters.value.dateFrom = from;

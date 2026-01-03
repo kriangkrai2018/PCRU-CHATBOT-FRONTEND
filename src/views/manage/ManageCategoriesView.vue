@@ -146,6 +146,19 @@
             </div>
           </div>
 
+          <!-- Filters Section -->
+          <AppleFilters
+            v-model="catFilters"
+            :sort-options="catSortOptions"
+            :statuses="catStatuses"
+            status-label="ประเภท"
+            :show-date-range="false"
+            :show-date-presets="false"
+            :show-number-range="false"
+            class="px-3 mb-3"
+            @change="onFiltersChange"
+          />
+
           <!-- Table Section -->
           <div class="apple-card">
             <div class="table-responsive">
@@ -518,6 +531,7 @@ import { ref, computed, watch, getCurrentInstance, onMounted, onUnmounted, nextT
 import { useRouter } from 'vue-router';
 import { Tooltip } from 'bootstrap';
 import Sidebar from '@/components/Sidebar.vue';
+import AppleFilters from '@/components/AppleFilters.vue';
 import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import { useConfirm } from '@/composables/useConfirm';
 import '@/assets/sidebar.css';
@@ -537,6 +551,27 @@ let _savedSidebarCollapsed = null;
 
 const searchQueryCategories = ref('');
 const expanded = ref({});
+
+// Filters state
+const catFilters = ref({
+  sortBy: 'id',
+  sortOrder: 'asc',
+  status: ''
+});
+
+const catSortOptions = [
+  { value: 'id', label: 'ID' },
+  { value: 'name', label: 'ชื่อหมวดหมู่' },
+];
+
+const catStatuses = [
+  { value: 'main', label: 'Main', icon: 'bi bi-folder-fill', color: 'status-blue' },
+  { value: 'sub', label: 'Sub', icon: 'bi bi-folder', color: 'status-gray' },
+];
+
+const onFiltersChange = () => {
+  displayPage.value = 1;
+};
 
 // Data
 const categories = ref([]);
@@ -919,18 +954,43 @@ const filteredCategories = computed(() => {
 });
 
 const visibleParents = computed(() => {
-  // Logic to show parents based on filter or pagination
-  // Simplified for display:
-  const all = filteredCategories.value;
+  // Filter to parent categories only
+  let parents = filteredCategories.value.filter(c => isMain(c));
+  
+  // Apply status filter (main/sub)
+  if (catFilters.value.status === 'main') {
+    // Only show categories that are main (no subcategories under them - or are root)
+    parents = parents.filter(c => isMain(c));
+  } else if (catFilters.value.status === 'sub') {
+    // Show sub-categories as roots when filtering by sub
+    parents = filteredCategories.value.filter(c => !isMain(c));
+  }
+  
+  // Apply sorting
+  const sortBy = catFilters.value.sortBy;
+  const sortOrder = catFilters.value.sortOrder;
+  parents.sort((a, b) => {
+    let valA, valB;
+    if (sortBy === 'id') {
+      valA = Number(a.CategoriesID) || 0;
+      valB = Number(b.CategoriesID) || 0;
+    } else if (sortBy === 'name') {
+      valA = (a.CategoriesName || '').toLowerCase();
+      valB = (b.CategoriesName || '').toLowerCase();
+    } else {
+      valA = a.CategoriesID;
+      valB = b.CategoriesID;
+    }
+    if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+    if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+  
+  // Apply pagination
   const start = (categoriesCurrentPage.value - 1) * categoriesItemsPerPage.value;
   const end = start + categoriesItemsPerPage.value;
   
-  // If searching, just show matched items that are parents, or whose children match
-  if (searchQueryCategories.value) {
-    return all.filter(c => isMain(c)).slice(start, end); // Simplified view
-  }
-  
-  return all.filter(c => isMain(c)).slice(start, end);
+  return parents.slice(start, end);
 });
 
 // Subcategory lookup

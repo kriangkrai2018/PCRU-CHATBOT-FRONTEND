@@ -39,8 +39,17 @@
         <!-- Controls: Apple Filters + Search -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
           <div class="small text-muted">Total: {{ totalEntries }}</div>
-          <div class="search-wrapper ms-auto">
-            <ReportSearch v-model="localSearch" placeholder="ค้นหา feedback หรือ chatlog..." />
+          <div class="search-container">
+            <i class="bi bi-search search-icon"></i>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="ค้นหา feedback หรือ chatlog..."
+              v-model="localSearch"
+            />
+            <button v-if="localSearch" class="search-clear" @click="localSearch = ''">
+              <i class="bi bi-x-circle-fill"></i>
+            </button>
           </div>
         </div>
         
@@ -375,7 +384,6 @@
 import { formatRelativeTime } from '@/utils/formatTime';
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import ReportSearch from '@/components/ReportSearch.vue';
 import AppleFilters from '@/components/AppleFilters.vue';
 // Updated: Import Chart.js directly
 import Chart from 'chart.js/auto';
@@ -390,9 +398,6 @@ const route = useRoute();
 
 // Optional pre-filter from query (e.g. ?questionId=123)
 const questionIdFilter = ref(route.query?.questionId ? String(route.query.questionId) : '');
-watch(() => route.query, (q) => {
-  questionIdFilter.value = q?.questionId ? String(q.questionId) : '';
-});
 
 const props = defineProps({
   feedbacks: { type: Array, default: () => [] },
@@ -423,6 +428,18 @@ const filters = ref({
   datePreset: 'all',
   dateFrom: '',
   dateTo: ''
+});
+
+// Initialize status from query if present
+if (route.query?.status) {
+  filters.value.status = route.query.status;
+}
+
+watch(() => route.query, (q) => {
+  questionIdFilter.value = q?.questionId ? String(q.questionId) : '';
+  if (q?.status) {
+    filters.value.status = q.status;
+  }
 });
 
 const feedbackSortOptions = [
@@ -460,7 +477,7 @@ const filteredFeedbacks = computed(() => {
   }
   
   // Apply type/status filter from AppleFilters
-  const effectiveType = questionIdFilter.value ? 'all' : (filters.value.status || 'all');
+  const effectiveType = filters.value.status || 'all';
   if (effectiveType === 'like') {
     arr = arr.filter(fb => isLikeValue(fb?.FeedbackValue));
   } else if (effectiveType === 'unlike') {
@@ -2202,6 +2219,18 @@ table td:last-child {
   border: 1px solid rgba(0, 0, 0, 0.06);
   margin-top: 8px;
 }
+
+/* Search */
+.search-container { position: relative; width: 240px; }
+.search-input {
+  width: 100%; padding: 8px 36px;
+  border-radius: 10px; border: 1px solid rgba(0,0,0,0.1);
+  background: rgba(118, 118, 128, 0.08);
+  font-size: 0.9rem; transition: all 0.2s;
+}
+.search-input:focus { background: white; border-color: var(--apple-blue); outline: none; box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15); }
+.search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #86868b; }
+.search-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: none; color: #86868b; cursor: pointer; }
 
 /* Apple buttons for drawer */
 .btn-apple-primary {

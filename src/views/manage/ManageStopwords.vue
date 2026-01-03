@@ -199,6 +199,19 @@
           <!-- Quick Actions -->
           <!-- Quick actions removed to keep single Add button in header -->
 
+          <!-- Filters Section -->
+          <AppleFilters
+            v-model="swFilters"
+            :sort-options="swSortOptions"
+            :statuses="swStatuses"
+            status-label="สถานะ"
+            :show-date-range="false"
+            :show-date-presets="false"
+            :show-number-range="false"
+            class="mb-4"
+            @change="onFiltersChange"
+          />
+
           <!-- Stopwords Table -->
           <div class="apple-card rounded-4 shadow-apple overflow-hidden mb-4">
             <div class="p-4 border-bottom">
@@ -450,6 +463,7 @@
 import { ref, onMounted, onUnmounted, computed, getCurrentInstance } from 'vue';
 import { Modal } from 'bootstrap';
 import Sidebar from '@/components/Sidebar.vue';
+import AppleFilters from '@/components/AppleFilters.vue';
 import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import { useAppleToast } from '@/composables/useAppleToast';
 import { useConfirm } from '@/composables/useConfirm';
@@ -503,6 +517,28 @@ const keywords = ref([]);
 const stats = ref({ total: 0, protected: 0, negativeProtected: 0, active: 0 });
 const searchQuery = ref('');
 
+// Filters state
+const swFilters = ref({
+  sortBy: 'id',
+  sortOrder: 'asc',
+  status: ''
+});
+
+const swSortOptions = [
+  { value: 'id', label: 'ID' },
+  { value: 'word', label: 'คำ' },
+];
+
+const swStatuses = [
+  { value: 'protected', label: 'ป้องกันโดย Keywords', icon: 'bi bi-shield-check', color: 'status-green' },
+  { value: 'negative', label: 'ป้องกันโดย Negative', icon: 'bi bi-dash-circle', color: 'status-red' },
+  { value: 'active', label: 'กำลังกรอง', icon: 'bi bi-funnel', color: 'status-orange' },
+];
+
+const onFiltersChange = () => {
+  currentPage.value = 1;
+};
+
 // Seed modal state
 const showSeedModal = ref(false);
 const isSeeding = ref(false);
@@ -535,9 +571,44 @@ const formData = ref({
 
 // Computed
 const filteredStopwords = computed(() => {
-  if (!searchQuery.value) return stopwords.value;
-  const q = searchQuery.value.toLowerCase();
-  return stopwords.value.filter(s => s.StopwordText && s.StopwordText.toLowerCase().includes(q));
+  let result = [...stopwords.value];
+  
+  // Search filter
+  const q = (searchQuery.value || '').toLowerCase();
+  if (q) {
+    result = result.filter(s => s.StopwordText && s.StopwordText.toLowerCase().includes(q));
+  }
+  
+  // Status filter
+  if (swFilters.value.status === 'protected') {
+    result = result.filter(s => s.isProtected);
+  } else if (swFilters.value.status === 'negative') {
+    result = result.filter(s => s.isNegativeKeyword);
+  } else if (swFilters.value.status === 'active') {
+    result = result.filter(s => !s.isProtected && !s.isNegativeKeyword);
+  }
+  
+  // Sorting
+  const sortBy = swFilters.value.sortBy;
+  const sortOrder = swFilters.value.sortOrder;
+  result.sort((a, b) => {
+    let valA, valB;
+    if (sortBy === 'id') {
+      valA = Number(a.StopwordID) || 0;
+      valB = Number(b.StopwordID) || 0;
+    } else if (sortBy === 'word') {
+      valA = (a.StopwordText || '').toLowerCase();
+      valB = (b.StopwordText || '').toLowerCase();
+    } else {
+      valA = a.StopwordID;
+      valB = b.StopwordID;
+    }
+    if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+    if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+  
+  return result;
 });
 
 const totalPages = computed(() => Math.ceil(filteredStopwords.value.length / itemsPerPage.value) || 1);

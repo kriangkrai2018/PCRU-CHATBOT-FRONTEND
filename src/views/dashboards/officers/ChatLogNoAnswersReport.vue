@@ -12,7 +12,7 @@
       </div>
       <div class="alert alert-warning alert-dismissible fade show py-2 px-3 small" role="alert">
         <i class="bi bi-info-circle me-1"></i>
-        <strong>หมายเหตุ:</strong> ข้อมูลจะถูกลบอัตโนมัติหลังจากจัดเก็บครบ 7 วัน (คำนวณจากวันที่บันทึก)
+        <strong>หมายเหตุ:</strong> ข้อมูลจะถูกลบอัตโนมัติหลังจากจัดเก็บครบ 30 วัน (คำนวณจากวันที่บันทึก)
         <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
       <div v-if="loading" class="text-center py-3">

@@ -231,13 +231,13 @@
                       <span v-else class="text-muted small">-</span>
                     </td>
                     <td data-label="Like" class="py-3 text-center" @click.stop>
-                      <div class="stat-pill like" :class="{ 'active': item.likeCount > 0 }" @click="goToFeedbacks(item.QuestionsAnswersID)">
+                      <div class="stat-pill like" :class="{ 'active': item.likeCount > 0 }" @click="goToFeedbacks(item.QuestionsAnswersID, 'like')">
                         <i class="bi bi-hand-thumbs-up-fill"></i>
                         <span>{{ item.likeCount || 0 }}</span>
                       </div>
                     </td>
                     <td data-label="Unlike" class="py-3 text-center" @click.stop>
-                      <div class="stat-pill unlike" :class="{ 'active': item.unlikeCount > 0 }" @click="goToFeedbacks(item.QuestionsAnswersID)">
+                      <div class="stat-pill unlike" :class="{ 'active': item.unlikeCount > 0 }" @click="goToFeedbacks(item.QuestionsAnswersID, 'unlike')">
                         <i class="bi bi-hand-thumbs-down-fill"></i>
                         <span>{{ item.unlikeCount || 0 }}</span>
                       </div>
@@ -874,8 +874,12 @@ function closeUploadModal() { showUploadModal.value = false; }
 function openTemplateModal() { showTemplateModal.value = true; }
 function closeTemplateModal() { showTemplateModal.value = false; }
 
-function goToFeedbacks(questionId) {
-  router.push({ name: 'report-feedbacks', query: { questionId: questionId } });
+function goToFeedbacks(questionId, status = null) {
+  const query = { questionId: questionId };
+  if (status) {
+    query.status = status;
+  }
+  router.push({ name: 'report-feedbacks', query: query });
 }
 
 // CRUD Logic

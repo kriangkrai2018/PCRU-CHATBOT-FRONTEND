@@ -177,6 +177,19 @@
       </form>
     </div>
 
+    <!-- Filters Section -->
+    <AppleFilters
+      v-model="nkFilters"
+      :sort-options="nkSortOptions"
+      :statuses="nkStatuses"
+      status-label="สถานะ"
+      :show-date-range="false"
+      :show-date-presets="false"
+      :show-number-range="false"
+      class="mb-4"
+      @change="onFiltersChange"
+    />
+
     <!-- Search & Filter -->
     <div class="filter-card slide-in-right" :style="{animationDelay: '0.2s'}">
       <div class="filter-row">
@@ -188,29 +201,6 @@
             placeholder="ค้นหาคำปฏิเสธ..."
             @input="debouncedSearch"
           />
-        </div>
-        <div class="filter-buttons">
-          <button 
-            class="filter-btn" 
-            :class="{ active: filterActive === undefined }"
-            @click="filterActive = undefined; fetchKeywords()"
-          >
-            ทั้งหมด
-          </button>
-          <button 
-            class="filter-btn" 
-            :class="{ active: filterActive === 1 }"
-            @click="filterActive = 1; fetchKeywords()"
-          >
-            ใช้งาน
-          </button>
-          <button 
-            class="filter-btn" 
-            :class="{ active: filterActive === 0 }"
-            @click="filterActive = 0; fetchKeywords()"
-          >
-            ปิดใช้งาน
-          </button>
         </div>
       </div>
     </div>
@@ -587,6 +577,7 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
 import { axiosInstance } from '@/plugins/axios';
 import Sidebar from '@/components/Sidebar.vue';
+import AppleFilters from '@/components/AppleFilters.vue';
 import { useRouter } from 'vue-router';
 import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 
@@ -631,6 +622,29 @@ const isAdding = ref(false);
 const isDeleting = ref(false);
 const isSeeding = ref(false); // 🆕
 const editingId = ref(null);
+
+// Filters state
+const nkFilters = ref({
+  sortBy: 'id',
+  sortOrder: 'asc',
+  status: ''
+});
+
+const nkSortOptions = [
+  { value: 'id', label: 'ID' },
+  { value: 'word', label: 'คำ' },
+  { value: 'modifier', label: 'ตัวคูณ' },
+];
+
+const nkStatuses = [
+  { value: 'active', label: 'ใช้งาน', icon: 'bi bi-check-circle-fill', color: 'status-green' },
+  { value: 'inactive', label: 'ปิดใช้งาน', icon: 'bi bi-x-circle', color: 'status-gray' },
+];
+
+const onFiltersChange = () => {
+  pagination.value.page = 1;
+  fetchKeywords();
+};
 
 // Seed modal state
 const seedModal = reactive({ 
@@ -708,8 +722,18 @@ const fetchKeywords = async () => {
       limit: pagination.value.limit,
       search: searchQuery.value
     });
-    if (filterActive.value !== undefined) {
-      params.append('active', filterActive.value);
+    
+    // Use filter status from AppleFilters
+    if (nkFilters.value.status === 'active') {
+      params.append('active', 1);
+    } else if (nkFilters.value.status === 'inactive') {
+      params.append('active', 0);
+    }
+    
+    // Add sorting params
+    if (nkFilters.value.sortBy) {
+      params.append('sortBy', nkFilters.value.sortBy);
+      params.append('sortOrder', nkFilters.value.sortOrder);
     }
 
     const response = await axiosInstance.get(`/negativekeywords?${params}`);

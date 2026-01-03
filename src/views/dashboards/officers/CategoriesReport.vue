@@ -95,6 +95,18 @@
           </div>
         </div>
 
+        <!-- Filters Section -->
+        <AppleFilters
+          v-model="catFilters"
+          :sort-options="catSortOptions"
+          :statuses="catStatuses"
+          status-label="ประเภท"
+          :show-date-range="false"
+          :show-date-presets="false"
+          :show-number-range="false"
+          @change="onFiltersChange"
+        />
+
         <!-- Table Section -->
         <div class="apple-card table-wrapper">
           <div class="card-header-actions p-3 d-flex justify-content-between align-items-center">
@@ -216,7 +228,7 @@
           <!-- Pagination -->
           <div class="pagination-footer">
             <div class="pagination-info">
-              แสดง {{ categoriesStartIndex }} - {{ categoriesEndIndex }} รายการ
+              แสดง {{ localStartIndex }} - {{ localEndIndex }} รายการ
             </div>
             <nav v-if="localTotalPages > 0" aria-label="Pagination">
               <ul class="pagination pagination-sm mb-0">
@@ -291,6 +303,7 @@ import { ref, computed, watch, nextTick, onUnmounted, onMounted, getCurrentInsta
 import { DoughnutChart, BarChart } from 'vue-chart-3';
 import { createWebSocketConnection, WS_ENDPOINTS } from '@/config/websocket';
 import { Chart, registerables } from 'chart.js';
+import AppleFilters from '@/components/AppleFilters.vue';
 
 Chart.register(...registerables);
 
@@ -318,6 +331,26 @@ const props = defineProps({
 const emit = defineEmits(['update:searchQueryCategories', 'refresh']);
 
 const expanded = ref({});
+
+// Filters state
+const catFilters = ref({
+  sortBy: 'id',
+  sortOrder: 'asc',
+  status: ''
+});
+
+const catSortOptions = [
+  { value: 'id', label: 'ID' },
+  { value: 'name', label: 'ชื่อหมวดหมู่' },
+];
+
+const catStatuses = [
+  { value: 'main', label: 'Main', icon: 'bi bi-folder-fill', color: 'status-blue' },
+  { value: 'sub', label: 'Sub', icon: 'bi bi-folder', color: 'status-gray' },
+];
+
+// onFiltersChange will be defined after localCurrentPage
+let onFiltersChange = () => {};
 const localSearch = ref((props.searchQueryCategories || '').toString());
 const showFileModal = ref(false);
 const modalFileUrl = ref('');
@@ -468,13 +501,43 @@ const totalFilesCount = computed(() => {
   return allItems.value.filter(c => c.CategoriesPDF).length;
 });
 
-// Chart Logic
-const visibleParents = computed(() => {
-  const page = Array.isArray(props.paginatedCategories) ? props.paginatedCategories : [];
-  const q = searchTerm.value;
-  if (!q) {
-    const source = Array.isArray(props.filteredCategories) && props.filteredCategories.length ? props.filteredCategories : (Array.isArray(props.categories) ? props.categories : []);
-    const parentsAll = source.filter(cat => {
+// Local pagination state (must be declared before filteredAndSortedParents)
+const localCurrentPage = ref(1);
+const itemsPerPage = ref(5);
+
+// Now define onFiltersChange
+onFiltersChange = () => {
+  localCurrentPage.value = 1;
+};
+
+// Filter and Sort Logic for visibleParents
+const filteredAndSortedParents = computed(() => {
+  const source = Array.isArray(props.filteredCategories) && props.filteredCategories.length 
+    ? props.filteredCategories 
+    : (Array.isArray(props.categories) ? props.categories : []);
+  
+  let result = [];
+  
+  // Apply status filter first, then determine what to show
+  if (catFilters.value.status === 'sub') {
+    // Show only sub-categories (not main)
+    result = source.filter(cat => {
+      if (!cat) return false;
+      const id = String(cat.CategoriesID ?? '').trim();
+      if (hideIfFour(id)) return false;
+      return !isMain(cat);
+    });
+  } else if (catFilters.value.status === 'main') {
+    // Show only main categories
+    result = source.filter(cat => {
+      if (!cat) return false;
+      const id = String(cat.CategoriesID ?? '').trim();
+      if (hideIfFour(id)) return false;
+      return isMain(cat);
+    });
+  } else {
+    // No filter - show parent categories only (original behavior for tree view)
+    result = source.filter(cat => {
       if (!cat) return false;
       const id = String(cat.CategoriesID ?? '').trim();
       if (hideIfFour(id)) return false;
@@ -484,8 +547,54 @@ const visibleParents = computed(() => {
       if (!parentExists(parent)) return true;
       return false;
     });
-    const p = Number(displayPage.value || 1);
-    const perPage = Number(itemsPerPageLocal.value || 5);
+  }
+
+  // Apply sorting
+  const sortBy = catFilters.value.sortBy;
+  const sortOrder = catFilters.value.sortOrder;
+  result.sort((a, b) => {
+    let valA, valB;
+    if (sortBy === 'id') {
+      // Handle IDs like "5-5", "1-7" - sort by string comparison for mixed formats
+      const idA = String(a.CategoriesID || '');
+      const idB = String(b.CategoriesID || '');
+      // Try numeric sort first if both are pure numbers
+      const numA = Number(idA);
+      const numB = Number(idB);
+      if (!isNaN(numA) && !isNaN(numB)) {
+        valA = numA;
+        valB = numB;
+      } else {
+        // Use localeCompare for string IDs like "1-7", "5-5"
+        return sortOrder === 'asc' 
+          ? idA.localeCompare(idB, undefined, { numeric: true })
+          : idB.localeCompare(idA, undefined, { numeric: true });
+      }
+    } else if (sortBy === 'name') {
+      valA = (a.CategoriesName || '').toLowerCase();
+      valB = (b.CategoriesName || '').toLowerCase();
+    } else {
+      valA = String(a.CategoriesID || '');
+      valB = String(b.CategoriesID || '');
+      return sortOrder === 'asc'
+        ? valA.localeCompare(valB, undefined, { numeric: true })
+        : valB.localeCompare(valA, undefined, { numeric: true });
+    }
+    if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+    if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  return result;
+});
+
+// Chart Logic
+const visibleParents = computed(() => {
+  const q = searchTerm.value;
+  if (!q) {
+    const parentsAll = filteredAndSortedParents.value;
+    const p = Number(localCurrentPage.value || 1);
+    const perPage = Number(itemsPerPage.value || 5);
     const start = (p - 1) * perPage;
     return parentsAll.slice(start, start + perPage);
   }
@@ -656,33 +765,44 @@ function isMain(cat) {
   if (!cat) return false;
   const id = String(cat.CategoriesID ?? '').trim();
   const parent = String(cat.ParentCategoriesID ?? '').trim();
+  
+  // If ParentCategoriesID equals CategoriesID, it's a main category
   if (parent && parent === id) return true;
+  
+  // If no parent, it's a main category
   if (!parent) return true;
-  if (!parentExists(parent)) return true;
-  return false;
+  
+  // If ParentCategoriesID is different from CategoriesID, it's a sub-category
+  // regardless of whether parent exists in the current list
+  if (parent && parent !== id) return false;
+  
+  return true;
 }
 
-// Pagination
-const itemsPerPageLocal = computed(() => {
-  const start = Number(props.categoriesStartIndex || 0);
-  const end = Number(props.categoriesEndIndex || 0);
-  if (end >= start && start > 0) return end - start + 1;
-  return Array.isArray(props.paginatedCategories) ? props.paginatedCategories.length || 5 : 5;
-});
-
+// Pagination computed properties
 const visibleParentsTotal = computed(() => {
   const q = searchTerm.value;
   if (q) return visibleParents.value.length;
-  const source = Array.isArray(props.filteredCategories) && props.filteredCategories.length ? props.filteredCategories : (Array.isArray(props.categories) ? props.categories : []);
-  return source.filter(cat => isMain(cat)).length;
+  // Use filteredAndSortedParents which already applies the status filter
+  return filteredAndSortedParents.value.length;
 });
 
 const localTotalPages = computed(() => {
-  if (Number.isInteger(props.categoriesTotalPages) && props.categoriesTotalPages > 0) return props.categoriesTotalPages;
-  return Math.max(1, Math.ceil((visibleParentsTotal.value || props.categoriesTotalEntries || 1) / itemsPerPageLocal.value));
+  const total = filteredAndSortedParents.value.length;
+  return Math.max(1, Math.ceil(total / itemsPerPage.value));
 });
 
-const displayPage = computed(() => Math.min(Math.max(1, Number(props.categoriesCurrentPage || 1)), localTotalPages.value));
+const displayPage = computed(() => Math.min(Math.max(1, localCurrentPage.value), localTotalPages.value));
+
+// Start and End index for pagination display
+const localStartIndex = computed(() => {
+  if (visibleParentsTotal.value === 0) return 0;
+  return (displayPage.value - 1) * itemsPerPage.value + 1;
+});
+
+const localEndIndex = computed(() => {
+  return Math.min(displayPage.value * itemsPerPage.value, visibleParentsTotal.value);
+});
 
 const localPagesToShow = computed(() => {
   const total = localTotalPages.value || 1;
@@ -694,11 +814,15 @@ const localPagesToShow = computed(() => {
   return [current - 1, current, current + 1, current + 2];
 });
 
-function categoriesGoToPage(p) { if(p>=1 && p<=localTotalPages.value) props.categoriesGoToPage(p); }
-function categoriesPrevPage() { if(displayPage.value > 1) props.categoriesPrevPage(); }
-function categoriesNextPage() { if(displayPage.value < localTotalPages.value) props.categoriesNextPage(); }
-function categoriesFirstPage() { props.categoriesFirstPage(); }
-function categoriesLastPage() { categoriesGoToPage(localTotalPages.value); }
+// Reset to page 1 when filter changes
+watch(() => catFilters.value.status, () => { localCurrentPage.value = 1; });
+watch(localSearch, () => { localCurrentPage.value = 1; });
+
+function categoriesGoToPage(p) { if(p>=1 && p<=localTotalPages.value) localCurrentPage.value = p; }
+function categoriesPrevPage() { if(displayPage.value > 1) localCurrentPage.value--; }
+function categoriesNextPage() { if(displayPage.value < localTotalPages.value) localCurrentPage.value++; }
+function categoriesFirstPage() { localCurrentPage.value = 1; }
+function categoriesLastPage() { localCurrentPage.value = localTotalPages.value; }
 
 // File Modal
 function isUrl(val) { return val && /^https?:\/\//i.test(val); }

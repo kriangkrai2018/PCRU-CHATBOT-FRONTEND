@@ -200,6 +200,18 @@
             </div>
           </div>
 
+          <!-- Apple Filters -->
+          <AppleFilters
+            v-model="synFilters"
+            :sort-options="synSortOptions"
+            :statuses="synStatuses"
+            status-label="สถานะ"
+            :show-date-range="false"
+            :show-date-presets="false"
+            :show-number-range="false"
+            @change="onFiltersChange"
+          />
+
           <!-- Synonyms Table -->
           <div class="apple-card rounded-4 shadow-apple overflow-hidden mb-4">
             <div class="p-4 border-bottom">
@@ -496,6 +508,7 @@
 import { ref, onMounted, onUnmounted, computed, getCurrentInstance, nextTick } from 'vue';
 import { Modal } from 'bootstrap';
 import Sidebar from '@/components/Sidebar.vue';
+import AppleFilters from '@/components/AppleFilters.vue';
 import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import { useAppleToast } from '@/composables/useAppleToast';
 import { useConfirm } from '@/composables/useConfirm';
@@ -556,6 +569,28 @@ const stats = ref({
 });
 const searchQuery = ref('');
 
+// Filters state
+const synFilters = ref({
+  sortBy: 'id',
+  sortOrder: 'asc',
+  status: ''
+});
+
+const synSortOptions = [
+  { value: 'id', label: 'ID' },
+  { value: 'inputWord', label: 'คำที่พิมพ์' },
+  { value: 'score', label: 'คะแนน' },
+];
+
+const synStatuses = [
+  { value: 'active', label: 'ใช้งาน', icon: 'bi bi-check-circle-fill', color: 'status-green' },
+  { value: 'inactive', label: 'ปิดใช้งาน', icon: 'bi bi-x-circle', color: 'status-gray' },
+];
+
+const onFiltersChange = () => {
+  currentPage.value = 1;
+};
+
 // Pagination
 const currentPage = ref(1);
 const itemsPerPage = ref(5);
@@ -579,13 +614,54 @@ const formData = ref({
 // Computed Properties
 // ============================================
 const filteredSynonyms = computed(() => {
-  if (!searchQuery.value) return synonyms.value;
-  const q = searchQuery.value.toLowerCase();
-  return synonyms.value.filter(s => 
-    (s.InputWord && s.InputWord.toLowerCase().includes(q)) ||
-    (s.TargetKeyword && s.TargetKeyword.toLowerCase().includes(q)) ||
-    (s.RoleDescription && s.RoleDescription.toLowerCase().includes(q))
-  );
+  let result = [...synonyms.value];
+  
+  // Text search filter
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase();
+    result = result.filter(s => 
+      (s.InputWord && s.InputWord.toLowerCase().includes(q)) ||
+      (s.TargetKeyword && s.TargetKeyword.toLowerCase().includes(q)) ||
+      (s.RoleDescription && s.RoleDescription.toLowerCase().includes(q))
+    );
+  }
+  
+  // Status filter
+  if (synFilters.value.status) {
+    if (synFilters.value.status === 'active') {
+      result = result.filter(s => s.IsActive === 1 || s.IsActive === true);
+    } else if (synFilters.value.status === 'inactive') {
+      result = result.filter(s => s.IsActive === 0 || s.IsActive === false);
+    }
+  }
+  
+  // Sorting
+  if (synFilters.value.sortBy) {
+    result.sort((a, b) => {
+      let aVal, bVal;
+      switch (synFilters.value.sortBy) {
+        case 'id':
+          aVal = a.SynonymID || 0;
+          bVal = b.SynonymID || 0;
+          break;
+        case 'inputWord':
+          aVal = (a.InputWord || '').toLowerCase();
+          bVal = (b.InputWord || '').toLowerCase();
+          break;
+        case 'score':
+          aVal = a.Score || 0;
+          bVal = b.Score || 0;
+          break;
+        default:
+          return 0;
+      }
+      if (aVal < bVal) return synFilters.value.sortOrder === 'asc' ? -1 : 1;
+      if (aVal > bVal) return synFilters.value.sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+  
+  return result;
 });
 
 const totalPages = computed(() => Math.ceil(filteredSynonyms.value.length / itemsPerPage.value) || 1);

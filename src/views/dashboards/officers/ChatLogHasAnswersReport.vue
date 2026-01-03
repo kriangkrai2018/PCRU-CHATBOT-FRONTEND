@@ -95,6 +95,7 @@
           
           <!-- Apple Filters -->
           <AppleFilters
+            class="px-3"
             v-model="chatFilters"
             :show-sort="true"
             :sort-options="chatSortOptions"
