@@ -486,6 +486,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Confirm Modal Component -->
+    <ConfirmModalComponent />
   </div>
 </template>
 
@@ -495,6 +498,7 @@ import { Modal } from 'bootstrap';
 import Sidebar from '@/components/Sidebar.vue';
 import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import { useAppleToast } from '@/composables/useAppleToast';
+import { useConfirm } from '@/composables/useConfirm';
 import '@/assets/sidebar.css';
 import '@/assets/manage-synonyms.css';
 
@@ -504,6 +508,9 @@ const $swal = appContext.config.globalProperties.$swal;
 
 // Apple Toast
 const { success: toastSuccess, error: toastError } = useAppleToast();
+
+// Confirm Modal
+const { confirmAction, ConfirmModalComponent } = useConfirm();
 
 // User info
 const userType = ref('Officer');
@@ -849,25 +856,21 @@ async function toggleStatus(item) {
 // Delete
 // ============================================
 async function confirmDelete(item) {
-  const result = await $swal.fire({
-    title: 'ยืนยันการลบ?',
-    html: `คุณต้องการลบคำพ้อง "<strong>${item.InputWord}</strong> → <strong>${item.TargetKeyword || 'N/A'}</strong>" หรือไม่?`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#ff3b30',
-    cancelButtonColor: '#86868b',
-    confirmButtonText: 'ลบเลย',
-    cancelButtonText: 'ยกเลิก'
-  });
-  
-  if (result.isConfirmed) {
-    try {
-      await $axios.delete(`/synonyms/${item.SynonymID}`);
-      toastSuccess('ลบคำพ้องสำเร็จ');
-      await refreshData();
-    } catch (error) {
-      toastError('ลบไม่สำเร็จ: ' + (error.response?.data?.message || error.message));
-    }
+  try {
+    await confirmAction({
+      title: 'ยืนยันการลบ',
+      message: `คุณต้องการลบคำพ้อง "<strong>${item.InputWord}</strong> → <strong>${item.TargetKeyword || 'N/A'}</strong>" หรือไม่?`,
+      variant: 'danger',
+      confirmText: 'ลบ',
+      loadingText: 'กำลังลบ...',
+      onConfirm: async () => {
+        await $axios.delete(`/synonyms/${item.SynonymID}`);
+        toastSuccess('ลบคำพ้องสำเร็จ');
+        await refreshData();
+      }
+    });
+  } catch (error) {
+    toastError('ลบไม่สำเร็จ: ' + (error.response?.data?.message || error.message));
   }
 }
 </script>

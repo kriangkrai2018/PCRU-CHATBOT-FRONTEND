@@ -440,6 +440,9 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Confirm Modal Component -->
+    <ConfirmModalComponent />
   </div>
 </template>
 
@@ -449,6 +452,7 @@ import { Modal } from 'bootstrap';
 import Sidebar from '@/components/Sidebar.vue';
 import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import { useAppleToast } from '@/composables/useAppleToast';
+import { useConfirm } from '@/composables/useConfirm';
 import '@/assets/sidebar.css';
 
 const { appContext } = getCurrentInstance();
@@ -457,6 +461,9 @@ const $swal = appContext.config.globalProperties.$swal;
 
 // Apple Toast
 const { success: toastSuccess, error: toastError } = useAppleToast();
+
+// Confirm Modal
+const { confirmAction, ConfirmModalComponent } = useConfirm();
 
 // User info
 const userType = ref('Officer');
@@ -701,11 +708,11 @@ async function saveCrudForm() {
     if (isEditing.value) {
       // Edit mode - for stopwords, we delete old and add new
       await $axios.delete(`/stopwords/${editingId.value}`);
-      await $axios.post('/stopwords', { stopword: formData.value.StopwordText.trim().toLowerCase() });
+      await $axios.post('/stopwords', { text: formData.value.StopwordText.trim().toLowerCase() });
       toastSuccess('แก้ไข Stopword สำเร็จ');
     } else {
       // Add mode
-      await $axios.post('/stopwords', { stopword: formData.value.StopwordText.trim().toLowerCase() });
+      await $axios.post('/stopwords', { text: formData.value.StopwordText.trim().toLowerCase() });
       toastSuccess('เพิ่ม Stopword สำเร็จ');
     }
     
@@ -721,25 +728,21 @@ async function saveCrudForm() {
 }
 
 async function confirmDelete(item) {
-  const result = await $swal.fire({
-    title: 'ยืนยันการลบ?',
-    html: `คุณต้องการลบ stopword "<strong>${item.StopwordText}</strong>" หรือไม่?`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#ff3b30',
-    cancelButtonColor: '#86868b',
-    confirmButtonText: 'ลบเลย',
-    cancelButtonText: 'ยกเลิก'
-  });
-  
-  if (result.isConfirmed) {
-    try {
-      await $axios.delete(`/stopwords/${item.StopwordID}`);
-      toastSuccess('ลบ Stopword สำเร็จ');
-      await refreshData();
-    } catch (error) {
-      toastError('ลบไม่สำเร็จ: ' + (error.response?.data?.message || error.message));
-    }
+  try {
+    await confirmAction({
+      title: 'ยืนยันการลบ',
+      message: `คุณต้องการลบ stopword "<strong>${item.StopwordText}</strong>" หรือไม่?`,
+      variant: 'danger',
+      confirmText: 'ลบ',
+      loadingText: 'กำลังลบ...',
+      onConfirm: async () => {
+        await $axios.delete(`/stopwords/${item.StopwordID}`);
+        toastSuccess('ลบ Stopword สำเร็จ');
+        await refreshData();
+      }
+    });
+  } catch (error) {
+    toastError('ลบไม่สำเร็จ: ' + (error.response?.data?.message || error.message));
   }
 }
 

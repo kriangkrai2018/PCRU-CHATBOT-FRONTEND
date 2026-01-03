@@ -2347,17 +2347,26 @@ export default {
       }
       processedText = phoneParts.join('');
 
-      // 🗺️ LAST STEP: Process Google Maps - create TWO separate widgets
-      // Check for Google Map URL pattern (may be linkified or plain)
-      const googleMapLinkMatch = /Google\s*map\s*:\s*<a[^>]*href="(https?:\/\/maps\.app\.goo\.gl\/[A-Za-z0-9]+)"[^>]*>[^<]*<\/a>/i.exec(processedText);
-      const googleMapPlainMatch = /Google\s*map\s*:\s*(https?:\/\/maps\.app\.goo\.gl\/[A-Za-z0-9]+)/i.exec(processedText);
-      const googleMapMatch = googleMapLinkMatch || googleMapPlainMatch;
+      // 🗺️ LAST STEP: Process Google Maps - detect GPS data and create map widget
+      // Pattern 1: Google Maps short URL (with or without "Google map :" prefix)
+      // - With prefix: "Google map : https://maps.app.goo.gl/xxx"
+      // - Plain URL: "https://maps.app.goo.gl/xxx" (stored directly)
+      // - Also linkified: <a href="https://maps.app.goo.gl/xxx">...</a>
+      const googleMapWithPrefixLink = /Google\s*map\s*:\s*<a[^>]*href="(https?:\/\/maps\.app\.goo\.gl\/[A-Za-z0-9]+)"[^>]*>[^<]*<\/a>/i.exec(processedText);
+      const googleMapWithPrefixPlain = /Google\s*map\s*:\s*(https?:\/\/maps\.app\.goo\.gl\/[A-Za-z0-9]+)/i.exec(processedText);
+      const googleMapPlainUrl = /<a[^>]*href="(https?:\/\/maps\.app\.goo\.gl\/[A-Za-z0-9]+)"[^>]*>[^<]*<\/a>/i.exec(processedText);
+      const googleMapRawUrl = /^(https?:\/\/maps\.app\.goo\.gl\/[A-Za-z0-9]+)$/i.exec(text?.trim() || '');
+      const googleMapMatch = googleMapWithPrefixLink || googleMapWithPrefixPlain || googleMapPlainUrl || googleMapRawUrl;
       
-      // Check for lat/long pattern
-      const latLngMatch = /latitude\s*longitude\s*:\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/i.exec(processedText);
+      // Pattern 2: Lat/Lng coordinates (with or without "latitude longitude :" prefix)
+      // - With prefix: "latitude longitude : 16.xxx,101.xxx"
+      // - Plain coords: "16.xxx,101.xxx" (stored directly from GPS input)
+      const latLngWithPrefix = /latitude\s*longitude\s*:\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/i.exec(processedText);
+      const latLngPlain = /^(-?\d{1,3}\.\d{4,})\s*,\s*(-?\d{1,3}\.\d{4,})$/i.exec(text?.trim() || '');
+      const latLngMatch = latLngWithPrefix || latLngPlain;
       
       if (googleMapMatch || latLngMatch) {
-        // 🗺️ Build output with title + map widgets
+        // 🗺️ Build output with title + map widget
         let output = '';
         
         // 📌 Add title section if available
@@ -2368,24 +2377,27 @@ export default {
 </div>`;
         }
         
-        // Widget 1: Google Map URL (short link)
-        if (googleMapMatch) {
+        // Determine which data we have and create single map widget
+        if (googleMapMatch && latLngMatch) {
+          // Both Google Map URL and coordinates - use URL with coords for embed
           const shortUrl = googleMapMatch[1];
-          // Use lat/lng if available, otherwise default
-          const lat1 = latLngMatch ? parseFloat(latLngMatch[1]) : 16.451354168722986;
-          const lng1 = latLngMatch ? parseFloat(latLngMatch[2]) : 101.15144827382676;
-          output += this.createMapWidget(shortUrl, lat1, lng1, 'Google Map');
+          const lat = parseFloat(latLngMatch[1]);
+          const lng = parseFloat(latLngMatch[2]);
+          output += this.createMapWidget(shortUrl, lat, lng, 'Google Map');
+        } else if (googleMapMatch) {
+          // Only Google Map URL - need to resolve location (use default coords for embed)
+          const shortUrl = googleMapMatch[1];
+          // Default to PCRU location if no coords available
+          output += this.createMapWidget(shortUrl, 16.451354168722986, 101.15144827382676, 'Google Map');
+        } else if (latLngMatch) {
+          // Only coordinates - create Google Maps URL from coords
+          const lat = parseFloat(latLngMatch[1]);
+          const lng = parseFloat(latLngMatch[2]);
+          const coordUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+          output += this.createMapWidget(coordUrl, lat, lng, 'ตำแหน่ง GPS');
         }
         
-        // Widget 2: Coordinates (lat/long)
-        if (latLngMatch) {
-          const lat2 = parseFloat(latLngMatch[1]);
-          const lng2 = parseFloat(latLngMatch[2]);
-          const coordUrl = `https://www.google.com/maps?q=${lat2},${lng2}`;
-          output += this.createMapWidget(coordUrl, lat2, lng2, 'พิกัด GPS');
-        }
-        
-        // Return title + map widgets, discard all other text
+        // Return title + map widget, discard all other text
         processedText = output;
       }
 

@@ -428,7 +428,101 @@
 
               <div class="apple-input-group">
                 <label>คำตอบ (Answer) <span class="text-danger">*</span></label>
-                <textarea class="apple-input apple-textarea" v-model="formData.QuestionText" rows="5" required placeholder="รายละเอียดคำตอบ..."></textarea>
+                
+                <!-- Answer Type Toggle -->
+                <div class="answer-type-toggle mb-3">
+                  <div class="d-flex gap-2">
+                    <button type="button" 
+                      class="btn-type-option" 
+                      :class="{ active: answerType === 'text' }" 
+                      @click="answerType = 'text'">
+                      <i class="bi bi-chat-left-text me-2"></i>ข้อความปกติ
+                    </button>
+                    <button type="button" 
+                      class="btn-type-option" 
+                      :class="{ active: answerType === 'gps' }" 
+                      @click="answerType = 'gps'">
+                      <i class="bi bi-geo-alt me-2"></i>ตำแหน่ง GPS
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- Normal Text Input -->
+                <div v-if="answerType === 'text'">
+                  <textarea class="apple-input apple-textarea" v-model="formData.QuestionText" rows="5" required placeholder="รายละเอียดคำตอบ..."></textarea>
+                </div>
+                
+                <!-- GPS Input -->
+                <div v-else class="gps-input-section">
+                  <div class="gps-type-toggle mb-3">
+                    <div class="d-flex gap-2">
+                      <button type="button" 
+                        class="btn-gps-option" 
+                        :class="{ active: gpsType === 'url' }" 
+                        @click="gpsType = 'url'">
+                        <i class="bi bi-link-45deg me-1"></i>Google Maps URL
+                      </button>
+                      <button type="button" 
+                        class="btn-gps-option" 
+                        :class="{ active: gpsType === 'coords' }" 
+                        @click="gpsType = 'coords'">
+                        <i class="bi bi-pin-map me-1"></i>ละติจูด/ลองจิจูด
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <!-- Google Maps URL -->
+                  <div v-if="gpsType === 'url'">
+                    <div class="input-with-icon">
+                      <i class="bi bi-google input-icon-left"></i>
+                      <input 
+                        type="url" 
+                        class="apple-input ps-5" 
+                        v-model="gpsUrl" 
+                        placeholder="https://maps.app.goo.gl/xxxxx หรือ https://goo.gl/maps/xxxxx"
+                        :required="answerType === 'gps' && gpsType === 'url'" />
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                      <i class="bi bi-info-circle me-1"></i>
+                      วิธีรับ URL: เปิด Google Maps → คลิกสถานที่ → แชร์ → คัดลอกลิงก์
+                    </small>
+                  </div>
+                  
+                  <!-- Latitude/Longitude (Single Input - Paste Friendly) -->
+                  <div v-else>
+                    <label class="small text-secondary mb-1">พิกัด GPS (Latitude, Longitude)</label>
+                    <input 
+                      type="text" 
+                      class="apple-input" 
+                      v-model="gpsCoords" 
+                      placeholder="วาง พิกัด เช่น 16.4321, 102.8236"
+                      @paste="handleCoordsPaste"
+                      :required="answerType === 'gps' && gpsType === 'coords'" />
+                    <small class="text-muted d-block mt-2">
+                      <i class="bi bi-info-circle me-1"></i>
+                      วิธีหาพิกัด: เปิด Google Maps → คลิกขวาที่ตำแหน่ง → คัดลอกพิกัด → วางที่นี่
+                    </small>
+                    <!-- แสดงพิกัดที่แยกแล้ว -->
+                    <div v-if="parsedLat && parsedLng" class="coords-parsed mt-2 p-2 bg-success bg-opacity-10 rounded small">
+                      <i class="bi bi-check-circle text-success me-1"></i>
+                      <span class="text-success">พิกัดถูกต้อง: </span>
+                      <span class="text-dark">Lat: <strong>{{ parsedLat }}</strong>, Lng: <strong>{{ parsedLng }}</strong></span>
+                    </div>
+                    <div v-else-if="gpsCoords && !parsedLat" class="coords-error mt-2 p-2 bg-danger bg-opacity-10 rounded small">
+                      <i class="bi bi-exclamation-circle text-danger me-1"></i>
+                      <span class="text-danger">รูปแบบไม่ถูกต้อง - ต้องเป็น "ละติจูด, ลองจิจูด" เช่น 16.4321, 102.8236</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Preview GPS Link -->
+                  <div v-if="(gpsType === 'url' && gpsUrl) || (gpsType === 'coords' && parsedLat && parsedLng)" class="gps-preview mt-3">
+                    <div class="d-flex align-items-center gap-2">
+                      <i class="bi bi-eye text-primary"></i>
+                      <span class="small text-secondary">ข้อมูลที่จะบันทึก:</span>
+                    </div>
+                    <code class="d-block mt-1 p-2 bg-light rounded small">{{ gpsType === 'url' ? gpsUrl : `${parsedLat},${parsedLng}` }}</code>
+                  </div>
+                </div>
               </div>
 
               <div class="row g-3">
@@ -485,6 +579,9 @@
       </div>
     </transition>
 
+    <!-- Confirm Modal Component (from useConfirm composable) -->
+    <ConfirmModalComponent />
+
   </div>
 </template>
 
@@ -495,6 +592,7 @@ import { Modal, Tooltip } from 'bootstrap';
 import Sidebar from '@/components/Sidebar.vue';
 import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
 import { useAppleToast } from '@/composables/useAppleToast';
+import { useConfirm } from '@/composables/useConfirm';
 import '@/assets/sidebar.css';
 import ex5Url from '@/assets/ex5.svg';
 import { formatRelativeTime } from '@/utils/formatTime';
@@ -504,6 +602,7 @@ const { appContext } = getCurrentInstance();
 const $axios = appContext.config.globalProperties.$axios;
 const $swal = appContext.config.globalProperties.$swal;
 const { success: toastSuccess, error: toastError, warning: toastWarning } = useAppleToast();
+const { confirmDelete, confirmAction, ConfirmModalComponent } = useConfirm();
 
 const userInfoObject = ref({});
 const userType = ref("");
@@ -553,12 +652,96 @@ const editingId = ref(null);
 const isSaving = ref(false);
 const keywordInput = ref('');
 const categoriesList = ref([]);
+
 const formData = ref({
   QuestionTitle: '',
   QuestionText: '',
   ReviewDate: '',
   CategoriesID: null,
   keywords: []
+});
+
+// Answer type: 'text' | 'gps'
+const answerType = ref('text');
+// GPS type: 'url' | 'coords'
+const gpsType = ref('url');
+const gpsUrl = ref('');
+// Single input for coordinates (user can paste "lat, lng" directly)
+const gpsCoords = ref('');
+
+// Computed: parse lat/lng from gpsCoords
+const parsedLat = computed(() => {
+  const match = gpsCoords.value.trim().match(/^(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)$/);
+  return match ? match[1] : '';
+});
+const parsedLng = computed(() => {
+  const match = gpsCoords.value.trim().match(/^(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)$/);
+  return match ? match[2] : '';
+});
+
+// Handle paste event to clean up coordinates
+function handleCoordsPaste(event) {
+  // Allow paste to happen normally, then clean up the value
+  setTimeout(() => {
+    let value = gpsCoords.value.trim();
+    // Clean up common formats:
+    // - "16.4321, 102.8236" (Google Maps format)
+    // - "16.4321,102.8236" (no space)
+    // - "16°26'19.6"N 102°49'25.0"E" (DMS format - not supported, keep as is)
+    value = value.replace(/\s+/g, ' ').replace(/\s*,\s*/g, ', ');
+    gpsCoords.value = value;
+  }, 0);
+}
+
+// Helper function to detect GPS content
+function detectAnswerType(text) {
+  if (!text) return { type: 'text', gpsType: 'url', url: '', lat: '', lng: '' };
+  
+  // Check for Google Maps URL patterns
+  const googleMapsUrlPattern = /https?:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps|www\.google\.com\/maps|maps\.google\.com)\/[^\s]+/i;
+  const urlMatch = text.match(googleMapsUrlPattern);
+  if (urlMatch) {
+    return { type: 'gps', gpsType: 'url', url: urlMatch[0], lat: '', lng: '' };
+  }
+  
+  // Check for latitude,longitude pattern (e.g., "16.4321, 102.8236" or "16.4321,102.8236")
+  const coordsPattern = /^(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)$/;
+  const coordsMatch = text.trim().match(coordsPattern);
+  if (coordsMatch) {
+    return { type: 'gps', gpsType: 'coords', url: '', lat: coordsMatch[1], lng: coordsMatch[2] };
+  }
+  
+  return { type: 'text', gpsType: 'url', url: '', lat: '', lng: '' };
+}
+
+// Generate answer text based on answer type
+function generateAnswerText() {
+  if (answerType.value === 'text') {
+    return formData.value.QuestionText;
+  }
+  
+  if (gpsType.value === 'url') {
+    return gpsUrl.value.trim();
+  } else {
+    return `${parsedLat.value},${parsedLng.value}`;
+  }
+}
+
+// Watch answerType changes to sync QuestionText
+watch([answerType, gpsType, gpsUrl, gpsCoords], () => {
+  if (answerType.value === 'gps') {
+    // Auto-update QuestionText when GPS fields change
+    formData.value.QuestionText = generateAnswerText();
+  }
+});
+
+// Reset GPS fields when switching to text
+watch(answerType, (newVal) => {
+  if (newVal === 'text') {
+    // Clear GPS fields but keep QuestionText as is
+    gpsUrl.value = '';
+    gpsCoords.value = '';
+  }
 });
 
 const reviewDateOptions = [
@@ -650,6 +833,11 @@ function resetCrudForm() {
   keywordInput.value = '';
   isEditing.value = false;
   editingId.value = null;
+  // Reset GPS fields
+  answerType.value = 'text';
+  gpsType.value = 'url';
+  gpsUrl.value = '';
+  gpsCoords.value = '';
 }
 
 async function openCrudModal() {
@@ -684,6 +872,18 @@ async function openEditModalFromPreview() {
     try { reviewDateStr = new Date(previewItem.value.ReviewDate).toISOString().split('T')[0]; } catch(e){}
   }
 
+  // Detect answer type from existing content
+  const detectedType = detectAnswerType(previewItem.value.QuestionText);
+  answerType.value = detectedType.type;
+  gpsType.value = detectedType.gpsType;
+  gpsUrl.value = detectedType.url;
+  // Set gpsCoords from detected lat/lng
+  if (detectedType.lat && detectedType.lng) {
+    gpsCoords.value = `${detectedType.lat}, ${detectedType.lng}`;
+  } else {
+    gpsCoords.value = '';
+  }
+
   formData.value = {
     QuestionTitle: previewItem.value.QuestionTitle || '',
     QuestionText: previewItem.value.QuestionText || '',
@@ -711,6 +911,32 @@ const saveCrudForm = async () => {
   // 🆕 Auto-add any keywords in the input field before saving
   if (keywordInput.value && keywordInput.value.trim()) {
     addKeyword();
+  }
+
+  // Validate GPS fields if GPS mode is selected
+  if (answerType.value === 'gps') {
+    if (gpsType.value === 'url' && !gpsUrl.value.trim()) {
+      toastWarning('กรุณากรอก Google Maps URL'); return;
+    }
+    if (gpsType.value === 'coords') {
+      if (!parsedLat.value || !parsedLng.value) {
+        toastWarning('กรุณากรอกพิกัด GPS ให้ถูกต้อง เช่น 16.4321, 102.8236'); return;
+      }
+      // Validate lat/lng format
+      const latNum = parseFloat(parsedLat.value);
+      const lngNum = parseFloat(parsedLng.value);
+      if (isNaN(latNum) || isNaN(lngNum)) {
+        toastWarning('ละติจูดหรือลองจิจูดไม่ถูกต้อง'); return;
+      }
+      if (latNum < -90 || latNum > 90) {
+        toastWarning('ละติจูดต้องอยู่ระหว่าง -90 ถึง 90'); return;
+      }
+      if (lngNum < -180 || lngNum > 180) {
+        toastWarning('ลองจิจูดต้องอยู่ระหว่าง -180 ถึง 180'); return;
+      }
+    }
+    // Update QuestionText with GPS data
+    formData.value.QuestionText = generateAnswerText();
   }
 
   if (!formData.value.QuestionTitle || !formData.value.QuestionText || !formData.value.CategoriesID || !formData.value.ReviewDate) {
@@ -742,28 +968,25 @@ const saveCrudForm = async () => {
 
 const confirmDeleteFromPreview = async () => {
   if (!previewItem.value) return;
-  const id = previewItem.value.QuestionsAnswersID;
-  const result = await $swal?.fire({
-    title: 'ยืนยันการลบ?',
-    text: `ต้องการลบรายการนี้หรือไม่?`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#FF3B30',
-    cancelButtonColor: '#8E8E93',
-    confirmButtonText: 'ลบ',
-    cancelButtonText: 'ยกเลิก',
-    customClass: { popup: 'apple-swal-popup' }
-  });
-
-  if (result?.isConfirmed) {
-    try {
-      await $axios.delete(`/questionsanswers/delete/${id}`);
-      toastSuccess('ลบสำเร็จ!', 2000);
-      closeDrawer();
-      await fetchQuestionsAnswers();
-    } catch (err) {
-      toastError(err.response?.data?.message || 'เกิดข้อผิดพลาด', 4000);
-    }
+  const item = previewItem.value;
+  const id = item.QuestionsAnswersID;
+  
+  try {
+    await confirmAction({
+      title: 'ยืนยันการลบ',
+      message: `คุณต้องการลบรายการ "<strong>${item.QuestionTitle}</strong>" ใช่หรือไม่?`,
+      variant: 'danger',
+      confirmText: 'ลบ',
+      loadingText: 'กำลังลบ...',
+      onConfirm: async () => {
+        await $axios.delete(`/questionsanswers/delete/${id}`);
+        toastSuccess('ลบสำเร็จ!', 2000);
+        closeDrawer();
+        await fetchQuestionsAnswers();
+      }
+    });
+  } catch (err) {
+    toastError(err.response?.data?.message || 'เกิดข้อผิดพลาด', 4000);
   }
 };
 
@@ -1357,6 +1580,166 @@ button.mobile-sidebar-toggle.mobile-inline-toggle { display: none !important; bo
 .btn-tag-option:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Answer Type Toggle Buttons */
+.btn-type-option {
+  background: #F4F6F8;
+  color: #1d1d1f;
+  border: 1px solid rgba(13,20,25,0.06);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 150ms ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.btn-type-option:hover:not(.active) {
+  background: #E9EDF2;
+  border-color: rgba(13,20,25,0.08);
+}
+.btn-type-option.active {
+  background: linear-gradient(135deg, #007AFF 0%, #0051D4 100%);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(0, 90, 255, 0.25);
+}
+
+/* GPS Type Toggle Buttons */
+.btn-gps-option {
+  background: #F4F6F8;
+  color: #6b6b6b;
+  border: 1px solid rgba(13,20,25,0.06);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 500;
+  font-size: 0.85rem;
+  transition: all 150ms ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.btn-gps-option:hover:not(.active) {
+  background: #E9EDF2;
+  color: #1d1d1f;
+}
+.btn-gps-option.active {
+  background: #34C759;
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
+}
+
+/* GPS Input Section */
+.gps-input-section {
+  background: rgba(0, 113, 227, 0.04);
+  border: 1px solid rgba(0, 113, 227, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.input-with-icon {
+  position: relative;
+}
+.input-icon-left {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #86868b;
+  font-size: 1rem;
+}
+
+.gps-preview {
+  background: rgba(52, 199, 89, 0.08);
+  border: 1px solid rgba(52, 199, 89, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+/* Map Picker Styles */
+.map-picker-container {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.map-picker-box {
+  height: 280px;
+  width: 100%;
+  border-radius: 10px;
+  border: 2px solid rgba(0, 113, 227, 0.15);
+  z-index: 1;
+}
+
+.map-picker-box .leaflet-container {
+  border-radius: 10px;
+}
+
+.btn-locate-me {
+  background: linear-gradient(135deg, #34C759 0%, #28a745 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 150ms ease;
+}
+.btn-locate-me:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+}
+.btn-locate-me:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.map-search-box {
+  position: relative;
+}
+.map-search-box .input-with-icon {
+  position: relative;
+}
+.btn-search-map {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--apple-blue);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 150ms ease;
+  z-index: 2;
+}
+.btn-search-map:hover:not(:disabled) {
+  background: var(--apple-blue-hover);
+}
+.btn-search-map:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Spin animation for loading */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spin {
+  animation: spin 1s linear infinite;
 }
 
 .btn-apple-icon {
