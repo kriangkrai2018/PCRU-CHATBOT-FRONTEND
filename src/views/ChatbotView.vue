@@ -61,9 +61,7 @@
             @mousedown.stop.prevent="onSnowflakeMouseDown($event, i)"
             @touchstart.stop.prevent="onSnowflakeTouchStart($event, i)"
             v-show="!isSnowflakeFloating(i)"
-          >
-            {{ flake.symbol }}
-          </div>
+          >❄</div>
         </div>
         
         <!-- Dragged/Falling snowflakes rendered OUTSIDE container to avoid overflow:hidden clipping -->
@@ -84,17 +82,17 @@
           <div class="panel-top">
             <button class="close-circle" @click="visible = false" aria-label="close">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="close-icon">
-                <!-- Line 1 with bold animations -->
+                <!-- Line 1 with gentle animations -->
                 <path class="close-line-1" d="M6 6L18 18" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="20" stroke-dashoffset="20">
                   <animate attributeName="stroke-dashoffset" to="0" dur="0.3s" fill="freeze"/>
-                  <animate attributeName="stroke-width" values="3;4;3" dur="0.6s" repeatCount="indefinite" begin="0.3s"/>
-                  <animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite"/>
+                  <animate attributeName="stroke-width" values="3;3.5;3" dur="3s" repeatCount="indefinite" begin="0.3s"/>
+                  <animate attributeName="opacity" values="0.9;1;0.9" dur="4s" repeatCount="indefinite"/>
                 </path>
-                <!-- Line 2 with bold animations -->
+                <!-- Line 2 with gentle animations -->
                 <path class="close-line-2" d="M6 18L18 6" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="20" stroke-dashoffset="20">
                   <animate attributeName="stroke-dashoffset" to="0" dur="0.3s" begin="0.15s" fill="freeze"/>
-                  <animate attributeName="stroke-width" values="3;4;3" dur="0.6s" repeatCount="indefinite" begin="0.3s"/>
-                  <animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite"/>
+                  <animate attributeName="stroke-width" values="3;3.5;3" dur="3s" repeatCount="indefinite" begin="0.3s"/>
+                  <animate attributeName="opacity" values="0.9;1;0.9" dur="4s" repeatCount="indefinite"/>
                 </path>
               </svg>
             </button>
@@ -170,17 +168,18 @@
             <div class="overlay-backdrop-2"></div>
           </div>
 
-          <div class="panel-body" :class="{ 'anchor-bottom': anchorBottom }" @scroll="handleScroll" ref="panelBody">
-            <!-- Scroll to Top Button -->
-            <transition name="fade-scale">
-              <button v-if="showScrollTop" class="scroll-to-top-btn" @click="scrollToTop" aria-label="scroll to top">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="scroll-icon">
-                  <path class="scroll-arrow" d="M12 19V5M5 12l7-7 7 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="40" stroke-dashoffset="40">
-                    <animate attributeName="stroke-dashoffset" to="0" dur="0.5s" fill="freeze"/>
-                  </path>
-                </svg>
-              </button>
-            </transition>
+          <!-- Scroll to Top Button - outside panel-body so it floats above content -->
+          <transition name="fade-scale">
+            <button v-if="showScrollTop" class="scroll-to-top-btn" @click="scrollToTop" aria-label="scroll to top">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="scroll-icon">
+                <path class="scroll-arrow" d="M12 19V5M5 12l7-7 7 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="40" stroke-dashoffset="40">
+                  <animate attributeName="stroke-dashoffset" to="0" dur="0.5s" fill="freeze"/>
+                </path>
+              </svg>
+            </button>
+          </transition>
+
+          <div class="panel-body" :class="{ 'anchor-bottom': anchorBottom }" @scroll.passive="handleScroll" ref="panelBody">
             
 
 
@@ -935,12 +934,12 @@ export default {
       shadowEnabled: true,
       animationEnabled: true,
       // Snow configuration from env
-      snowCount: parseInt(import.meta.env.VITE_SNOW_COUNT || '20'),
-      snowMinSize: parseFloat(import.meta.env.VITE_SNOW_MIN_SIZE || '0.6'),
-      snowMaxSize: parseFloat(import.meta.env.VITE_SNOW_MAX_SIZE || '1.4'),
-      snowMinDuration: parseInt(import.meta.env.VITE_SNOW_MIN_DURATION || '10'),
-      snowMaxDuration: parseInt(import.meta.env.VITE_SNOW_MAX_DURATION || '20'),
-      snowOpacity: parseFloat(import.meta.env.VITE_SNOW_OPACITY || '0.7'),
+      snowCount: parseInt(import.meta.env.VITE_SNOW_COUNT || '25'),
+      snowMinSize: parseFloat(import.meta.env.VITE_SNOW_MIN_SIZE || '12'),
+      snowMaxSize: parseFloat(import.meta.env.VITE_SNOW_MAX_SIZE || '22'),
+      snowMinDuration: parseInt(import.meta.env.VITE_SNOW_MIN_DURATION || '8'),
+      snowMaxDuration: parseInt(import.meta.env.VITE_SNOW_MAX_DURATION || '18'),
+      snowOpacity: parseFloat(import.meta.env.VITE_SNOW_OPACITY || '1'),
       // Pre-generated snowflake styles to prevent re-render jank
       snowflakeStyles: [],
       // Snowflake drag state
@@ -1128,10 +1127,36 @@ export default {
     }
     this.fetchStopwordsAndKeywords();
 
+    // Check if it's winter season FIRST (November - February in Thailand)
+    this.checkWinterSeason()
+    
+    // Debug snow settings
+    console.log('❄️ Snow Debug:', {
+      isWinterSeason: this.isWinterSeason,
+      snowEnabled: this.snowEnabled,
+      masterEnabled: this.masterEnabled,
+      snowCount: this.snowCount,
+      localStorage_snow: localStorage.getItem('chatbot_snow_enabled'),
+      localStorage_master: localStorage.getItem('chatbot_master_enabled')
+    })
+
     // Generate snowflake styles once to prevent jank on re-render
     this.generateSnowflakeStyles()
     
-    // 🎬 Auto-open with intro animation on first visit
+    // � PERFORMANCE: Pause animations when tab is not visible
+    this._handleVisibilityChange = () => {
+      const chatRoot = this.$el?.querySelector('.chat-root')
+      if (chatRoot) {
+        if (document.hidden) {
+          chatRoot.classList.add('tab-hidden')
+        } else {
+          chatRoot.classList.remove('tab-hidden')
+        }
+      }
+    }
+    document.addEventListener('visibilitychange', this._handleVisibilityChange)
+    
+    // �🎬 Auto-open with intro animation on first visit
     this.checkAndShowFirstVisitIntro();
     
     // Prevent Bootstrap carousel auto-init from parent page (university website)
@@ -1233,9 +1258,6 @@ export default {
     } catch (e) {
       console.log('Using default pronoun:', this.botPronoun)
     }
-    
-    // Check if it's winter season (November - February in Thailand)
-    this.checkWinterSeason()
 
     // Load persisted mini help dismissed state (persists until user clears chat)
     try {
@@ -1258,6 +1280,12 @@ export default {
       if (savedParticle !== null) this.particleEnabled = savedParticle === 'true'
       if (savedShadow !== null) this.shadowEnabled = savedShadow === 'true'
       if (savedAnimation !== null) this.animationEnabled = savedAnimation === 'true'
+      
+      // Force enable snow during winter season regardless of localStorage
+      if (this.isWinterSeason) {
+        this.snowEnabled = true
+        this.masterEnabled = true
+      }
       
       // If master is off, disable all effects
       if (savedMaster === 'false') {
@@ -1544,6 +1572,12 @@ export default {
     window.removeEventListener('resize', this.updateAnchoring)
     window.removeEventListener('resize', this.handleKeyboardDetection)
     document.removeEventListener('click', this.handleOutsideClick)
+    
+    // 🍎 Remove visibility change listener
+    if (this._handleVisibilityChange) {
+      document.removeEventListener('visibilitychange', this._handleVisibilityChange)
+      this._handleVisibilityChange = null
+    }
     
     const inputBox = this.$refs.inputBox
     if (inputBox) {
@@ -2435,6 +2469,8 @@ export default {
       const numGroups = 5;
       const windProfiles = [];
 
+      console.log('❄️ Generating snowflake styles, count:', this.snowCount)
+
       // Generate wind profiles for each group
       for (let i = 0; i < numGroups; i++) {
         windProfiles.push({
@@ -2453,10 +2489,10 @@ export default {
         styles.push({
           left: `${Math.random() * 100}%`,
           animationDuration: `${this.snowMinDuration + Math.random() * (this.snowMaxDuration - this.snowMinDuration)}s`,
-          animationDelay: `${Math.random() * 10}s`,
-          fontSize: `${this.snowMinSize + Math.random() * (this.snowMaxSize - this.snowMinSize)}em`,
+          animationDelay: `${Math.random() * 5}s`, // Max 5s delay so snow shows quickly
+          fontSize: `${this.snowMinSize + Math.random() * (this.snowMaxSize - this.snowMinSize)}px`,
           opacity: this.snowOpacity,
-          symbol: i % 2 === 0 ? '❅' : '❆',
+          symbol: '❄',
           ...windProfile
         })
       }

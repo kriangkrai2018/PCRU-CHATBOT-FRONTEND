@@ -582,3 +582,62 @@ html.theme-transitioning [data-theme="light"] * {
   -o-animation: none !important;
   animation: none !important;
 }
+
+/* ==========================================================================
+   🍎 DARK MODE PERFORMANCE OPTIMIZATIONS
+   GPU acceleration and rendering hints for smooth 60fps
+   ========================================================================== */
+
+/* GPU compositing for blur effects (expensive operations) */
+[data-theme="dark"] .panel-top,
+[data-theme="dark"] .theme-toggle-btn,
+[data-theme="dark"] .bot-with-categories {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Contain layout for message bubbles to isolate repaints */
+[data-theme="dark"] .message-bubble {
+  contain: layout style;
+}
+
+/* Optimize glow animations - use simpler shadows on mobile */
+@media (max-width: 768px) {
+  [data-theme="dark"] .message-bubble.bot {
+    box-shadow: 0 0 20px rgba(139, 76, 184, 0.12) !important;
+  }
+  
+  [data-theme="dark"] .message-bubble.bot:hover {
+    box-shadow: 0 0 25px rgba(139, 76, 184, 0.15) !important;
+  }
+  
+  /* Reduce blur on mobile for better performance */
+  [data-theme="dark"] .panel-top {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  
+  [data-theme="dark"] .theme-toggle-btn {
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+  }
+}
+
+/* Disable heavy effects when battery saver or reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="dark"] .message-bubble.bot {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+    transition: none !important;
+  }
+  
+  [data-theme="dark"] .message-bubble.bot::before {
+    display: none !important;
+  }
+  
+  [data-theme="dark"] .panel-top,
+  [data-theme="dark"] .theme-toggle-btn,
+  [data-theme="dark"] .bot-with-categories {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}

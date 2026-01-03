@@ -83,6 +83,29 @@ html.theme-transitioning *::after {
   animation: none !important;
 }
 
+/* ==========================================================================
+   🍎 APPLE-STYLE ACCESSIBILITY & PERFORMANCE
+   ========================================================================== */
+
+/* Respect user's reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Improve rendering performance on low-power devices */
+@media (prefers-reduced-motion: reduce), (update: slow) {
+  * {
+    will-change: auto !important;
+  }
+}
+
 body {
   min-height: 100vh;
   overflow-x: hidden; /* Prevent horizontal scroll during theme transition */
