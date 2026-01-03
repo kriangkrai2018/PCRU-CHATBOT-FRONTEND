@@ -177,7 +177,7 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .report-page-container { grid-template-columns: 1fr; }
-  .main-content { grid-column: 1/-1; padding: 0.5rem !important; }
+  .main-content { grid-column: 1/-1; padding: 0 !important; }
   
   .mobile-sidebar-toggle { 
     display: flex !important; 
@@ -190,6 +190,8 @@ onUnmounted(() => {
   :deep(.dashboard-hero) {
     border-radius: 0;
     position: relative;
+    flex-direction: column;
+    padding: 1rem;
   }
 
   :deep(.hero-heading) {
@@ -207,13 +209,33 @@ onUnmounted(() => {
     top: auto;
   }
 
-  :deep(.hero-title) {
+  :deep(.hero-title), :deep(.page-title) {
     text-align: center;
-    font-size: 1.75rem;
+    font-size: 1.5rem;
   }
 
   :deep(.hero-subtitle) {
     text-align: center;
+  }
+  
+  /* Fix container-fluid spacing on mobile */
+  :deep(.container-fluid) {
+    padding: 12px !important;
+  }
+  
+  :deep(.dashboard-container > .container-fluid) {
+    padding: 12px !important;
+  }
+  
+  /* Apple Card responsive */
+  :deep(.apple-card) {
+    border-radius: 16px;
+    margin-bottom: 12px;
+  }
+  
+  /* Reports Grid responsive */
+  .reports-grid {
+    padding: 0 !important;
   }
   
   :global(.sidebar) {

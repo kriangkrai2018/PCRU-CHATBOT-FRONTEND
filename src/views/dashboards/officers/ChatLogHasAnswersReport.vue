@@ -105,8 +105,8 @@
               </thead>
               <tbody>
                 <tr v-for="log in paginated" :key="log.ChatLogID" class="align-middle apple-row">
-                  <td class="ps-4 fw-medium text-secondary">{{ log.ChatLogID }}</td>
-                  <td class="py-3">
+                  <td class="ps-4 fw-medium text-secondary" data-label="ID">{{ log.ChatLogID }}</td>
+                  <td class="py-3" data-label="เวลา">
                     <span 
                       class="apple-badge-gray"
                       data-bs-toggle="tooltip" 
@@ -116,10 +116,10 @@
                       {{ formatRelativeTime(log.Timestamp) }}
                     </span>
                   </td>
-                  <td class="py-3">
+                  <td class="py-3" data-label="คำถาม">
                     <div class="text-dark fw-medium">{{ log.UserQuery }}</div>
                   </td>
-                  <td class="py-3">
+                  <td class="py-3" data-label="คำตอบที่ตรงกัน">
                     <div class="text-secondary small">
                       <i class="bi bi-arrow-return-right me-1"></i>
                       {{ questionsTitleMap[log.QuestionsAnswersID] || log.QuestionsAnswersID }}
@@ -139,9 +139,9 @@
           </div>
 
           <!-- Pagination -->
-          <div class="d-flex justify-content-between align-items-center p-3 border-top bg-white rounded-bottom-4">
-            <div class="small text-secondary">
-              Showing {{ startIndex }} - {{ endIndex }} of {{ totalEntries }}
+          <div class="pagination-footer">
+            <div class="pagination-info">
+              แสดง {{ startIndex }} - {{ endIndex }} จาก {{ totalEntries }} รายการ
             </div>
             <nav aria-label="Page navigation">
               <ul class="pagination pagination-sm mb-0 align-items-center">
@@ -468,6 +468,160 @@ onUnmounted(() => { if (ws) ws.disconnect(); });
 .empty-state i { font-size: 2.5rem; margin-bottom: 8px; opacity: 0.5; }
 
 /* Pagination Override */
-.pagination .page-link { border: none; color: #1d1d1f; border-radius: 8px; margin: 0 2px; }
-.pagination .page-item.active .page-link { background: var(--apple-blue); color: white; box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3); }
+.pagination .page-link { 
+  border: none; 
+  color: #1d1d1f; 
+  border-radius: 8px; 
+  margin: 0 2px;
+  background: rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+}
+.pagination .page-link:hover {
+  background: rgba(0, 122, 255, 0.1);
+  color: #007AFF;
+}
+.pagination .page-item.active .page-link { 
+  background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%) !important; 
+  color: #FFFFFF !important; 
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3); 
+}
+.pagination .page-item.disabled .page-link {
+  background: transparent;
+  color: #c7c7cc;
+}
+
+/* Pagination Footer - Apple Style */
+.pagination-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 0 0 16px 16px;
+}
+.pagination-info {
+  font-size: 13px;
+  color: #86868b;
+  font-weight: 500;
+}
+
+/* Mobile Container Fix */
+@media (max-width: 768px) {
+  .dashboard-container > .container-fluid {
+    padding: 12px !important;
+  }
+}
+
+/* Responsive Stats */
+@media (max-width: 992px) {
+  .row.mb-4.g-3 > .col-md-4 {
+    width: 100%;
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  
+  .card-header-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  
+  .search-container {
+    width: 100%;
+  }
+}
+
+/* Mobile Table Card View */
+@media (max-width: 768px) {
+  .apple-stat-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .apple-counter-capsule {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .table-responsive {
+    overflow-x: visible;
+    overflow-y: visible;
+  }
+
+  .apple-table { display: block; }
+  .apple-table thead { display: none; }
+  .apple-table tbody { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 12px;
+    padding: 12px;
+  }
+  .apple-table tbody tr {
+    display: flex;
+    flex-direction: column;
+    background: #FFFFFF;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    border: none;
+  }
+  .apple-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: transparent;
+    border-radius: 0;
+    gap: 1rem;
+    border: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  }
+  .apple-table tbody td:last-child {
+    border-bottom: none;
+  }
+  .apple-table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #86868b;
+    flex: 0 0 auto;
+    min-width: 100px;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    letter-spacing: 0.5px;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 576px) {
+  .container-fluid { padding: 12px !important; }
+  
+  .pagination-footer {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+    padding: 16px !important;
+  }
+  
+  .pagination { 
+    flex-wrap: wrap; 
+    gap: 0.5rem; 
+    justify-content: center; 
+  }
+  
+  .pagination .page-link {
+    min-width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .apple-card.chart-card { padding: 12px; }
+}
 </style>

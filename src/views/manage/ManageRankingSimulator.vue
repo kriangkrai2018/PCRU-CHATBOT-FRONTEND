@@ -232,43 +232,102 @@ async function testNegation() {
     
     const data = response.data;
     
-    // Build token analysis
-    const tokens = [];
+    // Build token analysis from raw query
     const query = negationTestQuery.value.toLowerCase();
-    const words = query.split(/[\s,.:;!?()[\]{}'"]+/).filter(Boolean);
+    
+    // 🆕 Better tokenization: keep compound words together for Thai
+    // Split by spaces first, then we'll mark inline negations
+    const rawTokens = query.split(/\s+/).filter(Boolean);
     
     // Get negative words from the response
     const negativeWordsMap = {};
     if (data.negationInfo?.negativeWordsFound) {
       for (const neg of data.negationInfo.negativeWordsFound) {
         negativeWordsMap[neg.word] = neg.modifier;
+        // Also mark the target keyword if present
+        if (neg.targetKeyword) {
+          negativeWordsMap[neg.targetKeyword] = neg.modifier;
+        }
       }
     }
     
     // Get negated keywords
     const negatedKeywordsSet = new Set();
+    const negatedKeywordsMap = {};
     if (data.negationInfo?.negatedKeywords) {
       for (const neg of data.negationInfo.negatedKeywords) {
         negatedKeywordsSet.add(neg.keyword);
+        negatedKeywordsMap[neg.keyword] = neg.negativeWord;
       }
     }
     
-    // Build token list
-    for (const word of words) {
-      tokens.push({
-        text: word,
-        isNegative: negativeWordsMap.hasOwnProperty(word),
-        modifier: negativeWordsMap[word] || null,
-        isKeyword: data.alternatives?.some(alt => alt.keywords?.some(kw => kw.toLowerCase().includes(word) || word.includes(kw.toLowerCase()))),
-        isNegated: negatedKeywordsSet.has(word)
-      });
+    // Also check blockedKeywordsDisplay from response
+    const blockedKeywords = data.blockedKeywordsDisplay || [];
+    for (const kw of blockedKeywords) {
+      negatedKeywordsSet.add(kw);
     }
+    
+    // Build token list with inline negation detection
+    const tokens = [];
+    for (const word of rawTokens) {
+      // Check if this token contains an inline negation pattern
+      const inlinePatterns = ['ไม่เอา', 'ไม่ต้อง', 'ไม่อยาก', 'ไม่ต้องการ', 'ไม่สนใจ', 'ไม่'];
+      let foundInlineNegation = null;
+      let targetWord = null;
+      
+      // Sort by length desc to match longer patterns first
+      const sortedPatterns = inlinePatterns.sort((a, b) => b.length - a.length);
+      for (const pattern of sortedPatterns) {
+        if (word.includes(pattern)) {
+          const patternIdx = word.indexOf(pattern);
+          if (patternIdx >= 0) {
+            foundInlineNegation = pattern;
+            targetWord = word.slice(patternIdx + pattern.length);
+            break;
+          }
+        }
+      }
+      
+      if (foundInlineNegation && targetWord) {
+        // Split into negation word and target
+        tokens.push({
+          text: foundInlineNegation,
+          isNegative: true,
+          modifier: -1.0,
+          isKeyword: false,
+          isNegated: false
+        });
+        if (targetWord) {
+          tokens.push({
+            text: targetWord,
+            isNegative: false,
+            modifier: null,
+            isKeyword: negatedKeywordsSet.has(targetWord) || blockedKeywords.includes(targetWord),
+            isNegated: negatedKeywordsSet.has(targetWord) || blockedKeywords.includes(targetWord)
+          });
+        }
+      } else {
+        // No inline negation, add as single token
+        tokens.push({
+          text: word,
+          isNegative: negativeWordsMap.hasOwnProperty(word) || inlinePatterns.includes(word),
+          modifier: negativeWordsMap[word] || (inlinePatterns.includes(word) ? -1.0 : null),
+          isKeyword: negatedKeywordsSet.has(word) || blockedKeywords.includes(word) || data.alternatives?.some(alt => alt.keywords?.some(kw => kw.toLowerCase().includes(word) || word.includes(kw.toLowerCase()))),
+          isNegated: negatedKeywordsSet.has(word) || blockedKeywords.includes(word)
+        });
+      }
+    }
+    
+    // Determine if negation was found
+    const hasNegation = data.negationInfo?.hasNegation || 
+                        blockedKeywords.length > 0 || 
+                        (data.blockedKeywords && data.blockedKeywords.length > 0);
     
     negationResult.value = {
       query: negationTestQuery.value,
       tokens,
-      hasNegation: data.negationInfo?.hasNegation || false,
-      negatedKeywords: data.negationInfo?.negatedKeywords || [],
+      hasNegation: hasNegation,
+      negatedKeywords: data.negationInfo?.negatedKeywords || blockedKeywords.map(kw => ({ keyword: kw, negativeWord: 'ไม่เอา', modifier: -1.0 })),
       negativeWordsFound: data.negationInfo?.negativeWordsFound || [],
       alternatives: data.alternatives || []
     };
