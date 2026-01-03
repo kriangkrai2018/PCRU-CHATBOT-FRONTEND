@@ -158,17 +158,16 @@
                     <th>Type</th>
                     <th>Contact</th>
                     <th>File</th>
-                    <th class="text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   <template v-for="(cat, idx) in visibleParents" :key="cat.CategoriesID">
-                    <tr class="align-middle parent-row">
+                    <tr class="align-middle parent-row clickable-row" @click="openPreview(cat)">
                       <td class="ps-4" data-label="">
                         <button 
                           v-if="hasSubCategories(cat.CategoriesID, cat.CategoriesID)" 
                           class="expand-btn" 
-                          @click="toggleExpand(cat.CategoriesID)"
+                          @click.stop="toggleExpand(cat.CategoriesID)"
                         >
                           <i class="bi" :class="expandedMap[cat.CategoriesID] ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
                         </button>
@@ -190,22 +189,12 @@
                       </td>
                       <td data-label="File">
                         <template v-if="cat.CategoriesPDF">
-                          <button @click.prevent="openFile(cat.CategoriesPDF, cat.CategoriesName)" class="file-link-btn">
+                          <button @click.stop.prevent="openFile(cat.CategoriesPDF, cat.CategoriesName)" class="file-link-btn">
                             <i :class="pdfIconClass(cat.CategoriesPDF)"></i>
                             <span>View</span>
                           </button>
                         </template>
                         <span v-else class="text-muted small">-</span>
-                      </td>
-                      <td class="text-center" data-label="Actions">
-                        <div class="row-actions">
-                          <button class="action-btn edit" @click.stop="openEditModal(cat)" title="แก้ไข">
-                            <i class="bi bi-pencil-square"></i>
-                          </button>
-                          <button class="action-btn delete" @click.stop="confirmDelete(cat)" title="ลบ">
-                            <i class="bi bi-trash"></i>
-                          </button>
-                        </div>
                       </td>
                     </tr>
 
@@ -213,7 +202,8 @@
                     <tr
                       v-for="sub in expandedMap[cat.CategoriesID] ? subCategories(cat.CategoriesID, cat.CategoriesID) : []"
                       :key="sub.CategoriesID"
-                      class="sub-row"
+                      class="sub-row clickable-row"
+                      @click="openPreview(sub)"
                     >
                       <td data-label=""></td>
                       <td class="cat-id-cell ps-4 text-secondary" data-label="CategoriesID">
@@ -229,28 +219,18 @@
                       </td>
                       <td data-label="File">
                         <template v-if="sub.CategoriesPDF">
-                          <button @click.prevent="openFile(sub.CategoriesPDF, sub.CategoriesName)" class="file-link-btn">
+                          <button @click.stop.prevent="openFile(sub.CategoriesPDF, sub.CategoriesName)" class="file-link-btn">
                             <i :class="pdfIconClass(sub.CategoriesPDF)"></i>
                             <span>View</span>
                           </button>
                         </template>
                         <span v-else class="text-muted small">-</span>
                       </td>
-                      <td class="text-center" data-label="Actions">
-                        <div class="row-actions">
-                          <button class="action-btn edit" @click.stop="openEditModal(sub)" title="แก้ไข">
-                            <i class="bi bi-pencil-square"></i>
-                          </button>
-                          <button class="action-btn delete" @click.stop="confirmDelete(sub)" title="ลบ">
-                            <i class="bi bi-trash"></i>
-                          </button>
-                        </div>
-                      </td>
                     </tr>
                   </template>
 
                   <tr v-if="visibleParents.length === 0">
-                    <td colspan="7" class="text-center text-muted py-5">
+                    <td colspan="6" class="text-center text-muted py-5">
                       <div class="empty-state">
                         <i class="bi bi-folder-x"></i>
                         <p>No categories found</p>
@@ -457,6 +437,76 @@
       </div>
     </transition>
 
+    <!-- 5. Preview Drawer (Right Sidebar) -->
+    <div class="drawer-overlay" v-if="showDrawer" @click="closeDrawer"></div>
+    <div class="apple-drawer" :class="{ 'drawer-open': showDrawer }">
+      <div class="drawer-header">
+        <h5 class="drawer-title">รายละเอียดหมวดหมู่</h5>
+        <button class="btn-close-drawer" @click="closeDrawer">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="drawer-body">
+        <div class="drawer-section">
+          <div class="drawer-label">CategoriesID</div>
+          <div class="drawer-value text-primary fw-bold">{{ previewItem?.CategoriesID || '-' }}</div>
+        </div>
+        <div class="drawer-section">
+          <div class="drawer-label">ชื่อหมวดหมู่</div>
+          <div class="drawer-value fw-bold text-dark">{{ previewItem?.CategoriesName || '-' }}</div>
+        </div>
+        <div class="drawer-section">
+          <div class="drawer-label">ประเภท</div>
+          <div class="drawer-value">
+            <span :class="isMain(previewItem) ? 'apple-badge-blue' : 'apple-badge-gray'">
+              {{ isMain(previewItem) ? 'Main Category' : 'Sub Category' }}
+            </span>
+          </div>
+        </div>
+        <div class="drawer-section" v-if="previewItem?.ParentCategoriesID && !isMain(previewItem)">
+          <div class="drawer-label">หมวดหมู่หลัก (Parent)</div>
+          <div class="drawer-value">
+            <span class="apple-badge-gray">{{ getParentName(previewItem?.ParentCategoriesID) }}</span>
+          </div>
+        </div>
+        <div class="drawer-section">
+          <div class="drawer-label">ข้อมูลติดต่อ</div>
+          <div class="drawer-value text-dark whitespace-prewrap" v-if="previewItem?.Contact">
+            <div v-for="(cc, i) in parseContacts(previewItem.Contact)" :key="i" class="contact-item mb-1">
+              <i class="bi bi-telephone-fill text-success me-2"></i>{{ cc }}
+            </div>
+          </div>
+          <div class="drawer-value text-muted" v-else>—</div>
+        </div>
+        <div class="drawer-section">
+          <div class="drawer-label">ไฟล์แนบ</div>
+          <div class="drawer-value" v-if="previewItem?.CategoriesPDF">
+            <button @click="openFile(previewItem.CategoriesPDF, previewItem.CategoriesName)" class="file-link-btn-large">
+              <i :class="pdfIconClass(previewItem.CategoriesPDF)"></i>
+              <span>ดูไฟล์</span>
+            </button>
+          </div>
+          <div class="drawer-value text-muted" v-else>—</div>
+        </div>
+        <div class="drawer-section" v-if="getSubCategoriesCount(previewItem?.CategoriesID) > 0">
+          <div class="drawer-label">หมวดหมู่ย่อย</div>
+          <div class="drawer-value">
+            <span class="apple-badge-green">{{ getSubCategoriesCount(previewItem?.CategoriesID) }} รายการ</span>
+          </div>
+        </div>
+      </div>
+      <div class="drawer-footer">
+        <div class="d-flex gap-2">
+          <button class="apple-btn-primary flex-fill" @click="openEditModalFromPreview">
+            <i class="bi bi-pencil-square me-2"></i> แก้ไข
+          </button>
+          <button class="apple-btn-secondary text-danger flex-fill" @click="confirmDeleteFromPreview">
+            <i class="bi bi-trash me-2"></i> ลบ
+          </button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -513,6 +563,10 @@ const crudFormData = ref({
 const modalFileUrl = ref('');
 const modalFileName = ref('');
 
+// Drawer State
+const showDrawer = ref(false);
+const previewItem = ref(null);
+
 // Computed: Parent Options
 const parentCategoryOptions = computed(() => {
   return (categories.value || []).filter(c => {
@@ -546,6 +600,27 @@ function openFile(fileValue, name) {
 function closeFileModal() {
   showFileModal.value = false;
   modalFileUrl.value = '';
+}
+
+// --- Drawer Functions ---
+function openPreview(item) {
+  previewItem.value = item;
+  showDrawer.value = true;
+}
+function closeDrawer() {
+  showDrawer.value = false;
+}
+function openEditModalFromPreview() {
+  if (previewItem.value) {
+    openEditModal(previewItem.value);
+    closeDrawer();
+  }
+}
+function confirmDeleteFromPreview() {
+  if (previewItem.value) {
+    confirmDelete(previewItem.value);
+    closeDrawer();
+  }
 }
 
 // --- CRUD Functions ---
@@ -796,6 +871,22 @@ function parseContacts(str) {
   if (!str) return [];
   // Split by " ||| " OR newline
   return String(str).split(/ \|\|\| |\n/).map(s => s.trim()).filter(Boolean);
+}
+
+// Helper: Get parent category name by ID
+function getParentName(parentId) {
+  if (!parentId) return '-';
+  const parent = (categories.value || []).find(c => String(c.CategoriesID) === String(parentId));
+  return parent?.CategoriesName || '-';
+}
+
+// Helper: Get sub-categories count for a parent
+function getSubCategoriesCount(parentId) {
+  if (!parentId) return 0;
+  return (categories.value || []).filter(c => 
+    String(c.ParentCategoriesID) === String(parentId) && 
+    String(c.CategoriesID) !== String(parentId)
+  ).length;
 }
 
 // ============================================
@@ -1668,6 +1759,167 @@ button.mobile-sidebar-toggle.mobile-inline-toggle { display: none !important; bo
   color: var(--apple-gray);
 }
 .empty-state i { font-size: 2.5rem; margin-bottom: 0.5rem; opacity: 0.5; }
+
+/* Drawer Styles */
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1050;
+  backdrop-filter: blur(2px);
+}
+
+.apple-drawer {
+  position: fixed;
+  top: 0;
+  right: -420px;
+  width: 400px;
+  max-width: 90vw;
+  height: 100vh;
+  background: #fff;
+  box-shadow: -4px 0 30px rgba(0, 0, 0, 0.15);
+  z-index: 1060;
+  display: flex;
+  flex-direction: column;
+  transition: right 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.apple-drawer.drawer-open {
+  right: 0;
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e5e5;
+  background: linear-gradient(135deg, #f5f5f7 0%, #fff 100%);
+}
+
+.drawer-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.btn-close-drawer {
+  background: rgba(0, 0, 0, 0.04);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #666;
+}
+.btn-close-drawer:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #1d1d1f;
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.drawer-section {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.drawer-section:last-child {
+  border-bottom: none;
+}
+
+.drawer-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #86868b;
+  margin-bottom: 6px;
+}
+
+.drawer-value {
+  font-size: 0.95rem;
+  color: #1d1d1f;
+  line-height: 1.5;
+}
+
+.drawer-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e5e5e5;
+  background: #fafafa;
+}
+
+/* Clickable Row */
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.clickable-row:hover {
+  background-color: rgba(0, 122, 255, 0.04) !important;
+}
+
+/* File Link Button Large (for drawer) */
+.file-link-btn-large {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(0, 122, 255, 0.08) 0%, rgba(0, 122, 255, 0.04) 100%);
+  border: 1px solid rgba(0, 122, 255, 0.2);
+  border-radius: 10px;
+  color: var(--apple-blue);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.file-link-btn-large:hover {
+  background: linear-gradient(135deg, rgba(0, 122, 255, 0.12) 0%, rgba(0, 122, 255, 0.08) 100%);
+  transform: translateY(-1px);
+}
+.file-link-btn-large i {
+  font-size: 1.1rem;
+}
+
+/* Contact Item */
+.contact-item {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+}
+
+/* Apple Badge Green */
+.apple-badge-green {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, rgba(52, 199, 89, 0.1) 0%, rgba(52, 199, 89, 0.05) 100%);
+  color: #34C759;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Responsive Drawer */
+@media (max-width: 480px) {
+  .apple-drawer {
+    width: 100%;
+    max-width: 100%;
+    right: -100%;
+  }
+}
 
 </style>
 
