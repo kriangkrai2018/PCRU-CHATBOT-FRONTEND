@@ -83,11 +83,15 @@
                 <th>QuestionText</th>
                 <th>Reason</th>
                 <th>Comment</th>
-                <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="fb in paginatedFeedbacks" :key="fb.FeedbackID" :class="{ 'unlike-row': fb.FeedbackValue === 0 }">
+              <tr 
+                v-for="fb in paginatedFeedbacks" 
+                :key="fb.FeedbackID" 
+                :class="['clickable-row', { 'unlike-row': fb.FeedbackValue === 0 }]"
+                @click="openDrawer(fb)"
+              >
                 <td data-label="ID">{{ fb.FeedbackID }}</td>
                 <td data-label="สถานะ">
                   <template v-if="fb.FeedbackValue === 1">
@@ -115,46 +119,16 @@
                 </td>
                 <td data-label="ความคิดเห็น">
                   <div v-if="fb.FeedbackComment" class="comment-cell">
-                    <button class="comment-preview-btn" @click="showFullComment(fb)">
+                    <button class="comment-preview-btn" @click.stop="showFullComment(fb)">
                       <i class="bi bi-chat-square-text me-1"></i>
                       <span class="comment-preview">{{ truncateComment(fb.FeedbackComment) }}</span>
                     </button>
                   </div>
                   <span v-else class="text-muted">-</span>
                 </td>
-                <td data-label="">
-                  <div class="d-flex justify-content-center align-items-center gap-2">
-                    <button 
-                      v-if="fb.FeedbackValue === 0 && fb.QuestionsAnswersID"
-                      class="handle-btn"
-                      @click="openInlineEdit(fb)"
-                      :disabled="handlingFeedbackId === fb.FeedbackID || savingInlineEdit"
-                    >
-                      <span v-if="handlingFeedbackId === fb.FeedbackID || savingInlineEdit" class="handle-btn-loading">
-                        <i class="bi bi-arrow-repeat spinning"></i>
-                      </span>
-                      <span v-else class="handle-btn-content">
-                        <i class="bi bi-pencil-square me-1"></i>
-                        จัดการ
-                      </span>
-                    </button>
-
-                    <button
-                      v-if="fb.FeedbackValue !== 1"
-                      class="delete-btn"
-                      @click="handleFeedback(fb)"
-                      :disabled="deletingFeedbackId === fb.FeedbackID"
-                      title="ย้ายไปหน้า Feedbacks ที่จัดการแล้ว"
-                    >
-                      <span v-if="deletingFeedbackId === fb.FeedbackID" class="spinner-border spinner-border-sm me-1"></span>
-                      <i v-else class="bi bi-trash me-1"></i>
-                      ลบ
-                    </button>
-                  </div>
-                </td>
               </tr>
               <tr v-if="filteredFeedbacks.length === 0">
-                <td colspan="8" class="text-center text-muted py-3">No feedbacks data found</td>
+                <td colspan="7" class="text-center text-muted py-3">No feedbacks data found</td>
               </tr>
             </tbody>
           </table>
@@ -173,67 +147,87 @@
           </nav>
         </div>
 
-        <!-- Inline Edit Modal -->
-        <transition name="modal-fade">
-          <div v-if="showInlineEdit" class="comment-modal-overlay" @click.self="closeInlineEdit">
-            <div class="comment-modal-content wide">
-              <div class="comment-modal-header">
-                <h5 class="comment-modal-title d-flex align-items-center gap-2">
-                  <i class="bi bi-pencil-square"></i>
-                  แก้ไขคำถาม-คำตอบ (ไม่เปลี่ยนหน้า)
-                </h5>
-                <button class="comment-modal-close" @click="closeInlineEdit" aria-label="ปิด">
+        <!-- Inline Edit Modal (Apple Style) -->
+        <transition name="apple-zoom">
+          <div v-if="showInlineEdit" class="apple-modal-overlay" @click.self="closeInlineEdit">
+            <div class="apple-modal-content wide-modal">
+              <div class="apple-modal-header">
+                <div class="d-flex flex-column">
+                  <h5 class="apple-modal-title">Edit Question</h5>
+                  <span class="apple-modal-subtitle">Update review details inline</span>
+                </div>
+                <button class="apple-close-btn" @click="closeInlineEdit" aria-label="Close">
                   <i class="bi bi-x-lg"></i>
                 </button>
               </div>
-              <div class="comment-modal-body">
-                <div v-if="editLoading" class="text-center py-4">
-                  <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
-                  <p class="mt-2 small text-muted">กำลังโหลดข้อมูลคำถาม-คำตอบ...</p>
+
+              <div class="apple-modal-body">
+                <div v-if="editLoading" class="text-center py-5">
+                  <div class="apple-spinner mx-auto mb-3"></div>
+                  <p class="text-secondary">Loading details...</p>
                 </div>
-                <div v-else>
+                <div v-else class="apple-form-container">
+                  
+                  <div class="apple-input-group">
+                    <label>Question Title</label>
+                    <input type="text" class="apple-input" v-model="inlineForm.questionTitle" />
+                  </div>
+
+                  <div class="apple-input-group">
+                    <label>Question Text</label>
+                    <textarea class="apple-input apple-textarea" rows="4" v-model="inlineForm.questionText"></textarea>
+                  </div>
+
                   <div class="row g-3">
-                    <div class="col-12">
-                      <label class="form-label fw-semibold">Question Title</label>
-                      <input type="text" class="form-control" v-model="inlineForm.questionTitle" />
-                    </div>
-                    <div class="col-12">
-                      <label class="form-label fw-semibold">Question Text</label>
-                      <textarea class="form-control" rows="4" v-model="inlineForm.questionText"></textarea>
+                    <div class="col-md-6">
+                      <div class="apple-input-group">
+                        <label>Review Date</label>
+                        <input type="date" class="apple-input" v-model="inlineForm.reviewDate" />
+                      </div>
                     </div>
                     <div class="col-md-6">
-                      <label class="form-label fw-semibold">Review Date</label>
-                      <input type="date" class="form-control" v-model="inlineForm.reviewDate" />
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label fw-semibold">Category</label>
-                      <select class="form-select" v-model="inlineForm.categoriesId">
-                        <option value="">-- เลือกหมวดหมู่ --</option>
-                        <option v-for="cat in inlineCategories" :key="cat.CategoriesID" :value="cat.CategoriesID">
-                          {{ cat.CategoriesName || cat.CategoriesID }}
-                        </option>
-                      </select>
-                    </div>
-                    <div class="col-12">
-                      <label class="form-label fw-semibold">Keywords (คั่นด้วย , )</label>
-                      <input type="text" class="form-control" v-model="inlineKeywordsInput" @keyup.enter.prevent="addInlineKeyword" placeholder="เช่น ความรู้,ข้อมูล,คำตอบ" />
-                      <div class="mt-2 d-flex flex-wrap gap-2">
-                        <span v-for="(k, idx) in inlineForm.keywords" :key="k+idx" class="badge bg-light text-dark border">
-                          {{ k }}
-                          <button type="button" class="btn btn-sm btn-link text-danger p-0 ps-1" @click="removeInlineKeyword(idx)">
-                            <i class="bi bi-x"></i>
-                          </button>
-                        </span>
+                      <div class="apple-input-group">
+                        <label>Category</label>
+                        <div class="select-wrapper">
+                          <select class="apple-input" v-model="inlineForm.categoriesId">
+                            <option value="">-- Select Category --</option>
+                            <option 
+                              v-for="cat in sortedInlineCategories" 
+                              :key="cat.CategoriesID" 
+                              :value="cat.CategoriesID"
+                              :class="cat.isMain ? 'fw-bold text-muted bg-light' : ''"
+                              :disabled="cat.isMain"
+                            >
+                              {{ cat.isMain ? '▸ ' : '  └ ' }}{{ cat.CategoriesName || cat.CategoriesID }}
+                            </option>
+                          </select>
+                          <i class="bi bi-chevron-down select-icon"></i>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div class="d-flex justify-content-end gap-2 mt-4">
-                    <button class="btn btn-outline-secondary" @click="closeInlineEdit" :disabled="savingInlineEdit">ปิด</button>
-                    <button class="btn btn-primary" @click="saveInlineEdit" :disabled="savingInlineEdit">
+
+                  <div class="apple-input-group">
+                    <label>Keywords (comma separated)</label>
+                    <div class="keyword-input-wrapper">
+                      <input type="text" class="apple-input" v-model="inlineKeywordsInput" @keyup.enter.prevent="addInlineKeyword" placeholder="Type and press Enter..." style="padding-right: 40px;" />
+                      <button class="apple-icon-btn-abs" @click="addInlineKeyword" title="Add keyword"><i class="bi bi-plus-lg"></i></button>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                      <span v-for="(k, idx) in inlineForm.keywords" :key="k+idx" class="keyword-tag removable" @click="removeInlineKeyword(idx)">
+                        {{ k }} <i class="bi bi-x ms-1"></i>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="apple-actions">
+                    <button class="btn-apple-secondary" @click="closeInlineEdit" :disabled="savingInlineEdit">Cancel</button>
+                    <button class="btn-apple-primary" @click="saveInlineEdit" :disabled="savingInlineEdit">
                       <span v-if="savingInlineEdit" class="spinner-border spinner-border-sm me-2"></span>
-                      บันทึกและทำเครื่องหมายว่าแก้ไขแล้ว
+                      Save & Mark Reviewed
                     </button>
                   </div>
+
                 </div>
               </div>
             </div>
@@ -299,6 +293,87 @@
         </div>
       </div>
     </transition>
+
+    <!-- Preview Drawer (Sidebar) -->
+    <div class="drawer-overlay" v-if="showDrawer" @click="closeDrawer"></div>
+    <div class="apple-drawer" :class="{ 'drawer-open': showDrawer }">
+      <div class="drawer-header">
+        <h5 class="drawer-title">รายละเอียด Feedback</h5>
+        <button class="btn-close-drawer" @click="closeDrawer">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="drawer-body">
+        <div class="drawer-section">
+          <div class="drawer-label">Feedback ID</div>
+          <div class="drawer-value text-secondary">{{ drawerFeedback?.FeedbackID || '-' }}</div>
+        </div>
+        <div class="drawer-section">
+          <div class="drawer-label">สถานะ</div>
+          <div class="drawer-value">
+            <span v-if="drawerFeedback?.FeedbackValue === 1" class="d-flex align-items-center gap-2">
+              <i class="bi bi-hand-thumbs-up-fill text-success fs-5"></i>
+              <span class="fw-semibold text-success">Like</span>
+            </span>
+            <span v-else-if="drawerFeedback?.FeedbackValue === 0" class="d-flex align-items-center gap-2">
+              <i class="bi bi-hand-thumbs-down-fill text-danger fs-5"></i>
+              <span class="fw-semibold text-danger">Unlike</span>
+            </span>
+            <span v-else class="text-muted">-</span>
+          </div>
+        </div>
+        <div class="drawer-section">
+          <div class="drawer-label">เวลา</div>
+          <div class="drawer-value d-flex align-items-center gap-2">
+            <span class="badge" :class="getTimeBadgeClass(drawerFeedback?.Timestamp)">
+              {{ formatRelativeTime(drawerFeedback?.Timestamp) }}
+            </span>
+            <span class="text-muted small">({{ formatFullTimestamp(drawerFeedback?.Timestamp) }})</span>
+          </div>
+        </div>
+        <div class="drawer-section">
+          <div class="drawer-label">คำถามผู้ใช้ (User Query)</div>
+          <div class="drawer-value text-dark whitespace-prewrap">{{ drawerFeedback?.UserQuery || '-' }}</div>
+        </div>
+        <div class="drawer-section">
+          <div class="drawer-label">คำตอบ (Question Text)</div>
+          <div class="drawer-value text-dark whitespace-prewrap">{{ drawerFeedback?.QuestionText || '-' }}</div>
+        </div>
+        <div class="drawer-section" v-if="drawerFeedback?.FeedbackReason">
+          <div class="drawer-label">เหตุผล</div>
+          <div class="mt-2">
+            <span class="reason-badge" :class="getReasonClass(drawerFeedback.FeedbackReason)">
+              {{ formatReason(drawerFeedback.FeedbackReason) }}
+            </span>
+          </div>
+        </div>
+        <div class="drawer-section" v-if="drawerFeedback?.FeedbackComment">
+          <div class="drawer-label">ความคิดเห็น</div>
+          <div class="drawer-value text-dark whitespace-prewrap comment-text-box">{{ drawerFeedback.FeedbackComment }}</div>
+        </div>
+      </div>
+      <div class="drawer-footer">
+        <div class="d-flex gap-2">
+          <button 
+            v-if="drawerFeedback?.FeedbackValue === 0 && drawerFeedback?.QuestionsAnswersID"
+            class="btn-apple-primary flex-fill" 
+            @click="openInlineEditFromDrawer"
+            :disabled="handlingFeedbackId === drawerFeedback?.FeedbackID || savingInlineEdit"
+          >
+            <i class="bi bi-pencil-square me-2"></i> แก้ไขคำถาม
+          </button>
+          <button 
+            v-if="drawerFeedback?.FeedbackValue !== 1"
+            class="btn-apple-secondary text-danger flex-fill" 
+            @click="handleFeedbackFromDrawer"
+            :disabled="deletingFeedbackId === drawerFeedback?.FeedbackID"
+          >
+            <span v-if="deletingFeedbackId === drawerFeedback?.FeedbackID" class="spinner-border spinner-border-sm me-1"></span>
+            <i v-else class="bi bi-trash me-2"></i> ลบ
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -473,6 +548,49 @@ function closeCommentModal() {
   setTimeout(() => {
     selectedFeedback.value = null;
   }, 300);
+}
+
+// Drawer (sidebar) state
+const showDrawer = ref(false);
+const drawerFeedback = ref(null);
+
+function openDrawer(fb) {
+  drawerFeedback.value = fb;
+  showDrawer.value = true;
+}
+
+function closeDrawer() {
+  showDrawer.value = false;
+  setTimeout(() => {
+    drawerFeedback.value = null;
+  }, 300);
+}
+
+function formatFullTimestamp(timestamp) {
+  if (!timestamp) return '-';
+  const d = new Date(timestamp);
+  if (isNaN(d.getTime())) return timestamp;
+  return d.toLocaleString('th-TH', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric', 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+}
+
+function openInlineEditFromDrawer() {
+  if (drawerFeedback.value) {
+    closeDrawer();
+    openInlineEdit(drawerFeedback.value);
+  }
+}
+
+async function handleFeedbackFromDrawer() {
+  if (drawerFeedback.value) {
+    closeDrawer();
+    await handleFeedback(drawerFeedback.value);
+  }
 }
 
 // Apple-style Alert / Confirm modal state
@@ -1886,5 +2004,231 @@ table th:last-child,
 table td:last-child {
   text-align: center;
   white-space: nowrap;
+}
+
+/* Clickable Row */
+.clickable-row {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.clickable-row:hover {
+  background-color: rgba(0, 113, 227, 0.06) !important;
+  transform: scale(1.002);
+}
+
+/* Drawer (Sidebar) Styles */
+.apple-drawer {
+  position: fixed;
+  top: 0;
+  right: -500px;
+  width: 500px;
+  max-width: 100vw;
+  height: 100vh;
+  background: white;
+  box-shadow: -4px 0 24px rgba(0,0,0,0.1);
+  z-index: 1050;
+  transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+.apple-drawer.drawer-open {
+  right: 0;
+}
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  backdrop-filter: blur(4px);
+  z-index: 1049;
+}
+.drawer-header {
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  background: linear-gradient(135deg, #FF9500 0%, #FF6B00 100%);
+  color: white;
+}
+.drawer-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+.btn-close-drawer {
+  border: none;
+  background: rgba(255,255,255,0.2);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: background 0.2s;
+}
+.btn-close-drawer:hover {
+  background: rgba(255,255,255,0.3);
+}
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+.drawer-section {
+  margin-bottom: 24px;
+}
+.drawer-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #86868b;
+  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+}
+.drawer-value {
+  font-size: 1rem;
+  color: #1d1d1f;
+  line-height: 1.5;
+}
+.drawer-footer {
+  padding: 20px 24px;
+  border-top: 1px solid rgba(0,0,0,0.05);
+  background: #F9F9FB;
+}
+.whitespace-prewrap {
+  white-space: pre-wrap;
+}
+.comment-text-box {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  margin-top: 8px;
+}
+
+/* Apple buttons for drawer */
+.btn-apple-primary {
+  background: linear-gradient(135deg, #007AFF 0%, #0055DD 100%);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+}
+.btn-apple-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 122, 255, 0.3);
+}
+.btn-apple-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+.btn-apple-secondary {
+  background: rgba(0,0,0,0.05);
+  color: #1d1d1f;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-apple-secondary:hover {
+  background: rgba(0,0,0,0.1);
+}
+.btn-apple-secondary.text-danger {
+  color: #FF3B30;
+}
+.btn-apple-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Apple Modal Styles */
+.apple-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px);
+  z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.apple-modal-content {
+  background: rgba(255,255,255,0.98); backdrop-filter: blur(20px);
+  border-radius: 18px; width: 100%; max-width: 600px;
+  box-shadow: 0 24px 48px rgba(0,0,0,0.2); overflow: hidden; display: flex; flex-direction: column;
+}
+.apple-modal-content.wide-modal { max-width: 800px; }
+.apple-modal-header { 
+  padding: 20px 24px; border-bottom: 1px solid rgba(0,0,0,0.06); 
+  display: flex; justify-content: space-between; align-items: center; background: white; 
+}
+.apple-modal-title { font-size: 1.25rem; font-weight: 700; color: #1d1d1f; margin: 0; }
+.apple-modal-subtitle { font-size: 0.9rem; color: #86868b; }
+.apple-close-btn { 
+  width: 32px; height: 32px; border-radius: 50%; border: none; 
+  background: rgba(0,0,0,0.05); color: #1d1d1f; 
+  display: flex; align-items: center; justify-content: center; transition: all 0.2s; cursor: pointer;
+}
+.apple-close-btn:hover { background: rgba(0,0,0,0.1); transform: rotate(90deg); }
+.apple-modal-body { padding: 24px; overflow-y: auto; max-height: 80vh; }
+
+.apple-input-group { margin-bottom: 16px; }
+.apple-input-group label { font-size: 0.85rem; font-weight: 600; color: #1d1d1f; margin-bottom: 6px; display: block; }
+.apple-input {
+  width: 100%; background: rgba(118, 118, 128, 0.12); border: none; border-radius: 10px; padding: 10px 14px; font-size: 1rem; color: #1d1d1f; transition: all 0.2s;
+}
+.apple-input:focus { outline: none; background: white; box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15); }
+.apple-textarea { resize: vertical; min-height: 100px; }
+
+.keyword-input-wrapper { position: relative; display: flex; align-items: center; }
+.apple-icon-btn-abs { 
+  position: absolute; right: 6px; width: 32px; height: 32px; border-radius: 8px; 
+  background: linear-gradient(135deg, #007AFF 0%, #0055DD 100%); 
+  border: none; color: white; display: flex; align-items: center; justify-content: center; 
+  box-shadow: 0 3px 8px rgba(0,113,227,0.3); cursor: pointer; transition: all 0.2s; z-index: 10;
+}
+.apple-icon-btn-abs i { color: white; font-size: 18px; font-weight: 700; }
+.apple-icon-btn-abs:hover { background: linear-gradient(135deg, #0055DD 0%, #003AAA 100%); transform: scale(1.1); }
+
+.select-wrapper { position: relative; }
+.select-icon { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: #86868b; pointer-events: none; }
+.select-wrapper select { appearance: none; padding-right: 36px; }
+
+.keyword-tag {
+  background: rgba(0,0,0,0.05); color: #1d1d1f; padding: 4px 10px;
+  border-radius: 6px; font-size: 0.85rem; font-weight: 500;
+}
+.keyword-tag.removable { cursor: pointer; transition: background 0.2s; }
+.keyword-tag.removable:hover { background: rgba(255, 59, 48, 0.1); color: #FF3B30; }
+
+.apple-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+
+.apple-spinner {
+  width: 40px; height: 40px; border: 3px solid rgba(0, 113, 227, 0.2);
+  border-top-color: #007AFF; border-radius: 50%; animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Apple Modal Transitions */
+.apple-zoom-enter-active { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.apple-zoom-leave-active { transition: all 0.2s ease; }
+.apple-zoom-enter-from, .apple-zoom-leave-to { opacity: 0; transform: scale(0.95); }
+
+/* Mobile responsive for drawer */
+@media (max-width: 576px) {
+  .apple-drawer {
+    width: 100%;
+    right: -100%;
+  }
+  .apple-modal-content { border-radius: 0; max-width: 100%; height: 100vh; max-height: 100vh; }
+  .apple-modal-body { padding: 16px; }
 }
 </style>

@@ -507,6 +507,9 @@
       </div>
     </div>
 
+    <!-- Confirm Modal Component -->
+    <ConfirmModalComponent />
+
   </div>
 </template>
 
@@ -516,12 +519,16 @@ import { useRouter } from 'vue-router';
 import { Tooltip } from 'bootstrap';
 import Sidebar from '@/components/Sidebar.vue';
 import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
+import { useConfirm } from '@/composables/useConfirm';
 import '@/assets/sidebar.css';
 import ex4Url from '@/assets/ex4.svg';
 
 const router = useRouter();
 const { appContext } = getCurrentInstance();
 const { $axios, $swal } = appContext.config.globalProperties;
+
+// Confirm Modal
+const { confirmAction, ConfirmModalComponent } = useConfirm();
 
 const userInfoObject = ref({});
 const userType = ref("");
@@ -707,44 +714,35 @@ const saveCrudForm = async () => {
 };
 
 const confirmDelete = async (cat) => {
-  const result = await $swal?.fire({
-    title: 'ยืนยันการลบ?',
-    text: `ต้องการลบหมวดหมู่ "${cat.CategoriesName}" ใช่หรือไม่?`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#FF3B30', // Apple Red
-    cancelButtonColor: '#8E8E93',   // Apple Gray
-    confirmButtonText: 'ลบ',
-    cancelButtonText: 'ยกเลิก',
-    customClass: {
-      popup: 'apple-swal-popup',
-      confirmButton: 'apple-swal-confirm',
-      cancelButton: 'apple-swal-cancel'
-    }
-  });
-
-  if (result?.isConfirmed) {
-    try {
-      const resp = await $axios.delete(`/categories/crud/delete/${cat.CategoriesID}`);
-      // If backend indicates it was already removed, show info and refresh
-      if (resp?.data && resp.data.data && resp.data.data.alreadyRemoved) {
-        await fetchCategories();
-        $swal?.fire({ icon: 'info', title: 'Removed', text: 'หมวดหมู่นี้ถูกลบไปแล้ว', toast: true, position: 'bottom-end', timer: 2000, showConfirmButton: false });
-      } else {
-        $swal?.fire({ icon: 'success', title: 'Deleted', text: 'ลบหมวดหมู่เรียบร้อย', toast: true, position: 'bottom-end', timer: 2000, showConfirmButton: false });
-        await fetchCategories();
+  try {
+    await confirmAction({
+      title: 'ยืนยันการลบ',
+      message: `ต้องการลบหมวดหมู่ "<strong>${cat.CategoriesName}</strong>" ใช่หรือไม่?`,
+      variant: 'danger',
+      confirmText: 'ลบ',
+      loadingText: 'กำลังลบ...',
+      onConfirm: async () => {
+        const resp = await $axios.delete(`/categories/crud/delete/${cat.CategoriesID}`);
+        // If backend indicates it was already removed, show info and refresh
+        if (resp?.data && resp.data.data && resp.data.data.alreadyRemoved) {
+          await fetchCategories();
+          $swal?.fire({ icon: 'info', title: 'Removed', text: 'หมวดหมู่นี้ถูกลบไปแล้ว', toast: true, position: 'bottom-end', timer: 2000, showConfirmButton: false });
+        } else {
+          $swal?.fire({ icon: 'success', title: 'Deleted', text: 'ลบหมวดหมู่เรียบร้อย', toast: true, position: 'bottom-end', timer: 2000, showConfirmButton: false });
+          await fetchCategories();
+        }
       }
-    } catch (err) {
-      // If there are linked Q&A entries, show message from server
-      if (err.response?.status === 400 && err.response?.data?.qaCount) {
-        $swal?.fire({ icon: 'error', title: 'Failed', text: err.response?.data?.message || 'Delete failed' });
-      } else if (err.response?.status === 404) {
-        // Resource not found: refresh list and show informative message
-        await fetchCategories();
-        $swal?.fire({ icon: 'info', title: 'Not Found', text: 'ไม่พบหมวดหมู่ที่ต้องการลบ (อาจถูกลบไปแล้ว)' });
-      } else {
-        $swal?.fire({ icon: 'error', title: 'Failed', text: err.response?.data?.message || 'Delete failed' });
-      }
+    });
+  } catch (err) {
+    // If there are linked Q&A entries, show message from server
+    if (err.response?.status === 400 && err.response?.data?.qaCount) {
+      $swal?.fire({ icon: 'error', title: 'Failed', text: err.response?.data?.message || 'Delete failed' });
+    } else if (err.response?.status === 404) {
+      // Resource not found: refresh list and show informative message
+      await fetchCategories();
+      $swal?.fire({ icon: 'info', title: 'Not Found', text: 'ไม่พบหมวดหมู่ที่ต้องการลบ (อาจถูกลบไปแล้ว)' });
+    } else if (err.response) {
+      $swal?.fire({ icon: 'error', title: 'Failed', text: err.response?.data?.message || 'Delete failed' });
     }
   }
 };

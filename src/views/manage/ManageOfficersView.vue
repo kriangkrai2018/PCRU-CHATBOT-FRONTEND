@@ -248,6 +248,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Confirm Modal Component -->
+    <ConfirmModalComponent />
   </div>
 </template>
 
@@ -258,6 +261,7 @@ import { Modal, Tooltip } from 'bootstrap';
 
 import Sidebar from '@/components/Sidebar.vue';
 import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
+import { useConfirm } from '@/composables/useConfirm';
 import '@/assets/sidebar.css';
 import ex3Url from '@/assets/ex3.svg';
 
@@ -265,6 +269,9 @@ const router = useRouter();
 const { appContext } = getCurrentInstance();
 const $axios = appContext.config.globalProperties.$axios;
 const $swal = appContext.config.globalProperties.$swal;
+
+// Confirm Modal
+const { confirmAction, ConfirmModalComponent } = useConfirm();
 
 const userInfoObject = ref({});
 const userType = ref("");
@@ -520,27 +527,23 @@ const saveCrudForm = async () => {
 };
 
 const confirmDelete = async (officer) => {
-  const result = await $swal?.fire({
-    title: 'ยืนยันการลบ',
-    html: `คุณต้องการลบเจ้าหน้าที่ "<strong>${officer.OfficerName}</strong>" หรือไม่?`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#6c757d',
-    confirmButtonText: 'ลบ',
-    cancelButtonText: 'ยกเลิก'
-  });
-
-  if (result?.isConfirmed) {
-    try {
-      await $axios.delete(`/officers/crud/delete/${officer.OfficerID}`);
-      $swal?.fire({ icon: 'success', title: 'ลบเจ้าหน้าที่สำเร็จ', position: 'bottom-end', toast: true, timer: 2000, showConfirmButton: false });
-      await fetchOrgs();
-    } catch (err) {
-      console.error('Delete officer error:', err);
-      const msg = err.response?.data?.message || err.message || 'เกิดข้อผิดพลาด';
-      $swal?.fire({ icon: 'error', title: 'ลบไม่สำเร็จ', text: msg, position: 'bottom-end', toast: true, timer: 4000, showConfirmButton: false });
-    }
+  try {
+    await confirmAction({
+      title: 'ยืนยันการลบ',
+      message: `คุณต้องการลบเจ้าหน้าที่ "<strong>${officer.OfficerName}</strong>" หรือไม่?`,
+      variant: 'danger',
+      confirmText: 'ลบ',
+      loadingText: 'กำลังลบ...',
+      onConfirm: async () => {
+        await $axios.delete(`/officers/crud/delete/${officer.OfficerID}`);
+        $swal?.fire({ icon: 'success', title: 'ลบเจ้าหน้าที่สำเร็จ', position: 'bottom-end', toast: true, timer: 2000, showConfirmButton: false });
+        await fetchOrgs();
+      }
+    });
+  } catch (err) {
+    console.error('Delete officer error:', err);
+    const msg = err.response?.data?.message || err.message || 'เกิดข้อผิดพลาด';
+    $swal?.fire({ icon: 'error', title: 'ลบไม่สำเร็จ', text: msg, position: 'bottom-end', toast: true, timer: 4000, showConfirmButton: false });
   }
 };
 

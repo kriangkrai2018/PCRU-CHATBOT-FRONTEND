@@ -226,6 +226,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Confirm Modal Component -->
+    <ConfirmModalComponent />
   </div>
 </template>
 
@@ -236,6 +239,7 @@ import { Modal, Tooltip } from 'bootstrap';
 
 import Sidebar from '@/components/Sidebar.vue';
 import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
+import { useConfirm } from '@/composables/useConfirm';
 import '@/assets/sidebar.css';
 import ex2Url from '@/assets/ex2.svg';
 
@@ -243,6 +247,9 @@ const router = useRouter();
 const { appContext } = getCurrentInstance();
 const $axios = appContext.config.globalProperties.$axios;
 const $swal = appContext.config.globalProperties.$swal;
+
+// Confirm Modal
+const { confirmAction, ConfirmModalComponent } = useConfirm();
 
 const userInfoObject = ref({});
 const userType = ref("");
@@ -439,27 +446,23 @@ const saveCrudForm = async () => {
 };
 
 const confirmDelete = async (org) => {
-  const result = await $swal?.fire({
-    title: 'ยืนยันการลบ',
-    html: `คุณต้องการลบหน่วยงาน "<strong>${org.OrgName}</strong>" หรือไม่?`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#6c757d',
-    confirmButtonText: 'ลบ',
-    cancelButtonText: 'ยกเลิก'
-  });
-
-  if (result?.isConfirmed) {
-    try {
-      await $axios.delete(`/organizations/crud/delete/${org.OrgID}`);
-      $swal?.fire({ icon: 'success', title: 'ลบหน่วยงานสำเร็จ', position: 'bottom-end', toast: true, timer: 2000, showConfirmButton: false });
-      await fetchOrgs();
-    } catch (err) {
-      console.error('Delete organization error:', err);
-      const msg = err.response?.data?.message || err.message || 'เกิดข้อผิดพลาด';
-      $swal?.fire({ icon: 'error', title: 'ลบไม่สำเร็จ', text: msg, position: 'bottom-end', toast: true, timer: 4000, showConfirmButton: false });
-    }
+  try {
+    await confirmAction({
+      title: 'ยืนยันการลบ',
+      message: `คุณต้องการลบหน่วยงาน "<strong>${org.OrgName}</strong>" หรือไม่?`,
+      variant: 'danger',
+      confirmText: 'ลบ',
+      loadingText: 'กำลังลบ...',
+      onConfirm: async () => {
+        await $axios.delete(`/organizations/crud/delete/${org.OrgID}`);
+        $swal?.fire({ icon: 'success', title: 'ลบหน่วยงานสำเร็จ', position: 'bottom-end', toast: true, timer: 2000, showConfirmButton: false });
+        await fetchOrgs();
+      }
+    });
+  } catch (err) {
+    console.error('Delete organization error:', err);
+    const msg = err.response?.data?.message || err.message || 'เกิดข้อผิดพลาด';
+    $swal?.fire({ icon: 'error', title: 'ลบไม่สำเร็จ', text: msg, position: 'bottom-end', toast: true, timer: 4000, showConfirmButton: false });
   }
 };
 

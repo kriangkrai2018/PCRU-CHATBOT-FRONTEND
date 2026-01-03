@@ -137,11 +137,15 @@
                   <th>Review Date</th>
                   <th>Category</th>
                   <th>Status</th>
-                  <th class="text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="qa in paginatedQuestions" :key="qa.QuestionsAnswersID" class="align-middle apple-row">
+                <tr 
+                  v-for="qa in paginatedQuestions" 
+                  :key="qa.QuestionsAnswersID" 
+                  class="align-middle apple-row clickable-row"
+                  @click="openInlineEdit(qa)"
+                >
                   <td class="ps-4 fw-medium text-secondary" data-label="ID">{{ qa.QuestionsAnswersID }}</td>
                   <td class="py-3" data-label="Question Title">
                     <div class="question-text-cell fw-medium text-dark" :title="qa.QuestionTitle">{{ qa.QuestionTitle }}</div>
@@ -166,14 +170,9 @@
                       {{ getStatusText(qa) }}
                     </span>
                   </td>
-                  <td class="py-3 text-center" data-label="">
-                    <button class="btn-apple-primary small" @click="openInlineEdit(qa)">
-                      <i class="bi bi-pencil-square me-2"></i> Update
-                    </button>
-                  </td>
                 </tr>
                 <tr v-if="filteredQuestions.length === 0">
-                  <td colspan="6" class="text-center text-muted py-5">
+                  <td colspan="5" class="text-center text-muted py-5">
                     <div class="empty-state">
                       <i class="bi bi-check2-circle"></i>
                       <p>All questions are up to date</p>
@@ -278,8 +277,8 @@
               <div class="apple-input-group">
                 <label>Keywords (comma separated)</label>
                 <div class="keyword-input-wrapper">
-                  <input type="text" class="apple-input pe-5" v-model="inlineKeywordsInput" @keyup.enter.prevent="addInlineKeyword" placeholder="Type and press Enter..." />
-                  <button class="apple-icon-btn-abs" @click="addInlineKeyword"><i class="bi bi-plus-lg"></i></button>
+                  <input type="text" class="apple-input" v-model="inlineKeywordsInput" @keyup.enter.prevent="addInlineKeyword" placeholder="Type and press Enter..." style="padding-right: 40px;" />
+                  <button class="apple-icon-btn-abs" @click="addInlineKeyword" title="Add keyword"><i class="bi bi-plus-lg"></i></button>
                 </div>
                 <div class="d-flex flex-wrap gap-2 mt-2">
                   <span v-for="(k, idx) in inlineForm.keywords" :key="k+idx" class="keyword-tag removable" @click="removeInlineKeyword(idx)">
@@ -893,6 +892,8 @@ onUnmounted(() => {
 }
 .apple-table tbody td { padding: 14px 16px; border-bottom: 1px solid rgba(0,0,0,0.03); color: #1d1d1f; }
 .apple-table tr.apple-row:hover { background-color: rgba(0, 113, 227, 0.03); }
+.apple-table tr.clickable-row { cursor: pointer; transition: all 0.2s ease; }
+.apple-table tr.clickable-row:hover { background-color: rgba(0, 113, 227, 0.06); transform: scale(1.002); }
 
 /* Badges */
 .apple-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
@@ -923,15 +924,18 @@ onUnmounted(() => {
 
 /* Buttons */
 .btn-apple-primary {
-  background: var(--apple-blue); color: white; padding: 8px 16px; border-radius: 10px; border: none; font-weight: 500; transition: transform 0.2s, box-shadow 0.2s; display: inline-flex; align-items: center;
+  background: linear-gradient(135deg, #007AFF 0%, #0055DD 100%); color: white; padding: 8px 16px; border-radius: 10px; border: none; font-weight: 600; transition: transform 0.2s, box-shadow 0.2s; display: inline-flex; align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.2);
 }
-.btn-apple-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3); }
+.btn-apple-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0, 113, 227, 0.3); }
+.btn-apple-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 .btn-apple-primary.small { padding: 6px 12px; font-size: 0.85rem; }
 
 .btn-apple-secondary {
-  background: rgba(0,0,0,0.05); color: #1d1d1f; padding: 8px 16px; border-radius: 10px; border: none; font-weight: 500; transition: background 0.2s;
+  background: rgba(0,0,0,0.06); color: #1d1d1f; padding: 8px 16px; border-radius: 10px; border: none; font-weight: 600; transition: all 0.2s;
 }
-.btn-apple-secondary:hover { background: rgba(0,0,0,0.1); }
+.btn-apple-secondary:hover { background: rgba(0,0,0,0.12); }
+.btn-apple-secondary:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* Modal & Form */
 .apple-modal-overlay {
@@ -957,7 +961,41 @@ onUnmounted(() => {
 }
 .apple-input:focus { outline: none; background: white; box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15); }
 .apple-textarea { resize: vertical; min-height: 100px; }
-.apple-icon-btn-abs { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 6px; background: white; border: none; color: var(--apple-blue); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.keyword-input-wrapper { position: relative; display: flex; align-items: center; }
+.apple-icon-btn-abs { 
+  position: absolute; 
+  right: 6px; 
+  width: 32px; 
+  height: 32px; 
+  border-radius: 8px; 
+  background: linear-gradient(135deg, #007AFF 0%, #0055DD 100%); 
+  border: none; 
+  color: white; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  box-shadow: 0 3px 8px rgba(0,113,227,0.3); 
+  cursor: pointer; 
+  transition: all 0.2s;
+  z-index: 10;
+  flex-shrink: 0;
+}
+.apple-icon-btn-abs i { 
+  color: white; 
+  font-size: 18px; 
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.apple-icon-btn-abs:hover { 
+  background: linear-gradient(135deg, #0055DD 0%, #003AAA 100%);
+  transform: scale(1.1); 
+  box-shadow: 0 5px 14px rgba(0,113,227,0.4); 
+}
+.apple-icon-btn-abs:active {
+  transform: scale(0.95);
+}
 .select-wrapper { position: relative; }
 .select-icon { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: #86868b; pointer-events: none; }
 .select-wrapper select { appearance: none; padding-right: 36px; }
