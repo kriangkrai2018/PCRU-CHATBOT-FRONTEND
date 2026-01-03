@@ -377,23 +377,64 @@
       </div>
     </div>
 
-    <!-- Seed Confirmation Modal -->
+    <!-- Seed Confirmation Modal with Preview -->
     <Teleport to="body">
       <div v-if="showSeedModal" class="modal-overlay" @click.self="showSeedModal = false">
-        <div class="apple-modal-card seed-modal">
+        <div class="apple-modal-card seed-modal-content">
           <div class="modal-icon primary">
             <i class="bi bi-magic"></i>
           </div>
           <h3 class="modal-title">เติมคำอัตโนมัติ</h3>
-          <p class="modal-text">
-            ระบบจะเติม Stopwords มาตรฐานจาก pythainlp ประมาณ 120 คำ<br>
-            (เช่น ผม, ฉัน, ที่, อยาก, ครับ, ค่ะ) ลงในระบบ<br>
-            <small class="text-muted">คำที่มีอยู่แล้วจะถูกข้าม ไม่ซ้ำกัน</small>
-          </p>
+          
+          <!-- Loading -->
+          <div v-if="seedModal.loading" class="seed-loading">
+            <div class="loading-spinner"></div>
+            <p class="mt-2 text-muted">กำลังโหลดรายการคำ...</p>
+          </div>
+          
+          <!-- Preview content -->
+          <div v-else class="seed-preview">
+            <!-- Words to add -->
+            <div v-if="seedModal.toAdd.length > 0" class="seed-section">
+              <h4 class="seed-section-title text-success">
+                <i class="bi bi-plus-circle-fill me-2"></i>
+                คำที่จะเพิ่มใหม่ ({{ seedModal.toAdd.length }} คำ)
+              </h4>
+              <div class="seed-words-list">
+                <span v-for="word in seedModal.toAdd" :key="word" class="seed-word-tag new">
+                  {{ word }}
+                </span>
+              </div>
+            </div>
+            
+            <!-- Already exists -->
+            <div v-if="seedModal.alreadyExists.length > 0" class="seed-section">
+              <h4 class="seed-section-title text-muted">
+                <i class="bi bi-check-circle me-2"></i>
+                มีในระบบแล้ว ({{ seedModal.alreadyExists.length }} คำ)
+              </h4>
+              <div class="seed-words-list">
+                <span v-for="word in seedModal.alreadyExists" :key="word" class="seed-word-tag exists">
+                  {{ word }}
+                </span>
+              </div>
+            </div>
+            
+            <!-- Empty state -->
+            <div v-if="seedModal.toAdd.length === 0" class="seed-empty">
+              <i class="bi bi-check-circle-fill text-success" style="font-size: 2rem;"></i>
+              <p class="mt-2 mb-0">ข้อมูลครบถ้วนแล้ว ไม่มีคำใหม่ที่ต้องเพิ่ม</p>
+            </div>
+          </div>
+          
           <div class="modal-actions">
             <button class="btn-secondary" @click="showSeedModal = false">ยกเลิก</button>
-            <button class="btn-primary-apple" @click="seedStopwords" :disabled="isSeeding">
-              {{ isSeeding ? 'กำลังเติม...' : 'ยืนยัน' }}
+            <button 
+              class="btn-primary-apple" 
+              @click="seedStopwords" 
+              :disabled="isSeeding || seedModal.toAdd.length === 0"
+            >
+              {{ isSeeding ? 'กำลังเติม...' : `เพิ่ม ${seedModal.toAdd.length} คำ` }}
             </button>
           </div>
         </div>
@@ -458,6 +499,12 @@ const searchQuery = ref('');
 // Seed modal state
 const showSeedModal = ref(false);
 const isSeeding = ref(false);
+const seedModal = ref({
+  loading: false,
+  toAdd: [],
+  alreadyExists: [],
+  totalStandard: 0
+});
 
 // Pagination
 const currentPage = ref(1);
@@ -697,8 +744,25 @@ async function confirmDelete(item) {
 }
 
 // Seed helpers
-function confirmSeed() {
+async function confirmSeed() {
   showSeedModal.value = true;
+  seedModal.value.loading = true;
+  seedModal.value.toAdd = [];
+  seedModal.value.alreadyExists = [];
+  
+  try {
+    const response = await $axios.get('/stopwords/seed/preview');
+    if (response.data && response.data.ok) {
+      seedModal.value.toAdd = response.data.data.toAdd || [];
+      seedModal.value.alreadyExists = response.data.data.alreadyExists || [];
+      seedModal.value.totalStandard = response.data.data.totalStandard || 0;
+    }
+  } catch (error) {
+    console.error('Error fetching seed preview:', error);
+    toastError('ไม่สามารถโหลดรายการคำได้');
+  } finally {
+    seedModal.value.loading = false;
+  }
 }
 
 async function seedStopwords() {
@@ -1911,5 +1975,87 @@ button.mobile-sidebar-toggle.mobile-inline-toggle { display: none !important; bo
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Seed Modal with Preview */
+.seed-modal-content {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 600px;
+  width: 95%;
+  max-height: 80vh;
+  overflow-y: auto;
+  text-align: center;
+}
+
+.seed-loading {
+  padding: 2rem 0;
+}
+
+.seed-preview {
+  text-align: left;
+  margin: 1rem 0 1.5rem 0;
+}
+
+.seed-section {
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  background: #F9F9F9;
+  border-radius: 12px;
+}
+
+.seed-section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.seed-words-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.seed-word-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.seed-word-tag.new {
+  background: linear-gradient(135deg, #FF9500 0%, #FF6B00 100%);
+  color: white;
+}
+
+.seed-word-tag.exists {
+  background: #E5E5EA;
+  color: #6E6E73;
+}
+
+.seed-empty {
+  padding: 2rem 0;
+  text-align: center;
+  color: #6E6E73;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #F5F5F7;
+  border-top-color: #FF9500;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 </style>
