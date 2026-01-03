@@ -708,6 +708,11 @@ function addKeyword() {
 function removeKeyword(index) { formData.value.keywords.splice(index, 1); }
 
 const saveCrudForm = async () => {
+  // 🆕 Auto-add any keywords in the input field before saving
+  if (keywordInput.value && keywordInput.value.trim()) {
+    addKeyword();
+  }
+
   if (!formData.value.QuestionTitle || !formData.value.QuestionText || !formData.value.CategoriesID || !formData.value.ReviewDate) {
     toastWarning('กรุณากรอกข้อมูลให้ครบ'); return;
   }

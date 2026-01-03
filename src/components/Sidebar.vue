@@ -1,13 +1,19 @@
 <template>
-  <div class="sidebar d-flex flex-column flex-shrink-0 pt-3 ps-0 pe-0" :class="{ 'collapsed': isCollapsed }">
-    <div class="sidebar-header d-flex align-items-center">
-      <button class="btn btn-link text-dark p-0 toggle-btn" @click="toggleSidebar">
-        <AnimatedToggleIcon :isOpen="!isCollapsed" />
-      </button>
-      <span class="fs-4 fw-bold pcru-text" :class="{ 'collapsed-text': isCollapsed }">PCRU</span>
+  <div class="sidebar d-flex flex-column flex-shrink-0 ps-0 pe-0" :class="{ 'collapsed': isCollapsed }">
+    <!-- Fixed Header -->
+    <div class="sidebar-header-fixed">
+      <div class="sidebar-header d-flex align-items-center">
+        <button class="btn btn-link text-dark p-0 toggle-btn" @click="toggleSidebar">
+          <AnimatedToggleIcon :isOpen="!isCollapsed" />
+        </button>
+        <span class="fs-4 fw-bold pcru-text" :class="{ 'collapsed-text': isCollapsed }">PCRU</span>
+      </div>
+      <hr>
     </div>
-    <hr>
-    <ul class="nav nav-pills flex-column mb-auto">
+    
+    <!-- Scrollable Navigation -->
+    <div class="sidebar-nav-wrapper">
+      <ul class="nav nav-pills flex-column">
       <li class="nav-item">
         <router-link
           to="/dashboard"
@@ -227,13 +233,17 @@
         </router-link>
       </li> -->
     </ul>
-    <div
-      class="user-profile d-flex flex-column align-items-center justify-content-center gap-2"
-      @mouseenter="isHoveringProfile = true"
-      @mouseleave="isHoveringProfile = false"
-      role="button"
-      tabindex="0"
-    >
+    </div>
+    
+    <!-- Fixed User Profile -->
+    <div class="sidebar-footer-fixed">
+      <div
+        class="user-profile d-flex flex-column align-items-center justify-content-center gap-2"
+        @mouseenter="isHoveringProfile = true"
+        @mouseleave="isHoveringProfile = false"
+        role="button"
+        tabindex="0"
+      >
       <!-- Icon on top -->
       <div class="w-100 d-flex align-items-center justify-content-start position-relative ps-2">
         <i v-if="isCollapsed && isHoveringProfile" class="bi bi-box-arrow-right fs-5" @click="handleLogout"></i>
@@ -255,6 +265,7 @@
         <small v-if="userType === 'Officer' && userInfoObject?.OrgName" class="text-muted d-block" style="font-size: 10px; margin-top: 2px;">
           {{ userInfoObject.OrgName }}
         </small>
+      </div>
       </div>
     </div>
   </div>
@@ -405,19 +416,30 @@ const handleLogout = () => { logout(router); };
   transition: width 340ms cubic-bezier(0.22, 0.9, 0.28, 1), background-color 180ms ease-in-out;
   background-color: #E3E3E3;
   box-sizing: border-box;
-  position: sticky; /* keep sidebar fixed while main scrolls */
+  position: sticky;
   top: 0;
   height: 100vh;
-  overflow-y: auto;
-  overflow-x: hidden; /* hide horizontal overflow but allow vertical scrolling */
+  overflow: hidden; /* Prevent scrolling on the sidebar itself */
   will-change: width, transform;
+  display: flex;
+  flex-direction: column;
 }
+
 .sidebar.collapsed { 
-  width: 70px !important;        /* force collapsed width to take precedence */
+  width: 70px !important;
   min-width: 70px !important;
-  overflow-x: hidden !important; /* keep horizontal overflow hidden when collapsed */
-  overflow-y: auto !important;   /* still allow vertical scrolling when collapsed */
 }
+
+/* Fixed Header */
+.sidebar-header-fixed {
+  position: sticky;
+  top: 0;
+  background-color: #E3E3E3;
+  z-index: 10;
+  padding-top: 1rem;
+  flex-shrink: 0;
+}
+
 .sidebar-header { 
   min-height: 50px; 
   display: flex;
@@ -426,10 +448,53 @@ const handleLogout = () => { logout(router); };
   padding-left: 0.75rem;
   gap: 0.5rem;
 }
+
+.sidebar-header-fixed hr {
+  margin: 0.5rem 0;
+  border-color: rgba(0,0,0,0.1);
+}
+
+/* Scrollable Navigation */
+.sidebar-nav-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 1rem;
+}
+
+.sidebar-nav-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-nav-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-nav-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.2);
+  border-radius: 3px;
+}
+
+.sidebar-nav-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.3);
+}
+
+/* Fixed Footer (User Profile) */
+.sidebar-footer-fixed {
+  position: sticky;
+  bottom: 0;
+  background-color: #E3E3E3;
+  z-index: 10;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  padding-top: 0.5rem;
+}
+
 .pcru-text {
   flex: 1;
   text-align: left;
 }
+
 .toggle-btn { 
   flex-shrink: 0;
   z-index: 10;
@@ -441,14 +506,20 @@ const handleLogout = () => { logout(router); };
   padding: 0;
   margin: 0;
 }
+
 .nav-link { 
   color: rgba(0,0,0,0.65);
   transition: color 220ms ease, background-color 220ms ease, padding 260ms cubic-bezier(0.22, 0.9, 0.28, 1);
-  padding-left: 0; /* remove left padding so items align flush */
+  padding-left: 0;
 }
+
 .nav-link:hover { background-color: rgba(0,0,0,0.03); }
 .nav-link.active { color: #000 !important; background-color: #D9D9D9 !important; }
-.user-profile { padding: 0.5rem; margin-top: auto; }
+
+.user-profile { 
+  padding: 0.5rem;
+}
+
 .manage-questions-answers-link {
   font-size: 0.75em !important;
 }

@@ -142,11 +142,11 @@
               </thead>
               <tbody>
                 <tr v-for="qa in paginatedQuestions" :key="qa.QuestionsAnswersID" class="align-middle apple-row">
-                  <td class="ps-4 fw-medium text-secondary">{{ qa.QuestionsAnswersID }}</td>
-                  <td class="py-3">
+                  <td class="ps-4 fw-medium text-secondary" data-label="ID">{{ qa.QuestionsAnswersID }}</td>
+                  <td class="py-3" data-label="Question Title">
                     <div class="question-text-cell fw-medium text-dark" :title="qa.QuestionTitle">{{ qa.QuestionTitle }}</div>
                   </td>
-                  <td class="py-3">
+                  <td class="py-3" data-label="Review Date">
                     <span 
                       :class="['apple-badge', getReviewDateBadgeClass(qa.ReviewDate)]"
                       data-bs-toggle="tooltip" 
@@ -156,17 +156,17 @@
                       {{ formatRelativeTime(qa.ReviewDate) }}
                     </span>
                   </td>
-                  <td class="py-3">
+                  <td class="py-3" data-label="Category">
                     <span class="tag-badge" :style="{ backgroundColor: getCategoryColor(qa.CategoriesID) }">
                       {{ categoriesNameMapSafe[qa.CategoriesID] || qa.CategoriesID }}
                     </span>
                   </td>
-                  <td class="py-3">
+                  <td class="py-3" data-label="Status">
                     <span :class="getStatusBadgeClass(qa)">
                       {{ getStatusText(qa) }}
                     </span>
                   </td>
-                  <td class="py-3 text-center">
+                  <td class="py-3 text-center" data-label="">
                     <button class="btn-apple-primary small" @click="openInlineEdit(qa)">
                       <i class="bi bi-pencil-square me-2"></i> Update
                     </button>
@@ -974,4 +974,153 @@ onUnmounted(() => {
 /* Pagination Override */
 .pagination .page-link { border: none; color: #1d1d1f; border-radius: 8px; margin: 0 2px; }
 .pagination .page-item.active .page-link { background: var(--apple-blue); color: white; box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3); }
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablet & Mobile */
+@media (max-width: 992px) {
+  .dashboard-container { padding: 0; }
+  .container-fluid { padding: 1rem !important; }
+  
+  /* Header responsive */
+  .d-flex.align-items-center.justify-content-between { flex-direction: column; align-items: flex-start !important; gap: 1rem; }
+  .apple-status-badge { margin-top: 0.5rem; }
+  
+  /* Stats cards 2 columns */
+  .row.mb-4.g-3 .col-md-4 { flex: 0 0 50%; max-width: 50%; }
+  
+  /* Charts stack vertically */
+  .row.mb-4.g-4 .col-12.col-lg-6 { flex: 0 0 100%; max-width: 100%; }
+  
+  /* Search bar full width */
+  .search-container { width: 100%; max-width: 100%; }
+  
+  /* Card header actions stack */
+  .card-header-actions { flex-direction: column; align-items: stretch !important; gap: 0.75rem; }
+  .apple-counter-capsule { justify-content: center; }
+}
+
+/* Mobile Only */
+@media (max-width: 768px) {
+  .page-title { font-size: 1.5rem; }
+  
+  /* Stats cards single column */
+  .row.mb-4.g-3 .col-md-4 { flex: 0 0 100%; max-width: 100%; }
+  
+  /* Apple icon box smaller */
+  .apple-icon-box { width: 40px; height: 40px; font-size: 1.25rem; }
+  
+  /* Stat cards compact */
+  .apple-stat-card { padding: 16px; }
+  .stat-icon-wrapper { width: 42px; height: 42px; font-size: 1.4rem; }
+  .stat-value { font-size: 1.4rem; }
+  .stat-label { font-size: 0.8rem; }
+  
+  /* Chart area smaller */
+  .chart-area { height: 220px; }
+  
+  /* Table transforms to card layout */
+  .apple-table { display: block; }
+  .apple-table thead { display: none; }
+  .apple-table tbody { display: flex; flex-direction: column; gap: 1rem; }
+  .apple-table tbody tr {
+    display: block;
+    background: white;
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    padding: 0.75rem 0;
+  }
+  .apple-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    border: none;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+  }
+  .apple-table td:last-child { border-bottom: none; }
+  .apple-table td::before {
+    content: attr(data-label);
+    flex: 1;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #86868b;
+    font-weight: 600;
+    margin-right: 0.8rem;
+    white-space: nowrap;
+  }
+  .apple-table td[data-label=""]::before { display: none; }
+  
+  /* Question text cell full width on mobile */
+  .question-text-cell { 
+    white-space: normal; 
+    max-width: 100%; 
+    flex: 1;
+    text-align: right;
+  }
+  
+  /* Action buttons in mobile cards */
+  .btn-apple-primary.small {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Pagination compact */
+  .pagination { font-size: 0.85rem; }
+  .pagination .page-link { padding: 0.4rem 0.6rem; }
+  
+  /* Modal full screen on mobile */
+  .apple-modal-overlay { padding: 0; }
+  .apple-modal-content { 
+    border-radius: 0; 
+    max-width: 100%; 
+    height: 100vh; 
+    max-height: 100vh;
+  }
+  .apple-modal-body { padding: 16px; }
+  .apple-modal-title { font-size: 1.1rem; }
+  
+  /* Form elements full width */
+  .apple-input-group { margin-bottom: 12px; }
+  .apple-input { padding: 10px 12px; font-size: 0.95rem; }
+  .apple-actions { flex-direction: column; }
+  .apple-actions button { width: 100%; }
+  
+  /* Keyword tags wrap */
+  .d-flex.flex-wrap.gap-2 { gap: 0.5rem !important; }
+  .keyword-tag { font-size: 0.7rem; padding: 2px 6px; }
+}
+
+/* Extra small mobile */
+@media (max-width: 480px) {
+  .container-fluid { padding: 0.75rem !important; }
+  
+  /* Compact everything */
+  .page-title { font-size: 1.3rem; }
+  .hero-subtitle { font-size: 0.85rem; }
+  
+  .apple-stat-card { padding: 12px; }
+  .stat-value { font-size: 1.25rem; }
+  
+  /* Table cards more compact */
+  .apple-table td { padding: 0.65rem 0.85rem; }
+  .apple-table td::before { font-size: 0.6rem; }
+  
+  /* Badges smaller */
+  .apple-badge { font-size: 0.7rem; padding: 3px 8px; }
+  .status-pill { font-size: 0.75rem; padding: 3px 10px; }
+  .tag-badge { font-size: 0.75rem; padding: 3px 8px; }
+  
+  /* Buttons compact */
+  .btn-apple-primary.small { padding: 6px 10px; font-size: 0.8rem; }
+  
+  /* Search input compact */
+  .search-input { padding: 7px 32px; font-size: 0.85rem; }
+  
+  /* Counter capsule smaller */
+  .apple-counter-capsule { padding: 5px 12px; font-size: 0.85rem; }
+  .apple-counter-capsule .label { font-size: 0.75rem; }
+}
 </style>

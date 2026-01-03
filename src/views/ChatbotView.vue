@@ -336,7 +336,7 @@
 
                 </div>
                 <div class="message-bubble" :class="[msg.type, { 'has-contacts': msg.showContacts || (msg.visibleContacts && msg.visibleContacts.length > 0) }]">
-                  <div v-if="!(msg.multipleResults && msg.text && msg.text.trim().startsWith('พบหลายคำถาม'))" class="message-text" v-html="linkifyText(msg.text)"></div>
+                  <div v-if="!(msg.multipleResults && msg.text && msg.text.trim().startsWith('พบหลายคำถาม'))" class="message-text" v-html="linkifyText(msg.text, msg.title, msg.found)"></div>
                   <div v-if="msg.showCategories" class="category-section" style="margin-top: 15px;">
                     <div class="category-title no-underline">หมวดหมู่</div>
                     
@@ -1912,7 +1912,35 @@ export default {
       const plain = (this.linkifyText(raw || '') || '').replace(/<[^>]+>/g, '').trim();
       return !!plain && !/^ไม่มี$/i.test(plain);
     },
-    linkifyText(text) {
+    // 🗺️ Create Apple-style embedded Google Map widget
+    createMapWidget(mapUrl, lat, lng, label = 'ดูแผนที่') {
+      const zoom = 15;
+      // Generate Google Maps embed URL
+      const embedUrl = `https://www.google.com/maps?q=${lat},${lng}&z=${zoom}&output=embed`;
+      
+      // Apple-style map widget HTML - use onclick for reliable clicking
+      return `<div class="map-widget-container" onclick="window.open('${mapUrl}', '_blank')">
+<div class="map-widget">
+<div class="map-preview">
+<iframe src="${embedUrl}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+</div>
+<div class="map-widget-footer">
+<div class="map-widget-info">
+<span class="map-widget-icon">📍</span>
+<span class="map-widget-label">${label}</span>
+</div>
+<span class="map-widget-action">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+<polyline points="15,3 21,3 21,9"></polyline>
+<line x1="10" y1="14" x2="21" y2="3"></line>
+</svg>
+</span>
+</div>
+</div>
+</div>`;
+    },
+    linkifyText(text, title = null, found = false) {
       if (!text) return '';
 
       const knownFacebookPages = {
@@ -2014,6 +2042,48 @@ export default {
         }
       }
       processedText = phoneParts.join('');
+
+      // 🗺️ LAST STEP: Process Google Maps - create TWO separate widgets
+      // Check for Google Map URL pattern (may be linkified or plain)
+      const googleMapLinkMatch = /Google\s*map\s*:\s*<a[^>]*href="(https?:\/\/maps\.app\.goo\.gl\/[A-Za-z0-9]+)"[^>]*>[^<]*<\/a>/i.exec(processedText);
+      const googleMapPlainMatch = /Google\s*map\s*:\s*(https?:\/\/maps\.app\.goo\.gl\/[A-Za-z0-9]+)/i.exec(processedText);
+      const googleMapMatch = googleMapLinkMatch || googleMapPlainMatch;
+      
+      // Check for lat/long pattern
+      const latLngMatch = /latitude\s*longitude\s*:\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/i.exec(processedText);
+      
+      if (googleMapMatch || latLngMatch) {
+        // 🗺️ Build output with title + map widgets
+        let output = '';
+        
+        // 📌 Add title section if available
+        if (title && found) {
+          output += `<div class="message-title">
+<span class="title-label">✨ นี่คือคำตอบที่คุณหา</span>
+<strong>${title}</strong>
+</div>`;
+        }
+        
+        // Widget 1: Google Map URL (short link)
+        if (googleMapMatch) {
+          const shortUrl = googleMapMatch[1];
+          // Use lat/lng if available, otherwise default
+          const lat1 = latLngMatch ? parseFloat(latLngMatch[1]) : 16.451354168722986;
+          const lng1 = latLngMatch ? parseFloat(latLngMatch[2]) : 101.15144827382676;
+          output += this.createMapWidget(shortUrl, lat1, lng1, 'Google Map');
+        }
+        
+        // Widget 2: Coordinates (lat/long)
+        if (latLngMatch) {
+          const lat2 = parseFloat(latLngMatch[1]);
+          const lng2 = parseFloat(latLngMatch[2]);
+          const coordUrl = `https://www.google.com/maps?q=${lat2},${lng2}`;
+          output += this.createMapWidget(coordUrl, lat2, lng2, 'พิกัด GPS');
+        }
+        
+        // Return title + map widgets, discard all other text
+        processedText = output;
+      }
 
       return processedText;
     },
@@ -3886,6 +3956,8 @@ export default {
               // if (multipleResults) msg.multipleResults = true;
               if (resQuestionId) msg.questionId = resQuestionId;
               if (typeof resFound !== 'undefined') msg.found = resFound;
+              // 📌 Set question title if available
+              if (res.data && res.data.title) msg.title = res.data.title;
               
               // 🛡️ Quality Guard: Store confidence info
               if (lowConfidence) msg.lowConfidence = true;
