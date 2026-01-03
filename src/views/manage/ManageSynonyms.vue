@@ -551,7 +551,7 @@ const searchQuery = ref('');
 
 // Pagination
 const currentPage = ref(1);
-const itemsPerPage = ref(15);
+const itemsPerPage = ref(5);
 
 // CRUD state
 const crudModalRef = ref(null);

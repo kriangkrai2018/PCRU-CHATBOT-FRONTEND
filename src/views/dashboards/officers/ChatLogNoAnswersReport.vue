@@ -174,7 +174,7 @@ const fetchData = async () => {
 
 // pagination
 const currentPage = ref(1);
-const itemsPerPage = ref(8);
+const itemsPerPage = ref(5);
 const filtered = computed(() => {
   const q = (localSearch.value || '').toString().trim().toLowerCase();
   if (!q) return items.value;

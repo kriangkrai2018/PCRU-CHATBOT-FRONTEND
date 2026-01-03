@@ -341,7 +341,7 @@ const filteredQuestions = computed(() => {
 
 // pagination
 const currentPage = ref(1);
-const itemsPerPage = ref(8);
+const itemsPerPage = ref(5);
 
 const totalEntries = computed(() => filteredQuestions.value.length);
 const totalPages = computed(() => Math.max(1, Math.ceil(totalEntries.value / itemsPerPage.value)));

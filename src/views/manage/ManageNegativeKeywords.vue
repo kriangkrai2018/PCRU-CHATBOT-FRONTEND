@@ -48,6 +48,10 @@
             
             <!-- Action buttons group -->
             <div class="header-actions d-flex gap-2">
+              <button class="btn-deleted" @click="openDeletedModal" :disabled="isLoadingDeleted" title="คำที่ลบล่าสุด">
+                <i class="bi bi-trash3"></i>
+                <span class="deleted-badge" v-if="deletedCount > 0">{{ deletedCount }}</span>
+              </button>
               <button class="btn-seed" @click="confirmSeed" :disabled="isSeeding" title="เติมคำมาตรฐานอัตโนมัติ">
                 <i class="bi bi-magic"></i>
                 <span class="d-none d-sm-inline">เติมอัตโนมัติ</span>
@@ -365,22 +369,210 @@
       </div>
     </Teleport>
 
-    <!-- 🆕 Seed Confirmation Modal -->
+    <!-- 🆕 Seed Confirmation Modal with Preview -->
     <Teleport to="body">
       <div class="modal-overlay" v-if="seedModal.show" @click.self="seedModal.show = false">
-        <div class="modal-content pop-in">
+        <div class="modal-content seed-modal-content pop-in">
           <div class="modal-icon primary">
             <i class="bi bi-magic"></i>
           </div>
           <h3 class="modal-title">เติมคำอัตโนมัติ</h3>
-          <p class="modal-text">
-            ระบบจะเติมคำปฏิเสธมาตรฐานประมาณ 50 คำ (เช่น ไม่, อย่า, ห้าม) ลงในระบบ<br>
-            <small class="text-muted">คำที่คุณเคยลบไปแล้วจะไม่ถูกเติมกลับมา</small>
-          </p>
+          
+          <!-- Loading state -->
+          <div v-if="seedModal.loading" class="seed-loading">
+            <div class="loading-spinner"></div>
+            <p class="text-muted mt-2">กำลังโหลดรายการ...</p>
+          </div>
+          
+          <!-- Preview content -->
+          <div v-else class="seed-preview">
+            <!-- Words to add -->
+            <div v-if="seedModal.toAdd.length > 0" class="seed-section">
+              <h4 class="seed-section-title text-success">
+                <i class="bi bi-plus-circle me-2"></i>
+                คำที่จะเพิ่มใหม่ ({{ seedModal.toAdd.length }} คำ)
+              </h4>
+              <div class="seed-words-list">
+                <span v-for="item in seedModal.toAdd" :key="item.word" class="seed-word-tag new">
+                  {{ item.word }}
+                  <small class="modifier">({{ item.modifier }})</small>
+                </span>
+              </div>
+            </div>
+            
+            <!-- Already exists -->
+            <div v-if="seedModal.alreadyExists.length > 0" class="seed-section">
+              <h4 class="seed-section-title text-muted">
+                <i class="bi bi-check-circle me-2"></i>
+                มีในระบบแล้ว ({{ seedModal.alreadyExists.length }} คำ)
+              </h4>
+              <div class="seed-words-list">
+                <span v-for="item in seedModal.alreadyExists" :key="item.word" class="seed-word-tag exists">
+                  {{ item.word }}
+                </span>
+              </div>
+            </div>
+            
+            <!-- Ignored (previously deleted) -->
+            <div v-if="seedModal.ignored.length > 0" class="seed-section">
+              <h4 class="seed-section-title text-warning">
+                <i class="bi bi-eye-slash me-2"></i>
+                ถูกลบไปแล้ว - จะไม่เพิ่มกลับ ({{ seedModal.ignored.length }} คำ)
+              </h4>
+              <div class="seed-words-list">
+                <span v-for="item in seedModal.ignored" :key="item.word" class="seed-word-tag ignored">
+                  {{ item.word }}
+                </span>
+              </div>
+            </div>
+            
+            <!-- No words to add -->
+            <div v-if="seedModal.toAdd.length === 0" class="seed-empty">
+              <i class="bi bi-check-circle-fill text-success" style="font-size: 2rem;"></i>
+              <p class="mt-2 mb-0">ข้อมูลครบถ้วนแล้ว ไม่มีคำใหม่ที่ต้องเพิ่ม</p>
+            </div>
+          </div>
+          
           <div class="modal-actions">
             <button class="btn-secondary" @click="seedModal.show = false">ยกเลิก</button>
-            <button class="btn-primary-apple" @click="seedKeywords" :disabled="isSeeding">
-              {{ isSeeding ? 'กำลังเติม...' : 'ยืนยัน' }}
+            <button 
+              class="btn-primary-apple" 
+              @click="seedKeywords" 
+              :disabled="isSeeding || seedModal.toAdd.length === 0"
+            >
+              {{ isSeeding ? 'กำลังเติม...' : `เพิ่ม ${seedModal.toAdd.length} คำ` }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- 🗑️ Recently Deleted Modal (Apple Style) -->
+    <Teleport to="body">
+      <div class="modal-overlay recently-deleted-overlay" v-if="deletedModal.show" @click.self="deletedModal.show = false">
+        <div class="recently-deleted-modal pop-in">
+          <!-- Header -->
+          <div class="rd-header">
+            <div class="rd-header-left">
+              <button class="rd-close-btn" @click="deletedModal.show = false">
+                <i class="bi bi-chevron-left"></i>
+                <span>กลับ</span>
+              </button>
+            </div>
+            <h3 class="rd-title">ลบล่าสุด</h3>
+            <div class="rd-header-right">
+              <button 
+                v-if="deletedModal.items.length > 0"
+                class="rd-action-btn select-btn"
+                @click="toggleSelectMode"
+              >
+                {{ deletedModal.selectMode ? 'เสร็จ' : 'เลือก' }}
+              </button>
+            </div>
+          </div>
+          
+          <!-- Info banner -->
+          <div class="rd-info-banner" v-if="deletedModal.items.length > 0">
+            <i class="bi bi-info-circle"></i>
+            <span>คำที่ลบจะถูกเก็บไว้ที่นี่ คุณสามารถกู้คืนได้ตลอดเวลา</span>
+          </div>
+          
+          <!-- Content -->
+          <div class="rd-content">
+            <!-- Loading -->
+            <div v-if="isLoadingDeleted" class="rd-loading">
+              <div class="loading-spinner"></div>
+              <p>กำลังโหลด...</p>
+            </div>
+            
+            <!-- Empty state -->
+            <div v-else-if="deletedModal.items.length === 0" class="rd-empty">
+              <div class="rd-empty-icon">
+                <i class="bi bi-trash3"></i>
+              </div>
+              <h4>ไม่มีคำที่ลบล่าสุด</h4>
+              <p>คำที่คุณลบจะปรากฏที่นี่</p>
+            </div>
+            
+            <!-- Items grid (Apple Photos style) -->
+            <div v-else class="rd-grid">
+              <div 
+                v-for="item in deletedModal.items" 
+                :key="item.Id"
+                class="rd-item"
+                :class="{ selected: deletedModal.selectedIds.includes(item.Id) }"
+                @click="deletedModal.selectMode ? toggleSelectItem(item.Id) : null"
+              >
+                <div class="rd-item-select" v-if="deletedModal.selectMode">
+                  <i :class="deletedModal.selectedIds.includes(item.Id) ? 'bi bi-check-circle-fill' : 'bi bi-circle'"></i>
+                </div>
+                <div class="rd-item-content">
+                  <span class="rd-word">{{ item.Word }}</span>
+                  <span class="rd-date">{{ formatDeletedDate(item.DeletedAt) }}</span>
+                </div>
+                <div class="rd-item-actions" v-if="!deletedModal.selectMode">
+                  <button class="rd-restore-btn" @click.stop="restoreItem(item)" title="กู้คืน">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                  </button>
+                  <button class="rd-delete-btn" @click.stop="permanentDeleteItem(item)" title="ลบถาวร">
+                    <i class="bi bi-trash3-fill"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Footer actions (when in select mode) -->
+          <div class="rd-footer" v-if="deletedModal.selectMode && deletedModal.items.length > 0">
+            <button 
+              class="rd-footer-btn restore"
+              :disabled="deletedModal.selectedIds.length === 0"
+              @click="restoreSelected"
+            >
+              <i class="bi bi-arrow-counterclockwise"></i>
+              <span>กู้คืน {{ deletedModal.selectedIds.length > 0 ? `(${deletedModal.selectedIds.length})` : '' }}</span>
+            </button>
+            <button 
+              class="rd-footer-btn delete"
+              :disabled="deletedModal.selectedIds.length === 0"
+              @click="permanentDeleteSelected"
+            >
+              <i class="bi bi-trash3-fill"></i>
+              <span>ลบถาวร {{ deletedModal.selectedIds.length > 0 ? `(${deletedModal.selectedIds.length})` : '' }}</span>
+            </button>
+          </div>
+          
+          <!-- Footer actions (when not in select mode) -->
+          <div class="rd-footer" v-if="!deletedModal.selectMode && deletedModal.items.length > 0">
+            <button class="rd-footer-btn restore-all" @click="restoreAll">
+              <i class="bi bi-arrow-counterclockwise"></i>
+              <span>กู้คืนทั้งหมด</span>
+            </button>
+            <button class="rd-footer-btn delete-all" @click="confirmDeleteAll">
+              <i class="bi bi-trash3-fill"></i>
+              <span>ลบทั้งหมด</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Confirm Delete All Modal -->
+    <Teleport to="body">
+      <div class="modal-overlay" v-if="confirmDeleteAllModal.show" @click.self="confirmDeleteAllModal.show = false">
+        <div class="modal-content pop-in">
+          <div class="modal-icon danger">
+            <i class="bi bi-exclamation-triangle"></i>
+          </div>
+          <h3 class="modal-title">ลบถาวรทั้งหมด?</h3>
+          <p class="modal-text">
+            คำทั้งหมด {{ deletedModal.items.length }} คำจะถูกลบถาวร<br>
+            <strong class="text-danger">ไม่สามารถกู้คืนได้อีก</strong>
+          </p>
+          <div class="modal-actions">
+            <button class="btn-secondary" @click="confirmDeleteAllModal.show = false">ยกเลิก</button>
+            <button class="btn-danger" @click="executeDeleteAll" :disabled="isDeletingAll">
+              {{ isDeletingAll ? 'กำลังลบ...' : 'ลบถาวรทั้งหมด' }}
             </button>
           </div>
         </div>
@@ -431,7 +623,7 @@ const toggleSidebar = () => {
 const keywords = ref([]);
 const existingKeywords = ref([]); // Keywords from Keywords table to prevent adding them as negative keywords
 const stats = ref({});
-const pagination = ref({ page: 1, limit: 50, total: 0, totalPages: 1 });
+const pagination = ref({ page: 1, limit: 5, total: 0, totalPages: 1 });
 const searchQuery = ref('');
 const filterActive = ref(undefined);
 const isLoading = ref(false);
@@ -441,7 +633,26 @@ const isSeeding = ref(false); // 🆕
 const editingId = ref(null);
 
 // Seed modal state
-const seedModal = reactive({ show: false }); // 🆕
+const seedModal = reactive({ 
+  show: false, 
+  loading: false,
+  toAdd: [],
+  alreadyExists: [],
+  ignored: [],
+  totalStandard: 0
+}); // 🆕
+
+// 🗑️ Recently Deleted modal state (Apple Style)
+const deletedModal = reactive({
+  show: false,
+  items: [],
+  selectMode: false,
+  selectedIds: []
+});
+const deletedCount = ref(0);
+const isLoadingDeleted = ref(false);
+const isDeletingAll = ref(false);
+const confirmDeleteAllModal = reactive({ show: false });
 
 // Forms
 const newKeyword = reactive({
@@ -604,8 +815,27 @@ const confirmDelete = (keyword) => {
 };
 
 // 🆕 Seed helpers
-const confirmSeed = () => {
+const confirmSeed = async () => {
   seedModal.show = true;
+  seedModal.loading = true;
+  seedModal.toAdd = [];
+  seedModal.alreadyExists = [];
+  seedModal.ignored = [];
+  
+  try {
+    const response = await axiosInstance.get('/negativekeywords/seed/preview');
+    if (response.data && response.data.ok) {
+      seedModal.toAdd = response.data.data.toAdd || [];
+      seedModal.alreadyExists = response.data.data.alreadyExists || [];
+      seedModal.ignored = response.data.data.ignored || [];
+      seedModal.totalStandard = response.data.data.totalStandard || 0;
+    }
+  } catch (error) {
+    console.error('Error fetching seed preview:', error);
+    showToast('ไม่สามารถโหลดรายการคำได้', 'error');
+  } finally {
+    seedModal.loading = false;
+  }
 };
 
 const seedKeywords = async () => {
@@ -633,6 +863,181 @@ const seedKeywords = async () => {
   }
 };
 
+// 🗑️ Recently Deleted Functions (Apple Style)
+const fetchDeletedCount = async () => {
+  try {
+    const response = await axiosInstance.get('/negativekeywords/deleted');
+    if (response.data && response.data.ok) {
+      deletedCount.value = response.data.total || 0;
+    }
+  } catch (error) {
+    console.warn('Could not fetch deleted count:', error);
+  }
+};
+
+const openDeletedModal = async () => {
+  deletedModal.show = true;
+  deletedModal.selectMode = false;
+  deletedModal.selectedIds = [];
+  isLoadingDeleted.value = true;
+  
+  try {
+    const response = await axiosInstance.get('/negativekeywords/deleted');
+    if (response.data && response.data.ok) {
+      deletedModal.items = response.data.data || [];
+      deletedCount.value = response.data.total || 0;
+    }
+  } catch (error) {
+    showToast('ไม่สามารถโหลดรายการคำที่ลบได้', 'error');
+  } finally {
+    isLoadingDeleted.value = false;
+  }
+};
+
+const toggleSelectMode = () => {
+  deletedModal.selectMode = !deletedModal.selectMode;
+  if (!deletedModal.selectMode) {
+    deletedModal.selectedIds = [];
+  }
+};
+
+const toggleSelectItem = (id) => {
+  const index = deletedModal.selectedIds.indexOf(id);
+  if (index > -1) {
+    deletedModal.selectedIds.splice(index, 1);
+  } else {
+    deletedModal.selectedIds.push(id);
+  }
+};
+
+const formatDeletedDate = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) return 'วันนี้';
+  if (diffDays === 1) return 'เมื่อวาน';
+  if (diffDays < 7) return `${diffDays} วันที่แล้ว`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} สัปดาห์ที่แล้ว`;
+  return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+const restoreItem = async (item) => {
+  try {
+    const response = await axiosInstance.post(`/negativekeywords/restore/${item.Id}`);
+    if (response.data && response.data.ok) {
+      showToast(`กู้คืน "${item.Word}" สำเร็จ`, 'success');
+      deletedModal.items = deletedModal.items.filter(i => i.Id !== item.Id);
+      deletedCount.value = Math.max(0, deletedCount.value - 1);
+      await fetchKeywords();
+    } else {
+      showToast(response.data?.message || 'ไม่สามารถกู้คืนได้', 'error');
+    }
+  } catch (error) {
+    showToast(error.response?.data?.message || 'เกิดข้อผิดพลาด', 'error');
+  }
+};
+
+const permanentDeleteItem = async (item) => {
+  if (!confirm(`ลบ "${item.Word}" ถาวร? ไม่สามารถกู้คืนได้อีก`)) return;
+  
+  try {
+    const response = await axiosInstance.delete(`/negativekeywords/deleted/${item.Id}`);
+    if (response.data && response.data.ok) {
+      showToast(`ลบ "${item.Word}" ถาวรแล้ว`, 'success');
+      deletedModal.items = deletedModal.items.filter(i => i.Id !== item.Id);
+      deletedCount.value = Math.max(0, deletedCount.value - 1);
+    } else {
+      showToast(response.data?.message || 'ไม่สามารถลบได้', 'error');
+    }
+  } catch (error) {
+    showToast(error.response?.data?.message || 'เกิดข้อผิดพลาด', 'error');
+  }
+};
+
+const restoreSelected = async () => {
+  if (deletedModal.selectedIds.length === 0) return;
+  
+  let successCount = 0;
+  for (const id of deletedModal.selectedIds) {
+    try {
+      const response = await axiosInstance.post(`/negativekeywords/restore/${id}`);
+      if (response.data && response.data.ok) successCount++;
+    } catch (error) {
+      console.warn('Restore failed for ID:', id);
+    }
+  }
+  
+  showToast(`กู้คืนสำเร็จ ${successCount} คำ`, 'success');
+  deletedModal.selectedIds = [];
+  deletedModal.selectMode = false;
+  await openDeletedModal();
+  await fetchKeywords();
+};
+
+const permanentDeleteSelected = async () => {
+  if (deletedModal.selectedIds.length === 0) return;
+  if (!confirm(`ลบถาวร ${deletedModal.selectedIds.length} คำ? ไม่สามารถกู้คืนได้อีก`)) return;
+  
+  let successCount = 0;
+  for (const id of deletedModal.selectedIds) {
+    try {
+      const response = await axiosInstance.delete(`/negativekeywords/deleted/${id}`);
+      if (response.data && response.data.ok) successCount++;
+    } catch (error) {
+      console.warn('Delete failed for ID:', id);
+    }
+  }
+  
+  showToast(`ลบถาวร ${successCount} คำแล้ว`, 'success');
+  deletedModal.selectedIds = [];
+  deletedModal.selectMode = false;
+  await openDeletedModal();
+};
+
+const restoreAll = async () => {
+  if (!confirm(`กู้คืนทั้งหมด ${deletedModal.items.length} คำ?`)) return;
+  
+  try {
+    const response = await axiosInstance.post('/negativekeywords/restore-all');
+    if (response.data && response.data.ok) {
+      showToast(response.data.message, 'success');
+      deletedModal.items = [];
+      deletedCount.value = 0;
+      await fetchKeywords();
+    } else {
+      showToast(response.data?.message || 'ไม่สามารถกู้คืนได้', 'error');
+    }
+  } catch (error) {
+    showToast(error.response?.data?.message || 'เกิดข้อผิดพลาด', 'error');
+  }
+};
+
+const confirmDeleteAll = () => {
+  confirmDeleteAllModal.show = true;
+};
+
+const executeDeleteAll = async () => {
+  isDeletingAll.value = true;
+  try {
+    const response = await axiosInstance.delete('/negativekeywords/deleted-all');
+    if (response.data && response.data.ok) {
+      showToast(response.data.message, 'success');
+      deletedModal.items = [];
+      deletedCount.value = 0;
+      confirmDeleteAllModal.show = false;
+    } else {
+      showToast(response.data?.message || 'ไม่สามารถลบได้', 'error');
+    }
+  } catch (error) {
+    showToast(error.response?.data?.message || 'เกิดข้อผิดพลาด', 'error');
+  } finally {
+    isDeletingAll.value = false;
+  }
+};
+
 const deleteKeyword = async () => {
   if (!deleteModal.keyword) return;
   
@@ -650,6 +1055,7 @@ const deleteKeyword = async () => {
       pagination.value.page = 1;
       console.log('🔄 Fetching keywords after delete...');
       await fetchKeywords();
+      await fetchDeletedCount(); // Update deleted badge count
       console.log('✅ Keywords reloaded');
     } else {
       const errorMsg = response.data?.message || 'เกิดข้อผิดพลาดในการลบ';
@@ -704,6 +1110,7 @@ onMounted(async () => {
   
   bindSidebarResize();
   fetchKeywords();
+  fetchDeletedCount(); // Load deleted count for badge
   
   // Fetch existing keywords to prevent conflicts
   try {
@@ -1375,6 +1782,11 @@ onUnmounted(() => {
   color: #FF3B30;
 }
 
+.modal-icon.primary {
+  background: linear-gradient(135deg, #FF9500 0%, #FF6B00 100%);
+  color: white;
+}
+
 .modal-title {
   font-size: 1.25rem;
   font-weight: 700;
@@ -1423,6 +1835,85 @@ onUnmounted(() => {
 
 .btn-danger:disabled {
   opacity: 0.6;
+}
+
+/* Seed Modal with Preview */
+.seed-modal-content {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 600px;
+  width: 95%;
+  max-height: 80vh;
+  overflow-y: auto;
+  text-align: center;
+}
+
+.seed-loading {
+  padding: 2rem 0;
+}
+
+.seed-preview {
+  text-align: left;
+  margin: 1rem 0 1.5rem 0;
+}
+
+.seed-section {
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  background: #F9F9F9;
+  border-radius: 12px;
+}
+
+.seed-section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.seed-words-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.seed-word-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.seed-word-tag.new {
+  background: linear-gradient(135deg, #34C759 0%, #32D74B 100%);
+  color: white;
+}
+
+.seed-word-tag.new .modifier {
+  opacity: 0.8;
+  font-size: 0.75rem;
+}
+
+.seed-word-tag.exists {
+  background: #E5E5EA;
+  color: #6E6E73;
+}
+
+.seed-word-tag.ignored {
+  background: #FFF3CD;
+  color: #856404;
+  text-decoration: line-through;
+}
+
+.seed-empty {
+  padding: 2rem 0;
+  text-align: center;
+  color: #6E6E73;
 }
 
 /* Loading */
@@ -1548,6 +2039,416 @@ onUnmounted(() => {
     display: flex !important;
     align-items: center;
     justify-content: center;
+  }
+}
+
+/* 🗑️ Recently Deleted Modal - Apple Style */
+.btn-deleted {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #8E8E93 0%, #636366 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-deleted:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.btn-deleted:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.deleted-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  background: #FF3B30;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  box-shadow: 0 2px 6px rgba(255, 59, 48, 0.4);
+}
+
+.recently-deleted-overlay {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.recently-deleted-modal {
+  background: #F2F2F7;
+  border-radius: 20px;
+  width: 95%;
+  max-width: 600px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
+}
+
+/* Header */
+.rd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.rd-header-left,
+.rd-header-right {
+  min-width: 80px;
+}
+
+.rd-header-right {
+  text-align: right;
+}
+
+.rd-close-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: #007AFF;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.2s;
+}
+
+.rd-close-btn:hover {
+  opacity: 0.7;
+}
+
+.rd-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1D1D1F;
+  margin: 0;
+  text-align: center;
+}
+
+.rd-action-btn {
+  background: none;
+  border: none;
+  color: #007AFF;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.2s;
+}
+
+.rd-action-btn:hover {
+  opacity: 0.7;
+}
+
+/* Info banner */
+.rd-info-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  color: #636366;
+}
+
+.rd-info-banner i {
+  color: #8E8E93;
+}
+
+/* Content */
+.rd-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.rd-loading,
+.rd-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  text-align: center;
+  color: #8E8E93;
+}
+
+.rd-empty-icon {
+  width: 80px;
+  height: 80px;
+  background: #E5E5EA;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.rd-empty-icon i {
+  font-size: 2rem;
+  color: #8E8E93;
+}
+
+.rd-empty h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1D1D1F;
+  margin: 0 0 8px 0;
+}
+
+.rd-empty p {
+  font-size: 0.9rem;
+  color: #8E8E93;
+  margin: 0;
+}
+
+/* Grid */
+.rd-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.rd-item {
+  position: relative;
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: default;
+}
+
+.rd-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.rd-item.selected {
+  background: #E8F0FE;
+  box-shadow: 0 0 0 2px #007AFF;
+}
+
+.rd-item-select {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 1.25rem;
+  color: #007AFF;
+}
+
+/* When select icon is shown, reserve space so it won't overlap text */
+.rd-item-select + .rd-item-content {
+  padding-left: 28px;
+}
+
+.rd-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rd-word {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1D1D1F;
+  word-break: break-word;
+}
+
+.rd-date {
+  font-size: 0.8rem;
+  color: #8E8E93;
+}
+
+.rd-item-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #F2F2F7;
+}
+
+.rd-restore-btn,
+.rd-delete-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rd-restore-btn {
+  background: #E8F8EF;
+  color: #34C759;
+}
+
+.rd-restore-btn:hover {
+  background: #34C759;
+  color: white;
+}
+
+.rd-delete-btn {
+  background: #FFE5E5;
+  color: #FF3B30;
+}
+
+.rd-delete-btn:hover {
+  background: #FF3B30;
+  color: white;
+}
+
+/* Footer */
+.rd-footer {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.rd-footer-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.rd-footer-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rd-footer-btn.restore,
+.rd-footer-btn.restore-all {
+  background: linear-gradient(135deg, #34C759 0%, #30D158 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+}
+
+.rd-footer-btn.restore:hover:not(:disabled),
+.rd-footer-btn.restore-all:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(52, 199, 89, 0.4);
+}
+
+.rd-footer-btn.delete,
+.rd-footer-btn.delete-all {
+  background: linear-gradient(135deg, #FF3B30 0%, #FF453A 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+}
+
+.rd-footer-btn.delete:hover:not(:disabled),
+.rd-footer-btn.delete-all:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 59, 48, 0.4);
+}
+
+/* Dark mode support */
+[data-theme="dark"] .recently-deleted-modal {
+  background: #1C1C1E;
+}
+
+[data-theme="dark"] .rd-header {
+  background: rgba(28, 28, 30, 0.9);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .rd-title {
+  color: #F5F5F7;
+}
+
+[data-theme="dark"] .rd-info-banner {
+  background: rgba(44, 44, 46, 0.6);
+  color: #AEAEB2;
+}
+
+[data-theme="dark"] .rd-empty-icon {
+  background: #2C2C2E;
+}
+
+[data-theme="dark"] .rd-empty h4 {
+  color: #F5F5F7;
+}
+
+[data-theme="dark"] .rd-item {
+  background: #2C2C2E;
+}
+
+[data-theme="dark"] .rd-item.selected {
+  background: #1C3A5E;
+}
+
+[data-theme="dark"] .rd-word {
+  color: #F5F5F7;
+}
+
+[data-theme="dark"] .rd-item-actions {
+  border-color: #3A3A3C;
+}
+
+[data-theme="dark"] .rd-footer {
+  background: rgba(28, 28, 30, 0.9);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .recently-deleted-modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+  
+  .rd-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .rd-footer-btn {
+    padding: 12px 16px;
+    font-size: 0.9rem;
   }
 }
 </style>

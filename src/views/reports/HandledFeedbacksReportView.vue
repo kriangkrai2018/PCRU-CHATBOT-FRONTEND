@@ -377,7 +377,7 @@ const selectedItem = ref(null);
 
 // Pagination
 const currentPage = ref(1);
-const itemsPerPage = ref(10);
+const itemsPerPage = ref(5);
 
 // Colors
 const colors = ['#34C759', '#FF3B30', '#007AFF', '#FF9500', '#AF52DE', '#5856D6'];

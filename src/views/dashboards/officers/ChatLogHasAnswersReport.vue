@@ -254,7 +254,7 @@ const fetchData = async () => {
 
 // pagination
 const currentPage = ref(1);
-const itemsPerPage = ref(10);
+const itemsPerPage = ref(5);
 const totalEntries = computed(() => filtered.value.length);
 const totalPages = computed(() => Math.max(1, Math.ceil(totalEntries.value / itemsPerPage.value)));
 const startIndex = computed(() => totalEntries.value === 0 ? 0 : (currentPage.value - 1) * itemsPerPage.value + 1);

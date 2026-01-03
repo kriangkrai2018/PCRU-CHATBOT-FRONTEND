@@ -621,7 +621,7 @@ const filteredKeywords = computed(() => {
 });
 
 const currentPage = ref(1);
-const itemsPerPage = ref(8);
+const itemsPerPage = ref(5);
 watch(localSearch, () => { currentPage.value = 1; });
 
 const totalEntries = computed(() => filteredKeywords.value.length);

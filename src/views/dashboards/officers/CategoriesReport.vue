@@ -485,7 +485,7 @@ const visibleParents = computed(() => {
       return false;
     });
     const p = Number(displayPage.value || 1);
-    const perPage = Number(itemsPerPageLocal.value || 10);
+    const perPage = Number(itemsPerPageLocal.value || 5);
     const start = (p - 1) * perPage;
     return parentsAll.slice(start, start + perPage);
   }
@@ -667,7 +667,7 @@ const itemsPerPageLocal = computed(() => {
   const start = Number(props.categoriesStartIndex || 0);
   const end = Number(props.categoriesEndIndex || 0);
   if (end >= start && start > 0) return end - start + 1;
-  return Array.isArray(props.paginatedCategories) ? props.paginatedCategories.length || 8 : 8;
+  return Array.isArray(props.paginatedCategories) ? props.paginatedCategories.length || 5 : 5;
 });
 
 const visibleParentsTotal = computed(() => {

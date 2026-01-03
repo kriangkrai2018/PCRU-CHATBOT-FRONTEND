@@ -537,7 +537,7 @@ const error = ref(null);
 const searchQuery = ref('');
 
 const currentPage = ref(1);
-const itemsPerPage = ref(10);
+const itemsPerPage = ref(5);
 
 const uploadedFile = ref(null);
 const isUploading = ref(false);

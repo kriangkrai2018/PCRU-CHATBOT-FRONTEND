@@ -257,7 +257,7 @@ const isLoading = ref(true);
 const error = ref(null);
 const searchQuery = ref('');
 const currentPage = ref(1);
-const itemsPerPage = 10;
+const itemsPerPage = 5;
 const isCleaningUp = ref(false);
 const restoringId = ref(null);
 

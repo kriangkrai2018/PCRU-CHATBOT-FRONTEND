@@ -70,7 +70,7 @@ const categoriesLoading = ref(true);
 const categoriesError = ref(null);
 const searchQueryCategories = ref('');
 const categoriesCurrentPage = ref(1);
-const categoriesItemsPerPage = ref(10);
+const categoriesItemsPerPage = ref(5);
 
 // Apple Colors
 const appleColors = [

@@ -461,7 +461,7 @@ const isSeeding = ref(false);
 
 // Pagination
 const currentPage = ref(1);
-const itemsPerPage = ref(20);
+const itemsPerPage = ref(5);
 
 // Action states
 const actionLoading = ref(null);

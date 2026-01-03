@@ -374,7 +374,7 @@ let ws = null;
 // Local search + pagination
 const localSearch = ref('');
 const currentPage = ref(1);
-const itemsPerPage = ref(8);
+const itemsPerPage = ref(5);
 
 watch(localSearch, () => { currentPage.value = 1; });
 

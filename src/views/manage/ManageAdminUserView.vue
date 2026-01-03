@@ -300,7 +300,7 @@ const searchQuery = ref('');
 
 // Pagination State
 const currentPage = ref(1);
-const itemsPerPage = ref(10);
+const itemsPerPage = ref(5);
 
 // Upload modal state
 const uploadedFile = ref(null);

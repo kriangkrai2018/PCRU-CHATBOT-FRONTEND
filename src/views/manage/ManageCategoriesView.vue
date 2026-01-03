@@ -756,7 +756,7 @@ const fetchCategories = async () => {
 
 // --- Table Logic & Helpers ---
 const categoriesCurrentPage = ref(1);
-const categoriesItemsPerPage = ref(100);
+const categoriesItemsPerPage = ref(5);
 
 // FIX: Robust isMain check to handle orphans
 function isMain(cat) {
