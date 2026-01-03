@@ -914,7 +914,7 @@ export default {
       // Power mode particles
       particles: [],
       particleAnimationFrame: null,
-      // Thai notice bubble (auto-hide after 5s)
+      // Thai notice bubble (auto-hide after 10s)
       // Theme transition circle animation
       showThemeTransition: false,
       themeTransitionSize: 0,
@@ -1002,6 +1002,7 @@ export default {
       showIntroAnimation: false,
       introPhase: 0, // 0: not started, 1: logo, 2: particles, 3: reveal
       isFirstTimeUser: false,
+      hasShownIntroThisSession: false, // ใช้ variable แทน storage เพื่อให้ refresh แล้วแสดง intro ใหม่
     }
   },
   computed: {
@@ -1150,13 +1151,13 @@ export default {
     // 🎨 Initialize user typing tooltip text with first message
     this.userTypingTooltipText = this.dynamicUnlikeMessages[0]
     
-    // Auto-hide Thai notice bubble after 5 seconds on mount
+    // Auto-hide Thai notice bubble after 10 seconds on mount
     if (this.showThaiNotice) {
       if (this.thaiNoticeTimer) clearTimeout(this.thaiNoticeTimer)
       this.thaiNoticeTimer = setTimeout(() => {
         this.showThaiNotice = false
         this.thaiNoticeTimer = null
-      }, 5000)
+      }, 10000)
     }
 
     // Load whether the user has ever asked the bot before (used to hide the clear button on fresh users)
@@ -1770,42 +1771,31 @@ export default {
     },
     // 🎬 Intro Animation Methods
     isMobileDevice() {
-      // ตรวจสอบจาก user agent เท่านั้น (ไม่ใช้ window size เพราะ Desktop อาจมีหน้าต่างเล็ก)
-      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      // ตรวจสอบจาก user agent และ screen size
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isSmallScreen = window.innerWidth <= 768;
+      console.log('[isMobile] UA:', isMobileUA, 'SmallScreen:', isSmallScreen, 'Width:', window.innerWidth);
+      // Desktop = screen > 768px หรือ ไม่ใช่ mobile UA
+      return isMobileUA && isSmallScreen;
     },
     checkFirstTimeUser() {
-      // ตรวจสอบว่าเคยเห็น intro ใน session นี้แล้วหรือยัง
-      try {
-        const hasSeenIntro = sessionStorage.getItem('chatbot_intro_shown');
-        return !hasSeenIntro;
-      } catch (e) {
-        return false;
-      }
+      // ตรวจสอบว่าเคยเห็น intro ใน session นี้แล้วหรือยัง (ใช้ variable ไม่ใช่ storage)
+      return !this.hasShownIntroThisSession;
     },
     checkAndShowFirstVisitIntro() {
-      // เฉพาะมือถือ: แสดง intro อัตโนมัติเมื่อเข้าเว็บครั้งแรก
-      // Desktop ไม่ auto-open - ต้องรอให้ user กดปุ่ม FAB
-      if (!this.isMobileDevice()) {
-        console.log('[Intro] Desktop detected - no auto-open');
-        return;
-      }
+      // ทั้ง Desktop และ Mobile: แสดง intro อัตโนมัติทุกครั้งที่โหลดหน้า/รีเฟรช
+      console.log('[Intro] checkAndShowFirstVisitIntro - showing intro animation');
       
-      try {
-        const hasVisited = sessionStorage.getItem('chatbot_session_visited');
-        if (!hasVisited) {
-          // ครั้งแรกของ session นี้ (มือถือ) → แสดง intro ก่อน
-          sessionStorage.setItem('chatbot_session_visited', 'true');
-          console.log('[Intro] Mobile first visit - showing intro');
-          
-          setTimeout(() => {
-            this.startIntroAnimation();
-          }, 300);
-        }
-      } catch (e) {
-        // sessionStorage ไม่ available (private mode) → ไม่ auto-open
+      // แสดง intro ทุกครั้งที่เข้าเว็บ (รีเฟรชก็แสดงใหม่)
+      if (this.checkFirstTimeUser()) {
+        console.log('[Intro] First time this session - showing intro');
+        setTimeout(() => {
+          this.startIntroAnimation();
+        }, 300);
       }
     },
     startIntroAnimation() {
+      console.log('[Intro] startIntroAnimation called');
       this.showIntroAnimation = true;
       this.introPhase = 0;
       
@@ -1825,13 +1815,12 @@ export default {
       this.completeIntro();
     },
     completeIntro() {
+      console.log('[Intro] completeIntro called');
       this.showIntroAnimation = false;
       this.introPhase = 0;
       
       // บันทึกว่าเคยเห็น intro แล้วใน session นี้
-      try {
-        sessionStorage.setItem('chatbot_intro_shown', 'true');
-      } catch (e) { /* ignore */ }
+      this.hasShownIntroThisSession = true;
       
       // หลังจาก intro จบ → เปิด chatbot
       this.$nextTick(() => {
