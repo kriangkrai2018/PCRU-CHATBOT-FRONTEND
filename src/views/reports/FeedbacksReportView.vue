@@ -412,8 +412,35 @@ onUnmounted(() => {
   justify-content: center;
 }
 
+@media (max-width: 991px) {
+  .hero-title {
+    font-size: 1.5rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .apple-icon-box {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .apple-icon-box svg {
+    width: 22px;
+    height: 22px;
+  }
+}
+
 @media (max-width: 768px) {
-  .main-content { grid-column: 1/-1; padding: 0 !important; }
+  .report-page-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .main-content { 
+    grid-column: 1/-1; 
+    padding: 0 !important; 
+  }
   
   .mobile-sidebar-toggle { display: flex; }
   
@@ -421,6 +448,51 @@ onUnmounted(() => {
     display: block;
   }
   
+  .dashboard-hero {
+    padding: 16px;
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  
+  .hero-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .hero-heading {
+    flex-direction: column;
+    text-align: center;
+    margin-left: 0;
+    gap: 12px;
+  }
+  
+  .hero-title {
+    font-size: 1.4rem;
+    text-align: center;
+  }
+  
+  .hero-subtitle {
+    text-align: center;
+    font-size: 0.85rem;
+  }
+  
+  .hero-status {
+    margin-top: 8px;
+  }
+  
+  .mobile-sidebar-toggle.mobile-inline-toggle {
+    position: absolute;
+    left: 12px;
+    top: 16px;
+  }
+  
+  .reports-grid {
+    padding: 12px !important;
+  }
+
   :global(.sidebar) {
     position: fixed;
     left: 0;
@@ -433,6 +505,31 @@ onUnmounted(() => {
   
   :global(body.sidebar-open .sidebar) {
     transform: translateX(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-hero {
+    padding: 12px;
+  }
+  
+  .hero-title {
+    font-size: 1.25rem;
+  }
+  
+  .apple-icon-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+  
+  .apple-status-badge {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+  }
+  
+  .reports-grid {
+    padding: 8px !important;
   }
 }
 </style>

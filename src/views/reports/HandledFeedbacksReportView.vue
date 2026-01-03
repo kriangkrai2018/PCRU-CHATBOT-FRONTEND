@@ -25,6 +25,12 @@
               <span class="text-secondary small">ประวัติ Feedback ที่ตรวจสอบแล้ว</span>
             </div>
           </div>
+
+          <!-- Auto-delete Warning -->
+          <div class="auto-delete-notice">
+            <i class="bi bi-info-circle-fill"></i>
+            <span>ระบบจะลบ Feedback ที่จัดการแล้วโดยอัตโนมัติหลังจาก <strong>30 วัน</strong></span>
+          </div>
           
           <!-- Live Status Badge -->
           <div class="d-flex align-items-center gap-2">
@@ -156,13 +162,13 @@
                     <th>วันที่</th>
                     <th>คำถามผู้ใช้</th>
                     <th>เหตุผล & ความเห็น</th>
-                    <th class="text-center" style="width: 100px;">ดูข้อมูล</th>
+                    <th class="text-center" style="width: 120px;">การดำเนินการ</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="item in paginatedItems" :key="item.FeedbackID" class="align-middle apple-row" @click="openDetails(item)">
-                    <td class="ps-4 fw-medium text-secondary">{{ item.FeedbackID }}</td>
-                    <td class="py-3">
+                    <td data-label="ID" class="ps-4 fw-medium text-secondary">{{ item.FeedbackID }}</td>
+                    <td data-label="สถานะ" class="py-3">
                        <span v-if="isLike(item)" class="feedback-pill like">
                           <i class="bi bi-hand-thumbs-up-fill me-1"></i> Like
                        </span>
@@ -170,7 +176,7 @@
                           <i class="bi bi-hand-thumbs-down-fill me-1"></i> Unlike
                        </span>
                     </td>
-                    <td class="py-3">
+                    <td data-label="วันที่" class="py-3">
                       <span 
                         class="apple-badge-gray"
                         data-bs-toggle="tooltip" 
@@ -180,13 +186,13 @@
                         {{ formatRelativeTime(item.Timestamp) }}
                       </span>
                     </td>
-                    <td class="py-3">
+                    <td data-label="คำถาม" class="py-3">
                       <div class="text-dark fw-medium text-truncate" style="max-width: 250px;" :title="item.UserQuery">
                         {{ item.UserQuery || '-' }}
                       </div>
                     </td>
-                    <td class="py-3">
-                      <div v-if="item.FeedbackReason" class="d-flex align-items-center gap-2">
+                    <td data-label="เหตุผล" class="py-3">
+                      <div v-if="item.FeedbackReason" class="d-flex align-items-center gap-2 flex-wrap">
                          <span class="reason-tag">{{ formatReason(item.FeedbackReason) }}</span>
                          <span v-if="item.FeedbackComment" class="text-secondary small text-truncate" style="max-width: 150px;" :title="item.FeedbackComment">
                            — {{ item.FeedbackComment }}
@@ -194,10 +200,16 @@
                       </div>
                       <span v-else class="text-muted small opacity-50">-</span>
                     </td>
-                    <td class="py-3 text-center">
-                      <button class="btn-icon-circle" @click.stop="openDetails(item)">
-                        <i class="bi bi-chevron-right"></i>
-                      </button>
+                    <td data-label="" class="py-3 text-center">
+                      <div class="action-buttons">
+                        <button class="btn-icon-circle" @click.stop="openDetails(item)" title="ดูรายละเอียด">
+                          <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="restore-btn" @click.stop="restoreFeedback(item)" :disabled="restoringId === item.FeedbackID" title="กู้คืน">
+                          <span v-if="restoringId === item.FeedbackID" class="spinner-border spinner-border-sm"></span>
+                          <i v-else class="bi bi-arrow-counterclockwise"></i>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                   <tr v-if="filteredItems.length === 0">
@@ -369,6 +381,7 @@ const loading = ref(true);
 const error = ref(null);
 const localSearch = ref('');
 const wsConnected = ref(false);
+const restoringId = ref(null);
 let ws = null;
 
 // Modal State
@@ -588,6 +601,23 @@ function closeDetailModal() {
   showDetailModal.value = false;
 }
 
+async function restoreFeedback(item) {
+  if (!item?.FeedbackID) return;
+  restoringId.value = item.FeedbackID;
+  try {
+    await $axios.put(`/feedbacks/${item.FeedbackID}/unhandle`);
+    // Remove from list
+    items.value = items.value.filter(i => i.FeedbackID !== item.FeedbackID);
+    // Show success notification (optional - use toast if available)
+    console.log('Feedback restored successfully');
+  } catch (err) {
+    console.error('Failed to restore feedback:', err);
+    alert('กู้คืนไม่สำเร็จ');
+  } finally {
+    restoringId.value = null;
+  }
+}
+
 function initTooltips() {
   nextTick(() => {
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new Tooltip(el));
@@ -777,12 +807,72 @@ function initTooltips() {
 .apple-close-btn:hover { background: rgba(0,0,0,0.1); }
 .apple-modal-body { padding: 24px; }
 .apple-modal-footer { padding: 16px 24px; border-top: 1px solid rgba(0,0,0,0.05); background: #F9F9FB; }
-.btn-apple-primary { background: var(--apple-blue); color: white; border: none; border-radius: 10px; padding: 10px; font-weight: 600; transition: 0.2s; }
-.btn-apple-primary:hover { background: #005ecb; }
+.btn-apple-primary { background: linear-gradient(180deg, #007AFF 0%, #0051D4 100%); color: white; border: none; border-radius: 10px; padding: 12px 20px; font-weight: 600; transition: 0.2s; cursor: pointer; }
+.btn-apple-primary:hover { background: linear-gradient(180deg, #0066E6 0%, #0044B8 100%); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 122, 255, 0.35); }
 
 .detail-section { margin-bottom: 16px; }
 .detail-section label { display: block; font-size: 0.75rem; color: #86868b; text-transform: uppercase; font-weight: 600; margin-bottom: 4px; }
 .detail-value { font-size: 0.95rem; color: #1d1d1f; word-break: break-word; }
+
+/* Auto-delete Notice */
+.auto-delete-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #FFF3CD 0%, #FFEAA7 100%);
+  border: 1px solid #F0C36D;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #856404;
+}
+
+.auto-delete-notice i {
+  font-size: 18px;
+  color: #D68910;
+}
+
+.auto-delete-notice strong {
+  color: #B7791F;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+.restore-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(180deg, #34C759 0%, #28A745 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.restore-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #2DB84D 0%, #229A3B 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.4);
+}
+
+.restore-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.restore-btn i {
+  font-size: 14px;
+}
 
 /* Transitions */
 .apple-zoom-enter-active { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -822,44 +912,283 @@ function initTooltips() {
   justify-content: center;
 }
 
+/* ========== Apple-style Responsive Design ========== */
+
+/* Tablet */
+@media (max-width: 991px) {
+  .page-title {
+    font-size: 1.5rem;
+  }
+  
+  .apple-icon-box {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .apple-icon-box svg {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .apple-stat-card {
+    padding: 16px;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+  }
+  
+  .chart-area {
+    height: 220px;
+  }
+  
+  .auto-delete-notice {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+}
+
+/* Mobile */
 @media (max-width: 768px) {
-  .main-content { padding: 0 !important; grid-column: 1/-1; width: 100%; }
+  .main-content { 
+    padding: 0 !important; 
+    grid-column: 1/-1; 
+    width: 100%; 
+  }
+  
+  .container-fluid {
+    padding: 12px !important;
+  }
   
   .mobile-sidebar-toggle { display: flex; }
   
   .mobile-sidebar-backdrop {
     display: block;
   }
-
-  .dashboard-hero {
+  
+  /* Header */
+  .d-flex.align-items-center.justify-content-between.mb-4 {
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    border-radius: 0;
-    position: relative;
-  }
-
-  .hero-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    align-items: center !important;
+    gap: 16px;
     text-align: center;
   }
-
-  .mobile-sidebar-toggle {
+  
+  .d-flex.align-items-center.gap-3 {
+    flex-direction: column;
+    position: relative;
+    width: 100%;
+  }
+  
+  .mobile-sidebar-toggle.mobile-inline-toggle {
     position: absolute;
     left: 0;
-    top: 50%;
+    top: 0;
   }
-
-  .hero-title {
+  
+  .page-title {
+    font-size: 1.4rem;
     text-align: center;
-    font-size: 1.5rem;
   }
-
-  .hero-subtitle {
+  
+  .auto-delete-notice {
+    width: 100%;
+    justify-content: center;
     text-align: center;
+    flex-wrap: wrap;
+    font-size: 12px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+  
+  /* Stats Cards */
+  .row.mb-4.g-3 {
+    margin-bottom: 16px !important;
+  }
+  
+  .col-md-4 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  
+  .apple-stat-card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+  
+  .stat-icon-wrapper {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .stat-value {
+    font-size: 1.4rem;
+  }
+  
+  .stat-label {
+    font-size: 0.75rem;
+  }
+  
+  /* Charts */
+  .row.mb-4.g-4 {
+    margin-bottom: 16px !important;
+  }
+  
+  .col-12.col-lg-6 {
+    margin-bottom: 12px;
+  }
+  
+  .chart-card {
+    border-radius: 14px;
+  }
+  
+  .card-header-clean h5 {
+    font-size: 0.95rem;
+  }
+  
+  .chart-area {
+    height: 200px;
+  }
+  
+  .chart-wrapper {
+    height: 180px !important;
+  }
+  
+  /* Table Controls */
+  .card-header-actions {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch !important;
+  }
+  
+  .apple-counter-capsule {
+    justify-content: center;
+  }
+  
+  .search-container {
+    width: 100% !important;
+  }
+  
+  /* Table: Mobile card view */
+  .table-responsive {
+    overflow-x: visible;
+  }
+  
+  .apple-table {
+    display: block;
+  }
+  
+  .apple-table thead {
+    display: none;
+  }
+  
+  .apple-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+  
+  .apple-table tbody tr {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.05);
+    gap: 10px;
+  }
+  
+  .apple-table tbody tr:hover {
+    background: rgba(52, 199, 89, 0.02);
+  }
+  
+  .apple-table tbody td {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 4px 0 !important;
+    border: none !important;
+    width: 100%;
+  }
+  
+  .apple-table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 11px;
+    color: #86868b;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    min-width: 80px;
+    flex-shrink: 0;
+  }
+  
+  .apple-table tbody td:first-child {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 8px;
+    padding: 10px 12px !important;
+  }
+  
+  .apple-table tbody td:last-child {
+    justify-content: center;
+    padding-top: 12px !important;
+    border-top: 1px solid rgba(0,0,0,0.06) !important;
+    margin-top: 4px;
+  }
+  
+  .apple-table tbody td:last-child::before {
+    display: none;
+  }
+  
+  /* Pagination */
+  .d-flex.justify-content-between.align-items-center.p-3 {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  
+  .pagination {
+    justify-content: center;
+  }
+  
+  .pagination .page-link {
+    min-width: 32px;
+    min-height: 32px;
+    font-size: 0.85rem;
+    padding: 6px 10px;
+  }
+  
+  /* Modal */
+  .apple-modal-content {
+    max-width: 95%;
+    margin: 0 auto;
+    border-radius: 16px;
+  }
+  
+  .apple-modal-header {
+    padding: 16px;
+  }
+  
+  .apple-modal-body {
+    padding: 16px;
+  }
+  
+  .apple-modal-footer {
+    padding: 12px 16px;
+  }
+  
+  /* Action Buttons */
+  .action-buttons {
+    width: 100%;
+    justify-content: center;
+    gap: 12px;
+  }
+  
+  .btn-icon-circle,
+  .restore-btn {
+    width: 36px;
+    height: 36px;
   }
   
   :global(.sidebar) {
@@ -874,6 +1203,97 @@ function initTooltips() {
   
   :global(body.sidebar-open .sidebar) {
     transform: translateX(0);
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .container-fluid {
+    padding: 8px !important;
+  }
+  
+  .page-title {
+    font-size: 1.25rem;
+  }
+  
+  .apple-icon-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+  
+  .apple-status-badge {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+  }
+  
+  .auto-delete-notice {
+    font-size: 11px;
+    padding: 8px 10px;
+  }
+  
+  .apple-stat-card {
+    padding: 12px;
+    border-radius: 12px;
+  }
+  
+  .stat-icon-wrapper {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .stat-icon-wrapper i {
+    font-size: 16px;
+  }
+  
+  .stat-value {
+    font-size: 1.25rem;
+  }
+  
+  .chart-card {
+    border-radius: 12px;
+  }
+  
+  .chart-area {
+    height: 180px;
+  }
+  
+  .apple-table tbody tr {
+    padding: 12px;
+    border-radius: 14px;
+  }
+  
+  .apple-table tbody td {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .apple-table tbody td::before {
+    min-width: auto;
+    margin-bottom: 2px;
+  }
+  
+  .feedback-pill {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+  }
+  
+  .apple-badge-gray {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+  }
+  
+  .reason-tag {
+    font-size: 0.7rem;
+  }
+  
+  .detail-section label {
+    font-size: 0.7rem;
+  }
+  
+  .detail-value {
+    font-size: 0.85rem;
   }
 }
 </style>

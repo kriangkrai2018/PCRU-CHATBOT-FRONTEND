@@ -294,6 +294,15 @@ onUnmounted(() => {
   .main-content {
     padding: 0 !important;
   }
+  
+  /* Fix container-fluid spacing on mobile */
+  :deep(.container-fluid) {
+    padding: 12px !important;
+  }
+  
+  :deep(.dashboard-container > .container-fluid) {
+    padding: 12px !important;
+  }
 
   /* Keep the header comfortable on mobile: give the hero content internal padding */
   .dashboard-hero .hero-content {
@@ -308,6 +317,17 @@ onUnmounted(() => {
     margin: 0 0 10px 0 !important; /* place above title */
     align-self: flex-start !important; /* left-align on mobile */
     margin-left: -1rem !important; /* offset the internal padding so button sits at the left edge */
+  }
+  
+  /* Apple Card responsive */
+  :deep(.apple-card) {
+    border-radius: 16px;
+    margin-bottom: 12px;
+  }
+  
+  /* Reports Grid responsive */
+  .reports-grid {
+    padding: 0 !important;
   }
 }
 

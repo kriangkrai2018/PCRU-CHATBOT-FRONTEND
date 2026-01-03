@@ -163,10 +163,21 @@
                   </div>
                 </td>
                 <td class="text-center">
-                  <button class="restore-btn" @click="restoreFeedback(fb)" :disabled="restoringId === fb.FeedbackID">
-                    <span v-if="restoringId === fb.FeedbackID" class="spinner-border spinner-border-sm me-1"></span>
-                    กู้คืน
-                  </button>
+                  <div class="action-buttons">
+                    <button 
+                      v-if="fb.QuestionsAnswersID"
+                      class="edit-keyword-btn" 
+                      @click="openKeywordModal(fb)" 
+                      :disabled="editingKeywordId === fb.FeedbackID"
+                      title="แก้ไข Keywords"
+                    >
+                      <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button class="restore-btn" @click="restoreFeedback(fb)" :disabled="restoringId === fb.FeedbackID">
+                      <span v-if="restoringId === fb.FeedbackID" class="spinner-border spinner-border-sm me-1"></span>
+                      กู้คืน
+                    </button>
+                  </div>
                 </td>
               </tr>
             </transition-group>
@@ -239,6 +250,101 @@
         </div>
       </div>
     </transition>
+
+    <!-- Edit Keywords Modal (Apple Style) -->
+    <transition name="modal-fade">
+      <div v-if="showKeywordModal" class="modal-overlay keyword-modal-overlay" @click.self="closeKeywordModal">
+        <div class="modal-content keyword-modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="bi bi-pencil-square me-2"></i>
+              แก้ไขคำถาม-คำตอบ
+            </h5>
+            <button class="modal-close" @click="closeKeywordModal">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div v-if="keywordModalLoading" class="loading-content">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-2 text-muted">กำลังโหลดข้อมูล...</p>
+            </div>
+            <div v-else>
+              <!-- Question Info -->
+              <div class="qa-info-card mb-3">
+                <div class="info-item">
+                  <span class="info-label">คำถาม:</span>
+                  <span class="info-value">{{ keywordForm.questionText || '-' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">User Query:</span>
+                  <span class="info-value text-muted">{{ selectedKeywordFeedback?.UserQuery || '-' }}</span>
+                </div>
+              </div>
+
+              <!-- Question Title -->
+              <div class="form-group mb-3">
+                <label class="form-label fw-semibold">Question Title</label>
+                <input type="text" class="form-control apple-input" v-model="keywordForm.questionTitle" />
+              </div>
+
+              <!-- Question Text -->
+              <div class="form-group mb-3">
+                <label class="form-label fw-semibold">Question Text</label>
+                <textarea class="form-control apple-input" rows="3" v-model="keywordForm.questionText"></textarea>
+              </div>
+
+              <!-- Category -->
+              <div class="form-group mb-3">
+                <label class="form-label fw-semibold">Category</label>
+                <select class="form-select apple-select" v-model="keywordForm.categoriesId">
+                  <option value="">-- เลือกหมวดหมู่ --</option>
+                  <option v-for="cat in categories" :key="cat.CategoriesID" :value="cat.CategoriesID">
+                    {{ cat.CategoriesName || cat.CategoriesID }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Keywords -->
+              <div class="form-group mb-3">
+                <label class="form-label fw-semibold">Keywords (คั่นด้วย , )</label>
+                <input 
+                  type="text" 
+                  class="form-control apple-input" 
+                  v-model="keywordInput" 
+                  @keyup.enter.prevent="addKeyword"
+                  placeholder="พิมพ์ keyword แล้วกด Enter" 
+                />
+                <div class="keywords-tags mt-2">
+                  <span 
+                    v-for="(kw, idx) in keywordForm.keywords" 
+                    :key="kw + idx" 
+                    class="keyword-tag"
+                  >
+                    {{ kw }}
+                    <button type="button" class="tag-remove" @click="removeKeyword(idx)">
+                      <i class="bi bi-x"></i>
+                    </button>
+                  </span>
+                  <span v-if="keywordForm.keywords.length === 0" class="text-muted small">ยังไม่มี keyword</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" @click="closeKeywordModal" :disabled="savingKeyword">
+              ยกเลิก
+            </button>
+            <button class="btn-save" @click="saveKeywords" :disabled="savingKeyword || keywordModalLoading">
+              <span v-if="savingKeyword" class="spinner-border spinner-border-sm me-2"></span>
+              บันทึก
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -264,6 +370,21 @@ const restoringId = ref(null);
 // Comment Modal
 const showCommentModal = ref(false);
 const selectedFeedback = ref(null);
+
+// Keyword Modal State
+const showKeywordModal = ref(false);
+const selectedKeywordFeedback = ref(null);
+const keywordModalLoading = ref(false);
+const savingKeyword = ref(false);
+const editingKeywordId = ref(null);
+const categories = ref([]);
+const keywordInput = ref('');
+const keywordForm = ref({
+  questionTitle: '',
+  questionText: '',
+  categoriesId: '',
+  keywords: []
+});
 
 // Reason labels
 const reasonLabels = {
@@ -439,9 +560,130 @@ async function restoreFeedback(fb) {
   }
 }
 
+// Keyword Modal Functions
+async function fetchCategories() {
+  try {
+    const response = await $axios.get('/categories');
+    categories.value = response.data;
+  } catch (err) {
+    console.error('Failed to fetch categories:', err);
+  }
+}
+
+async function openKeywordModal(fb) {
+  selectedKeywordFeedback.value = fb;
+  showKeywordModal.value = true;
+  keywordModalLoading.value = true;
+  
+  try {
+    // Load QA data if feedback has QuestionsAnswersID
+    if (fb.QuestionsAnswersID) {
+      const response = await $axios.get(`/questions-answers/${fb.QuestionsAnswersID}`);
+      const qa = response.data;
+      
+      keywordForm.value = {
+        questionTitle: qa.QuestionTitle || '',
+        questionText: qa.QuestionText || '',
+        categoriesId: qa.CategoriesID || '',
+        keywords: qa.Keywords ? qa.Keywords.split(',').map(k => k.trim()).filter(k => k) : []
+      };
+      editingKeywordId.value = fb.QuestionsAnswersID;
+    } else {
+      // New QA from feedback
+      keywordForm.value = {
+        questionTitle: fb.UserQuery || '',
+        questionText: fb.UserQuery || '',
+        categoriesId: '',
+        keywords: []
+      };
+      editingKeywordId.value = null;
+    }
+  } catch (err) {
+    console.error('Failed to load QA data:', err);
+    // Fallback to feedback data
+    keywordForm.value = {
+      questionTitle: fb.UserQuery || '',
+      questionText: fb.UserQuery || '',
+      categoriesId: '',
+      keywords: []
+    };
+    editingKeywordId.value = null;
+  } finally {
+    keywordModalLoading.value = false;
+  }
+}
+
+function closeKeywordModal() {
+  showKeywordModal.value = false;
+  setTimeout(() => {
+    selectedKeywordFeedback.value = null;
+    keywordForm.value = {
+      questionTitle: '',
+      questionText: '',
+      categoriesId: '',
+      keywords: []
+    };
+    keywordInput.value = '';
+    editingKeywordId.value = null;
+  }, 300);
+}
+
+function addKeyword() {
+  const kw = keywordInput.value.trim();
+  if (kw && !keywordForm.value.keywords.includes(kw)) {
+    keywordForm.value.keywords.push(kw);
+    keywordInput.value = '';
+  }
+}
+
+function removeKeyword(index) {
+  keywordForm.value.keywords.splice(index, 1);
+}
+
+async function saveKeywords() {
+  if (!keywordForm.value.categoriesId) {
+    showErrorToast('กรุณาเลือกหมวดหมู่');
+    return;
+  }
+  if (keywordForm.value.keywords.length === 0) {
+    showErrorToast('กรุณาเพิ่มอย่างน้อย 1 keyword');
+    return;
+  }
+  
+  savingKeyword.value = true;
+  
+  try {
+    const payload = {
+      QuestionTitle: keywordForm.value.questionTitle,
+      QuestionText: keywordForm.value.questionText,
+      CategoriesID: keywordForm.value.categoriesId,
+      Keywords: keywordForm.value.keywords.join(',')
+    };
+    
+    if (editingKeywordId.value) {
+      // Update existing QA
+      await $axios.put(`/questions-answers/${editingKeywordId.value}`, payload);
+      showSuccessToast('อัปเดต Keywords สำเร็จ');
+    } else {
+      // Create new QA
+      await $axios.post('/questions-answers', payload);
+      showSuccessToast('เพิ่ม Keywords สำเร็จ');
+    }
+    
+    closeKeywordModal();
+    await fetchHandledFeedbacks();
+  } catch (err) {
+    console.error('Failed to save keywords:', err);
+    showErrorToast('บันทึกไม่สำเร็จ');
+  } finally {
+    savingKeyword.value = false;
+  }
+}
+
 // Lifecycle
 onMounted(() => {
   fetchHandledFeedbacks();
+  fetchCategories();
 });
 </script>
 
@@ -1171,6 +1413,310 @@ onMounted(() => {
   animation: spin 0.8s linear infinite;
 }
 
+/* Edit Keyword Button */
+.edit-keyword-btn {
+  padding: 6px 12px;
+  background: linear-gradient(180deg, #007AFF 0%, #0051D4 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-keyword-btn:hover {
+  background: linear-gradient(180deg, #0066E6 0%, #0044B8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.35);
+}
+
+.edit-keyword-btn:active {
+  transform: translateY(0);
+}
+
+/* Keyword Modal */
+.keyword-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 20px;
+}
+
+.keyword-modal-content {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
+}
+
+.keyword-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #007AFF 0%, #0051D4 100%);
+  color: white;
+}
+
+.keyword-modal-header h4 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.keyword-modal-body {
+  padding: 24px;
+  max-height: calc(90vh - 160px);
+  overflow-y: auto;
+}
+
+.qa-info-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.info-item {
+  margin-bottom: 12px;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  font-size: 12px;
+  color: #6c757d;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+}
+
+.info-value {
+  font-size: 14px;
+  color: #1d1d1f;
+  line-height: 1.5;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 8px;
+}
+
+.apple-input,
+.apple-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 12px;
+  font-size: 15px;
+  color: #1d1d1f;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.apple-input:focus,
+.apple-select:focus {
+  outline: none;
+  border-color: #007AFF;
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+}
+
+.apple-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236c757d' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 40px;
+}
+
+.keyword-input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.keyword-input-group .apple-input {
+  flex: 1;
+}
+
+.add-keyword-btn {
+  padding: 12px 18px;
+  background: linear-gradient(180deg, #34C759 0%, #28A745 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.add-keyword-btn:hover {
+  background: linear-gradient(180deg, #2DB84D 0%, #229A3B 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.35);
+}
+
+.keywords-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  min-height: 40px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px dashed #d1d5db;
+}
+
+.keyword-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(180deg, #007AFF 0%, #0051D4 100%);
+  color: white;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  animation: tagAppear 0.2s ease;
+}
+
+@keyframes tagAppear {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.tag-remove {
+  width: 18px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: background 0.2s ease;
+}
+
+.tag-remove:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.empty-keywords {
+  color: #adb5bd;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.keyword-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+}
+
+.btn-cancel {
+  padding: 10px 20px;
+  background: #ffffff;
+  color: #1d1d1f;
+  border: 1.5px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+.btn-save {
+  padding: 10px 24px;
+  background: linear-gradient(180deg, #007AFF 0%, #0051D4 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: linear-gradient(180deg, #0066E6 0%, #0044B8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.35);
+}
+
+.btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.modal-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.loading-spinner-large {
+  width: 48px;
+  height: 48px;
+  border: 3px solid #e9ecef;
+  border-top-color: #007AFF;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .header-content {
@@ -1189,6 +1735,20 @@ onMounted(() => {
   .pagination-section {
     flex-direction: column;
     gap: 12px;
+  }
+  
+  .keyword-modal-content {
+    max-width: 100%;
+    margin: 10px;
+  }
+  
+  .keyword-input-group {
+    flex-direction: column;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 6px;
   }
 }
 </style>

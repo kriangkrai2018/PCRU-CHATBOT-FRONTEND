@@ -214,9 +214,9 @@
           </div>
 
           <!-- Pagination -->
-          <div class="d-flex justify-content-between align-items-center p-3 border-top bg-white rounded-bottom-4">
-            <div class="small text-secondary">
-              Showing {{ categoriesStartIndex }} - {{ categoriesEndIndex }}
+          <div class="pagination-footer">
+            <div class="pagination-info">
+              แสดง {{ categoriesStartIndex }} - {{ categoriesEndIndex }} รายการ
             </div>
             <nav v-if="localTotalPages > 0" aria-label="Pagination">
               <ul class="pagination pagination-sm mb-0">
@@ -746,6 +746,13 @@ function closeModal() { showFileModal.value = false; }
   margin: 0;
 }
 
+/* Mobile container spacing fix */
+@media (max-width: 768px) {
+  .dashboard-container > .container-fluid {
+    padding: 12px !important;
+  }
+}
+
 .page-title {
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -935,8 +942,45 @@ function closeModal() { showFileModal.value = false; }
 .apple-zoom-enter-from, .apple-zoom-leave-to { opacity: 0; transform: scale(0.95); }
 
 /* Pagination Override */
-.pagination .page-link { border: none; color: #1d1d1f; border-radius: 8px; margin: 0 2px; }
-.pagination .page-item.active .page-link { background: var(--apple-blue); color: white; box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3); }
+.pagination .page-link { 
+  border: none; 
+  color: #1d1d1f; 
+  border-radius: 8px; 
+  margin: 0 2px;
+  background: rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+}
+.pagination .page-link:hover {
+  background: rgba(0, 122, 255, 0.1);
+  color: #007AFF;
+}
+.pagination .page-item.active .page-link { 
+  background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%) !important; 
+  color: #FFFFFF !important; 
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3); 
+}
+.pagination .page-item.disabled .page-link {
+  background: transparent;
+  color: #c7c7cc;
+}
+
+/* Pagination Footer - Apple Style */
+.pagination-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 0 0 16px 16px;
+}
+.pagination-info {
+  font-size: 13px;
+  color: #86868b;
+  font-weight: 500;
+}
 
 @media (max-width: 992px) {
   .d-flex.align-items-center.justify-content-between.mb-4 {
@@ -991,47 +1035,100 @@ function closeModal() { showFileModal.value = false; }
   }
 
   .table-responsive {
-    overflow-x: auto;
+    overflow-x: visible;
+    overflow-y: visible;
   }
-
-  .apple-table thead th, .apple-table tbody td { padding: 10px; }
 
   .contact-cell { min-width: unset; }
   .search-input { padding-right: 2.5rem; }
 
+  .apple-table { display: block; }
   .apple-table thead { display: none; }
+  .apple-table tbody { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 12px;
+    padding: 12px;
+  }
   .apple-table tbody tr {
-    display: block;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    background: #FFFFFF;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    border: none;
+  }
+  .apple-table tbody tr.sub-row {
+    background: rgba(0, 122, 255, 0.04);
+    margin-left: 16px;
+    border-left: 3px solid #007AFF;
   }
   .apple-table tbody td {
     display: flex;
     justify-content: space-between;
-    padding: 10px 12px;
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 10px;
+    align-items: center;
+    padding: 12px 16px;
+    background: transparent;
+    border-radius: 0;
     gap: 1rem;
     border: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  }
+  .apple-table tbody td:last-child {
+    border-bottom: none;
   }
   .apple-table tbody td::before {
     content: attr(data-label);
     font-weight: 600;
-    color: #6f6f77;
-    flex: 0 0 130px;
+    color: #86868b;
+    flex: 0 0 auto;
+    min-width: 80px;
     text-transform: uppercase;
     font-size: 0.65rem;
+    letter-spacing: 0.5px;
+  }
+  .apple-table tbody td[data-label="Actions"] {
+    display: none;
   }
   .apple-table tbody td button.file-link-btn {
     justify-content: flex-end;
   }
+  
+  /* Hide empty first column for mobile */
+  .apple-table tbody tr td:first-child:empty {
+    display: none;
+  }
+  
+  /* Tree line hide on mobile */
+  .tree-line {
+    display: none;
+  }
 }
 
 @media (max-width: 576px) {
-  .container-fluid { padding: 0.5rem; }
+  .container-fluid { padding: 12px !important; }
   .apple-status-badge { width: 100%; justify-content: center; }
   .apple-card.chart-card { padding: 12px; }
-  .pagination { flex-wrap: wrap; gap: 0.5rem; }
+  .pagination { flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+  
+  /* Pagination Footer Mobile */
+  .pagination-footer,
+  .d-flex.justify-content-between.align-items-center.p-3.border-top {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+    padding: 16px !important;
+  }
+  
+  .pagination .page-link {
+    min-width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 </style>

@@ -88,8 +88,8 @@
             </thead>
             <tbody>
               <tr v-for="fb in paginatedFeedbacks" :key="fb.FeedbackID" :class="{ 'unlike-row': fb.FeedbackValue === 0 }">
-                <td>{{ fb.FeedbackID }}</td>
-                <td>
+                <td data-label="ID">{{ fb.FeedbackID }}</td>
+                <td data-label="สถานะ">
                   <template v-if="fb.FeedbackValue === 1">
                     <i class="bi bi-hand-thumbs-up-fill text-success me-2" aria-hidden="true"></i>
                     <span class="fw-semibold">Like</span>
@@ -102,18 +102,18 @@
                     <span>{{ fb.FeedbackValue }}</span>
                   </template>
                 </td>
-                <td>
+                <td data-label="เวลา">
                   <span class="badge" :class="getTimeBadgeClass(fb.Timestamp)">{{ formatRelativeTime(fb.Timestamp) }}</span>
                 </td>
-                <td>{{ fb.UserQuery || '-' }}</td>
-                <td>{{ fb.QuestionText || '-' }}</td>
-                <td>
+                <td data-label="คำถามผู้ใช้">{{ fb.UserQuery || '-' }}</td>
+                <td data-label="คำตอบ">{{ fb.QuestionText || '-' }}</td>
+                <td data-label="เหตุผล">
                   <span v-if="fb.FeedbackReason" class="reason-badge" :class="getReasonClass(fb.FeedbackReason)">
                     {{ formatReason(fb.FeedbackReason) }}
                   </span>
                   <span v-else class="text-muted">-</span>
                 </td>
-                <td>
+                <td data-label="ความคิดเห็น">
                   <div v-if="fb.FeedbackComment" class="comment-cell">
                     <button class="comment-preview-btn" @click="showFullComment(fb)">
                       <i class="bi bi-chat-square-text me-1"></i>
@@ -122,7 +122,7 @@
                   </div>
                   <span v-else class="text-muted">-</span>
                 </td>
-                <td>
+                <td data-label="">
                   <div class="d-flex justify-content-center align-items-center gap-2">
                     <button 
                       v-if="fb.FeedbackValue === 0 && fb.QuestionsAnswersID"
@@ -1479,19 +1479,257 @@ async function handleFeedback(fb) {
   }
 }
 
-/* Responsive */
+/* ========== Apple-style Responsive Design ========== */
+
+/* Tablet */
+@media (max-width: 991px) {
+  .chart-container {
+    height: 220px;
+  }
+  
+  .segmented-filter {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .segment-btn {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+}
+
+/* Mobile */
 @media (max-width: 768px) {
+  .card.p-4 {
+    padding: 16px !important;
+    border-radius: 16px;
+  }
+  
+  /* Controls: Stack vertically */
+  .d-flex.flex-wrap.justify-content-between {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 12px;
+  }
+  
+  .segmented-filter {
+    width: 100%;
+    justify-content: center;
+    order: 1;
+  }
+  
+  .search-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    order: 2;
+  }
+  
+  /* Charts: Stack vertically */
+  .row.mb-4 .col-md-6 {
+    margin-bottom: 16px;
+  }
+  
+  .chart-container {
+    height: 200px;
+  }
+  
+  /* Table: Mobile card view */
+  .table-responsive {
+    overflow-x: visible;
+  }
+  
+  .table {
+    display: block;
+  }
+  
+  .table thead {
+    display: none;
+  }
+  
+  .table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .table tbody tr {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.05);
+    gap: 8px;
+  }
+  
+  .table tbody tr.unlike-row {
+    background: linear-gradient(135deg, rgba(255, 59, 48, 0.04) 0%, rgba(255, 255, 255, 1) 100%);
+    border-left: 3px solid #FF3B30;
+  }
+  
+  .table tbody td {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 6px 0;
+    border: none;
+    width: 100%;
+  }
+  
+  .table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 12px;
+    color: #86868b;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    min-width: 100px;
+    flex-shrink: 0;
+  }
+  
+  /* Hide FeedbackID on mobile - use data attribute instead */
+  .table tbody td:first-child {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 4px;
+  }
+  
+  .table tbody td:last-child {
+    justify-content: center;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    margin-top: 4px;
+  }
+  
+  .table tbody td:last-child::before {
+    display: none;
+  }
+  
+  /* Comment modal */
   .comment-modal-content {
     max-width: 95%;
     margin: 0 auto;
+    border-radius: 16px;
+  }
+  
+  .comment-modal-content.wide {
+    max-width: 95%;
   }
   
   .comment-cell {
-    max-width: 180px;
+    max-width: 100%;
   }
   
   .comment-preview {
-    max-width: 140px;
+    max-width: 100%;
+  }
+  
+  .comment-preview-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Buttons */
+  .handle-btn,
+  .delete-btn {
+    flex: 1;
+    justify-content: center;
+  }
+  
+  /* Pagination */
+  .d-flex.justify-content-between.align-items-center.p-3 {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  
+  .pagination {
+    justify-content: center;
+  }
+  
+  .pagination .page-link {
+    min-width: 32px;
+    min-height: 32px;
+    font-size: 0.9rem;
+  }
+  
+  /* Alert modal */
+  .alert-modal-content {
+    width: 95%;
+    max-width: 400px;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .card.p-4 {
+    padding: 12px !important;
+    border-radius: 14px;
+  }
+  
+  .card h3.fs-5 {
+    font-size: 1rem !important;
+  }
+  
+  .segmented-filter {
+    padding: 3px;
+    gap: 2px;
+  }
+  
+  .segment-btn {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+  
+  .segment-btn .badge {
+    display: none;
+  }
+  
+  .chart-container {
+    height: 180px;
+  }
+  
+  .table tbody tr {
+    padding: 12px;
+    border-radius: 14px;
+  }
+  
+  .table tbody td {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .table tbody td::before {
+    min-width: auto;
+    margin-bottom: 2px;
+  }
+  
+  .handle-btn,
+  .delete-btn {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+  
+  .reason-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+  
+  .comment-modal-header {
+    padding: 16px;
+  }
+  
+  .comment-modal-body {
+    padding: 16px;
+  }
+  
+  .comment-metadata {
+    flex-direction: column;
+    gap: 8px;
   }
 }
 

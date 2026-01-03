@@ -54,8 +54,8 @@
             </thead>
             <tbody>
               <tr v-for="log in paginated" :key="log.ChatLogID">
-                <td>{{ log.ChatLogID }}</td>
-                <td>
+                <td data-label="ID">{{ log.ChatLogID }}</td>
+                <td data-label="เวลา">
                   <span 
                     class="badge bg-secondary"
                     data-bs-toggle="tooltip" 
@@ -65,7 +65,7 @@
                     {{ formatRelativeTime(log.Timestamp) }}
                   </span>
                 </td>
-                <td>{{ log.UserQuery || '-' }}</td>
+                <td data-label="คำถาม">{{ log.UserQuery || '-' }}</td>
               </tr>
               <tr v-if="filtered.length === 0">
                 <td colspan="3" class="text-center text-muted py-3">No ChatLogNoAnswers data found</td>
@@ -418,5 +418,168 @@ onUnmounted(() => {
 
 .pagination {
   margin-bottom: 0 !important;
+}
+
+/* Search wrapper */
+.search-wrapper {
+  min-width: 220px;
+  max-width: 320px;
+}
+
+/* ========== Apple-style Responsive Design ========== */
+
+/* Tablet */
+@media (max-width: 991px) {
+  .chart-container {
+    height: 220px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .card.p-4 {
+    padding: 16px !important;
+    border-radius: 16px;
+  }
+  
+  .card h3.fs-5 {
+    font-size: 1rem !important;
+  }
+  
+  /* Alert */
+  .alert {
+    font-size: 12px;
+    padding: 10px 12px !important;
+  }
+  
+  /* Controls: Stack vertically */
+  .d-flex.justify-content-between.align-items-center.mb-2 {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 12px;
+  }
+  
+  .search-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* Charts: Stack vertically */
+  .row.mb-3 .col-lg-6 {
+    margin-bottom: 16px;
+  }
+  
+  .chart-container {
+    height: 200px;
+  }
+  
+  /* Table: Mobile card view */
+  .table-responsive {
+    overflow-x: visible;
+  }
+  
+  .table {
+    display: block;
+  }
+  
+  .table thead {
+    display: none;
+  }
+  
+  .table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .table tbody tr {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.05);
+    gap: 8px;
+  }
+  
+  .table tbody td {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 6px 0;
+    border: none;
+    width: 100%;
+  }
+  
+  .table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 12px;
+    color: #86868b;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    min-width: 80px;
+    flex-shrink: 0;
+  }
+  
+  .table tbody td:first-child {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+  
+  /* Pagination */
+  .d-flex.justify-content-between.align-items-center.p-3 {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  
+  .pagination {
+    justify-content: center;
+  }
+  
+  .pagination .page-link {
+    min-width: 32px;
+    min-height: 32px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .card.p-4 {
+    padding: 12px !important;
+    border-radius: 14px;
+  }
+  
+  .card h3.fs-5 {
+    font-size: 0.9rem !important;
+  }
+  
+  .chart-container {
+    height: 180px;
+  }
+  
+  .table tbody tr {
+    padding: 12px;
+    border-radius: 14px;
+  }
+  
+  .table tbody td {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .table tbody td::before {
+    min-width: auto;
+    margin-bottom: 2px;
+  }
+  
+  .badge {
+    font-size: 0.7rem;
+  }
 }
 </style>

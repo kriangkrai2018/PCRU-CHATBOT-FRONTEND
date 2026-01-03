@@ -232,7 +232,7 @@
               <table class="table table-hover mb-0 apple-table">
                 <thead>
                   <tr>
-                    <th>ID</th>
+                    <th>ลำดับ</th>
                     <th>คำ (Stopword)</th>
                     <th>สถานะ</th>
                     <th>การดำเนินการ</th>
@@ -241,7 +241,7 @@
                 <tbody>
                   <transition-group name="row-fade">
                     <tr v-for="item in paginatedStopwords" :key="item.StopwordID" class="apple-row">
-                      <td class="py-3" data-label="ID">{{ item.StopwordID }}</td>
+                      <td class="py-3" data-label="ลำดับ">{{ item.RowNum }}</td>
                       <td class="py-3 fw-bold" data-label="คำ">{{ item.StopwordText }}</td>
                       <td class="py-3" data-label="สถานะ">
                         <div class="d-flex flex-column gap-1">
