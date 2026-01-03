@@ -1,5 +1,43 @@
 <template>
   <div class="chat-root" data-bs-no-js="true">
+    <!-- 🎬 First-time Intro Animation (Genshin-style) -->
+    <transition name="intro-fade">
+      <div v-if="showIntroAnimation" class="intro-overlay">
+        <!-- Phase 1: Logo Reveal -->
+        <div class="intro-content" :class="{ 'phase-1': introPhase >= 1, 'phase-2': introPhase >= 2, 'phase-3': introPhase >= 3 }">
+          <!-- Particle burst effect -->
+          <div class="intro-particles">
+            <div v-for="n in 50" :key="n" class="intro-particle" :style="getIntroParticleStyle(n)"></div>
+          </div>
+          
+          <!-- Central logo/bot image -->
+          <div class="intro-logo-container">
+            <div class="intro-glow"></div>
+            <div class="intro-ring ring-1"></div>
+            <div class="intro-ring ring-2"></div>
+            <div class="intro-ring ring-3"></div>
+            <img :src="botAvatar" alt="Bot Avatar" class="intro-avatar" />
+          </div>
+          
+          <!-- Title text -->
+          <div class="intro-title">
+            <span class="intro-title-char" v-for="(char, i) in 'PCRU CHATBOT'" :key="i" :style="{ animationDelay: (i * 0.05) + 's' }">{{ char === ' ' ? '\u00A0' : char }}</span>
+          </div>
+          
+          <!-- Subtitle -->
+          <div class="intro-subtitle">ผู้ช่วย AI ของมหาวิทยาลัยราชภัฏเพชรบูรณ์</div>
+          
+          <!-- Loading bar -->
+          <div class="intro-loading">
+            <div class="intro-loading-bar"></div>
+          </div>
+          
+          <!-- Skip hint -->
+          <div class="intro-skip" @click="skipIntro">คลิกเพื่อข้าม</div>
+        </div>
+      </div>
+    </transition>
+
     <!-- Theme transition circle overlay -->
     <div 
       v-if="showThemeTransition" 
@@ -960,6 +998,10 @@ export default {
       longPressDuration: 3000, // 3 seconds
       longPressStartTimer: null, // Timer to detect long press vs normal click
       isLongPressing: false, // Track if we're in long press mode
+      // 🎬 First-time intro animation (Genshin-style)
+      showIntroAnimation: false,
+      introPhase: 0, // 0: not started, 1: logo, 2: particles, 3: reveal
+      isFirstTimeUser: false,
     }
   },
   computed: {
@@ -1087,6 +1129,9 @@ export default {
 
     // Generate snowflake styles once to prevent jank on re-render
     this.generateSnowflakeStyles()
+    
+    // 🎬 Auto-open with intro animation on first visit
+    this.checkAndShowFirstVisitIntro();
     
     // Prevent Bootstrap carousel auto-init from parent page (university website)
     // This stops jQuery/Bootstrap from trying to initialize carousels on our component
@@ -1688,9 +1733,16 @@ export default {
         return;
       }
       
-      // Normal click - open chatbot
+      // Normal click - check if first time user (desktop: show intro on first click)
       console.log('[FAB] Normal click - opening chatbot');
-      this.visible = true;
+      
+      // ทั้งคอมและมือถือ: ถ้ายังไม่เคยเห็น intro → แสดง intro ก่อน
+      if (this.checkFirstTimeUser()) {
+        this.startIntroAnimation();
+      } else {
+        this.visible = true;
+      }
+      
       this.isLongPressing = false;
     },
     completeLongPress() {
@@ -1715,6 +1767,93 @@ export default {
       this.showLongPressOverlay = false;
       this.longPressCountdown = 0;
       this.isLongPressing = false;
+    },
+    // 🎬 Intro Animation Methods
+    isMobileDevice() {
+      // ตรวจสอบจาก user agent เท่านั้น (ไม่ใช้ window size เพราะ Desktop อาจมีหน้าต่างเล็ก)
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    },
+    checkFirstTimeUser() {
+      // ตรวจสอบว่าเคยเห็น intro ใน session นี้แล้วหรือยัง
+      try {
+        const hasSeenIntro = sessionStorage.getItem('chatbot_intro_shown');
+        return !hasSeenIntro;
+      } catch (e) {
+        return false;
+      }
+    },
+    checkAndShowFirstVisitIntro() {
+      // เฉพาะมือถือ: แสดง intro อัตโนมัติเมื่อเข้าเว็บครั้งแรก
+      // Desktop ไม่ auto-open - ต้องรอให้ user กดปุ่ม FAB
+      if (!this.isMobileDevice()) {
+        console.log('[Intro] Desktop detected - no auto-open');
+        return;
+      }
+      
+      try {
+        const hasVisited = sessionStorage.getItem('chatbot_session_visited');
+        if (!hasVisited) {
+          // ครั้งแรกของ session นี้ (มือถือ) → แสดง intro ก่อน
+          sessionStorage.setItem('chatbot_session_visited', 'true');
+          console.log('[Intro] Mobile first visit - showing intro');
+          
+          setTimeout(() => {
+            this.startIntroAnimation();
+          }, 300);
+        }
+      } catch (e) {
+        // sessionStorage ไม่ available (private mode) → ไม่ auto-open
+      }
+    },
+    startIntroAnimation() {
+      this.showIntroAnimation = true;
+      this.introPhase = 0;
+      
+      // Phase 1: Logo appears (0.5s)
+      setTimeout(() => { this.introPhase = 1; }, 100);
+      
+      // Phase 2: Particles burst (1s)
+      setTimeout(() => { this.introPhase = 2; }, 600);
+      
+      // Phase 3: Title reveal (1.5s)
+      setTimeout(() => { this.introPhase = 3; }, 1200);
+      
+      // Auto complete after 4s
+      setTimeout(() => { this.completeIntro(); }, 4000);
+    },
+    skipIntro() {
+      this.completeIntro();
+    },
+    completeIntro() {
+      this.showIntroAnimation = false;
+      this.introPhase = 0;
+      
+      // บันทึกว่าเคยเห็น intro แล้วใน session นี้
+      try {
+        sessionStorage.setItem('chatbot_intro_shown', 'true');
+      } catch (e) { /* ignore */ }
+      
+      // หลังจาก intro จบ → เปิด chatbot
+      this.$nextTick(() => {
+        this.visible = true;
+      });
+    },
+    getIntroParticleStyle(n) {
+      const angle = (n / 50) * 360;
+      const distance = 100 + Math.random() * 200;
+      const size = 2 + Math.random() * 6;
+      const duration = 1 + Math.random() * 2;
+      const delay = Math.random() * 0.5;
+      const hue = 260 + Math.random() * 60; // Purple-pink range
+      
+      return {
+        '--angle': angle + 'deg',
+        '--distance': distance + 'px',
+        '--size': size + 'px',
+        '--duration': duration + 's',
+        '--delay': delay + 's',
+        '--hue': hue,
+      };
     },
     onEnterKey() {
       // Ignore enter while IME composition is active
@@ -5682,6 +5821,301 @@ export default {
 .fade-blur-leave-from .countdown-container {
   transform: scale(1);
   opacity: 1;
+}
+
+/* 🎬 Intro Animation Styles (Genshin-style) */
+.intro-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at center, #1a0a2e 0%, #0d0015 50%, #000 100%);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.intro-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  position: relative;
+  z-index: 10;
+}
+
+/* Particles */
+.intro-particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.intro-particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--size);
+  height: var(--size);
+  background: radial-gradient(circle, hsl(var(--hue), 80%, 70%) 0%, transparent 70%);
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+}
+
+.phase-2 .intro-particle {
+  animation: particle-burst var(--duration) ease-out var(--delay) forwards;
+}
+
+@keyframes particle-burst {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateX(var(--distance));
+  }
+}
+
+/* Logo Container */
+.intro-logo-container {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.3);
+  transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.phase-1 .intro-logo-container {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.intro-glow {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(139, 76, 184, 0.4) 0%, transparent 60%);
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+
+.intro-ring {
+  position: absolute;
+  border: 2px solid rgba(139, 76, 184, 0.5);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.phase-1 .intro-ring {
+  animation: ring-expand 2s ease-out infinite;
+}
+
+.ring-1 {
+  width: 100%;
+  height: 100%;
+  animation-delay: 0s !important;
+}
+.ring-2 {
+  width: 130%;
+  height: 130%;
+  animation-delay: 0.4s !important;
+}
+.ring-3 {
+  width: 160%;
+  height: 160%;
+  animation-delay: 0.8s !important;
+}
+
+@keyframes ring-expand {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.intro-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 40px rgba(139, 76, 184, 0.6), 0 0 80px rgba(139, 76, 184, 0.3);
+  z-index: 10;
+}
+
+/* Title */
+.intro-title {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 0 20px rgba(139, 76, 184, 0.8), 0 4px 20px rgba(0, 0, 0, 0.5);
+  letter-spacing: 4px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s ease-out;
+}
+
+.phase-3 .intro-title {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.intro-title-char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(20px) scale(0.5);
+}
+
+.phase-3 .intro-title-char {
+  animation: char-reveal 0.4s ease-out forwards;
+}
+
+@keyframes char-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Subtitle */
+.intro-subtitle {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: 2px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.5s ease-out 0.3s;
+}
+
+.phase-3 .intro-subtitle {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Loading Bar */
+.intro-loading {
+  width: 200px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 20px;
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+}
+
+.phase-3 .intro-loading {
+  opacity: 1;
+}
+
+.intro-loading-bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #8B4CB8, #6B2C91, #8B4CB8);
+  background-size: 200% 100%;
+  border-radius: 2px;
+  animation: loading-progress 3s ease-out forwards, loading-shimmer 1s linear infinite;
+}
+
+.phase-3 .intro-loading-bar {
+  animation: loading-progress 3s ease-out forwards, loading-shimmer 1s linear infinite;
+}
+
+@keyframes loading-progress {
+  0% { width: 0; }
+  100% { width: 100%; }
+}
+
+@keyframes loading-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Skip Hint */
+.intro-skip {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  opacity: 0;
+  animation: fade-in 0.5s ease-out 1s forwards;
+  z-index: 100;
+}
+
+.intro-skip:hover {
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+@keyframes fade-in {
+  to { opacity: 1; }
+}
+
+/* Intro Fade Transition */
+.intro-fade-enter-active {
+  transition: opacity 0.3s ease-out;
+}
+.intro-fade-leave-active {
+  transition: opacity 0.8s ease-out;
+}
+.intro-fade-enter-from,
+.intro-fade-leave-to {
+  opacity: 0;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .intro-logo-container {
+    width: 140px;
+    height: 140px;
+  }
+  .intro-avatar {
+    width: 100px;
+    height: 100px;
+  }
+  .intro-title {
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+  }
+  .intro-subtitle {
+    font-size: 0.9rem;
+    padding: 0 20px;
+    text-align: center;
+  }
 }
 </style>
 
