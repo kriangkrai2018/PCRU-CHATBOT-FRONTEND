@@ -58,8 +58,34 @@
   font-weight: normal;
 }
 
+html {
+  overflow-x: hidden; /* Prevent horizontal scroll during theme transition */
+}
+
+/* Lock scroll during theme transition */
+html.theme-transitioning,
+body.theme-transitioning {
+  overflow: hidden !important;
+}
+
+/* Disable ALL transitions and animations during theme change to prevent flickering */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  -webkit-transition: none !important;
+  -moz-transition: none !important;
+  -o-transition: none !important;
+  transition: none !important;
+  -webkit-animation: none !important;
+  -moz-animation: none !important;
+  -o-animation: none !important;
+  animation: none !important;
+}
+
 body {
   min-height: 100vh;
+  overflow-x: hidden; /* Prevent horizontal scroll during theme transition */
   color: var(--color-text);
   background: var(--color-background);
   transition:

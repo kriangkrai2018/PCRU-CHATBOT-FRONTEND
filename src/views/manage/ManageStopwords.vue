@@ -56,6 +56,10 @@
               <h2 class="page-title m-0">Manage Stopwords</h2>
               
               <div class="header-actions d-flex gap-2 ms-auto">
+                <button class="btn-seed" @click="confirmSeed" :disabled="isSeeding" title="เติมคำมาตรฐานอัตโนมัติ">
+                  <i class="bi bi-magic"></i>
+                  <span class="d-none d-sm-inline">เติมอัตโนมัติ</span>
+                </button>
                 <button class="btn-add-apple" @click="openAddModal" title="เพิ่ม Stopword ใหม่">
                   <i class="bi bi-plus-lg"></i>
                   <span class="d-none d-sm-inline">Add Stopword</span>
@@ -372,6 +376,29 @@
         </div>
       </div>
     </div>
+
+    <!-- Seed Confirmation Modal -->
+    <Teleport to="body">
+      <div v-if="showSeedModal" class="modal-overlay" @click.self="showSeedModal = false">
+        <div class="apple-modal-card seed-modal">
+          <div class="modal-icon primary">
+            <i class="bi bi-magic"></i>
+          </div>
+          <h3 class="modal-title">เติมคำอัตโนมัติ</h3>
+          <p class="modal-text">
+            ระบบจะเติม Stopwords มาตรฐานจาก pythainlp ประมาณ 120 คำ<br>
+            (เช่น ผม, ฉัน, ที่, อยาก, ครับ, ค่ะ) ลงในระบบ<br>
+            <small class="text-muted">คำที่มีอยู่แล้วจะถูกข้าม ไม่ซ้ำกัน</small>
+          </p>
+          <div class="modal-actions">
+            <button class="btn-secondary" @click="showSeedModal = false">ยกเลิก</button>
+            <button class="btn-primary-apple" @click="seedStopwords" :disabled="isSeeding">
+              {{ isSeeding ? 'กำลังเติม...' : 'ยืนยัน' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -427,6 +454,10 @@ const stopwords = ref([]);
 const keywords = ref([]);
 const stats = ref({ total: 0, protected: 0, negativeProtected: 0, active: 0 });
 const searchQuery = ref('');
+
+// Seed modal state
+const showSeedModal = ref(false);
+const isSeeding = ref(false);
 
 // Pagination
 const currentPage = ref(1);
@@ -665,6 +696,35 @@ async function confirmDelete(item) {
   }
 }
 
+// Seed helpers
+function confirmSeed() {
+  showSeedModal.value = true;
+}
+
+async function seedStopwords() {
+  isSeeding.value = true;
+  try {
+    const response = await $axios.post('/stopwords/seed');
+    if (response.data && response.data.ok) {
+      const added = response.data.addedCount || 0;
+      if (added > 0) {
+        toastSuccess(`เติมข้อมูลสำเร็จ! เพิ่มคำใหม่ ${added} คำ`);
+      } else {
+        showMessage('ข้อมูลเป็นปัจจุบันอยู่แล้ว ไม่มีคำใหม่ที่ต้องเพิ่ม', 'warning');
+      }
+      showSeedModal.value = false;
+      // Refresh table
+      await refreshData();
+    } else {
+      toastError(response.data?.message || 'ไม่สามารถเติมคำได้');
+    }
+  } catch (error) {
+    toastError(error.response?.data?.message || error.message || 'เกิดข้อผิดพลาดในการเติมข้อมูล');
+  } finally {
+    isSeeding.value = false;
+  }
+}
+
 // Helpers
 function showMessage(msg, type) {
   actionMessage.value = msg;
@@ -786,6 +846,146 @@ button.mobile-sidebar-toggle.mobile-inline-toggle { display: none !important; bo
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+/* Seed Button - Magic Style */
+.btn-seed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #ff9500 0%, #ff7b00 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(255, 149, 0, 0.3);
+}
+
+.btn-seed:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 149, 0, 0.4);
+  background: linear-gradient(135deg, #ff7b00 0%, #ff6600 100%);
+}
+
+.btn-seed:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-seed i {
+  font-size: 1rem;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+/* Seed Modal Card */
+.apple-modal-card.seed-modal {
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 28px;
+}
+
+.modal-icon.primary {
+  background: linear-gradient(135deg, #ff9500 0%, #ff7b00 100%);
+  color: white;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin-bottom: 12px;
+}
+
+.modal-text {
+  font-size: 0.9rem;
+  color: #6e6e73;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.modal-actions .btn-secondary {
+  padding: 10px 24px;
+  border: 1px solid #e5e5ea;
+  background: #f5f5f7;
+  color: #1d1d1f;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-actions .btn-secondary:hover {
+  background: #e5e5ea;
+}
+
+.modal-actions .btn-primary-apple {
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #ff9500 0%, #ff7b00 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-actions .btn-primary-apple:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 149, 0, 0.4);
+}
+
+.modal-actions .btn-primary-apple:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btn-add-apple:hover {

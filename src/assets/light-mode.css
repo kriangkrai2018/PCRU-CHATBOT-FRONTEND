@@ -333,4 +333,19 @@
     box-shadow: 0 16px 30px rgba(20,20,20,0.08); 
 }
 
-
+/* ============================================
+   THEME TRANSITION - Disable ALL transitions
+   Override all transitions during theme change
+   ============================================ */
+html.theme-transitioning [data-theme="light"] .apple-help-mini,
+html.theme-transitioning [data-theme="light"] .org-card,
+html.theme-transitioning [data-theme="light"] * {
+  -webkit-transition: none !important;
+  -moz-transition: none !important;
+  -o-transition: none !important;
+  transition: none !important;
+  -webkit-animation: none !important;
+  -moz-animation: none !important;
+  -o-animation: none !important;
+  animation: none !important;
+}

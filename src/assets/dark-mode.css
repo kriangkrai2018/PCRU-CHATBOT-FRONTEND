@@ -537,3 +537,21 @@
 [data-theme="dark"] .panel-header { 
   background-color: rgba(0,0,0,0.1) !important; 
 }
+
+/* ============================================
+   THEME TRANSITION - Disable ALL transitions
+   Override all transitions during theme change
+   ============================================ */
+html.theme-transitioning [data-theme="dark"] .apple-help-mini,
+html.theme-transitioning [data-theme="dark"] .org-card,
+html.theme-transitioning [data-theme="dark"] *,
+html.theme-transitioning [data-theme="light"] * {
+  -webkit-transition: none !important;
+  -moz-transition: none !important;
+  -o-transition: none !important;
+  transition: none !important;
+  -webkit-animation: none !important;
+  -moz-animation: none !important;
+  -o-animation: none !important;
+  animation: none !important;
+}

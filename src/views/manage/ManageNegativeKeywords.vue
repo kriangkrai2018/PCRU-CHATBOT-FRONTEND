@@ -9,40 +9,42 @@
       <div class="negative-keywords-container">
         <!-- Header Section -->
         <div class="header-section my-4">
-          <div class="header-top d-flex align-items-center gap-3 mb-3">
-            <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
-              <i :class="isMobileSidebarOpen ? 'bi bi-x' : 'bi bi-list'"></i>
-            </button>
+          <div class="header-top d-flex align-items-center gap-3 mb-3" style="justify-content: space-between;">
+            <div class="d-flex align-items-center gap-3">
+              <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
+                <i :class="isMobileSidebarOpen ? 'bi bi-x' : 'bi bi-list'"></i>
+              </button>
 
-            <svg class="brain-icon" width="40" height="40" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <!-- Background Circle -->
-              <circle cx="32" cy="32" r="30" fill="#dc2626" opacity="0.08"/>
-              
-              <!-- X mark / Negative symbol -->
-              <circle class="brain-outline brain-left" 
-                cx="32" cy="32" r="18"
-                stroke="#dc2626" stroke-width="3" stroke-linecap="round" fill="none"/>
-              
-              <!-- Diagonal lines forming X -->
-              <path class="brain-wrinkle wrinkle-1" 
-                d="M 18 18 L 46 46" 
-                stroke="#dc2626" stroke-width="3" stroke-linecap="round" fill="none"/>
-              <path class="brain-wrinkle wrinkle-2" 
-                d="M 46 18 L 18 46" 
-                stroke="#dc2626" stroke-width="3" stroke-linecap="round" fill="none"/>
-              
-              <!-- Dots -->
-              <g class="neuron-group">
-                <circle class="neuron-glow" cx="20" cy="20" r="5" fill="#dc2626" opacity="0.2"/>
-                <circle class="neuron neuron-1" cx="20" cy="20" r="2.5" fill="#dc2626"/>
-              </g>
-              <g class="neuron-group">
-                <circle class="neuron-glow" cx="44" cy="44" r="5" fill="#ef4444" opacity="0.2"/>
-                <circle class="neuron neuron-2" cx="44" cy="44" r="2.5" fill="#ef4444"/>
-              </g>
-            </svg>
+              <svg class="brain-icon" width="40" height="40" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Background Circle -->
+                <circle cx="32" cy="32" r="30" fill="#dc2626" opacity="0.08"/>
+                
+                <!-- X mark / Negative symbol -->
+                <circle class="brain-outline brain-left" 
+                  cx="32" cy="32" r="18"
+                  stroke="#dc2626" stroke-width="3" stroke-linecap="round" fill="none"/>
+                
+                <!-- Diagonal lines forming X -->
+                <path class="brain-wrinkle wrinkle-1" 
+                  d="M 18 18 L 46 46" 
+                  stroke="#dc2626" stroke-width="3" stroke-linecap="round" fill="none"/>
+                <path class="brain-wrinkle wrinkle-2" 
+                  d="M 46 18 L 18 46" 
+                  stroke="#dc2626" stroke-width="3" stroke-linecap="round" fill="none"/>
+                
+                <!-- Dots -->
+                <g class="neuron-group">
+                  <circle class="neuron-glow" cx="20" cy="20" r="5" fill="#dc2626" opacity="0.2"/>
+                  <circle class="neuron neuron-1" cx="20" cy="20" r="2.5" fill="#dc2626"/>
+                </g>
+                <g class="neuron-group">
+                  <circle class="neuron-glow" cx="44" cy="44" r="5" fill="#ef4444" opacity="0.2"/>
+                  <circle class="neuron neuron-2" cx="44" cy="44" r="2.5" fill="#ef4444"/>
+                </g>
+              </svg>
 
-            <h2 class="page-title m-0">Manage Negative Keywords</h2>
+              <h2 class="page-title m-0">Manage Negative Keywords</h2>
+            </div>
             
             <!-- Action buttons group -->
             <div class="header-actions d-flex gap-2">
@@ -144,7 +146,7 @@
             />
             <small class="form-hint">ใส่หลายคำได้ คั่นด้วยเครื่องหมาย , (comma)</small>
           </div>
-          <div class="form-group" style="width: 180px;">
+          <div class="form-group form-group-modifier">
             <label class="form-label">ตัวคูณคะแนน</label>
             <select v-model="newKeyword.weightModifier" class="form-control">
               <option :value="-1.0">-1.0 (กลับเป็นลบ)</option>
@@ -152,7 +154,7 @@
               <option :value="-0.5">-0.5 (ลดครึ่งหนึ่ง)</option>
             </select>
           </div>
-          <div class="form-group" style="width: 250px;">
+          <div class="form-group form-group-description">
             <label class="form-label">คำอธิบาย (ไม่บังคับ)</label>
             <input 
               type="text" 
@@ -161,7 +163,7 @@
               placeholder="อธิบายการใช้งาน"
             />
           </div>
-          <div class="form-group" style="width: auto; align-self: flex-end;">
+          <div class="form-group form-group-button">
             <button type="submit" class="btn-primary-apple" :disabled="!newKeyword.word.trim() || isAdding">
               <i class="bi bi-plus-lg me-1"></i>
               {{ isAdding ? 'กำลังเพิ่ม...' : 'เพิ่ม' }}
@@ -875,7 +877,7 @@ onUnmounted(() => {
 .form-row {
   display: flex;
   gap: 1rem;
-  align-items: flex-start;
+  align-items: flex-end;
   flex-wrap: wrap;
 }
 

@@ -1734,8 +1734,9 @@ export default {
     },
 
     toggleTheme() {
-      // Start theme transition circle animation
-      this.startThemeTransition()
+      // Disable transitions first to prevent color flickering
+      document.documentElement.classList.add('theme-transitioning')
+      document.body.classList.add('theme-transitioning')
       
       // Cycle through: light -> dark -> auto -> light
       if (this.theme === 'light') {
@@ -1746,13 +1747,6 @@ export default {
         this.theme = 'light'
       }
       
-      // Expand button to show text for 3 seconds
-      this.isExpanded = true;
-      if (this.expandTimer) clearTimeout(this.expandTimer);
-      this.expandTimer = setTimeout(() => {
-        this.isExpanded = false;
-      }, 3000);
-      
       try {
         localStorage.setItem('chatbot_theme', this.theme)
         
@@ -1762,12 +1756,30 @@ export default {
           actualTheme = this.resolveAutoTheme()
         }
         
+        // Apply theme immediately while transitions are disabled
         document.documentElement.setAttribute('data-theme', actualTheme)
         const meta = document.querySelector('meta[name="theme-color"]')
         if (meta) meta.setAttribute('content', actualTheme === 'dark' ? '#202124' : '#8B4CB8')
         const cs = document.querySelector('meta[name="color-scheme"]')
         if (cs) cs.setAttribute('content', actualTheme === 'dark' ? 'dark' : 'light')
       } catch (e) { /* ignore */ }
+      
+      // Force multiple repaints to ensure all CSS is applied
+      void document.documentElement.offsetHeight
+      void document.body.offsetHeight
+      
+      // Re-enable transitions after sufficient delay (100ms) to let all colors settle
+      setTimeout(() => {
+        document.documentElement.classList.remove('theme-transitioning')
+        document.body.classList.remove('theme-transitioning')
+      }, 100)
+      
+      // Expand button to show text for 2 seconds (shorter for better UX)
+      this.isExpanded = true;
+      if (this.expandTimer) clearTimeout(this.expandTimer);
+      this.expandTimer = setTimeout(() => {
+        this.isExpanded = false;
+      }, 2000);
     },
 
     getThemeButtonTitle() {

@@ -1,6 +1,49 @@
 /* Apple-like system font */
-.chat-root { font-family: -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+.chat-root { 
+  font-family: -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  overflow: hidden; /* Prevent scrollbar during theme transition */
+}
 .chat-overlay { position: fixed; inset: 0; display: flex; justify-content: flex-end; z-index: 1400; }
+
+/* ============================================
+   THEME TRANSITION - Disable ALL animations
+   ============================================ */
+/* Ultra high specificity to override all other !important rules */
+html.theme-transitioning .chat-root,
+html.theme-transitioning .chat-root *,
+html.theme-transitioning .chat-root *::before,
+html.theme-transitioning .chat-root *::after,
+html.theme-transitioning .feedback-btn,
+html.theme-transitioning .feedback-icon,
+html.theme-transitioning .feedback-icon path,
+html.theme-transitioning svg,
+html.theme-transitioning svg *,
+html.theme-transitioning button,
+html.theme-transitioning span,
+html.theme-transitioning div {
+  -webkit-transition: none !important;
+  -moz-transition: none !important;
+  -o-transition: none !important;
+  transition: none !important;
+  -webkit-animation: none !important;
+  -moz-animation: none !important;
+  -o-animation: none !important;
+  animation: none !important;
+  animation-play-state: paused !important;
+}
+
+/* Theme transition circle - expands from theme button */
+.theme-transition-circle {
+  position: fixed;
+  top: var(--transition-y, 50%);
+  left: var(--transition-x, 50%);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  background: transparent;
+  /* No visible effect, just prevents layout shift */
+}
 
 /* Message & Bubble spacing */
 .chat-panel { padding: 0; }
@@ -398,9 +441,22 @@ html.keyboard-open .close-circle {
   background: rgba(255, 255, 255, 0.15);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) ;
+  /* Ultra-smooth Apple-style transition - slower collapse */
+  transition: 
+    width 0.7s cubic-bezier(0.32, 0.72, 0, 1),
+    min-width 0.7s cubic-bezier(0.32, 0.72, 0, 1),
+    border-radius 0.7s cubic-bezier(0.32, 0.72, 0, 1),
+    padding 0.7s cubic-bezier(0.32, 0.72, 0, 1),
+    gap 0.5s cubic-bezier(0.32, 0.72, 0, 1),
+    background 0.3s ease,
+    transform 0.2s ease,
+    box-shadow 0.3s ease;
   overflow: hidden;
   cursor: pointer;
+  will-change: width, min-width, border-radius, padding;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
 }
 .theme-toggle-btn.expanded {
   width: auto;
@@ -408,15 +464,24 @@ html.keyboard-open .close-circle {
   border-radius: 30px;
   padding: 0 16px 0 12px;
   gap: 8px;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) ;
+  /* Faster expansion for responsive feel */
+  transition: 
+    width 0.4s cubic-bezier(0.32, 0.72, 0, 1),
+    min-width 0.4s cubic-bezier(0.32, 0.72, 0, 1),
+    border-radius 0.4s cubic-bezier(0.32, 0.72, 0, 1),
+    padding 0.4s cubic-bezier(0.32, 0.72, 0, 1),
+    gap 0.3s cubic-bezier(0.32, 0.72, 0, 1),
+    background 0.3s ease,
+    transform 0.2s ease,
+    box-shadow 0.3s ease;
 }
 .theme-toggle-btn:hover {
   background: rgba(255, 255, 255, 0.25);
-  transform: translateY(-1px);
+  transform: translateZ(0) translateY(-1px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 .theme-toggle-btn:active {
-  transform: scale(0.95);
+  transform: translateZ(0) scale(0.95);
 }
 .theme-toggle-btn .icon-wrapper {
   display: flex;
@@ -447,14 +512,29 @@ html.keyboard-open .close-circle {
   white-space: nowrap;
   max-width: 0;
   opacity: 0;
-  transform: translateX(-10px);
-  transition: opacity 3s cubic-bezier(0.25, 0.46, 0.45, 0.94), max-width 3s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: translateX(-8px) translateZ(0);
+  /* Apple-style spring transition - fast in, smooth out */
+  transition: 
+    opacity 0.4s cubic-bezier(0.32, 0.72, 0, 1),
+    max-width 0.5s cubic-bezier(0.32, 0.72, 0, 1),
+    transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
   flex-shrink: 0;
+  will-change: opacity, max-width, transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 .theme-toggle-btn.expanded .theme-label {
   max-width: 100px;
   opacity: 1;
-  transform: translateX(0);
+  transform: translateX(0) translateZ(0);
+}
+
+/* Collapse animation - slower, more graceful */
+.theme-toggle-btn:not(.expanded) .theme-label {
+  transition: 
+    opacity 0.6s cubic-bezier(0.32, 0.72, 0, 1),
+    max-width 0.7s cubic-bezier(0.32, 0.72, 0, 1) 0.1s,
+    transform 0.6s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .clear-chat-btn { 
@@ -4186,6 +4266,16 @@ body.no-effects textarea,
 body.no-effects .feedback-btn,
 body.no-effects .feedback-icon {
   transition: opacity 0.1s ease, background-color 0.1s ease, color 0.1s ease !important;
+}
+
+/* Override no-effects transitions during theme change */
+html.theme-transitioning body.no-effects button,
+html.theme-transitioning body.no-effects input,
+html.theme-transitioning body.no-effects select,
+html.theme-transitioning body.no-effects textarea,
+html.theme-transitioning body.no-effects .feedback-btn,
+html.theme-transitioning body.no-effects .feedback-icon {
+  transition: none !important;
 }
 
 /* Ensure SVG icons remain visible and functional */
