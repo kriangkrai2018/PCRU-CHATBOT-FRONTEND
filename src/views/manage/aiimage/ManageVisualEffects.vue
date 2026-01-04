@@ -1,9 +1,13 @@
 <template>
   <div class="effects-section">
-    <div class="effects-card">
-      <div class="effects-card-header">
-        <div class="card-icon-wrapper">
-          <svg class="card-icon" width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <!-- Apple-style Split Layout: Settings + Preview -->
+    <div class="effects-split-layout">
+      <!-- Left: Settings Card -->
+      <div class="effects-settings-panel">
+        <div class="effects-card">
+          <div class="effects-card-header">
+            <div class="card-icon-wrapper">
+              <svg class="card-icon" width="28" height="28" viewBox="0 0 24 24" fill="none">
             <defs>
               <linearGradient id="effectGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stop-color="#3B82F6"/>
@@ -219,27 +223,126 @@
           </button>
         </div>
       </div>
-    </div>
-
-    <!-- Apple-style Alert Modal -->
-    <transition name="apple-alert-fade">
-      <div v-if="showAlert" class="apple-alert-backdrop" @click="closeAlert">
-        <div class="apple-alert-container" @click.stop>
-          <div class="apple-alert-icon">
-            <svg v-if="alertType === 'success'" class="alert-icon-svg" viewBox="0 0 52 52">
-              <circle class="alert-icon-circle" cx="26" cy="26" r="25" fill="none"/>
-              <path class="alert-icon-check" fill="none" d="M14 27l7.5 7.5L38 18"/>
-            </svg>
-            <svg v-else class="alert-icon-svg" viewBox="0 0 52 52">
-              <circle class="alert-icon-circle-error" cx="26" cy="26" r="25" fill="none"/>
-              <path class="alert-icon-x" fill="none" d="M16 16l20 20M36 16L16 36"/>
-            </svg>
-          </div>
-          <h3 class="apple-alert-title">{{ alertTitle }}</h3>
-          <p class="apple-alert-text">{{ alertText }}</p>
         </div>
       </div>
-    </transition>
+      <!-- End Settings Panel -->
+
+      <!-- Right: Apple-style Live Preview Panel -->
+      <div class="effects-preview-panel">
+        <div class="preview-card">
+          <div class="preview-card-header">
+            <div class="preview-badge">
+              <span class="preview-badge-dot"></span>
+              <span>Live Preview</span>
+            </div>
+            <h3 class="preview-title">ตัวอย่างเอฟเฟกต์</h3>
+            <p class="preview-subtitle">ดูตัวอย่างการแสดงผลก่อนบันทึก</p>
+          </div>
+          
+          <div class="preview-device-frame">
+            <!-- iPhone-style Device Frame -->
+            <div class="device-notch"></div>
+            <div class="device-screen" :class="previewClasses">
+              <!-- Preview Snow Effect -->
+              <div v-if="snowEnabled && masterEnabled" class="preview-snow-container">
+                <div v-for="i in 20" :key="'snow-' + i" class="preview-snowflake" :style="getSnowflakeStyle(i)">❄</div>
+              </div>
+              
+              <!-- Chatbot Window Preview -->
+              <div class="preview-chatbot-window">
+                <!-- Header -->
+                <div class="preview-chat-header">
+                  <div class="preview-avatar" :class="{ 'no-animation': !animationEnabled || !masterEnabled }">
+                    <span class="avatar-emoji">🤖</span>
+                  </div>
+                  <div class="preview-header-text">
+                    <span class="preview-bot-name">PCRU Chatbot</span>
+                    <span class="preview-bot-status">● ออนไลน์</span>
+                  </div>
+                  <div class="preview-close-btn" :class="{ 'no-shadow': !shadowEnabled || !masterEnabled }">✕</div>
+                </div>
+                
+                <!-- Messages -->
+                <div class="preview-messages">
+                  <div class="preview-msg bot" :class="{ 'no-shadow': !shadowEnabled || !masterEnabled, 'no-animation': !animationEnabled || !masterEnabled }">
+                    <span>สวัสดีครับ! 👋 มีอะไรให้ช่วยไหมครับ?</span>
+                  </div>
+                  <div class="preview-msg user" :class="{ 'no-shadow': !shadowEnabled || !masterEnabled, 'no-animation': !animationEnabled || !masterEnabled }">
+                    <span>สอบถามเรื่องการลงทะเบียน</span>
+                  </div>
+                  <div class="preview-msg bot" :class="{ 'no-shadow': !shadowEnabled || !masterEnabled, 'no-animation': !animationEnabled || !masterEnabled }">
+                    <span>การลงทะเบียนสามารถทำได้ที่สำนักทะเบียนครับ 📚</span>
+                  </div>
+                </div>
+                
+                <!-- Input Area -->
+                <div class="preview-input-area">
+                  <div class="preview-input" :class="{ 'no-shadow': !shadowEnabled || !masterEnabled }">
+                    <span class="preview-placeholder">พิมพ์ข้อความ...</span>
+                    <!-- Particle Effect Preview -->
+                    <div v-if="particleEnabled && masterEnabled" class="preview-particles">
+                      <span v-for="i in 5" :key="'particle-' + i" class="preview-particle" :style="getParticleStyle(i)">✨</span>
+                    </div>
+                  </div>
+                  <div class="preview-send-btn" :class="{ 'no-shadow': !shadowEnabled || !masterEnabled, 'no-animation': !animationEnabled || !masterEnabled }">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- FAB Button Preview -->
+              <div class="preview-fab" :class="{ 'no-shadow': !shadowEnabled || !masterEnabled, 'no-animation': !animationEnabled || !masterEnabled }">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 6a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h2v3l4-3h6a3 3 0 0 0 3-3V6z" fill="white"/>
+                </svg>
+              </div>
+              
+              <!-- Master Off Overlay -->
+              <transition name="fade">
+                <div v-if="!masterEnabled" class="preview-disabled-overlay">
+                  <div class="disabled-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                      <path d="M4 4l16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </div>
+                  <span class="disabled-text">เอฟเฟกต์ถูกปิด</span>
+                </div>
+              </transition>
+            </div>
+            <div class="device-home-indicator"></div>
+          </div>
+          
+          <!-- Effect Status Indicators -->
+          <div class="preview-status-grid">
+            <div class="status-item" :class="{ active: masterEnabled }">
+              <span class="status-dot"></span>
+              <span class="status-label">Master</span>
+            </div>
+            <div class="status-item" :class="{ active: snowEnabled && masterEnabled }">
+              <span class="status-dot"></span>
+              <span class="status-label">Snow</span>
+            </div>
+            <div class="status-item" :class="{ active: particleEnabled && masterEnabled }">
+              <span class="status-dot"></span>
+              <span class="status-label">Particle</span>
+            </div>
+            <div class="status-item" :class="{ active: shadowEnabled && masterEnabled }">
+              <span class="status-dot"></span>
+              <span class="status-label">Shadow</span>
+            </div>
+            <div class="status-item" :class="{ active: animationEnabled && masterEnabled }">
+              <span class="status-dot"></span>
+              <span class="status-label">Animation</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- End Preview Panel -->
+    </div>
+    <!-- End Split Layout -->
 
     <!-- Info Card -->
     <div class="info-card">
@@ -342,6 +445,37 @@ const hasChanges = computed(() => {
     animationEnabled.value !== originalAnimation.value
   )
 })
+
+// Preview computed classes
+const previewClasses = computed(() => ({
+  'no-effects': !masterEnabled.value,
+  'no-shadows': !shadowEnabled.value || !masterEnabled.value,
+  'no-animations': !animationEnabled.value || !masterEnabled.value
+}))
+
+// Preview helper functions
+const getSnowflakeStyle = (index) => {
+  const left = (index * 5) % 100
+  const delay = (index * 0.3) % 3
+  const duration = 3 + (index % 3)
+  const size = 8 + (index % 8)
+  return {
+    left: `${left}%`,
+    animationDelay: `${delay}s`,
+    animationDuration: `${duration}s`,
+    fontSize: `${size}px`,
+    opacity: 0.3 + (index % 5) * 0.15
+  }
+}
+
+const getParticleStyle = (index) => {
+  const left = 10 + (index * 18)
+  const delay = index * 0.2
+  return {
+    left: `${left}%`,
+    animationDelay: `${delay}s`
+  }
+}
 
 // Load settings from localStorage or API
 const loadSettings = () => {
@@ -1097,5 +1231,584 @@ onMounted(() => {
 
 .apple-alert-fade-leave-to .apple-alert-container {
   transform: scale(0.96);
+}
+
+/* ===== Apple-style Split Layout & Preview Panel ===== */
+.effects-split-layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 24px;
+  align-items: start;
+}
+
+.effects-settings-panel {
+  min-width: 0;
+}
+
+.effects-preview-panel {
+  position: sticky;
+  top: 24px;
+}
+
+.preview-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 28px;
+  border: 1px solid rgba(139, 92, 184, 0.1);
+  box-shadow: 
+    0 8px 32px rgba(139, 92, 184, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  animation: slideInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.preview-card-header {
+  padding: 24px 24px 20px;
+  text-align: center;
+  border-bottom: 1px solid rgba(139, 92, 184, 0.08);
+  background: linear-gradient(135deg, rgba(139, 92, 184, 0.03) 0%, rgba(167, 139, 250, 0.02) 100%);
+}
+
+.preview-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #059669;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.preview-badge-dot {
+  width: 6px;
+  height: 6px;
+  background: #10B981;
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+.preview-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+  background: linear-gradient(135deg, #8B4CB8 0%, #A78BFA 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.preview-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Device Frame - iPhone Style */
+.preview-device-frame {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.device-notch {
+  width: 120px;
+  height: 28px;
+  background: #1f2937;
+  border-radius: 0 0 20px 20px;
+  margin-bottom: -14px;
+  z-index: 10;
+  position: relative;
+}
+
+.device-notch::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 4px;
+  background: #374151;
+  border-radius: 2px;
+}
+
+.device-screen {
+  width: 100%;
+  max-width: 320px;
+  height: 480px;
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 50%, #6B73FF 100%);
+  border-radius: 32px;
+  border: 4px solid #1f2937;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.device-home-indicator {
+  width: 120px;
+  height: 4px;
+  background: #374151;
+  border-radius: 2px;
+  margin-top: 12px;
+}
+
+/* Preview Snow Effect */
+.preview-snow-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 5;
+}
+
+.preview-snowflake {
+  position: absolute;
+  top: -20px;
+  color: white;
+  animation: snowfall linear infinite;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+@keyframes snowfall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    transform: translateY(500px) rotate(360deg);
+  }
+}
+
+/* Chatbot Window Preview */
+.preview-chatbot-window {
+  position: absolute;
+  bottom: 70px;
+  left: 12px;
+  right: 12px;
+  height: 340px;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  z-index: 2;
+}
+
+.preview-chat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #8B4CB8 0%, #A78BFA 100%);
+  color: white;
+}
+
+.preview-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  animation: avatar-pulse 2s ease-in-out infinite;
+}
+
+.preview-avatar.no-animation {
+  animation: none;
+}
+
+.preview-avatar img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.avatar-emoji {
+  font-size: 22px;
+  line-height: 1;
+}
+
+@keyframes avatar-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.preview-header-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-bot-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.preview-bot-status {
+  font-size: 10px;
+  opacity: 0.9;
+}
+
+.preview-close-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.preview-close-btn.no-shadow {
+  box-shadow: none;
+}
+
+/* Messages */
+.preview-messages {
+  flex: 1;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.preview-msg {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 12px;
+  line-height: 1.4;
+  animation: msg-slide-in 0.3s ease-out;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.preview-msg.no-shadow {
+  box-shadow: none;
+}
+
+.preview-msg.no-animation {
+  animation: none;
+}
+
+@keyframes msg-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.preview-msg.bot {
+  align-self: flex-start;
+  background: #f3f4f6;
+  color: #1f2937;
+  border-bottom-left-radius: 4px;
+}
+
+.preview-msg.user {
+  align-self: flex-end;
+  background: linear-gradient(135deg, #8B4CB8 0%, #A78BFA 100%);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+/* Input Area */
+.preview-input-area {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid #e5e7eb;
+  background: #fafafa;
+}
+
+.preview-input {
+  flex: 1;
+  height: 36px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.preview-input.no-shadow {
+  box-shadow: none;
+}
+
+.preview-placeholder {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+/* Particle Effect */
+.preview-particles {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+.preview-particle {
+  position: absolute;
+  font-size: 10px;
+  animation: particle-float 1.5s ease-out infinite;
+}
+
+@keyframes particle-float {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.5);
+  }
+}
+
+.preview-send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8B4CB8 0%, #A78BFA 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(139, 76, 184, 0.3);
+}
+
+.preview-send-btn.no-shadow {
+  box-shadow: none;
+}
+
+.preview-send-btn.no-animation:hover {
+  transform: none;
+}
+
+/* FAB Button Preview */
+.preview-fab {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(107, 44, 145, 0.4);
+  animation: fab-bounce 2s ease-in-out infinite;
+  z-index: 3;
+}
+
+.preview-fab.no-shadow {
+  box-shadow: none;
+}
+
+.preview-fab.no-animation {
+  animation: none;
+}
+
+@keyframes fab-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Disabled Overlay */
+.preview-disabled-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 100;
+}
+
+.disabled-icon {
+  color: rgba(255, 255, 255, 0.8);
+  animation: disabled-pulse 2s ease-in-out infinite;
+}
+
+@keyframes disabled-pulse {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.disabled-text {
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Status Grid */
+.preview-status-grid {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  border-top: 1px solid rgba(139, 92, 184, 0.08);
+  flex-wrap: wrap;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(156, 163, 175, 0.1);
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.status-item.active {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9ca3af;
+  transition: all 0.3s ease;
+}
+
+.status-item.active .status-dot {
+  background: #10B981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.status-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.status-item.active .status-label {
+  color: #059669;
+}
+
+/* Fade transition */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Responsive - Preview Panel */
+@media (max-width: 1100px) {
+  .effects-split-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .effects-preview-panel {
+    position: static;
+    order: -1;
+  }
+  
+  .preview-card {
+    margin-bottom: 24px;
+  }
+  
+  .preview-device-frame {
+    padding: 16px;
+  }
+  
+  .device-screen {
+    max-width: 280px;
+    height: 420px;
+  }
+  
+  .preview-chatbot-window {
+    height: 300px;
+    bottom: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .device-screen {
+    max-width: 240px;
+    height: 360px;
+  }
+  
+  .preview-chatbot-window {
+    height: 260px;
+    bottom: 50px;
+    left: 8px;
+    right: 8px;
+  }
+  
+  .preview-status-grid {
+    gap: 8px;
+    padding: 12px;
+  }
+  
+  .status-item {
+    padding: 4px 8px;
+  }
+  
+  .status-label {
+    font-size: 10px;
+  }
 }
 </style>
