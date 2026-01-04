@@ -302,7 +302,7 @@
           
           <!-- Season Selector -->
           <div class="season-selector">
-            <span class="season-selector-label">เลือกฤดูกาล:</span>
+            <span class="season-selector-label">เลือกฤดูกาล (Preview):</span>
             <div class="season-buttons">
               <button 
                 class="season-btn" 
@@ -339,6 +339,42 @@
                 <span class="season-icon">🚫</span>
                 <span class="season-name">ไม่มี</span>
               </button>
+            </div>
+            
+            <!-- Apply Season Button -->
+            <div class="season-apply-section">
+              <button 
+                class="btn-apply-season"
+                @click="applySeasonOverride"
+                :disabled="!masterEnabled || previewSeason === 'none'"
+                :class="{ 'has-override': activeSeason !== 'auto' }"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12l5 5L20 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span v-if="activeSeason === 'auto'">ใช้งานฤดู {{ getSeasonName(previewSeason) }}</span>
+                <span v-else>อัพเดทเป็นฤดู {{ getSeasonName(previewSeason) }}</span>
+              </button>
+              
+              <button 
+                v-if="activeSeason !== 'auto'"
+                class="btn-reset-season"
+                @click="resetSeasonToAuto"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M21 3v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>ใช้อัตโนมัติ</span>
+              </button>
+            </div>
+            
+            <!-- Current Active Season Info -->
+            <div class="active-season-info" v-if="activeSeason !== 'auto'">
+              <span class="active-season-badge">
+                <span class="badge-icon">{{ getSeasonEmoji(activeSeason) }}</span>
+                <span class="badge-text">กำลังใช้: {{ getSeasonName(activeSeason) }}</span>
+              </span>
             </div>
           </div>
           
@@ -562,6 +598,9 @@ const rainEnabled = ref(true)
 
 // Preview season selector (for preview panel only)
 const previewSeason = ref('winter')
+
+// Active season override ('auto' means use natural season based on date)
+const activeSeason = ref('auto')
 const particleEnabled = ref(true)
 const shadowEnabled = ref(true)
 const animationEnabled = ref(true)
@@ -594,6 +633,47 @@ const previewClasses = computed(() => ({
   'no-shadows': !shadowEnabled.value || !masterEnabled.value,
   'no-animations': !animationEnabled.value || !masterEnabled.value
 }))
+
+// Season helper functions
+const getSeasonName = (season) => {
+  const names = {
+    winter: 'หนาว',
+    summer: 'ร้อน',
+    rainy: 'ฝน',
+    none: 'ไม่มี',
+    auto: 'อัตโนมัติ'
+  }
+  return names[season] || season
+}
+
+const getSeasonEmoji = (season) => {
+  const emojis = {
+    winter: '❄️',
+    summer: '☀️',
+    rainy: '🌧️',
+    none: '🚫',
+    auto: '🔄'
+  }
+  return emojis[season] || '🔄'
+}
+
+// Apply season override
+const applySeasonOverride = () => {
+  if (previewSeason.value === 'none') return
+  
+  activeSeason.value = previewSeason.value
+  localStorage.setItem('chatbot_active_season', previewSeason.value)
+  
+  showAppleAlert('success', 'ใช้งานฤดูกาลสำเร็จ', `เปลี่ยนเป็นฤดู${getSeasonName(previewSeason.value)}แล้ว`, 2000)
+}
+
+// Reset to auto season
+const resetSeasonToAuto = () => {
+  activeSeason.value = 'auto'
+  localStorage.removeItem('chatbot_active_season')
+  
+  showAppleAlert('success', 'รีเซ็ตสำเร็จ', 'กลับไปใช้ฤดูกาลอัตโนมัติตามวันที่', 2000)
+}
 
 // Preview helper functions
 const getSnowflakeStyle = (index) => {
@@ -656,6 +736,7 @@ const loadSettings = () => {
     const savedParticle = localStorage.getItem('chatbot_particle_enabled')
     const savedShadow = localStorage.getItem('chatbot_shadow_enabled')
     const savedAnimation = localStorage.getItem('chatbot_animation_enabled')
+    const savedActiveSeason = localStorage.getItem('chatbot_active_season')
 
     if (savedMaster !== null) {
       masterEnabled.value = savedMaster === 'true'
@@ -690,6 +771,12 @@ const loadSettings = () => {
     if (savedAnimation !== null) {
       animationEnabled.value = savedAnimation === 'true'
       originalAnimation.value = savedAnimation === 'true'
+    }
+    
+    // Load active season override
+    if (savedActiveSeason !== null) {
+      activeSeason.value = savedActiveSeason
+      previewSeason.value = savedActiveSeason // Set preview to match active
     }
   } catch (error) {
     console.error('Error loading settings:', error)
@@ -1624,11 +1711,11 @@ onMounted(() => {
 }
 
 .device-notch {
-  width: 120px;
-  height: 28px;
+  width: 140px;
+  height: 26px;
   background: #1f2937;
   border-radius: 0 0 20px 20px;
-  margin-bottom: -28px;
+  margin-bottom: -26px;
   z-index: 10;
   position: relative;
 }
@@ -1646,12 +1733,12 @@ onMounted(() => {
 }
 
 .device-screen {
-  width: 280px;
-  max-width: 320px;
+  width: 240px;
+  max-width: 300px;
   height: 480px;
   background: linear-gradient(180deg, #667eea 0%, #764ba2 50%, #6B73FF 100%);
   border-radius: 32px;
-  border: 4px solid #1f2937;
+  border: 6px solid #1f2937;
   overflow: hidden;
   position: relative;
   box-shadow: 
@@ -1661,11 +1748,11 @@ onMounted(() => {
 }
 
 .device-home-indicator {
-  width: 120px;
+  width: 80px;
   height: 4px;
-  background: #374151;
+  background: #ffffff;
   border-radius: 2px;
-  margin-top: -8px;
+  margin-top: -14px;
   z-index: 10;
   position: relative
 }
@@ -2221,7 +2308,7 @@ onMounted(() => {
 @media (max-width: 480px) {
   .device-screen {
     max-width: 240px;
-    height: 385px;
+    height: 445px;
   }
   
   .preview-chatbot-window {
@@ -2242,6 +2329,160 @@ onMounted(() => {
   
   .status-label {
     font-size: 10px;
+  }
+}
+
+/* Season Override Buttons */
+.season-apply-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.06) 0%, rgba(5, 150, 105, 0.03) 100%);
+  border-top: 1px solid rgba(16, 185, 129, 0.12);
+}
+
+.btn-apply-season {
+  padding: 6px 16px;
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-apply-season:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+}
+
+.btn-apply-season:active {
+  transform: scale(0.95);
+}
+
+.btn-reset-season {
+  padding: 6px 12px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-reset-season:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
+  transform: scale(1.02);
+}
+
+/* Active Season Info */
+.active-season-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.04) 100%);
+  border-top: 1px solid rgba(16, 185, 129, 0.15);
+}
+
+.active-season-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%);
+  border-radius: 24px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.active-season-badge.winter {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.active-season-badge.summer {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.1) 100%);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.active-season-badge.rainy {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.active-season-badge.none {
+  background: rgba(107, 114, 128, 0.1);
+  border-color: rgba(107, 114, 128, 0.2);
+}
+
+.active-badge-emoji {
+  font-size: 18px;
+}
+
+.active-badge-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.active-badge-label {
+  font-size: 10px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.active-badge-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Dark mode support for season buttons */
+:root[data-theme="dark"] .btn-reset-season {
+  background: rgba(239, 68, 68, 0.15);
+  color: #F87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+:root[data-theme="dark"] .active-season-info {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.08) 100%);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+:root[data-theme="dark"] .active-badge-label {
+  color: #9ca3af;
+}
+
+:root[data-theme="dark"] .active-badge-value {
+  color: #e5e7eb;
+}
+
+@media (max-width: 480px) {
+  .active-season-info {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .btn-apply-season,
+  .btn-reset-season {
+    font-size: 11px;
+    padding: 5px 10px;
   }
 }
 </style>
