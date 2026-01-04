@@ -750,6 +750,7 @@
     <button 
       v-if="!visible" 
       class="fab-open" 
+      style="touch-action: none;"
       @pointerdown.prevent="onFabPointerDown"
       @pointerup="onFabPointerUp"
       @pointerleave="onFabPointerUp"
@@ -1730,24 +1731,50 @@ export default {
         this.longPressCountdown = 3;
         this.showLongPressOverlay = true;
         
+        // Vibrate 3 times (Start of countdown)
+        this.triggerVibration(3);
+        
         // Start countdown
         this.longPressTimer = setInterval(() => {
           this.longPressCountdown--;
           console.log('[FAB] Countdown:', this.longPressCountdown);
+          
+          // Vibrate based on remaining seconds
+          if (this.longPressCountdown > 0) {
+            this.triggerVibration(this.longPressCountdown);
+          }
+
           if (this.longPressCountdown <= 0) {
             this.completeLongPress();
           }
         }, 1000);
       }, 500);
     },
+    
+    triggerVibration(count) {
+      if (!navigator.vibrate) return;
+      // Pattern: 100ms on, 50ms off
+      const pattern = [];
+      for (let i = 0; i < count; i++) {
+        pattern.push(100); // Vibrate
+        if (i < count - 1) pattern.push(50); // Pause
+      }
+      try {
+        navigator.vibrate(pattern);
+      } catch (e) { /* ignore */ }
+    },
+
     onFabPointerUp(e) {
       console.log('[FAB] pointerup/leave', e?.type, 'isLongPressing:', this.isLongPressing, 'showOverlay:', this.showLongPressOverlay);
       
-      // If overlay is showing, don't cancel on pointerleave (overlay covers the button)
-      if (e?.type === 'pointerleave' && this.showLongPressOverlay) {
-        console.log('[FAB] Ignoring pointerleave while overlay is shown');
+      // If overlay is showing, ignore ALL pointer events (countdown is running)
+      if (this.showLongPressOverlay) {
+        console.log('[FAB] Ignoring pointer event while overlay is shown');
         return;
       }
+
+      // Stop any ongoing vibration only if cancelling
+      if (navigator.vibrate) navigator.vibrate(0);
       
       // Clear timers
       if (this.longPressStartTimer) {
@@ -1759,11 +1786,9 @@ export default {
         this.longPressTimer = null;
       }
       
-      // If we were in long press mode, just cancel (don't open chat)
-      if (this.isLongPressing || this.showLongPressOverlay) {
+      // If we were in long press mode but overlay not showing, cancel
+      if (this.isLongPressing) {
         console.log('[FAB] Cancelling long press');
-        this.showLongPressOverlay = false;
-        this.longPressCountdown = 0;
         this.isLongPressing = false;
         return;
       }
