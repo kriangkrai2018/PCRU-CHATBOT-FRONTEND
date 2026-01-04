@@ -638,37 +638,9 @@
               </div>
               </transition-group>
             </div>
+            </div>
 
-              <!-- AI Intro Fullscreen Overlay -->
-              <transition name="ai-fade">
-                <div v-if="showAiIntro" class="ai-intro-overlay" @click.self="closeAiIntro" @keydown.esc="closeAiIntro" tabindex="-1" aria-modal="true" role="dialog">
-                  <button class="ai-close" @click="closeAiIntro" aria-label="ปิด">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                  </button>
-                  <div class="ai-intro-content" @mousemove="onAiMouseMove" @mouseleave="onAiMouseLeave">
-                    <div class="ai-hero">
-                      <img :src="botAvatar" alt="PCRU AI" class="ai-hero-img" :style="aiTiltTransform" />
-                      <div class="ai-hero-glow"></div>
-                    </div>
-                    <div class="ai-hero-text">
-                      <div class="ai-hero-title">PCRU AI Assistant</div>
-                      <div class="ai-hero-sub">ช่วยคุณค้นหาทุน การเรียน การบริการ และอีกมากมาย</div>
-                    </div>
-                    <button class="ai-help-btn apple-help-button" @click="openHelpModal">
-                      <div class="help-btn-ripple"></div>
-                      <svg class="help-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle class="help-circle" cx="12" cy="12" r="10"/>
-                        <path class="help-question" d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                        <line class="help-dot" x1="12" y1="17" x2="12.01" y2="17"/>
-                      </svg>
-                      <span class="help-btn-text">วิธีใช้งาน Bot</span>
-                    </button>
-                  </div>
-                </div>
-              </transition>
-          </div>
-
-          <div class="panel-footer" :class="{ focused: panelFocused }" ref="panelFooter">
+          <div class="panel-footer" :class="{ focused: panelFocused, 'pwa-standalone': isPwaStandalone }" :style="pwaFooterStyle" ref="panelFooter">
             
             <!-- Particles canvas for power mode effect -->
             <canvas ref="particleCanvas" class="particle-canvas"></canvas>
@@ -958,6 +930,8 @@ export default {
       viewportHeight: '100%',
       // Footer focus fallback to reliably move send button on mobile
       panelFocused: false,
+      // PWA standalone mode detection
+      isPwaStandalone: false,
       // Theme: 'light' | 'dark' | 'auto' (initialized in mounted via initTheme)
       theme: 'auto',
       // Theme toggle expansion state
@@ -1006,12 +980,21 @@ export default {
     }
   },
   computed: {
+    // PWA Standalone footer style - reduce padding since no Safari URL bar
+    pwaFooterStyle() {
+      if (this.isPwaStandalone) {
+        return {
+          paddingBottom: '12px'
+        }
+      }
+      return {}
+    },
     snowZIndex() {
       return parseInt(import.meta.env.VITE_SNOW_Z_INDEX || '1000');
     },
     displayedCategories() {
       if (!this.categories || !Array.isArray(this.categories)) return []
-      const result = this.showAllCategories ? this.categories : this.categories.slice(0, 3)
+      const result = this.showAllCategories ? this.categories : this.categories.slice(0, 2)
       console.log('displayedCategories:', result, 'showAllCategories:', this.showAllCategories, 'categories.length:', this.categories.length)
       return result
     },
@@ -1120,6 +1103,9 @@ export default {
   },
   
   async mounted() {
+    // Detect PWA standalone mode (Add to Home Screen)
+    this.detectStandaloneMode()
+    
     // Initialize Intl.Segmenter for frontend stopword removal.
     if ('Segmenter' in Intl) {
       this.segmenter = new Intl.Segmenter('th', { granularity: 'word' });
@@ -5510,6 +5496,41 @@ export default {
       // Winter season in Thailand: November (11), December (12), January (1), February (2)
       this.isWinterSeason = month === 11 || month === 12 || month === 1 || month === 2
     },
+    
+    /**
+     * Detect PWA standalone mode (Add to Home Screen on iOS Safari)
+     * Adds class to html element for CSS targeting
+     */
+    detectStandaloneMode() {
+      // Check multiple ways to detect standalone mode
+      const displayModeStandalone = window.matchMedia('(display-mode: standalone)').matches
+      const iOSStandalone = window.navigator.standalone === true // iOS Safari specific
+      const androidTWA = document.referrer.includes('android-app://') // Android TWA
+      
+      // Also check if running in fullscreen without browser UI
+      const noUrlBar = window.innerHeight === screen.height || 
+                       (window.innerHeight > screen.height * 0.9 && /iPhone|iPad|iPod/.test(navigator.userAgent))
+      
+      const isStandalone = displayModeStandalone || iOSStandalone || androidTWA || noUrlBar
+      
+      console.log('📱 PWA Detection:', {
+        displayModeStandalone,
+        iOSStandalone,
+        androidTWA,
+        noUrlBar,
+        innerHeight: window.innerHeight,
+        screenHeight: screen.height,
+        isStandalone
+      })
+      
+      if (isStandalone) {
+        this.isPwaStandalone = true // Set Vue data property
+        document.documentElement.classList.add('standalone')
+        document.documentElement.setAttribute('data-pwa', 'true')
+        console.log('📱 PWA Standalone mode ACTIVATED')
+      }
+    },
+    
     handleScroll() {
       if (this.$refs.panelBody) {
         const currentScrollTop = this.$refs.panelBody.scrollTop

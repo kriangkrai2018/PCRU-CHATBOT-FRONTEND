@@ -5196,3 +5196,43 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
 .panel-top {
   animation: blurIn 0.6s ease-out;
 }
+
+/* ========================================
+   PWA Standalone Mode (Add to Home Screen)
+   iPhone Safari without URL bar at bottom
+   Need to move input DOWN to the bottom edge
+   ======================================== */
+
+/* Remove extra padding that was added for Safari URL bar */
+@media all and (display-mode: standalone) {
+  .panel-footer {
+    padding-bottom: 12px !important;
+    margin-bottom: 0 !important;
+  }
+  
+  .chat-panel {
+    padding-bottom: 0 !important;
+  }
+}
+
+/* iOS Safari standalone - remove safe area padding since no URL bar */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  @media screen and (max-width: 600px) {
+    html.standalone .panel-footer,
+    html[data-pwa="true"] .panel-footer {
+      padding-bottom: 12px !important;
+      margin-bottom: 0 !important;
+    }
+    
+    html.standalone .chat-panel,
+    html[data-pwa="true"] .chat-panel {
+      padding-bottom: 0 !important;
+    }
+  }
+}
+
+/* Vue-controlled PWA Standalone class - most reliable */
+.panel-footer.pwa-standalone {
+  padding-bottom: 12px !important;
+  margin-bottom: 0 !important;
+}

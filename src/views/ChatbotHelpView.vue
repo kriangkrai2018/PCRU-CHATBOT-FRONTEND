@@ -39,7 +39,7 @@
                 </div>
                 <div class="hero-text">
                   <h2 class="section-heading">ผู้ช่วยอัจฉริยะ PCRU</h2>
-                  <p class="section-desc">พร้อมตอบคำถามเรื่องทุน, หอพัก, และเอกสารต่างๆ</p>
+                  <p class="section-desc">พร้อมตอบคำถามเรื่องทุน, หอพัก, เอกสารต่างๆ และช่วยค้นหาสถานที่ในมหาวิทยาลัยได้</p>
                 </div>
               </div>
               
@@ -120,9 +120,21 @@
                   <div class="indicator"><i class="bi bi-check-circle-fill"></i></div>
                   <div class="text"><strong>แนะนำ:</strong> "ขอรายละเอียดทุนเรียนดีปีล่าสุด"</div>
                 </div>
+                <div class="example-row good">
+                  <div class="indicator"><i class="bi bi-check-circle-fill"></i></div>
+                  <div class="text"><strong>แนะนำ (นำทาง/สถานที่):</strong> "ไปอาคารเรียนรวมจากหอพักต้องเดินทางยังไง"</div>
+                </div>
+                <div class="example-row good">
+                  <div class="indicator"><i class="bi bi-check-circle-fill"></i></div>
+                  <div class="text"><strong>แนะนำ (นำทาง/สถานที่):</strong> "ห้องทะเบียนอยู่ตึกไหน"</div>
+                </div>
                 <div class="example-row bad">
                   <div class="indicator"><i class="bi bi-x-circle-fill"></i></div>
                   <div class="text"><strong>ไม่แนะนำ:</strong> "ทุน" (กว้างไป)</div>
+                </div>
+                <div class="example-row bad">
+                  <div class="indicator"><i class="bi bi-x-circle-fill"></i></div>
+                  <div class="text"><strong>ไม่แนะนำ (นำทาง/สถานที่):</strong> "ไปไหน" (ไม่ระบุจุดหมาย/จุดเริ่มต้น)</div>
                 </div>
               </div>
             </section>
