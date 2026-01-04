@@ -164,6 +164,7 @@
               :statuses="qaStatuses"
               status-label="สถานะ"
               :show-date-presets="true"
+              date-preset-direction="future"
               :show-number-range="true"
               number-range-label="Like/Unlike"
               min-placeholder="ต่ำสุด"
@@ -214,7 +215,7 @@
                         class="category-badge"
                         :style="{ backgroundColor: tagColors[(item.CategoriesID || 0) % tagColors.length] + '20', color: tagColors[(item.CategoriesID || 0) % tagColors.length] }"
                       >
-                        <span class="cell-ellipsis">{{ categoriesNameMapSafe[item.CategoriesID] || item.CategoriesID }}</span>
+                        <span class="cell-ellipsis">{{ item.CategoriesName || categoriesNameMapSafe[item.CategoriesID] || item.CategoriesID }}</span>
                       </span>
                     </td>
                     <td data-label="Keywords" class="py-3">
@@ -399,7 +400,7 @@
           <div class="mt-2">
             <span class="category-badge large" 
               :style="{ backgroundColor: tagColors[(previewItem?.CategoriesID || 0) % tagColors.length] + '20', color: tagColors[(previewItem?.CategoriesID || 0) % tagColors.length] }">
-              {{ categoriesNameMapSafe[previewItem?.CategoriesID] || previewItem?.CategoriesID || '-' }}
+              {{ previewItem?.CategoriesName || categoriesNameMapSafe[previewItem?.CategoriesID] || previewItem?.CategoriesID || '-' }}
             </span>
           </div>
         </div>
@@ -1089,7 +1090,12 @@ const filteredQuestions = computed(() => {
   
   // Apply category filter
   if (qaFilters.value.category) {
-    arr = arr.filter(item => String(item.CategoriesID) === String(qaFilters.value.category));
+    const filterCat = String(qaFilters.value.category);
+    arr = arr.filter(item => {
+      const itemCat = String(item.CategoriesID);
+      // Match exact category OR sub-category (e.g. filter "5" matches "5", "5-1", "5-2")
+      return itemCat === filterCat || itemCat.startsWith(filterCat + '-');
+    });
   }
   
   // Apply status filter (active/expired/expiring)

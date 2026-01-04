@@ -547,7 +547,6 @@ const allManageActions = [
   { key: 'manage-categories', icon: 'categories', title: 'Manage Categories', desc: 'Manage Categories', link: '/managecategories', color: 'linear-gradient(135deg, #AF52DE, #BF5AF2)', allowed: ['admin','officer'] },
   { key: 'manage-qa', icon: 'qa', title: 'Manage Q&A', desc: 'Manage Question Answer', link: '/managequestionsanswers', color: 'linear-gradient(135deg, #007AFF, #5AC8FA)', allowed: ['admin','officer'] },
   { key: 'manage-ai', icon: 'ai', title: 'Manage AI Images', desc: 'จัดการรูปภาพ AI', link: '/manageaiimage', color: 'linear-gradient(135deg, #5856D6, #5AC8FA)', allowed: ['superadmin','admin'] },
-  { key: 'managethaipatterns', icon: 'patterns', title: 'Manage Thai Patterns', desc: 'จัดการแพตเทิร์นภาษาไทย', link: '/managethaipatterns', color: 'linear-gradient(135deg, #FFCC00, #FF9500)', allowed: ['officer'] },
   { key: 'managestopwords', icon: 'stopwords', title: 'Manage Stopwords', desc: 'จัดการ Stopwords', link: '/managestopwords', color: 'linear-gradient(135deg, #FF3B30, #FF7A7A)', allowed: ['officer'] },
   { key: 'managenegativekeywords', icon: 'negative', title: 'Manage Negative Keywords', desc: 'จัดการ Negative Keywords', link: '/managenegativekeywords', color: 'linear-gradient(135deg, #34C759, #6ee77a)', allowed: ['officer'] },
   { key: 'managesynonyms', icon: 'synonyms', title: 'Manage Synonyms', desc: 'จัดการคำพ้อง', link: '/managesynonyms', color: 'linear-gradient(135deg, #FF9500, #FFCC00)', allowed: ['officer'] },
