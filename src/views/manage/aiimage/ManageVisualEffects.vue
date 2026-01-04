@@ -300,23 +300,65 @@
             <p class="preview-subtitle">ดูตัวอย่างการแสดงผลก่อนบันทึก</p>
           </div>
           
+          <!-- Season Selector -->
+          <div class="season-selector">
+            <span class="season-selector-label">เลือกฤดูกาล:</span>
+            <div class="season-buttons">
+              <button 
+                class="season-btn" 
+                :class="{ active: previewSeason === 'winter', disabled: !snowEnabled || !masterEnabled }"
+                @click="previewSeason = 'winter'"
+                :disabled="!snowEnabled || !masterEnabled"
+              >
+                <span class="season-icon">❄️</span>
+                <span class="season-name">หนาว</span>
+              </button>
+              <button 
+                class="season-btn" 
+                :class="{ active: previewSeason === 'summer', disabled: !summerEnabled || !masterEnabled }"
+                @click="previewSeason = 'summer'"
+                :disabled="!summerEnabled || !masterEnabled"
+              >
+                <span class="season-icon">☀️</span>
+                <span class="season-name">ร้อน</span>
+              </button>
+              <button 
+                class="season-btn" 
+                :class="{ active: previewSeason === 'rainy', disabled: !rainEnabled || !masterEnabled }"
+                @click="previewSeason = 'rainy'"
+                :disabled="!rainEnabled || !masterEnabled"
+              >
+                <span class="season-icon">🌧️</span>
+                <span class="season-name">ฝน</span>
+              </button>
+              <button 
+                class="season-btn" 
+                :class="{ active: previewSeason === 'none' }"
+                @click="previewSeason = 'none'"
+              >
+                <span class="season-icon">🚫</span>
+                <span class="season-name">ไม่มี</span>
+              </button>
+            </div>
+          </div>
+          
           <div class="preview-device-frame">
             <!-- iPhone-style Device Frame -->
             <div class="device-notch"></div>
-            <div class="device-screen" :class="previewClasses">
+            <div class="device-screen" :class="[previewClasses, 'season-' + previewSeason]">
               <!-- Preview Snow Effect (Winter) -->
-              <div v-if="snowEnabled && masterEnabled" class="preview-snow-container">
+              <div v-if="previewSeason === 'winter' && snowEnabled && masterEnabled" class="preview-snow-container">
                 <div v-for="i in 20" :key="'snow-' + i" class="preview-snowflake" :style="getSnowflakeStyle(i)">❄</div>
               </div>
               
               <!-- Preview Summer Effect (Fireflies) -->
-              <div v-if="summerEnabled && masterEnabled" class="preview-summer-container">
+              <div v-if="previewSeason === 'summer' && summerEnabled && masterEnabled" class="preview-summer-container">
                 <div v-for="i in 15" :key="'firefly-' + i" class="preview-firefly" :style="getFireflyStyle(i)">✨</div>
                 <div class="preview-sun-rays"></div>
               </div>
               
               <!-- Preview Rain Effect -->
-              <div v-if="rainEnabled && masterEnabled" class="preview-rain-container">
+              <div v-if="previewSeason === 'rainy' && rainEnabled && masterEnabled" class="preview-rain-container">
                 <div v-for="i in 30" :key="'rain-' + i" class="preview-raindrop" :style="getRaindropStyle(i)"></div>
               </div>
               
@@ -387,21 +429,32 @@
             <div class="device-home-indicator"></div>
           </div>
           
+          <!-- Current Preview Info -->
+          <div class="preview-current-info">
+            <div class="current-season-display">
+              <span class="current-label">กำลังแสดง:</span>
+              <span class="current-value" v-if="previewSeason === 'winter'">❄️ ฤดูหนาว</span>
+              <span class="current-value" v-else-if="previewSeason === 'summer'">☀️ ฤดูร้อน</span>
+              <span class="current-value" v-else-if="previewSeason === 'rainy'">🌧️ ฤดูฝน</span>
+              <span class="current-value" v-else>🚫 ไม่มีเอฟเฟกต์ฤดูกาล</span>
+            </div>
+          </div>
+          
           <!-- Effect Status Indicators -->
           <div class="preview-status-grid">
             <div class="status-item" :class="{ active: masterEnabled }">
               <span class="status-dot"></span>
               <span class="status-label">Master</span>
             </div>
-            <div class="status-item" :class="{ active: snowEnabled && masterEnabled }">
+            <div class="status-item" :class="{ active: snowEnabled && masterEnabled, previewing: previewSeason === 'winter' }">
               <span class="status-dot snow"></span>
               <span class="status-label">❄️ Snow</span>
             </div>
-            <div class="status-item" :class="{ active: summerEnabled && masterEnabled }">
+            <div class="status-item" :class="{ active: summerEnabled && masterEnabled, previewing: previewSeason === 'summer' }">
               <span class="status-dot summer"></span>
               <span class="status-label">☀️ Summer</span>
             </div>
-            <div class="status-item" :class="{ active: rainEnabled && masterEnabled }">
+            <div class="status-item" :class="{ active: rainEnabled && masterEnabled, previewing: previewSeason === 'rainy' }">
               <span class="status-dot rain"></span>
               <span class="status-label">🌧️ Rain</span>
             </div>
@@ -506,6 +559,9 @@ const masterEnabled = ref(true)
 const snowEnabled = ref(true)
 const summerEnabled = ref(true)
 const rainEnabled = ref(true)
+
+// Preview season selector (for preview panel only)
+const previewSeason = ref('winter')
 const particleEnabled = ref(true)
 const shadowEnabled = ref(true)
 const animationEnabled = ref(true)
@@ -1474,6 +1530,91 @@ onMounted(() => {
   margin: 0;
 }
 
+/* Season Selector */
+.season-selector {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(139, 92, 184, 0.08);
+  background: rgba(249, 250, 251, 0.5);
+}
+
+.season-selector-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.season-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.season-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.season-btn:hover:not(.disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.season-btn.active {
+  border-color: #8B4CB8;
+  background: linear-gradient(135deg, rgba(139, 76, 184, 0.08) 0%, rgba(167, 139, 250, 0.08) 100%);
+  box-shadow: 0 4px 16px rgba(139, 76, 184, 0.2);
+}
+
+.season-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.season-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.season-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.season-btn.active .season-name {
+  color: #8B4CB8;
+}
+
+/* Season-specific screen backgrounds */
+.device-screen.season-winter {
+  background: linear-gradient(180deg, #a8c8e8 0%, #d4e5f7 50%, #e8f1fa 100%);
+}
+
+.device-screen.season-summer {
+  background: linear-gradient(180deg, #ffecd2 0%, #fcb69f 50%, #ff9a56 100%);
+}
+
+.device-screen.season-rainy {
+  background: linear-gradient(180deg, #667eea 0%, #5a6794 50%, #4b5563 100%);
+}
+
+.device-screen.season-none {
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 50%, #6B73FF 100%);
+}
+
 /* Device Frame - iPhone Style */
 .preview-device-frame {
   padding: 20px;
@@ -1487,7 +1628,7 @@ onMounted(() => {
   height: 28px;
   background: #1f2937;
   border-radius: 0 0 20px 20px;
-  margin-bottom: -14px;
+  margin-bottom: -28px;
   z-index: 10;
   position: relative;
 }
@@ -1505,7 +1646,7 @@ onMounted(() => {
 }
 
 .device-screen {
-  width: 100%;
+  width: 280px;
   max-width: 320px;
   height: 480px;
   background: linear-gradient(180deg, #667eea 0%, #764ba2 50%, #6B73FF 100%);
@@ -1524,7 +1665,9 @@ onMounted(() => {
   height: 4px;
   background: #374151;
   border-radius: 2px;
-  margin-top: 12px;
+  margin-top: -8px;
+  z-index: 10;
+  position: relative
 }
 
 /* Preview Snow Effect */
@@ -1934,12 +2077,37 @@ onMounted(() => {
   font-weight: 600;
 }
 
+/* Current Preview Info */
+.preview-current-info {
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(139, 92, 184, 0.05) 0%, rgba(167, 139, 250, 0.03) 100%);
+  border-top: 1px solid rgba(139, 92, 184, 0.08);
+}
+
+.current-season-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.current-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.current-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #8B4CB8;
+}
+
 /* Status Grid */
 .preview-status-grid {
   display: flex;
   justify-content: center;
-  gap: 12px;
-  padding: 16px;
+  gap: 8px;
+  padding: 12px 16px;
   border-top: 1px solid rgba(139, 92, 184, 0.08);
   flex-wrap: wrap;
 }
@@ -1956,6 +2124,16 @@ onMounted(() => {
 
 .status-item.active {
   background: rgba(34, 197, 94, 0.1);
+}
+
+.status-item.previewing {
+  border: 2px solid #8B4CB8;
+  animation: preview-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes preview-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 76, 184, 0.3); }
+  50% { box-shadow: 0 0 8px 2px rgba(139, 76, 184, 0.4); }
 }
 
 .status-dot {
@@ -2030,8 +2208,8 @@ onMounted(() => {
   }
   
   .device-screen {
-    max-width: 280px;
-    height: 420px;
+    max-width: 260px;
+    height: 475px;
   }
   
   .preview-chatbot-window {
@@ -2043,7 +2221,7 @@ onMounted(() => {
 @media (max-width: 480px) {
   .device-screen {
     max-width: 240px;
-    height: 360px;
+    height: 385px;
   }
   
   .preview-chatbot-window {
