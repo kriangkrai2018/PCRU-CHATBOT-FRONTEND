@@ -959,7 +959,7 @@ export default {
       // Footer focus fallback to reliably move send button on mobile
       panelFocused: false,
       // Theme: 'light' | 'dark' | 'auto' (initialized in mounted via initTheme)
-      theme: 'light',
+      theme: 'auto',
       // Theme toggle expansion state
       isExpanded: false,
       expandTimer: null,

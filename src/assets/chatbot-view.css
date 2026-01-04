@@ -3650,7 +3650,7 @@ body.no-effects .apple-help-button::after { display: none !important; }
   resize: none;
   outline: none;
   transition: border-color 200ms ease, box-shadow 200ms ease;
-  background: rgba(255,255,255,0.8);
+
 }
 
 .feedback-comment-input:focus {
