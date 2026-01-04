@@ -11,6 +11,7 @@
                 class="logo-img"
                 :style="{ transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`, cursor: isDragging ? 'grabbing' : 'grab' }"
                 @mousedown.prevent="handleMouseDown"
+                @touchstart.prevent="handleTouchStart"
               >
             </div>
           </div>
@@ -34,7 +35,7 @@ import { useLogoState } from '@/stores/logoStore.js';
 
 // --- เรียกใช้ Composable และ State สำหรับโลโก้ ---
 const { rotateX, rotateY } = useLogoState(); // ดึงค่าองศาการหมุนจาก Global Store
-const { isDragging, handleMouseDown } = useInteractiveLogo(); // ดึงฟังก์ชันการควบคุมจาก Composable
+const { isDragging, handleMouseDown, handleTouchStart } = useInteractiveLogo(); // ดึงฟังก์ชันการควบคุมจาก Composable
 </script>
 
 <style>
