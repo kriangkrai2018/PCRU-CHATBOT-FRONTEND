@@ -71,8 +71,8 @@
               </svg>
             </div>
             <div class="effect-text">
-              <h4 class="effect-title">เอฟเฟกต์หิมะ (Snow)</h4>
-              <p class="effect-desc">แสดงหิมะตกในหน้า Chatbot (โดยปกติจะแสดงเฉพาะช่วงฤดูหนาว)</p>
+              <h4 class="effect-title">❄️ เอฟเฟกต์หิมะ (Snow)</h4>
+              <p class="effect-desc">แสดงหิมะตกในหน้า Chatbot (พ.ย. - ก.พ.)</p>
             </div>
           </div>
           <div class="effect-toggle">
@@ -87,6 +87,67 @@
             </label>
             <span class="toggle-status" :class="{ active: snowEnabled }">
               {{ snowEnabled ? 'เปิด' : 'ปิด' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Summer Effect Toggle -->
+        <div class="effect-item">
+          <div class="effect-info">
+            <div class="effect-icon summer-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
+                <path d="M12 2v2M12 20v2M2 12h2M20 12h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="effect-text">
+              <h4 class="effect-title">☀️ เอฟเฟกต์ฤดูร้อน (Summer)</h4>
+              <p class="effect-desc">แสดงแสงแดดและหิ่งห้อยในหน้า Chatbot (มี.ค. - พ.ค.)</p>
+            </div>
+          </div>
+          <div class="effect-toggle">
+            <label class="toggle-switch">
+              <input
+                type="checkbox"
+                :checked="summerEnabled"
+                @change="toggleSummer"
+                :disabled="isSaving || !masterEnabled"
+              />
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-status" :class="{ active: summerEnabled }">
+              {{ summerEnabled ? 'เปิด' : 'ปิด' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Rain Effect Toggle -->
+        <div class="effect-item">
+          <div class="effect-info">
+            <div class="effect-icon rain-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M16 13v8M8 13v8M12 15v8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M20 16.58A5 5 0 0018 7h-1.26A8 8 0 104 15.25" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="effect-text">
+              <h4 class="effect-title">🌧️ เอฟเฟกต์ฤดูฝน (Rain)</h4>
+              <p class="effect-desc">แสดงฝนตกในหน้า Chatbot (มิ.ย. - ต.ค.)</p>
+            </div>
+          </div>
+          <div class="effect-toggle">
+            <label class="toggle-switch">
+              <input
+                type="checkbox"
+                :checked="rainEnabled"
+                @change="toggleRain"
+                :disabled="isSaving || !masterEnabled"
+              />
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-status" :class="{ active: rainEnabled }">
+              {{ rainEnabled ? 'เปิด' : 'ปิด' }}
             </span>
           </div>
         </div>
@@ -243,9 +304,20 @@
             <!-- iPhone-style Device Frame -->
             <div class="device-notch"></div>
             <div class="device-screen" :class="previewClasses">
-              <!-- Preview Snow Effect -->
+              <!-- Preview Snow Effect (Winter) -->
               <div v-if="snowEnabled && masterEnabled" class="preview-snow-container">
                 <div v-for="i in 20" :key="'snow-' + i" class="preview-snowflake" :style="getSnowflakeStyle(i)">❄</div>
+              </div>
+              
+              <!-- Preview Summer Effect (Fireflies) -->
+              <div v-if="summerEnabled && masterEnabled" class="preview-summer-container">
+                <div v-for="i in 15" :key="'firefly-' + i" class="preview-firefly" :style="getFireflyStyle(i)">✨</div>
+                <div class="preview-sun-rays"></div>
+              </div>
+              
+              <!-- Preview Rain Effect -->
+              <div v-if="rainEnabled && masterEnabled" class="preview-rain-container">
+                <div v-for="i in 30" :key="'rain-' + i" class="preview-raindrop" :style="getRaindropStyle(i)"></div>
               </div>
               
               <!-- Chatbot Window Preview -->
@@ -322,8 +394,16 @@
               <span class="status-label">Master</span>
             </div>
             <div class="status-item" :class="{ active: snowEnabled && masterEnabled }">
-              <span class="status-dot"></span>
-              <span class="status-label">Snow</span>
+              <span class="status-dot snow"></span>
+              <span class="status-label">❄️ Snow</span>
+            </div>
+            <div class="status-item" :class="{ active: summerEnabled && masterEnabled }">
+              <span class="status-dot summer"></span>
+              <span class="status-label">☀️ Summer</span>
+            </div>
+            <div class="status-item" :class="{ active: rainEnabled && masterEnabled }">
+              <span class="status-dot rain"></span>
+              <span class="status-label">🌧️ Rain</span>
             </div>
             <div class="status-item" :class="{ active: particleEnabled && masterEnabled }">
               <span class="status-dot"></span>
@@ -424,6 +504,8 @@ let alertTimeout = null
 // Effect states
 const masterEnabled = ref(true)
 const snowEnabled = ref(true)
+const summerEnabled = ref(true)
+const rainEnabled = ref(true)
 const particleEnabled = ref(true)
 const shadowEnabled = ref(true)
 const animationEnabled = ref(true)
@@ -431,6 +513,8 @@ const animationEnabled = ref(true)
 // Original states for comparison
 const originalMaster = ref(true)
 const originalSnow = ref(true)
+const originalSummer = ref(true)
+const originalRain = ref(true)
 const originalParticle = ref(true)
 const originalShadow = ref(true)
 const originalAnimation = ref(true)
@@ -440,6 +524,8 @@ const hasChanges = computed(() => {
   return (
     masterEnabled.value !== originalMaster.value ||
     snowEnabled.value !== originalSnow.value ||
+    summerEnabled.value !== originalSummer.value ||
+    rainEnabled.value !== originalRain.value ||
     particleEnabled.value !== originalParticle.value ||
     shadowEnabled.value !== originalShadow.value ||
     animationEnabled.value !== originalAnimation.value
@@ -468,6 +554,32 @@ const getSnowflakeStyle = (index) => {
   }
 }
 
+const getFireflyStyle = (index) => {
+  const left = 5 + (index * 6) % 90
+  const top = 10 + (index * 7) % 80
+  const delay = (index * 0.5) % 4
+  const duration = 2 + (index % 3)
+  return {
+    left: `${left}%`,
+    top: `${top}%`,
+    animationDelay: `${delay}s`,
+    animationDuration: `${duration}s`
+  }
+}
+
+const getRaindropStyle = (index) => {
+  const left = (index * 3.3) % 100
+  const delay = (index * 0.15) % 2
+  const duration = 0.8 + (index % 3) * 0.2
+  const height = 10 + (index % 10)
+  return {
+    left: `${left}%`,
+    animationDelay: `${delay}s`,
+    animationDuration: `${duration}s`,
+    height: `${height}px`
+  }
+}
+
 const getParticleStyle = (index) => {
   const left = 10 + (index * 18)
   const delay = index * 0.2
@@ -483,6 +595,8 @@ const loadSettings = () => {
     // Load from localStorage
     const savedMaster = localStorage.getItem('chatbot_master_enabled')
     const savedSnow = localStorage.getItem('chatbot_snow_enabled')
+    const savedSummer = localStorage.getItem('chatbot_summer_enabled')
+    const savedRain = localStorage.getItem('chatbot_rain_enabled')
     const savedParticle = localStorage.getItem('chatbot_particle_enabled')
     const savedShadow = localStorage.getItem('chatbot_shadow_enabled')
     const savedAnimation = localStorage.getItem('chatbot_animation_enabled')
@@ -495,6 +609,16 @@ const loadSettings = () => {
     if (savedSnow !== null) {
       snowEnabled.value = savedSnow === 'true'
       originalSnow.value = savedSnow === 'true'
+    }
+
+    if (savedSummer !== null) {
+      summerEnabled.value = savedSummer === 'true'
+      originalSummer.value = savedSummer === 'true'
+    }
+
+    if (savedRain !== null) {
+      rainEnabled.value = savedRain === 'true'
+      originalRain.value = savedRain === 'true'
     }
 
     if (savedParticle !== null) {
@@ -543,6 +667,8 @@ const toggleMaster = (event) => {
   // When master is turned off, turn off all effects
   if (!event.target.checked) {
     snowEnabled.value = false
+    summerEnabled.value = false
+    rainEnabled.value = false
     particleEnabled.value = false
     shadowEnabled.value = false
     animationEnabled.value = false
@@ -551,6 +677,14 @@ const toggleMaster = (event) => {
 
 const toggleSnow = (event) => {
   snowEnabled.value = event.target.checked
+}
+
+const toggleSummer = (event) => {
+  summerEnabled.value = event.target.checked
+}
+
+const toggleRain = (event) => {
+  rainEnabled.value = event.target.checked
 }
 
 const toggleParticle = (event) => {
@@ -573,6 +707,8 @@ const saveSettings = async () => {
     // Save to localStorage
     localStorage.setItem('chatbot_master_enabled', masterEnabled.value.toString())
     localStorage.setItem('chatbot_snow_enabled', snowEnabled.value.toString())
+    localStorage.setItem('chatbot_summer_enabled', summerEnabled.value.toString())
+    localStorage.setItem('chatbot_rain_enabled', rainEnabled.value.toString())
     localStorage.setItem('chatbot_particle_enabled', particleEnabled.value.toString())
     localStorage.setItem('chatbot_shadow_enabled', shadowEnabled.value.toString())
     localStorage.setItem('chatbot_animation_enabled', animationEnabled.value.toString())
@@ -580,6 +716,8 @@ const saveSettings = async () => {
     // Update original values
     originalMaster.value = masterEnabled.value
     originalSnow.value = snowEnabled.value
+    originalSummer.value = summerEnabled.value
+    originalRain.value = rainEnabled.value
     originalParticle.value = particleEnabled.value
     originalShadow.value = shadowEnabled.value
     originalAnimation.value = animationEnabled.value
@@ -781,6 +919,16 @@ onMounted(() => {
 
 .snow-icon {
   background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);
+  color: white;
+}
+
+.summer-icon {
+  background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+  color: white;
+}
+
+.rain-icon {
+  background: linear-gradient(135deg, #6EE7B7 0%, #10B981 100%);
   color: white;
 }
 
@@ -1408,6 +1556,97 @@ onMounted(() => {
   }
 }
 
+/* Preview Summer Effect */
+.preview-summer-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 5;
+}
+
+.preview-firefly {
+  position: absolute;
+  font-size: 10px;
+  animation: firefly-float ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.8));
+}
+
+@keyframes firefly-float {
+  0%, 100% {
+    opacity: 0.3;
+    transform: translate(0, 0) scale(0.8);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(10px, -15px) scale(1.2);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translate(-5px, 10px) scale(1);
+  }
+  75% {
+    opacity: 1;
+    transform: translate(15px, 5px) scale(1.1);
+  }
+}
+
+.preview-sun-rays {
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
+  animation: sun-pulse 3s ease-in-out infinite;
+}
+
+@keyframes sun-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.1); }
+}
+
+/* Preview Rain Effect */
+.preview-rain-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 5;
+}
+
+.preview-raindrop {
+  position: absolute;
+  top: -20px;
+  width: 2px;
+  background: linear-gradient(180deg, transparent 0%, rgba(174, 194, 224, 0.8) 50%, rgba(174, 194, 224, 0.3) 100%);
+  border-radius: 0 0 2px 2px;
+  animation: rainfall linear infinite;
+}
+
+@keyframes rainfall {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(500px);
+    opacity: 0;
+  }
+}
+
 /* Chatbot Window Preview */
 .preview-chatbot-window {
   position: absolute;
@@ -1728,6 +1967,22 @@ onMounted(() => {
 }
 
 .status-item.active .status-dot {
+  background: #10B981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+/* Seasonal status dot colors */
+.status-item.active .status-dot.snow {
+  background: #3B82F6;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+}
+
+.status-item.active .status-dot.summer {
+  background: #F59E0B;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}
+
+.status-item.active .status-dot.rain {
   background: #10B981;
   box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
 }
