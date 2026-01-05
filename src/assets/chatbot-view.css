@@ -4666,6 +4666,133 @@ body.no-effects .apple-help-button::after { display: none !important; }
   box-shadow: 0 4px 12px rgba(107, 44, 145, 0.25), 0 1px 0 rgba(255,255,255,0.1) inset;
 }
 
+/* 🎯 Scroll to Top Tutorial Tooltip */
+.scroll-tutorial-tooltip {
+  position: absolute;
+  bottom: 140px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1001;
+  background: linear-gradient(135deg, rgba(107, 44, 145, 0.95), rgba(139, 76, 184, 0.95));
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: 0 8px 32px rgba(107, 44, 145, 0.4), 0 4px 12px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+  max-width: 280px;
+  animation: tutorial-bounce 0.5s ease-out;
+}
+
+.scroll-tutorial-arrow {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-top: 12px solid rgba(139, 76, 184, 0.95);
+}
+
+.scroll-tutorial-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.scroll-tutorial-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.scroll-tutorial-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.scroll-tutorial-text strong {
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.scroll-tutorial-text span {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.scroll-tutorial-dismiss {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.scroll-tutorial-dismiss:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.scroll-tutorial-dismiss:active {
+  transform: scale(0.98);
+}
+
+/* Tutorial transition */
+.scroll-tutorial-fade-enter-active,
+.scroll-tutorial-fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.scroll-tutorial-fade-enter-from,
+.scroll-tutorial-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px);
+}
+
+@keyframes tutorial-bounce {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px) scale(0.9);
+  }
+  60% {
+    transform: translateX(-50%) translateY(-5px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .scroll-tutorial-tooltip {
+    bottom: 130px;
+    max-width: 260px;
+    padding: 14px 16px;
+  }
+  
+  .scroll-tutorial-icon {
+    font-size: 1.3rem;
+  }
+  
+  .scroll-tutorial-text strong {
+    font-size: 0.9rem;
+  }
+  
+  .scroll-tutorial-text span {
+    font-size: 0.8rem;
+  }
+}
+
 /* Fade scale transition for scroll button */
 .fade-scale-enter-active, .fade-scale-leave-active {
   transition: opacity 0.3s ease, transform 0.3s ease;

@@ -179,6 +179,21 @@
             </button>
           </transition>
 
+          <!-- 🎯 Scroll to Top Tutorial Tooltip -->
+          <transition name="scroll-tutorial-fade">
+            <div v-if="showScrollTutorial" class="scroll-tutorial-tooltip">
+              <div class="scroll-tutorial-arrow"></div>
+              <div class="scroll-tutorial-content">
+                <div class="scroll-tutorial-icon">⬆️</div>
+                <div class="scroll-tutorial-text">
+                  <strong>กดเพื่อเลื่อนขึ้นไปด้านบน</strong>
+                  <span>กลับไปดูหมวดหมู่และข้อความก่อนหน้าได้เลย</span>
+                </div>
+              </div>
+              <button class="scroll-tutorial-dismiss" @click="dismissScrollTutorial">เข้าใจแล้ว</button>
+            </div>
+          </transition>
+
           <div class="panel-body" :class="{ 'anchor-bottom': anchorBottom }" @scroll.passive="handleScroll" ref="panelBody">
             
 
@@ -927,6 +942,9 @@ export default {
       isWinterSeason: false,
       showScrollTop: false,
       lastScrollTop: 0,
+      // Scroll to top tutorial
+      showScrollTutorial: false,
+      scrollTutorialShown: false,
       anchorBottom: true,
       botAvatar: null,
       userType: '',
@@ -1913,12 +1931,34 @@ export default {
     startFeedbackTutorial() {
       // Check if user has seen tutorial before
       const hasSeenTutorial = localStorage.getItem('pcru_feedback_tutorial_seen')
-      if (hasSeenTutorial) return
+      if (hasSeenTutorial) {
+        console.log('🎓 Tutorial: Already seen, skipping')
+        return
+      }
       
-      this.tutorialStep = 0
-      this.tutorialTargetRect = null
-      this.showFeedbackTutorial = true
-      this.updateTutorialTarget()
+      // Only show tutorial if this is the first bot answer with feedback buttons
+      const botMessagesWithAnswer = this.messages.filter(m => m.sender === 'bot' && m.found === true && !m.multipleResults && !m._temp)
+      console.log('🎓 Tutorial: Bot messages with answer count:', botMessagesWithAnswer.length)
+      if (botMessagesWithAnswer.length !== 1) {
+        console.log('🎓 Tutorial: Not first answer, skipping')
+        return
+      }
+      
+      // Ensure feedback buttons are visible in DOM
+      this.$nextTick(() => {
+        const feedbackBtn = document.querySelector('.apple-feedback .apple-feedback-btn')
+        console.log('🎓 Tutorial: Feedback button found:', feedbackBtn)
+        if (!feedbackBtn) {
+          console.log('🎓 Tutorial: No feedback button in DOM')
+          return
+        }
+        
+        console.log('🎓 Tutorial: Starting tutorial!')
+        this.tutorialStep = 0
+        this.tutorialTargetRect = null
+        this.showFeedbackTutorial = true
+        this.updateTutorialTarget()
+      })
     },
     
     updateTutorialTarget() {
@@ -1979,6 +2019,11 @@ export default {
     skipTutorial() {
       this.showFeedbackTutorial = false
       localStorage.setItem('pcru_feedback_tutorial_seen', 'true')
+    },
+    
+    dismissScrollTutorial() {
+      this.showScrollTutorial = false
+      localStorage.setItem('pcru_scroll_tutorial_seen', 'true')
     },
     
     // Reset tutorial (for testing)
@@ -5871,6 +5916,7 @@ export default {
         // Hide immediately if at the very top (scrollTop is 0 or very close)
         if (currentScrollTop <= 10) {
           this.showScrollTop = false
+          this.showScrollTutorial = false
           this.lastScrollTop = currentScrollTop
           return
         }
@@ -5878,6 +5924,7 @@ export default {
         // Hide if at the bottom (user scrolled all the way down)
         if (currentScrollTop + clientHeight >= scrollHeight - 10) {
           this.showScrollTop = false
+          this.showScrollTutorial = false
           this.lastScrollTop = currentScrollTop
           return
         }
@@ -5886,9 +5933,20 @@ export default {
         // and is not at the very top or bottom
         if (currentScrollTop < this.lastScrollTop && currentScrollTop > 100) {
           this.showScrollTop = true
+          // Show tutorial the first time scroll button appears (after user has asked a question)
+          // Only show after feedback tutorial has been completed
+          if (!this.scrollTutorialShown && this.messages.length > 0 && !localStorage.getItem('pcru_scroll_tutorial_seen') && localStorage.getItem('pcru_feedback_tutorial_seen')) {
+            this.scrollTutorialShown = true
+            this.showScrollTutorial = true
+            // Auto-dismiss after 6 seconds
+            setTimeout(() => {
+              this.dismissScrollTutorial()
+            }, 6000)
+          }
         } else if (currentScrollTop > this.lastScrollTop) {
           // Hide when scrolling down
           this.showScrollTop = false
+          this.showScrollTutorial = false
         }
         
         this.lastScrollTop = currentScrollTop
