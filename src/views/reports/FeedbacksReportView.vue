@@ -130,7 +130,8 @@ const barChartOptions = ref({
 const fetchFeedbacks = async () => {
   feedbacksLoading.value = true;
   try {
-    const response = await $axios.get('/feedbacks');
+    // Fetch ALL feedbacks (including handled) for total count display
+    const response = await $axios.get('/feedbacks?all=true');
     feedbacks.value = response.data?.data || response.data || [];
   } catch (err) {
     console.error('❌ fetchFeedbacks error:', err);
