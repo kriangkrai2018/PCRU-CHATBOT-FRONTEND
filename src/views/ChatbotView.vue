@@ -473,77 +473,7 @@
                     </ul>
                   </div>
                   
-                  <!-- 💬 Feedback Actions (Like/Unlike) -->
-                  <div class="feedback-actions" v-if="msg.type === 'bot' && !msg.typing && (msg.text || msg.results) && msg.found === true && !msg.multipleResults && msg === getLatestBotMessage()">
-                    <button
-                      class="feedback-btn"
-                      :class="[{ active: msg.feedback === 'like' }, { anim: msg._anim === 'like' }, { disabled: feedbackButtonsDisabled }]"
-                      @click.stop="handleLikeClick(msg)"
-                      :disabled="feedbackButtonsDisabled"
-                      :title="feedbackButtonsDisabled ? 'รออีกสักครู่นะคะ' : 'ถูกใจ'"
-                    >
-                      <svg class="feedback-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path class="thumb-outline" d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                      <span class="sr-only">ถูกใจ</span>
-                    </button>
-                    <!-- Unlike button with inline dropdown -->
-                    <div class="feedback-unlike-wrapper">
-                      <button
-                        class="feedback-btn"
-                        :class="[{ active: msg.feedback === 'dislike' }, { anim: msg._anim === 'dislike' }, { disabled: feedbackButtonsDisabled }]"
-                        @click="toggleFeedbackDropdown(idx)"
-                        :disabled="feedbackButtonsDisabled"
-                        :title="feedbackButtonsDisabled ? 'รออีกสักครู่นะคะ' : 'ไม่ถูกใจ'"
-                      >
-                        <svg class="feedback-icon thumbs-down" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path class="thumb-outline" d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span class="sr-only">ไม่ถูกใจ</span>
-                      </button>
-                      <!-- Inline dropdown for unlike reasons (rendered without Vue <transition> to avoid global enter-class animations) -->
-                      <div 
-                        v-if="openFeedbackDropdownIndex === idx" 
-                        class="feedback-reason-dropdown feedback-reason-dropdown-inline"
-                        @click.stop
-                      >
-                        <div class="feedback-dropdown-header">
-                          <span>เลือกเหตุผล</span>
-                          <button class="feedback-dropdown-close" @click="closeFeedbackDropdown" aria-label="ปิด">
-                            <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                              <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            </svg>
-                          </button>
-                        </div>
-                        <ul class="feedback-reason-list" v-if="!showFeedbackCommentBox">
-                          <li 
-                            v-for="option in feedbackReasonOptions" 
-                            :key="option.value"
-                            class="feedback-reason-item"
-                            :class="{ active: msg.selectedReason === option.value }"
-                            @click.stop.prevent="handleReasonSelect(msg, option.value)"
-                            @touchend.stop.prevent="handleReasonSelect(msg, option.value)"
-                          >
-                            {{ option.label }}
-                          </li>
-                        </ul>
-                        <div v-else class="feedback-comment-box">
-                          <textarea 
-                            v-model="feedbackCommentText"
-                              class="feedback-comment-input"
-                              placeholder="กรุณาระบุเหตุผล..."
-                              rows="3"
-                              autofocus
-                              @keydown.enter.prevent="submitFeedbackComment"
-                            ></textarea>
-                            <div class="feedback-comment-actions">
-                              <button class="feedback-comment-btn cancel" @click="cancelFeedbackComment">ยกเลิก</button>
-                              <button class="feedback-comment-btn submit" @click="submitFeedbackComment" :disabled="!feedbackCommentText.trim()">ส่ง</button>
-                            </div>
-                          </div>
-                        </div>
-                    </div>
-                  </div>
+
                   <!-- Backend suggestions list -->
                   <div v-if="msg.results && msg.results.length" class="suggestions">
                     <transition-group name="suggestion-fade" tag="ul" class="suggestions-list">
@@ -633,6 +563,82 @@
 
                   <div v-if="msg.type === 'bot' && msg.typing" class="typing-indicator">
                     <span></span><span></span><span></span>
+                  </div>
+                  
+                  <!-- 💬 Apple-style Inline Feedback (subtle icons at bottom-right) -->
+                  <div 
+                    class="apple-feedback" 
+                    v-if="msg.type === 'bot' && !msg.typing && (msg.text || msg.results) && msg.found === true && !msg.multipleResults"
+                  >
+                    <button
+                      class="apple-feedback-btn"
+                      :class="{ active: msg.feedback === 'like', disabled: feedbackButtonsDisabled }"
+                      @click.stop="handleLikeClick(msg)"
+                      :disabled="feedbackButtonsDisabled"
+                      aria-label="ถูกใจ"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" 
+                          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                    <div class="apple-feedback-wrapper">
+                      <button
+                        class="apple-feedback-btn"
+                        :class="{ active: msg.feedback === 'dislike', disabled: feedbackButtonsDisabled }"
+                        @click.stop="toggleFeedbackDropdown(idx)"
+                        :disabled="feedbackButtonsDisabled"
+                        aria-label="ไม่ถูกใจ"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                          <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" 
+                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </button>
+                      <!-- Apple-style dropdown for unlike reasons -->
+                      <transition name="apple-dropdown">
+                        <div 
+                          v-if="openFeedbackDropdownIndex === idx" 
+                          class="apple-feedback-dropdown"
+                          @click.stop
+                        >
+                          <div class="apple-dropdown-header">
+                            <span>บอกเหตุผลให้เราปรับปรุง</span>
+                            <button class="apple-dropdown-close" @click="closeFeedbackDropdown" aria-label="ปิด">
+                              <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
+                                <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                              </svg>
+                            </button>
+                          </div>
+                          <ul class="apple-reason-list" v-if="!showFeedbackCommentBox">
+                            <li 
+                              v-for="option in feedbackReasonOptions" 
+                              :key="option.value"
+                              class="apple-reason-item"
+                              :class="{ active: msg.selectedReason === option.value }"
+                              @click.stop.prevent="handleReasonSelect(msg, option.value)"
+                              @touchend.stop.prevent="handleReasonSelect(msg, option.value)"
+                            >
+                              {{ option.label }}
+                            </li>
+                          </ul>
+                          <div v-else class="apple-comment-box">
+                            <textarea 
+                              v-model="feedbackCommentText"
+                              class="apple-comment-input"
+                              placeholder="พิมพ์ความคิดเห็น..."
+                              rows="2"
+                              autofocus
+                              @keydown.enter.prevent="submitFeedbackComment"
+                            ></textarea>
+                            <div class="apple-comment-actions">
+                              <button class="apple-comment-btn cancel" @click="cancelFeedbackComment">ยกเลิก</button>
+                              <button class="apple-comment-btn submit" @click="submitFeedbackComment" :disabled="!feedbackCommentText.trim()">ส่ง</button>
+                            </div>
+                          </div>
+                        </div>
+                      </transition>
+                    </div>
                   </div>
                 </div>
               </div>

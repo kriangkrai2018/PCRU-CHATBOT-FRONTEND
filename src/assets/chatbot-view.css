@@ -3520,8 +3520,359 @@ body.no-effects .apple-help-button::after { display: none !important; }
   padding-top: 8px;
 }
 
-/* Feedback buttons (like / dislike) */
-.feedback-actions { display:flex; gap:8px; margin-top:10px; align-items:center }
+/* ========================================
+   🍎 Apple-style Inline Feedback Icons
+   Following Human Interface Guidelines
+   ======================================== */
+
+/* Container: positioned at bottom-right of message bubble */
+.apple-feedback {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 0.5px solid rgba(0, 0, 0, 0.04);
+}
+
+/* Wrapper for dislike + dropdown */
+.apple-feedback-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Subtle icon button - SF Symbols style (more visible) */
+.apple-feedback-btn {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.04);
+  color: #666;
+  transition: color 0.2s ease, background 0.15s ease, transform 0.1s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.apple-feedback-btn svg path {
+  stroke: #999;
+}
+
+.apple-feedback-btn:hover {
+  color: #333;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.apple-feedback-btn:hover svg path {
+  stroke: #555;
+}
+
+.apple-feedback-btn:active {
+  transform: scale(0.92);
+}
+
+/* Active state: System Blue for like, System Red for dislike */
+.apple-feedback-btn.active {
+  background: rgba(0, 122, 255, 0.1);
+  color: #007AFF;
+}
+
+.apple-feedback-btn.active svg path {
+  stroke: #007AFF;
+  fill: #007AFF;
+}
+
+/* Disabled state */
+.apple-feedback-btn.disabled,
+.apple-feedback-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Apple-style dropdown menu */
+.apple-feedback-dropdown {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 12px;
+  box-shadow: 
+    0 0 0 0.5px rgba(0, 0, 0, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 12px 28px rgba(0, 0, 0, 0.12);
+  min-width: 200px;
+  width: max-content;
+  max-width: 260px;
+  z-index: 99999;
+  overflow: hidden;
+  transform-origin: bottom right;
+}
+
+/* Dropdown header */
+.apple-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(60, 60, 67, 0.6);
+  letter-spacing: -0.01em;
+}
+
+.apple-dropdown-close {
+  all: unset;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: rgba(60, 60, 67, 0.4);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.apple-dropdown-close:hover {
+  color: rgba(60, 60, 67, 0.8);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* Reason list */
+.apple-reason-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+
+.apple-reason-item {
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #1d1d1f;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  position: relative;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.apple-reason-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.apple-reason-item:active {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.apple-reason-item.active {
+  color: #007AFF;
+  font-weight: 500;
+}
+
+.apple-reason-item.active::after {
+  content: '';
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23007AFF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+
+/* Comment box for 'other' reason */
+.apple-comment-box {
+  padding: 10px 12px;
+}
+
+.apple-comment-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  background: rgba(255, 255, 255, 0.8);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.apple-comment-input:focus {
+  border-color: #007AFF;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+}
+
+.apple-comment-input::placeholder {
+  color: rgba(60, 60, 67, 0.3);
+}
+
+.apple-comment-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+
+.apple-comment-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+  font-family: inherit;
+}
+
+.apple-comment-btn.cancel {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1d1d1f;
+}
+
+.apple-comment-btn.cancel:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.apple-comment-btn.submit {
+  background: #007AFF;
+  color: #fff;
+}
+
+.apple-comment-btn.submit:hover:not(:disabled) {
+  background: #0066DB;
+}
+
+.apple-comment-btn.submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Dropdown animation - Apple spring */
+.apple-dropdown-enter-active {
+  animation: appleMenuIn 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.apple-dropdown-leave-active {
+  animation: appleMenuOut 0.15s ease-out;
+}
+
+@keyframes appleMenuIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes appleMenuOut {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.95) translateY(2px);
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .apple-feedback {
+    border-top-color: rgba(255, 255, 255, 0.06);
+  }
+  
+  .apple-feedback-btn {
+    color: rgba(235, 235, 245, 0.3);
+  }
+  
+  .apple-feedback-btn:hover {
+    color: rgba(235, 235, 245, 0.6);
+    background: rgba(255, 255, 255, 0.06);
+  }
+  
+  .apple-feedback-dropdown {
+    background: rgba(44, 44, 46, 0.92);
+    box-shadow: 
+      0 0 0 0.5px rgba(255, 255, 255, 0.1),
+      0 4px 12px rgba(0, 0, 0, 0.3),
+      0 12px 28px rgba(0, 0, 0, 0.4);
+  }
+  
+  .apple-dropdown-header {
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+    color: rgba(235, 235, 245, 0.6);
+  }
+  
+  .apple-dropdown-close {
+    color: rgba(235, 235, 245, 0.4);
+  }
+  
+  .apple-dropdown-close:hover {
+    color: rgba(235, 235, 245, 0.8);
+    background: rgba(255, 255, 255, 0.06);
+  }
+  
+  .apple-reason-item {
+    color: #f5f5f7;
+  }
+  
+  .apple-reason-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+  
+  .apple-reason-item:active {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .apple-comment-input {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #f5f5f7;
+  }
+  
+  .apple-comment-input::placeholder {
+    color: rgba(235, 235, 245, 0.3);
+  }
+  
+  .apple-comment-btn.cancel {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f5f5f7;
+  }
+  
+  .apple-comment-btn.cancel:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .apple-feedback-btn {
+    transition: none;
+  }
+  .apple-dropdown-enter-active,
+  .apple-dropdown-leave-active {
+    animation: none;
+  }
+}
+
+/* Legacy feedback buttons - keep for backwards compat but hide */
+.feedback-actions { display: none !important; }
 
 /* Unlike wrapper for dropdown positioning */
 .feedback-unlike-wrapper {
