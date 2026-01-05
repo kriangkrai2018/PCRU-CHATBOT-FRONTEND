@@ -51,6 +51,7 @@
           default-sort-by="date"
           default-sort-order="desc"
           :show-date-presets="true"
+          :custom-date-presets="noAnswerDatePresets"
           :show-date-range="true"
           @change="onNoAnswerFiltersChange"
         />
@@ -153,6 +154,14 @@ const noAnswerSortOptions = [
   { value: 'query', label: 'คำถาม' }
 ];
 
+// Custom date presets สำหรับ ChatLogNoAnswers (เก็บแค่ 30 วัน)
+const noAnswerDatePresets = [
+  { value: 'all', label: 'ทั้งหมด' },
+  { value: 'today', label: 'วันนี้' },
+  { value: 'week', label: '7 วัน' },
+  { value: 'month', label: '30 วัน' }
+];
+
 function onNoAnswerFiltersChange() {
   currentPage.value = 1;
 }
@@ -213,17 +222,46 @@ const itemsPerPage = ref(5);
 const filtered = computed(() => {
   let arr = Array.isArray(items.value) ? items.value : [];
   
-  // Apply date range filter
-  if (noAnswerFilters.value.dateFrom) {
-    const fromDate = new Date(noAnswerFilters.value.dateFrom);
+  // Force re-evaluation when noAnswerFilters changes
+  const filters = noAnswerFilters.value;
+  
+  // Apply date preset filter
+  const now = new Date();
+  const preset = filters.datePreset;
+  let fromDate = null;
+  
+  if (preset && preset !== 'all') {
+    switch (preset) {
+      case 'today':
+        fromDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        break;
+      case 'week':
+        fromDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case 'month':
+        fromDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+    }
+  }
+  
+  // Apply date range from preset or custom dateFrom/dateTo
+  if (fromDate) {
     fromDate.setHours(0, 0, 0, 0);
     arr = arr.filter(log => {
       if (!log.Timestamp) return false;
       return new Date(log.Timestamp) >= fromDate;
     });
   }
-  if (noAnswerFilters.value.dateTo) {
-    const toDate = new Date(noAnswerFilters.value.dateTo);
+  if (filters.dateFrom) {
+    const customFromDate = new Date(filters.dateFrom);
+    customFromDate.setHours(0, 0, 0, 0);
+    arr = arr.filter(log => {
+      if (!log.Timestamp) return false;
+      return new Date(log.Timestamp) >= customFromDate;
+    });
+  }
+  if (filters.dateTo) {
+    const toDate = new Date(filters.dateTo);
     toDate.setHours(23, 59, 59, 999);
     arr = arr.filter(log => {
       if (!log.Timestamp) return false;

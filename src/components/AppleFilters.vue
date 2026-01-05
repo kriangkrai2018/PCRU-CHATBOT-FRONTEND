@@ -133,11 +133,12 @@
         </label>
         <div class="filter-pills">
           <button 
+            type="button"
             v-for="preset in datePresets" 
             :key="preset.value"
             class="pill-btn pill-sm" 
             :class="{ active: localFilters.datePreset === preset.value }"
-            @click="setDatePreset(preset.value)"
+            @click.prevent.stop="setDatePreset(preset.value)"
           >
             {{ preset.label }}
           </button>
@@ -229,6 +230,7 @@ const props = defineProps({
   // Date range
   showDateRange: { type: Boolean, default: false },
   showDatePresets: { type: Boolean, default: true },
+  customDatePresets: { type: Array, default: null }, // Custom date presets array
   datePresetDirection: { type: String, default: 'past' }, // 'past' or 'future'
 
   // Number range
@@ -248,7 +250,7 @@ const emit = defineEmits(['update:modelValue', 'change']);
 
 const isExpanded = ref(false);
 
-const datePresets = [
+const defaultDatePresets = [
   { value: 'all', label: 'ทั้งหมด' },
   { value: 'today', label: 'วันนี้' },
   { value: 'week', label: '7 วัน' },
@@ -256,6 +258,8 @@ const datePresets = [
   { value: 'quarter', label: '3 เดือน' },
   { value: 'year', label: '1 ปี' }
 ];
+
+const datePresets = computed(() => props.customDatePresets || defaultDatePresets);
 
 const localFilters = ref({
   sortBy: props.defaultSortBy,
@@ -314,7 +318,7 @@ const activeFilterTags = computed(() => {
   }
 
   if (f.datePreset && f.datePreset !== 'all') {
-    const preset = datePresets.find(p => p.value === f.datePreset);
+    const preset = datePresets.value.find(p => p.value === f.datePreset);
     tags.push({ key: 'datePreset', label: preset?.label || f.datePreset });
   }
 
@@ -351,6 +355,7 @@ function setStatus(status) {
 }
 
 function setDatePreset(preset) {
+  console.log('🔹 setDatePreset called with:', preset);
   localFilters.value.datePreset = preset;
   
   // Calculate actual date range based on preset

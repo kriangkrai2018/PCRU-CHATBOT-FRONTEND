@@ -139,6 +139,7 @@
               default-sort-by="date"
               default-sort-order="desc"
               :show-date-presets="true"
+              :custom-date-presets="handledDatePresets"
               :show-date-range="true"
               @change="onHandledFiltersChange"
             />
@@ -382,6 +383,14 @@ const handledSortOptions = [
   { value: 'date', label: 'วันที่' },
   { value: 'id', label: 'รหัส' },
   { value: 'reason', label: 'เหตุผล' }
+];
+
+// Custom date presets สำหรับ Handled Feedbacks (เก็บแค่ 30 วัน)
+const handledDatePresets = [
+  { value: 'all', label: 'ทั้งหมด' },
+  { value: 'today', label: 'วันนี้' },
+  { value: 'week', label: '7 วัน' },
+  { value: 'month', label: '30 วัน' }
 ];
 
 function onHandledFiltersChange() {
