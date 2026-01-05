@@ -210,11 +210,6 @@ html.theme-transitioning div {
   transition-duration: 0s !important;
 }
 
-/* Black background during intro to prevent content flash */
-.chat-root.intro-playing {
-  background: #000 !important;
-}
-
 /* Keep intro animations running */
 .intro-playing .intro-overlay,
 .intro-playing .intro-overlay * {
