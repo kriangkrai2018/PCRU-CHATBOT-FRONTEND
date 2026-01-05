@@ -750,6 +750,11 @@ function subCategories(parentId, selfId) {
     const isParentMatch = String(c.ParentCategoriesID ?? '').trim() === parentStr;
     if (!isParentMatch) return false;
     return q ? itemMatchesQuery(c, q) : true;
+  }).sort((a, b) => {
+    // Sort by CategoriesID ascending (e.g., 1-1, 1-2, 1-3...)
+    const aId = String(a.CategoriesID || '');
+    const bId = String(b.CategoriesID || '');
+    return aId.localeCompare(bId, undefined, { numeric: true, sensitivity: 'base' });
   });
 }
 

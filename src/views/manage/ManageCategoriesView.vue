@@ -998,7 +998,12 @@ function subCategories(parentId, selfId) {
   return (categories.value || []).filter(c => 
     String(c.ParentCategoriesID) === String(parentId) && 
     String(c.CategoriesID) !== String(selfId)
-  );
+  ).sort((a, b) => {
+    // Sort by CategoriesID ascending (e.g., 1-1, 1-2, 1-3...)
+    const aId = String(a.CategoriesID || '');
+    const bId = String(b.CategoriesID || '');
+    return aId.localeCompare(bId, undefined, { numeric: true, sensitivity: 'base' });
+  });
 }
 function hasSubCategories(parentId, selfId) {
   return subCategories(parentId, selfId).length > 0;
