@@ -972,8 +972,11 @@ const visibleParents = computed(() => {
   parents.sort((a, b) => {
     let valA, valB;
     if (sortBy === 'id') {
-      valA = Number(a.CategoriesID) || 0;
-      valB = Number(b.CategoriesID) || 0;
+      // Use numeric locale comparison for IDs (handles both simple numbers and composite IDs like "1-1", "2-3")
+      const aId = String(a.CategoriesID || '');
+      const bId = String(b.CategoriesID || '');
+      const cmp = aId.localeCompare(bId, undefined, { numeric: true, sensitivity: 'base' });
+      return sortOrder === 'asc' ? cmp : -cmp;
     } else if (sortBy === 'name') {
       valA = (a.CategoriesName || '').toLowerCase();
       valB = (b.CategoriesName || '').toLowerCase();
@@ -981,8 +984,10 @@ const visibleParents = computed(() => {
       valA = a.CategoriesID;
       valB = b.CategoriesID;
     }
-    if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
-    if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+    if (sortBy !== 'id') {
+      if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+      if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+    }
     return 0;
   });
   
@@ -1009,9 +1014,16 @@ function hasSubCategories(parentId, selfId) {
   return subCategories(parentId, selfId).length > 0;
 }
 
-// Pagination
-const categoriesTotalEntries = computed(() => filteredCategories.value.filter(c => isMain(c)).length);
-const localTotalPages = computed(() => Math.ceil(categoriesTotalEntries.value / categoriesItemsPerPage.value));
+// Pagination - count based on current filter status
+const categoriesTotalEntries = computed(() => {
+  if (catFilters.value.status === 'sub') {
+    // When filtering by Sub, count subcategories
+    return filteredCategories.value.filter(c => !isMain(c)).length;
+  }
+  // Default: count main categories
+  return filteredCategories.value.filter(c => isMain(c)).length;
+});
+const localTotalPages = computed(() => Math.ceil(categoriesTotalEntries.value / categoriesItemsPerPage.value) || 1);
 const displayPage = computed(() => categoriesCurrentPage.value);
 const categoriesStartIndex = computed(() => (categoriesCurrentPage.value - 1) * categoriesItemsPerPage.value + 1);
 const categoriesEndIndex = computed(() => Math.min(categoriesCurrentPage.value * categoriesItemsPerPage.value, categoriesTotalEntries.value));

@@ -520,7 +520,7 @@ const searchQuery = ref('');
 // Filters state
 const swFilters = ref({
   sortBy: 'id',
-  sortOrder: 'asc',
+  sortOrder: 'desc',
   status: ''
 });
 
