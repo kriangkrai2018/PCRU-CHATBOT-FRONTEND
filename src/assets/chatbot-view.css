@@ -2981,7 +2981,7 @@ body.no-effects .apple-help-button::after { display: none !important; }
 .message-wrapper.bot.typing .message-bubble,
 .panel-footer .bottom-typing .message-bubble {
   width: auto !important;
-  max-width: 60% !important;
+  max-width: 90% !important;
 }
 
 @keyframes botBubbleIn {

@@ -2771,12 +2771,24 @@ export default {
       // Split by HTML tags and newlines to preserve them
       const parts = textToStream.split(/(<[^>]+>|\n)/g);
       
+      // Helper: scroll after DOM updates
+      const scrollAfterUpdate = () => {
+        return new Promise(resolve => {
+          requestAnimationFrame(() => {
+            this.scrollToBottomInstant();
+            resolve();
+          });
+        });
+      };
+      
       for (const part of parts) {
         if (!part) continue; // Skip empty parts from split
 
         if (part.match(/<[^>]+>/) || part === '\n') {
           // It's a tag or a newline, append it instantly
           this.messages[messageIndex].text += part;
+          // Scroll immediately after adding tags/newlines
+          await scrollAfterUpdate();
         } else {
           // It's text, type it out character by character
           for (let i = 0; i < part.length; i++) {
@@ -2784,10 +2796,8 @@ export default {
             if (!this.messages[messageIndex]) return; // Stop if message was cleared
             this.messages[messageIndex].text += part[i];
             
-            // Scroll to bottom every few characters to keep it in view
-            if (i % 5 === 0) {
-              this.scrollToBottom();
-            }
+            // Scroll to bottom EVERY character to keep it in view
+            await scrollAfterUpdate();
           }
         }
       }
@@ -4976,6 +4986,12 @@ export default {
           top: this.$refs.panelBody.scrollHeight,
           behavior: 'smooth'
         })
+      }
+    },
+    // Instant scroll without animation - for use during streaming/typing
+    scrollToBottomInstant() {
+      if (this.$refs.panelBody) {
+        this.$refs.panelBody.scrollTop = this.$refs.panelBody.scrollHeight;
       }
     },
     selectSuggestion(msg, item, idx) {
