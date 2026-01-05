@@ -4275,7 +4275,6 @@ export default {
               console.log('📄 Full res.data for PDF debug:', JSON.stringify(res.data, null, 2));
               
               const msg = this.messages[botIndex];
-              msg.typing = false;
               // Set all non-text properties first
               if (pdf) msg.pdf = pdf;
               if (contacts) msg.contacts = contacts;
@@ -4317,10 +4316,17 @@ export default {
                 }
               }
 
+              // Set typing to true before streaming text (so feedback buttons hide during typing)
+              msg.typing = true;
 
               // Now, stream the text content
               if (botText) {
                 await this.streamText(botIndex, botText);
+                // Set typing to false after streaming is complete (so feedback buttons appear)
+                msg.typing = false;
+              } else {
+                // No text to stream, so typing is already done
+                msg.typing = false;
               }
 
               // Show suggestions after typing finishes (sequentially)
