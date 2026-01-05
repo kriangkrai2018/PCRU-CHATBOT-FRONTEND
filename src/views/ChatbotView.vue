@@ -1839,6 +1839,10 @@ export default {
   watch: {
     visible(newVal) {
       if (newVal) {
+        // Reset scroll button state when opening
+        this.showScrollTop = false
+        this.lastScrollTop = 0
+        
         // Initialize welcome text
         if (this.messages.length > 0 || this.welcomeTypingShown) {
           // If history exists or already shown, show immediately
@@ -5861,16 +5865,25 @@ export default {
     handleScroll() {
       if (this.$refs.panelBody) {
         const currentScrollTop = this.$refs.panelBody.scrollTop
+        const scrollHeight = this.$refs.panelBody.scrollHeight
+        const clientHeight = this.$refs.panelBody.clientHeight
         
         // Hide immediately if at the very top (scrollTop is 0 or very close)
-        if (currentScrollTop <= 5) {
+        if (currentScrollTop <= 10) {
+          this.showScrollTop = false
+          this.lastScrollTop = currentScrollTop
+          return
+        }
+        
+        // Hide if at the bottom (user scrolled all the way down)
+        if (currentScrollTop + clientHeight >= scrollHeight - 10) {
           this.showScrollTop = false
           this.lastScrollTop = currentScrollTop
           return
         }
         
         // Show button only when user intentionally scrolls UP (not down)
-        // and is not at the very top
+        // and is not at the very top or bottom
         if (currentScrollTop < this.lastScrollTop && currentScrollTop > 100) {
           this.showScrollTop = true
         } else if (currentScrollTop > this.lastScrollTop) {
