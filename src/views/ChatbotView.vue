@@ -388,7 +388,7 @@
 
                 </div>
                 <div class="message-bubble" :class="[msg.type, { 'has-contacts': msg.showContacts || (msg.visibleContacts && msg.visibleContacts.length > 0) }]">
-                  <div v-if="!(msg.multipleResults && msg.text && msg.text.trim().startsWith('พบหลายคำถาม'))" class="message-text" v-html="linkifyText(msg.text, msg.title, msg.found)"></div>
+                  <div v-if="!(msg.multipleResults && msg.text && msg.text.trim().startsWith('พบหลายคำถาม'))" class="message-text" v-html="linkifyText(msg.text, msg.title, msg.found, msg.type === 'user')"></div>
                   <div v-if="msg.showCategories" class="category-section" style="margin-top: 15px;">
                     <div class="category-title no-underline">หมวดหมู่</div>
                     
@@ -1938,7 +1938,7 @@ export default {
       }
       
       // Only show tutorial if this is the first bot answer with feedback buttons (and matched by keyword)
-      const botMessagesWithAnswer = this.messages.filter(m => m.sender === 'bot' && m.found === true && !m.multipleResults && !m._temp && m.keywordMatch !== false)
+      const botMessagesWithAnswer = this.messages.filter(m => m.type === 'bot' && m.found === true && !m.multipleResults && !m._temp && m.keywordMatch !== false)
       console.log('🎓 Tutorial: Bot messages with answer count:', botMessagesWithAnswer.length)
       if (botMessagesWithAnswer.length !== 1) {
         console.log('🎓 Tutorial: Not first answer or not keywordMatch, skipping')
@@ -2589,7 +2589,7 @@ export default {
 </div>
 </div>`;
     },
-    linkifyText(text, title = null, found = false) {
+    linkifyText(text, title = null, found = false, isUserMessage = false) {
       if (!text) return '';
 
       const knownFacebookPages = {
@@ -2693,6 +2693,11 @@ export default {
       processedText = phoneParts.join('');
 
       // 🗺️ LAST STEP: Process Google Maps - detect GPS data and create map widget
+      // 🆕 Skip map widget creation for user messages - just show the link
+      if (isUserMessage) {
+        return processedText;
+      }
+      
       // Pattern 1: Google Maps short URL (with or without "Google map :" prefix)
       // - With prefix: "Google map : https://maps.app.goo.gl/xxx"
       // - Plain URL: "https://maps.app.goo.gl/xxx" (stored directly)
