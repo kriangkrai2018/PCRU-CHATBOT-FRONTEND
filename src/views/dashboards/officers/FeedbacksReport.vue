@@ -13,8 +13,8 @@
             กำลังแสดงผลสำหรับคำถาม ID: <strong>{{ questionIdFilter }}</strong>
           </div>
         </div>
-        <!-- Charts Section -->
-        <div class="row mb-4">
+        <!-- Charts Section (hidden when no data) -->
+        <div v-if="chartTotal > 0" class="row mb-4">
           <div class="col-md-6">
             <div class="chart-container">
               <canvas id="feedbacks-pie-chart" ref="pieCanvas"></canvas>
@@ -508,6 +508,12 @@ const filteredFeedbacks = computed(() => {
 });
 
 watch(filters, () => { currentPage.value = 1; }, { deep: true });
+
+// Chart total - used to hide charts when no data
+const chartTotal = computed(() => {
+  const arr = Array.isArray(props.feedbacks) ? props.feedbacks : [];
+  return arr.length;
+});
 
 // pagination
 const currentPage = ref(1);

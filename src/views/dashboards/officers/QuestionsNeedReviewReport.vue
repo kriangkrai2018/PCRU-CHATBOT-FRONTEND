@@ -76,21 +76,17 @@
 
         <!-- Charts Section -->
         <div class="row mb-4 g-4">
-          <div class="col-12 col-lg-6">
+          <div v-if="pieTotal > 0" class="col-12 col-lg-6">
             <div class="apple-card chart-card h-100">
               <div class="card-header-clean">
                 <h5>Status Breakdown</h5>
               </div>
-              <div class="chart-area" :class="{ 'd-flex align-items-center justify-content-center': pieTotal === 0 }">
-                <canvas v-if="pieTotal > 0" ref="pieCanvas"></canvas>
-                <div v-else class="empty-state-chart text-muted">
-                  <i class="bi bi-pie-chart mb-2 fs-3 d-block opacity-50"></i>
-                  No Data
-                </div>
+              <div class="chart-area">
+                <canvas ref="pieCanvas"></canvas>
               </div>
             </div>
           </div>
-          <div class="col-12 col-lg-6">
+          <div v-if="barTotal > 0" class="col-12 col-lg-6">
             <div class="apple-card chart-card h-100">
               <div class="card-header-clean">
                 <h5>By Category</h5>
@@ -823,6 +819,8 @@ const barChartData = computed(() => ({
   }]
 }));
 
+const barTotal = computed(() => Object.values(categoryCounts.value).reduce((acc, v) => acc + (Number(v) || 0), 0));
+
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -864,7 +862,7 @@ function initCharts() {
       });
     }
 
-    if (barCanvas.value && barChartData.value) {
+    if (barTotal.value > 0 && barCanvas.value && barChartData.value) {
       barChart = new Chart(barCanvas.value, {
         type: 'bar',
         data: barChartData.value,
@@ -874,8 +872,8 @@ function initCharts() {
   });
 }
 
-watch(pieTotal, () => { if (!loading.value && !error.value) initCharts(); });
-watch(items, () => { if (!loading.value && !error.value && items.value.length > 0) initCharts(); }, { deep: true });
+watch([pieTotal, barTotal], () => { if (!loading.value && !error.value) initCharts(); });
+watch(items, () => { if (!loading.value && !error.value) initCharts(); }, { deep: true });
 
 onMounted(() => {
   fetchData();

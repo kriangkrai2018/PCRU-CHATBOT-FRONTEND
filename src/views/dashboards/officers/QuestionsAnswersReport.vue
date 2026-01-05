@@ -71,8 +71,8 @@
           </div>
         </div>
 
-        <!-- Charts Section -->
-        <div class="row mb-4 g-4">
+        <!-- Charts Section (hidden when no data) -->
+        <div v-if="chartTotal > 0" class="row mb-4 g-4">
           <div class="col-12 col-lg-6">
             <div class="apple-card chart-card h-100">
               <div class="card-header-clean">
@@ -452,6 +452,11 @@ const filteredQuestions = computed(() => {
   });
   
   return result;
+});
+
+// Chart total - used to hide charts when no data
+const chartTotal = computed(() => {
+  return allQuestions.value.length;
 });
 
 // pagination

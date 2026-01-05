@@ -21,8 +21,8 @@
       </div>
       <div v-else-if="error" class="alert alert-danger" role="alert">Error: {{ error }}</div>
       <div v-else>
-        <!-- Charts Section -->
-        <div class="row mb-3">
+        <!-- Charts Section (hidden when no data) -->
+        <div v-if="chartTotal > 0" class="row mb-3">
           <div class="col-lg-6">
             <div class="chart-container">
               <canvas ref="pieCanvas"></canvas>
@@ -303,6 +303,12 @@ const sorted = computed(() => {
     
     return comparison * order;
   });
+});
+
+// Chart total - used to hide charts when no data
+const chartTotal = computed(() => {
+  const arr = Array.isArray(items.value) ? items.value : [];
+  return arr.length;
 });
 
 const totalEntries = computed(() => sorted.value.length);

@@ -69,20 +69,16 @@
             </div>
           </div>
 
-          <!-- Charts Section -->
-          <div class="row mb-4 g-4">
+          <!-- Charts Section (hidden when no data) -->
+          <div v-if="hasChartData" class="row mb-4 g-4">
             <div class="col-12 col-lg-6">
               <div class="apple-card chart-card h-100">
                 <div class="card-header-clean">
                   <h5>สัดส่วนปัญหา (Reasons)</h5>
                 </div>
                 <div class="chart-area w-100">
-                  <div v-if="hasChartData" class="chart-wrapper">
+                  <div class="chart-wrapper">
                     <DoughnutChart :chart-data="pieData" :chart-options="chartOptions" style="height: 260px;" />
-                  </div>
-                  <div v-else class="empty-state-chart">
-                    <i class="bi bi-pie-chart text-muted opacity-25" style="font-size: 3rem;"></i>
-                    <p class="text-muted small mt-2">No data available</p>
                   </div>
                 </div>
               </div>
@@ -93,12 +89,8 @@
                   <h5>กิจกรรมย้อนหลัง (Activity)</h5>
                 </div>
                 <div class="chart-area w-100">
-                  <div v-if="hasChartData" class="chart-wrapper">
+                  <div class="chart-wrapper">
                     <BarChart :chart-data="barChartData" :chart-options="barChartOptions" style="height: 260px;" />
-                  </div>
-                  <div v-else class="empty-state-chart">
-                    <i class="bi bi-bar-chart text-muted opacity-25" style="font-size: 3rem;"></i>
-                    <p class="text-muted small mt-2">No activity recorded</p>
                   </div>
                 </div>
               </div>

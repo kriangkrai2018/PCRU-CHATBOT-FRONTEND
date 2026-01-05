@@ -53,8 +53,8 @@
           </div>
         </div>
 
-        <!-- Chart Section -->
-        <div class="row mb-4">
+        <!-- Chart Section (hidden when no data) -->
+        <div v-if="chartTotal > 0" class="row mb-4">
           <div class="col-12">
             <div class="apple-card chart-card">
               <div class="card-header-clean">
@@ -335,6 +335,12 @@ const fetchData = async () => {
     loading.value = false;
   }
 };
+
+// Chart total - used to hide charts when no data
+const chartTotal = computed(() => {
+  const logs = Array.isArray(items.value) ? items.value : [];
+  return logs.length;
+});
 
 // pagination
 const currentPage = ref(1);
