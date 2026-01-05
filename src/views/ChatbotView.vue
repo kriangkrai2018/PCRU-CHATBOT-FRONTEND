@@ -583,10 +583,11 @@
                   <!-- 💬 Apple-style Inline Feedback (subtle icons at bottom-right) -->
                   <!-- Show on ALL bot messages with answers (not just latest) -->
                   <!-- If feedback is locked (user asked new question), show only the selected one -->
+                  <!-- 🆕 Only show if keywordMatch is true (matched by keyword, not just text/title) -->
                   <div 
                     class="apple-feedback" 
                     :class="{ 'has-feedback': msg.feedback, 'is-locked': msg.feedbackLocked }"
-                    v-if="msg.type === 'bot' && !msg.typing && (msg.text || msg.results) && msg.found === true && !msg.multipleResults"
+                    v-if="msg.type === 'bot' && !msg.typing && (msg.text || msg.results) && msg.found === true && !msg.multipleResults && msg.keywordMatch !== false"
                   >
                     <!-- Like button: show if not locked, OR if locked and was liked -->
                     <button
@@ -1936,11 +1937,11 @@ export default {
         return
       }
       
-      // Only show tutorial if this is the first bot answer with feedback buttons
-      const botMessagesWithAnswer = this.messages.filter(m => m.sender === 'bot' && m.found === true && !m.multipleResults && !m._temp)
+      // Only show tutorial if this is the first bot answer with feedback buttons (and matched by keyword)
+      const botMessagesWithAnswer = this.messages.filter(m => m.sender === 'bot' && m.found === true && !m.multipleResults && !m._temp && m.keywordMatch !== false)
       console.log('🎓 Tutorial: Bot messages with answer count:', botMessagesWithAnswer.length)
       if (botMessagesWithAnswer.length !== 1) {
-        console.log('🎓 Tutorial: Not first answer, skipping')
+        console.log('🎓 Tutorial: Not first answer or not keywordMatch, skipping')
         return
       }
       
@@ -4416,6 +4417,7 @@ export default {
             let multipleResults = false
             let resQuestionId = null
             let resFound = false
+            let resKeywordMatch = true // 🆕 Default to true for backward compatibility
             // 🛡️ Quality Guard: New fields for handling low confidence and clarification
             let lowConfidence = false
             let needsClarification = false
@@ -4563,6 +4565,8 @@ export default {
                 }
                 // detect found flag (when backend has an exact answer)
                 if (typeof res.data.found !== 'undefined') resFound = !!res.data.found
+                // 🆕 capture keywordMatch flag (true if matched by keyword, false if only by text/title)
+                if (typeof res.data.keywordMatch !== 'undefined') resKeywordMatch = res.data.keywordMatch
                 // capture question id if backend returned it
                 if (res.data.questionId) {
                   // attach id into results or metadata as needed later
@@ -4620,6 +4624,8 @@ export default {
               // if (multipleResults) msg.multipleResults = true;
               if (resQuestionId) msg.questionId = resQuestionId;
               if (typeof resFound !== 'undefined') msg.found = resFound;
+              // 🆕 Store keywordMatch flag (true if matched by keyword, false if only by text/title)
+              msg.keywordMatch = resKeywordMatch;
               // 📌 Set question title if available
               if (res.data && res.data.title) msg.title = res.data.title;
               
@@ -4656,7 +4662,8 @@ export default {
                 msg.typing = false;
                 
                 // 🎓 Trigger feedback tutorial when feedback buttons appear for the first time
-                if (msg.found === true && !msg.multipleResults) {
+                // Only trigger if keywordMatch is true (not just text/title match)
+                if (msg.found === true && !msg.multipleResults && msg.keywordMatch !== false) {
                   this.$nextTick(() => {
                     setTimeout(() => this.startFeedbackTutorial(), 500)
                   })
@@ -5494,13 +5501,14 @@ export default {
     
     // 🤖 Auto-like previous bot message when user asks new question without giving feedback
     // Also lock ALL previous feedbacks so user can't change them
+    // 🆕 Only auto-like if keywordMatch is true (not just text/title match)
     autoLikePreviousBotMessage() {
       let autoLikedOne = false
       
       // Loop through all messages and lock all bot messages with feedback
       for (let i = this.messages.length - 1; i >= 0; i--) {
         const msg = this.messages[i]
-        if (msg.type === 'bot' && msg.found === true && !msg.multipleResults) {
+        if (msg.type === 'bot' && msg.found === true && !msg.multipleResults && msg.keywordMatch !== false) {
           // If no feedback yet and we haven't auto-liked one, auto-like this one
           if (!msg.feedback && !autoLikedOne) {
             msg.feedback = 'like'
