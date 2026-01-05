@@ -783,6 +783,88 @@
       </div>
     </transition>
 
+    <!-- 🎓 Feedback Tutorial Overlay (Heyday-style) -->
+    <transition name="tutorial-fade">
+      <div 
+        v-if="showFeedbackTutorial" 
+        class="tutorial-overlay"
+        @click.self="skipTutorial"
+      >
+        <!-- Blur background except spotlight -->
+        <div class="tutorial-backdrop"></div>
+        
+        <!-- Spotlight highlight -->
+        <div 
+          class="tutorial-spotlight"
+          :style="tutorialSpotlightStyle"
+        ></div>
+        
+        <!-- Tutorial tooltip/card -->
+        <div class="tutorial-card" :style="tutorialCardStyle">
+          <div class="tutorial-step-indicator">
+            <span 
+              v-for="n in tutorialSteps.length" 
+              :key="n"
+              class="step-dot"
+              :class="{ active: n - 1 === tutorialStep, completed: n - 1 < tutorialStep }"
+            ></span>
+          </div>
+          
+          <div class="tutorial-content">
+            <div class="tutorial-icon">{{ currentTutorialData.icon }}</div>
+            <h3 class="tutorial-title">{{ currentTutorialData.title }}</h3>
+            <p class="tutorial-description">{{ currentTutorialData.description }}</p>
+          </div>
+          
+          <div class="tutorial-actions">
+            <button 
+              v-if="tutorialStep > 0" 
+              class="tutorial-btn secondary"
+              @click="prevTutorialStep"
+            >
+              ย้อนกลับ
+            </button>
+            <button 
+              v-if="tutorialStep < tutorialSteps.length - 1"
+              class="tutorial-btn primary"
+              @click="nextTutorialStep"
+            >
+              ถัดไป
+            </button>
+            <button 
+              v-else
+              class="tutorial-btn primary"
+              @click="completeTutorial"
+            >
+              เข้าใจแล้ว! ✨
+            </button>
+          </div>
+          
+          <button class="tutorial-skip" @click="skipTutorial">
+            ข้าม
+          </button>
+        </div>
+        
+        <!-- Pointing arrow -->
+        <div 
+          v-if="currentTutorialData.showArrow"
+          class="tutorial-arrow"
+          :style="tutorialArrowStyle"
+        >
+          <svg width="40" height="60" viewBox="0 0 40 60">
+            <path 
+              d="M20 0 L20 45 M10 35 L20 45 L30 35" 
+              stroke="white" 
+              stroke-width="3" 
+              fill="none"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+    </transition>
+
     <!-- ChatbotHelpView Component -->
     <ChatbotHelpView :visible="showHelpModal" @close="closeHelpModal" />
   </div>
@@ -983,9 +1065,98 @@ export default {
       introPhase: 0, // 0: not started, 1: logo, 2: particles, 3: reveal
       isFirstTimeUser: false,
       hasShownIntroThisSession: false, // ใช้ variable แทน storage เพื่อให้ refresh แล้วแสดง intro ใหม่
+      // 🎓 Feedback Tutorial (Heyday-style onboarding)
+      showFeedbackTutorial: false,
+      tutorialStep: 0,
+      tutorialTargetRect: null,
+      tutorialSteps: [
+        {
+          icon: '👋',
+          title: 'ยินดีต้อนรับ!',
+          description: 'เมื่อบอทตอบคำถามเสร็จ จะมีปุ่มให้คุณบอกความรู้สึกได้',
+          target: null,
+          showArrow: false
+        },
+        {
+          icon: '👍',
+          title: 'กดถูกใจ',
+          description: 'หากคำตอบตรงใจ กดปุ่มนี้เพื่อบอกว่าเราตอบได้ดี',
+          target: 'like',
+          showArrow: true
+        },
+        {
+          icon: '👎',
+          title: 'กดไม่ถูกใจ',
+          description: 'หากต้องการให้ปรับปรุง กดปุ่มนี้แล้วบอกเหตุผลได้เลย',
+          target: 'dislike',
+          showArrow: true
+        },
+        {
+          icon: '✨',
+          title: 'พร้อมใช้งาน!',
+          description: 'ขอบคุณที่ช่วยให้เราพัฒนาได้ดียิ่งขึ้น',
+          target: null,
+          showArrow: false
+        }
+      ],
     }
   },
   computed: {
+    // 🎓 Tutorial computed properties
+    currentTutorialData() {
+      return this.tutorialSteps[this.tutorialStep] || this.tutorialSteps[0]
+    },
+    tutorialSpotlightStyle() {
+      if (!this.tutorialTargetRect) {
+        return { display: 'none' }
+      }
+      const padding = 8
+      return {
+        top: `${this.tutorialTargetRect.top - padding}px`,
+        left: `${this.tutorialTargetRect.left - padding}px`,
+        width: `${this.tutorialTargetRect.width + padding * 2}px`,
+        height: `${this.tutorialTargetRect.height + padding * 2}px`
+      }
+    },
+    tutorialCardStyle() {
+      if (!this.tutorialTargetRect) {
+        // Center the card when no target
+        return {
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)'
+        }
+      }
+      // Position card above or below the spotlight
+      const cardHeight = 220
+      const viewportHeight = window.innerHeight
+      const targetTop = this.tutorialTargetRect.top
+      
+      if (targetTop > viewportHeight / 2) {
+        // Target is in lower half, show card above
+        return {
+          bottom: `${viewportHeight - targetTop + 20}px`,
+          left: '50%',
+          transform: 'translateX(-50%)'
+        }
+      } else {
+        // Target is in upper half, show card below
+        return {
+          top: `${this.tutorialTargetRect.bottom + 20}px`,
+          left: '50%',
+          transform: 'translateX(-50%)'
+        }
+      }
+    },
+    tutorialArrowStyle() {
+      if (!this.tutorialTargetRect) {
+        return { display: 'none' }
+      }
+      return {
+        top: `${this.tutorialTargetRect.top - 65}px`,
+        left: `${this.tutorialTargetRect.left + this.tutorialTargetRect.width / 2 - 20}px`
+      }
+    },
     // PWA Standalone footer style - reduce padding since no Safari URL bar
     pwaFooterStyle() {
       if (this.isPwaStandalone) {
@@ -1706,6 +1877,85 @@ export default {
     }
   },
   methods: {
+    // 🎓 Tutorial Methods
+    startFeedbackTutorial() {
+      // Check if user has seen tutorial before
+      const hasSeenTutorial = localStorage.getItem('pcru_feedback_tutorial_seen')
+      if (hasSeenTutorial) return
+      
+      this.tutorialStep = 0
+      this.tutorialTargetRect = null
+      this.showFeedbackTutorial = true
+      this.updateTutorialTarget()
+    },
+    
+    updateTutorialTarget() {
+      const step = this.tutorialSteps[this.tutorialStep]
+      if (!step || !step.target) {
+        this.tutorialTargetRect = null
+        return
+      }
+      
+      this.$nextTick(() => {
+        let targetEl = null
+        
+        if (step.target === 'like') {
+          // Find the like button in apple-feedback
+          targetEl = document.querySelector('.apple-feedback .apple-feedback-btn:first-child')
+        } else if (step.target === 'dislike') {
+          // Find the dislike button in apple-feedback
+          targetEl = document.querySelector('.apple-feedback .apple-feedback-wrapper .apple-feedback-btn')
+        }
+        
+        if (targetEl) {
+          const rect = targetEl.getBoundingClientRect()
+          this.tutorialTargetRect = {
+            top: rect.top,
+            left: rect.left,
+            width: rect.width,
+            height: rect.height,
+            bottom: rect.bottom,
+            right: rect.right
+          }
+        } else {
+          this.tutorialTargetRect = null
+        }
+      })
+    },
+    
+    nextTutorialStep() {
+      if (this.tutorialStep < this.tutorialSteps.length - 1) {
+        this.tutorialStep++
+        this.updateTutorialTarget()
+      }
+    },
+    
+    prevTutorialStep() {
+      if (this.tutorialStep > 0) {
+        this.tutorialStep--
+        this.updateTutorialTarget()
+      }
+    },
+    
+    completeTutorial() {
+      this.showFeedbackTutorial = false
+      localStorage.setItem('pcru_feedback_tutorial_seen', 'true')
+      // Light haptic feedback
+      if (navigator.vibrate) navigator.vibrate(50)
+    },
+    
+    skipTutorial() {
+      this.showFeedbackTutorial = false
+      localStorage.setItem('pcru_feedback_tutorial_seen', 'true')
+    },
+    
+    // Reset tutorial (for testing)
+    resetFeedbackTutorial() {
+      localStorage.removeItem('pcru_feedback_tutorial_seen')
+      this.tutorialStep = 0
+      this.tutorialTargetRect = null
+    },
+    
     // 🔐 FAB Long Press Handlers (using Pointer Events)
     onFabPointerDown(e) {
       console.log('[FAB] pointerdown', e.pointerType);
@@ -4324,6 +4574,13 @@ export default {
                 await this.streamText(botIndex, botText);
                 // Set typing to false after streaming is complete (so feedback buttons appear)
                 msg.typing = false;
+                
+                // 🎓 Trigger feedback tutorial when feedback buttons appear for the first time
+                if (msg.found === true && !msg.multipleResults) {
+                  this.$nextTick(() => {
+                    setTimeout(() => this.startFeedbackTutorial(), 500)
+                  })
+                }
               } else {
                 // No text to stream, so typing is already done
                 msg.typing = false;
