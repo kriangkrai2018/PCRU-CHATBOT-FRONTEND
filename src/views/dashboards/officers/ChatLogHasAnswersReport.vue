@@ -199,6 +199,8 @@ const props = defineProps({
   barChartOptions: Object,
 });
 
+const emit = defineEmits(['ws-status']);
+
 const { appContext } = getCurrentInstance();
 const $axios = appContext.config.globalProperties.$axios;
 
@@ -408,8 +410,14 @@ onMounted(() => {
         fetchData();
       }
     },
-    onOpen: () => { wsConnected.value = true; },
-    onClose: () => { wsConnected.value = false; },
+    onOpen: () => { 
+      wsConnected.value = true; 
+      emit('ws-status', true);
+    },
+    onClose: () => { 
+      wsConnected.value = false; 
+      emit('ws-status', false);
+    },
   });
 });
 

@@ -261,6 +261,16 @@ const defaultDatePresets = [
 
 const datePresets = computed(() => props.customDatePresets || defaultDatePresets);
 
+function normalizeDatePreset(value) {
+  const allowed = Array.isArray(props.customDatePresets) && props.customDatePresets.length > 0
+    ? props.customDatePresets
+    : defaultDatePresets;
+
+  const v = (value ?? '').toString().trim();
+  if (!v) return 'all';
+  return allowed.some(p => p && p.value === v) ? v : 'all';
+}
+
 const localFilters = ref({
   sortBy: props.defaultSortBy,
   sortOrder: props.defaultSortOrder,
@@ -274,9 +284,18 @@ const localFilters = ref({
   ...props.modelValue
 });
 
+// Ensure 'ช่วงเวลา' defaults to 'ทั้งหมด' even if parent passes empty/invalid preset
+localFilters.value.datePreset = normalizeDatePreset(localFilters.value.datePreset);
+
 // Sync with parent's modelValue
 watch(() => props.modelValue, (newVal) => {
   localFilters.value = { ...localFilters.value, ...newVal };
+  localFilters.value.datePreset = normalizeDatePreset(localFilters.value.datePreset);
+}, { deep: true });
+
+// If available presets change, keep current selection valid
+watch(datePresets, () => {
+  localFilters.value.datePreset = normalizeDatePreset(localFilters.value.datePreset);
 }, { deep: true });
 
 const hasActiveFilters = computed(() => {
@@ -355,8 +374,7 @@ function setStatus(status) {
 }
 
 function setDatePreset(preset) {
-  console.log('🔹 setDatePreset called with:', preset);
-  localFilters.value.datePreset = preset;
+  localFilters.value.datePreset = normalizeDatePreset(preset);
   
   // Calculate actual date range based on preset
   const now = new Date();

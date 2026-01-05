@@ -5,19 +5,29 @@
     <main class="main-content flex-grow-1">
       <div class="apple-dashboard">
         <div class="dashboard-hero">
-          <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
-            <AnimatedToggleIcon :isOpen="isMobileSidebarOpen" />
-          </button>
-          <div class="hero-heading">
-            <div class="hero-icon apple-icon-box indigo-gradient">
-              <svg class="chat-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                <path d="M9 10h6m-6 4h4" />
-              </svg>
+          <div class="hero-content">
+            <button class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
+              <AnimatedToggleIcon :isOpen="isMobileSidebarOpen" />
+            </button>
+            <div class="hero-heading">
+              <div class="hero-icon apple-icon-box indigo-gradient">
+                <svg class="chat-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                  <path d="M9 10h6m-6 4h4" />
+                </svg>
+              </div>
+              <div class="hero-text">
+                <h3 class="page-title m-0">Chat Logs (Has Answers)</h3>
+                <span class="text-secondary small">User queries matched with answers</span>
+              </div>
             </div>
-            <div class="hero-text">
-              <h3 class="page-title m-0">Chat Logs (Has Answers)</h3>
-              <span class="text-secondary small">User queries matched with answers</span>
+          </div>
+          
+          <!-- Live Status Badge -->
+          <div class="hero-status">
+            <div class="apple-status-badge" :class="{ 'online': wsConnected }">
+              <span class="status-dot"></span>
+              <span>{{ wsConnected ? 'Live' : 'Offline' }}</span>
             </div>
           </div>
         </div>
@@ -26,6 +36,7 @@
             :questionsTitleMap="questionsTitleMap"
             :chartOptions="chartOptions"
             :barChartOptions="barChartOptions"
+            @ws-status="handleWsStatus"
           />
         </div>
       </div>
@@ -53,7 +64,13 @@ const { $axios } = appContext.config.globalProperties;
 const userInfoObject = ref({});
 const userType = ref('');
 const questionsAnswers = ref([]);
+const wsConnected = ref(false);
 let _savedSidebarCollapsed = null;
+
+// Handle WebSocket status from child component
+const handleWsStatus = (status) => {
+  wsConnected.value = status;
+};
 
 const toggleSidebar = () => {
   const sb = document.querySelector('.sidebar');
@@ -140,10 +157,58 @@ onUnmounted(() => {
 .dashboard-hero {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 1rem;
   padding: 1rem;
   background: white;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.hero-content {
+  display: flex;
+  align-items: center;
+}
+
+.hero-status {
+  margin-left: auto;
+}
+
+/* Apple Status Badge */
+.apple-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #86868b;
+  transition: all 0.3s ease;
+}
+
+.apple-status-badge.online {
+  background: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #86868b;
+  transition: all 0.3s ease;
+}
+
+.apple-status-badge.online .status-dot {
+  background: #34c759;
+  box-shadow: 0 0 8px rgba(52, 199, 89, 0.6);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 /* Apple Icon Box */
