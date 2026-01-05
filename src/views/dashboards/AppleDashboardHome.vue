@@ -38,7 +38,7 @@
 
     <!-- Apple Stats Cards -->
     <transition-group name="stat-pop" tag="div" class="stats-grid" appear>
-      <div v-for="(stat, idx) in visibleStats" :key="stat.key" class="stat-card" :style="{ '--delay': `${idx * 80}ms` }">
+      <router-link v-for="(stat, idx) in visibleStats" :key="stat.key" :to="stat.link" class="stat-card" :style="{ '--delay': `${idx * 80}ms` }">
         <div class="stat-icon-wrap">
           <div class="stat-icon" :style="{ background: stat.color }">
             <DashboardIcons :name="stat.icon" />
@@ -54,7 +54,7 @@
         <svg class="stat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none">
           <path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-      </div>
+      </router-link>
     </transition-group>
 
     <!-- Charts Section - Apple Style -->
@@ -322,22 +322,22 @@ const roleBadgeClass = computed(() => normalizedRole.value);
 // Stats based on role
 const visibleStats = computed(() => {
   const allStats = [
-    { key: 'categories', icon: 'categories', label: 'Categories', value: categories.value.length, color: 'linear-gradient(135deg, #007AFF, #5AC8FA)' },
-    { key: 'qa', icon: 'qa', label: 'Q&A', value: questionsAnswers.value.length, color: 'linear-gradient(135deg, #34C759, #30D158)' },
-    { key: 'keywords', icon: 'keywords', label: 'Keywords', value: keywords.value.length, color: 'linear-gradient(135deg, #FF9500, #FFCC00)' },
-    { key: 'feedbacks', icon: 'feedbacks', label: 'Feedbacks', value: feedbacks.value.length, color: 'linear-gradient(135deg, #AF52DE, #BF5AF2)' },
-    { key: 'chatHas', icon: 'answered', label: 'Answered', value: chatHas.value.length, color: 'linear-gradient(135deg, #5856D6, #AF52DE)' },
-    { key: 'chatNo', icon: 'noanswer', label: 'No Answer', value: chatNo.value.length, color: 'linear-gradient(135deg, #FF3B30, #FF9500)' },
-    { key: 'organizations', icon: 'organizations', label: 'Organizations', value: organizationsCount.value, color: 'linear-gradient(135deg, #007AFF, #5AC8FA)' },
-    { key: 'officers', icon: 'officers', label: 'Officers', value: officersCount.value, color: 'linear-gradient(135deg, #34C759, #30D158)' },
+    { key: 'categories', icon: 'categories', label: 'Categories', value: categories.value.length, color: 'linear-gradient(135deg, #007AFF, #5AC8FA)', link: '/reports/categories' },
+    { key: 'qa', icon: 'qa', label: 'Q&A', value: questionsAnswers.value.length, color: 'linear-gradient(135deg, #34C759, #30D158)', link: '/reports/questionsanswers' },
+    { key: 'keywords', icon: 'keywords', label: 'Keywords', value: keywords.value.length, color: 'linear-gradient(135deg, #FF9500, #FFCC00)', link: '/reports/keywords' },
+    { key: 'feedbacks', icon: 'feedbacks', label: 'Feedbacks', value: feedbacks.value.length, color: 'linear-gradient(135deg, #AF52DE, #BF5AF2)', link: '/reports/feedbacks' },
+    { key: 'chatHas', icon: 'answered', label: 'Answered', value: chatHas.value.length, color: 'linear-gradient(135deg, #5856D6, #AF52DE)', link: '/reports/chatlog-has-answers' },
+    { key: 'chatNo', icon: 'noanswer', label: 'No Answer', value: chatNo.value.length, color: 'linear-gradient(135deg, #FF3B30, #FF9500)', link: '/reports/chatlog-no-answers' },
+    { key: 'organizations', icon: 'organizations', label: 'Organizations', value: organizationsCount.value, color: 'linear-gradient(135deg, #007AFF, #5AC8FA)', link: '/manageorganizations' },
+    { key: 'officers', icon: 'officers', label: 'Officers', value: officersCount.value, color: 'linear-gradient(135deg, #34C759, #30D158)', link: '/manageofficers' },
   ];
 
   switch (normalizedRole.value) {
     case 'superadmin':
       // Superadmin: show counts separated for Admins and Super Admins
       return [
-        { key: 'admins', icon: 'officers', label: 'Admins', value: adminsCount.value, color: 'linear-gradient(135deg, #FF9500, #FFCC00)' },
-        { key: 'superadmins', icon: 'officers', label: 'Super Admins', value: superadminsCount.value, color: 'linear-gradient(135deg, #FF3B30, #FF7A7A)' },
+        { key: 'admins', icon: 'officers', label: 'Admins', value: adminsCount.value, color: 'linear-gradient(135deg, #FF9500, #FFCC00)', link: '/manageadmins' },
+        { key: 'superadmins', icon: 'officers', label: 'Super Admins', value: superadminsCount.value, color: 'linear-gradient(135deg, #FF3B30, #FF7A7A)', link: '/manageadmins' },
       ];
     case 'admin':
       // Admin should only see organization and officer related stats
@@ -997,6 +997,8 @@ onUnmounted(() => {
   position: relative;
   animation: statPop 0.6s var(--transition-spring) backwards;
   animation-delay: var(--delay, 0ms);
+  text-decoration: none;
+  color: inherit;
 }
 
 .stat-card:hover {

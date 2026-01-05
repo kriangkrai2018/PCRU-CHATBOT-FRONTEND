@@ -109,7 +109,7 @@
               v-model="localFilters.dateFrom" 
               @change="emitChange"
               class="filter-date"
-              :max="localFilters.dateTo || undefined"
+              :max="dateFromMax"
             />
           </div>
           <span class="date-separator">ถึง</span>
@@ -119,7 +119,8 @@
               v-model="localFilters.dateTo" 
               @change="emitChange"
               class="filter-date"
-              :min="localFilters.dateFrom || undefined"
+              :min="dateToMin"
+              :max="dateToMax"
             />
           </div>
         </div>
@@ -287,11 +288,77 @@ const localFilters = ref({
 // Ensure 'ช่วงเวลา' defaults to 'ทั้งหมด' even if parent passes empty/invalid preset
 localFilters.value.datePreset = normalizeDatePreset(localFilters.value.datePreset);
 
+// Validate date range - ensure dateFrom is not after dateTo
+function validateDateRange() {
+  const from = localFilters.value.dateFrom;
+  const to = localFilters.value.dateTo;
+  
+  if (from && to) {
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+    
+    // If dateFrom is after dateTo, adjust
+    if (fromDate > toDate) {
+      // Keep the most recently changed value and adjust the other
+      localFilters.value.dateTo = from;
+    }
+  }
+}
+
+// Watch for date changes and validate
+watch(() => localFilters.value.dateFrom, (newFrom) => {
+  if (newFrom && localFilters.value.dateTo) {
+    const fromDate = new Date(newFrom);
+    const toDate = new Date(localFilters.value.dateTo);
+    if (fromDate > toDate) {
+      // dateFrom changed to be after dateTo, so clear dateTo or set it to dateFrom
+      localFilters.value.dateTo = newFrom;
+    }
+  }
+});
+
+watch(() => localFilters.value.dateTo, (newTo) => {
+  if (newTo && localFilters.value.dateFrom) {
+    const fromDate = new Date(localFilters.value.dateFrom);
+    const toDate = new Date(newTo);
+    if (toDate < fromDate) {
+      // dateTo changed to be before dateFrom, so adjust dateFrom
+      localFilters.value.dateFrom = newTo;
+    }
+  }
+});
+
 // Sync with parent's modelValue
 watch(() => props.modelValue, (newVal) => {
   localFilters.value = { ...localFilters.value, ...newVal };
   localFilters.value.datePreset = normalizeDatePreset(localFilters.value.datePreset);
 }, { deep: true });
+
+// Today's date for date range limits
+const today = computed(() => new Date().toISOString().split('T')[0]);
+
+// Computed max for dateFrom: minimum of (dateTo, today for past direction)
+const dateFromMax = computed(() => {
+  if (props.datePresetDirection === 'future') {
+    return localFilters.value.dateTo || undefined;
+  }
+  // Past direction: can't select future dates, and can't exceed dateTo
+  const todayStr = today.value;
+  const toStr = localFilters.value.dateTo;
+  if (toStr && toStr < todayStr) return toStr;
+  return todayStr;
+});
+
+// Computed min for dateTo: dateFrom
+const dateToMin = computed(() => localFilters.value.dateFrom || undefined);
+
+// Computed max for dateTo: today for past direction
+const dateToMax = computed(() => {
+  if (props.datePresetDirection === 'future') {
+    return undefined;
+  }
+  return today.value;
+});
 
 // If available presets change, keep current selection valid
 watch(datePresets, () => {

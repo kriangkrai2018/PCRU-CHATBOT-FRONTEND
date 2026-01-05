@@ -4309,17 +4309,6 @@ export default {
                 if (chatLogId) {
                   msg.chatLogId = chatLogId;
                 }
-                try {
-                  if (msg.found === true && !msg.feedback) {
-                    msg.feedback = 'like';
-                    if (this.$axios && chatLogId) {
-                      const payloadFb = { chatLogId: chatLogId, liked: true };
-                      await this.$axios.post('/chat/feedback', payloadFb).catch(err => console.warn('Failed to send auto-like feedback', err));
-                    }
-                  }
-                } catch (e) {
-                  // ignore
-                }
               }
 
 
@@ -5671,21 +5660,8 @@ export default {
       }
     }
     ,
-    // Open PDF and auto-like the answer (user can still click 'unlike' afterward)
+    // Open PDF in a new tab (feedback is only set by explicit user action)
     openPdf(msg, url) {
-      try {
-        if (!msg) return
-        // set feedback to like explicitly
-        msg.feedback = 'like'
-        this.saveChatHistory()
-        // send feedback to backend if available using chatLogId
-        if (this.$axios && msg.chatLogId) {
-          const payload = { chatLogId: msg.chatLogId, liked: true }
-          this.$axios.post('/chat/feedback', payload).catch(err => console.warn('Failed to send feedback', err))
-        }
-      } catch (e) {
-        // ignore
-      }
       // open PDF in new tab after updating state
       try {
         // Resolve relative URLs using API base

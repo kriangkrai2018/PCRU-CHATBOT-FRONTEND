@@ -455,8 +455,9 @@ export default {
   margin-bottom: 24px;
 }
 .hero-icon-wrapper {
-  width: 80.90px;
+  width: 64px;
   height: 64px;
+  min-width: 64px;
   border-radius: 20px;
   display: flex;
   align-items: center;
