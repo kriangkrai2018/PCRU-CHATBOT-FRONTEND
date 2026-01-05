@@ -200,21 +200,6 @@
             </button>
           </transition>
 
-          <!-- 🎯 Scroll to Top Tutorial Tooltip -->
-          <transition name="scroll-tutorial-fade">
-            <div v-if="showScrollTutorial" class="scroll-tutorial-tooltip">
-              <div class="scroll-tutorial-arrow"></div>
-              <div class="scroll-tutorial-content">
-                <div class="scroll-tutorial-icon">⬆️</div>
-                <div class="scroll-tutorial-text">
-                  <strong>กดเพื่อเลื่อนขึ้นไปด้านบน</strong>
-                  <span>กลับไปดูหมวดหมู่และข้อความก่อนหน้าได้เลย</span>
-                </div>
-              </div>
-              <button class="scroll-tutorial-dismiss" @click="dismissScrollTutorial">เข้าใจแล้ว</button>
-            </div>
-          </transition>
-
           <div class="panel-body" :class="{ 'anchor-bottom': anchorBottom }" @scroll.passive="handleScroll" ref="panelBody">
             
 
@@ -924,6 +909,63 @@
       </div>
     </transition>
 
+    <!-- 🎯 Scroll to Top Tutorial Overlay (Spotlight-style like feedback) -->
+    <transition name="tutorial-fade">
+      <div 
+        v-if="showScrollTutorial" 
+        class="scroll-tutorial-overlay"
+        @click.self="dismissScrollTutorial"
+      >
+        <!-- Blur background -->
+        <div class="tutorial-backdrop"></div>
+        
+        <!-- Spotlight on scroll button -->
+        <div 
+          class="scroll-tutorial-spotlight"
+          :style="scrollTutorialSpotlightStyle"
+        >
+          <!-- Clone of scroll button inside spotlight -->
+          <div class="spotlight-scroll-btn-clone">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M12 19V5M5 12l7-7 7 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        
+        <!-- Tutorial card -->
+        <div class="scroll-tutorial-card" :style="scrollTutorialCardStyle">
+          <div class="tutorial-content">
+            <div class="tutorial-icon">⬆️</div>
+            <h3 class="tutorial-title">เลื่อนขึ้นด้านบน</h3>
+            <p class="tutorial-description">กดปุ่มนี้เพื่อกลับไปดูหมวดหมู่และข้อความก่อนหน้าได้เลยค่ะ</p>
+          </div>
+          
+          <div class="tutorial-actions">
+            <button class="tutorial-btn primary" @click="dismissScrollTutorial">
+              เข้าใจแล้ว! ✨
+            </button>
+          </div>
+        </div>
+        
+        <!-- Arrow pointing to button -->
+        <div 
+          class="scroll-tutorial-arrow-pointer"
+          :style="scrollTutorialArrowStyle"
+        >
+          <svg width="30" height="50" viewBox="0 0 30 50">
+            <path 
+              d="M15 50 L15 10 M5 20 L15 10 L25 20" 
+              stroke="white" 
+              stroke-width="3" 
+              fill="none"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+    </transition>
+
     <!-- ChatbotHelpView Component -->
     <ChatbotHelpView :visible="showHelpModal" @close="closeHelpModal" />
   </div>
@@ -968,6 +1010,7 @@ export default {
       // Scroll to top tutorial
       showScrollTutorial: false,
       scrollTutorialShown: false,
+      scrollButtonRect: null, // Position of scroll-to-top button for spotlight
       anchorBottom: true,
       botAvatar: null,
       userType: '',
@@ -1237,6 +1280,43 @@ export default {
       return {
         top: `${this.tutorialTargetRect.top - 65}px`,
         left: `${this.tutorialTargetRect.left + this.tutorialTargetRect.width / 2 - 20}px`
+      }
+    },
+    // 🎯 Scroll Tutorial Computed Styles
+    scrollTutorialSpotlightStyle() {
+      if (!this.scrollButtonRect) {
+        return { display: 'none' }
+      }
+      const padding = 10
+      return {
+        top: `${this.scrollButtonRect.top - padding}px`,
+        left: `${this.scrollButtonRect.left - padding}px`,
+        width: `${this.scrollButtonRect.width + padding * 2}px`,
+        height: `${this.scrollButtonRect.height + padding * 2}px`
+      }
+    },
+    scrollTutorialCardStyle() {
+      if (!this.scrollButtonRect) {
+        return {
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)'
+        }
+      }
+      // Card appears above the button (button is usually at bottom-left)
+      return {
+        bottom: `${window.innerHeight - this.scrollButtonRect.top + 20}px`,
+        left: `${this.scrollButtonRect.left + this.scrollButtonRect.width / 2}px`,
+        transform: 'translateX(-50%)'
+      }
+    },
+    scrollTutorialArrowStyle() {
+      if (!this.scrollButtonRect) {
+        return { display: 'none' }
+      }
+      return {
+        top: `${this.scrollButtonRect.top - 55}px`,
+        left: `${this.scrollButtonRect.left + this.scrollButtonRect.width / 2 - 15}px`
       }
     },
     // PWA Standalone footer style - reduce padding since no Safari URL bar
@@ -2076,7 +2156,25 @@ export default {
     
     dismissScrollTutorial() {
       this.showScrollTutorial = false
+      this.scrollButtonRect = null
       localStorage.setItem('pcru_scroll_tutorial_seen', 'true')
+    },
+    
+    updateScrollButtonRect() {
+      const scrollBtn = document.querySelector('.scroll-to-top-btn')
+      if (scrollBtn) {
+        const rect = scrollBtn.getBoundingClientRect()
+        this.scrollButtonRect = {
+          top: rect.top,
+          left: rect.left,
+          width: rect.width,
+          height: rect.height,
+          bottom: rect.bottom,
+          right: rect.right
+        }
+      } else {
+        this.scrollButtonRect = null
+      }
     },
     
     // Reset tutorial (for testing)
@@ -6201,11 +6299,15 @@ export default {
           // Only show after feedback tutorial has been completed
           if (!this.scrollTutorialShown && this.messages.length > 0 && !localStorage.getItem('pcru_scroll_tutorial_seen') && localStorage.getItem('pcru_feedback_tutorial_seen')) {
             this.scrollTutorialShown = true
-            this.showScrollTutorial = true
-            // Auto-dismiss after 6 seconds
+            // Capture scroll button position for spotlight
+            this.$nextTick(() => {
+              this.updateScrollButtonRect()
+              this.showScrollTutorial = true
+            })
+            // Auto-dismiss after 8 seconds
             setTimeout(() => {
               this.dismissScrollTutorial()
-            }, 6000)
+            }, 8000)
           }
         } else if (currentScrollTop > this.lastScrollTop) {
           // Hide when scrolling down
