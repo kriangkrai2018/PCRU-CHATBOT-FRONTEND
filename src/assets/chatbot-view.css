@@ -811,6 +811,360 @@ html.keyboard-open .close-circle {
     transform 0.6s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
+/* ==========================================================================
+   🎮 GRAPHICS QUALITY BUTTON (Apple-style)
+   ========================================================================== */
+.graphics-quality-wrapper {
+  position: absolute;
+  right: max(60px, calc(60px + env(safe-area-inset-right, 0px)));
+  top: max(14px, calc(14px + env(safe-area-inset-top, 0px)));
+  z-index: 1001;
+}
+
+.graphics-quality-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.graphics-quality-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+.graphics-quality-btn.active {
+  background: rgba(139, 76, 184, 0.35);
+  border-color: rgba(139, 76, 184, 0.4);
+}
+
+.gfx-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.gfx-icon-wrapper svg {
+  width: 18px;
+  height: 18px;
+  color: white;
+}
+
+.gfx-label {
+  display: none;
+}
+
+/* Graphics Menu Dropdown */
+.graphics-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: auto;
+  min-width: 200px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border-radius: 16px;
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.15),
+    0 2px 10px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+  z-index: 2000;
+}
+
+.gfx-menu-header {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.gfx-menu-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d1d1f;
+  letter-spacing: -0.2px;
+}
+
+.gfx-menu-subtitle {
+  display: block;
+  font-size: 11px;
+  color: #86868b;
+  margin-top: 2px;
+}
+
+.gfx-menu-options {
+  padding: 6px;
+}
+
+.gfx-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.gfx-option:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.gfx-option.selected {
+  background: rgba(139, 76, 184, 0.1);
+}
+
+.gfx-option-icon {
+  font-size: 18px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+}
+
+.gfx-option-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.gfx-option-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1d1d1f;
+}
+
+.gfx-option-desc {
+  font-size: 11px;
+  color: #86868b;
+}
+
+.gfx-option-check {
+  font-size: 14px;
+  font-weight: 600;
+  color: #8B4CB8;
+}
+
+/* Animation */
+.gfx-menu-fade-enter-active,
+.gfx-menu-fade-leave-active {
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.gfx-menu-fade-enter-from,
+.gfx-menu-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .graphics-menu {
+  background: rgba(44, 44, 46, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.4),
+    0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .gfx-menu-header {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .gfx-menu-title {
+  color: #f5f5f7;
+}
+
+[data-theme="dark"] .gfx-menu-subtitle {
+  color: #98989d;
+}
+
+[data-theme="dark"] .gfx-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .gfx-option.selected {
+  background: rgba(139, 76, 184, 0.2);
+}
+
+[data-theme="dark"] .gfx-option-icon {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .gfx-option-label {
+  color: #f5f5f7;
+}
+
+[data-theme="dark"] .gfx-option-desc {
+  color: #98989d;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .graphics-quality-wrapper {
+    right: max(56px, calc(56px + env(safe-area-inset-right, 0px)));
+    top: max(15px, calc(15px + env(safe-area-inset-top, 0px)));
+  }
+  
+  .graphics-quality-btn {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .gfx-icon-wrapper svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .graphics-menu {
+    right: 0;
+    left: auto;
+    min-width: 180px;
+  }
+}
+
+/* ==========================================================================
+   🎮 GRAPHICS QUALITY CSS EFFECTS
+   ========================================================================== */
+
+/* Low quality - MAXIMUM PERFORMANCE MODE */
+
+/* Hide all decorative elements */
+.gfx-low .snowflake,
+.gfx-low .intro-particle,
+.gfx-low .chat-panel::before,
+.gfx-low .chat-panel::after,
+.gfx-low .intro-glow,
+.gfx-low .intro-ring,
+.gfx-low .sparkle,
+.gfx-low .glow-effect,
+.gfx-low .animated-bg,
+.gfx-low .floating-shapes {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Remove ALL blur and backdrop effects for performance */
+.gfx-low,
+.gfx-low *,
+.gfx-low *::before,
+.gfx-low *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+  animation: none !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition: none !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
+/* Simplify shadows for performance */
+.gfx-low .message-bubble,
+.gfx-low .chat-panel,
+.gfx-low .backdrop-card,
+.gfx-low .category-btn,
+.gfx-low .sub-item,
+.gfx-low .suggestion-btn {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+/* Solid backgrounds instead of semi-transparent */
+.gfx-low .chat-panel {
+  background: #ffffff !important;
+}
+
+.gfx-low.dark-mode .chat-panel,
+body.dark-mode.gfx-low .chat-panel {
+  background: #1c1c1e !important;
+}
+
+/* 🔒 FORCE CONTENT TO STAY VISIBLE - override all hiding */
+.gfx-low .help-content,
+.gfx-low .help-section,
+.gfx-low .help-item,
+.gfx-low .panel-body,
+.gfx-low .panel-body > *,
+.gfx-low .message-wrapper,
+.gfx-low .message-text,
+.gfx-low .message-bubble,
+.gfx-low .category-btn,
+.gfx-low .sub-item,
+.gfx-low .suggestion-btn,
+.gfx-low .panel-footer,
+.gfx-low .panel-top,
+.gfx-low button,
+.gfx-low input,
+.gfx-low textarea {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.gfx-low .panel-body,
+.gfx-low .help-content,
+.gfx-low .help-section,
+.gfx-low .help-item,
+.gfx-low .message-text {
+  display: block !important;
+}
+
+.gfx-low .messages-container,
+.gfx-low .categories-scroll,
+.gfx-low .sub-items-container {
+  display: flex !important;
+}
+
+/* Medium quality - reduced effects */
+.gfx-medium .snowflake,
+.gfx-medium .intro-particle {
+  display: none !important;
+}
+
+.gfx-medium .chat-panel::before,
+.gfx-medium .chat-panel::after {
+  opacity: 0.3 !important;
+  filter: blur(60px) !important;
+}
+
+.gfx-medium .message-bubble,
+.gfx-medium .backdrop-card {
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+/* High quality - all effects enabled (default) */
+.gfx-high .snowflake,
+.gfx-high .intro-particle {
+  display: block;
+}
+
 .clear-chat-btn { 
   position:absolute; 
   right: max(12px, calc(12px + env(safe-area-inset-right, 0px)));

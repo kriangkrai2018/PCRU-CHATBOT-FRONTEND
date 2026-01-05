@@ -721,4 +721,43 @@ export default {
   .apple-panel { width: 100%; border-left: none; }
   .feature-grid { grid-template-columns: 1fr; }
 }
+
+/* 🎮 Graphics Low Mode - ensure content stays visible */
+:global(.gfx-low) .apple-help-overlay,
+:global(.gfx-low) .apple-panel,
+:global(.gfx-low) .panel-content,
+:global(.gfx-low) .apple-section,
+:global(.gfx-low) .feature-card,
+:global(.gfx-low) .section-hero,
+:global(.gfx-low) .step-item,
+:global(.gfx-low) .category-tag {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+:global(.gfx-low) .panel-content {
+  display: block !important;
+}
+
+:global(.gfx-low) .feature-grid {
+  display: grid !important;
+}
+
+:global(.gfx-low) .apple-help-overlay * {
+  animation: none !important;
+  transition: none !important;
+}
+
+:global(.gfx-low) .apple-panel {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+}
+
+:global(.gfx-low) .backdrop {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+}
 </style>

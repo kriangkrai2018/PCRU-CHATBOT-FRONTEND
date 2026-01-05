@@ -164,6 +164,75 @@
               <span class="theme-label">{{ themeDisplayOnly }}</span>
             </button>
             
+            <!-- 🎮 Graphics Quality Button (Apple-style) -->
+            <div class="graphics-quality-wrapper">
+              <button 
+                class="graphics-quality-btn" 
+                :class="{ active: showGraphicsMenu }"
+                @click.stop="toggleGraphicsMenu"
+                :title="'กราฟิก: ' + graphicsQualityLabel"
+                aria-label="ปรับคุณภาพกราฟิก"
+              >
+                <div class="gfx-icon-wrapper">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <!-- GPU/Performance icon -->
+                    <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                    <path d="M7 10h2v4H7zM11 9h2v5h-2zM15 11h2v3h-2z" fill="currentColor">
+                      <animate v-if="graphicsQuality === 'high'" attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite"/>
+                    </path>
+                  </svg>
+                </div>
+                <span class="gfx-label">{{ graphicsQualityLabel }}</span>
+              </button>
+              
+              <!-- Graphics Menu Dropdown -->
+              <transition name="gfx-menu-fade">
+                <div v-if="showGraphicsMenu" class="graphics-menu" @click.stop>
+                  <div class="gfx-menu-header">
+                    <span class="gfx-menu-title">คุณภาพกราฟิก</span>
+                    <span class="gfx-menu-subtitle">สำหรับเครื่องที่ช้า</span>
+                  </div>
+                  <div class="gfx-menu-options">
+                    <button 
+                      class="gfx-option" 
+                      :class="{ selected: graphicsQuality === 'low' }"
+                      @click="setGraphicsQuality('low')"
+                    >
+                      <div class="gfx-option-icon">🔋</div>
+                      <div class="gfx-option-content">
+                        <span class="gfx-option-label">ต่ำ</span>
+                        <span class="gfx-option-desc">ประหยัดแบตเตอรี่</span>
+                      </div>
+                      <div v-if="graphicsQuality === 'low'" class="gfx-option-check">✓</div>
+                    </button>
+                    <button 
+                      class="gfx-option" 
+                      :class="{ selected: graphicsQuality === 'medium' }"
+                      @click="setGraphicsQuality('medium')"
+                    >
+                      <div class="gfx-option-icon">⚖️</div>
+                      <div class="gfx-option-content">
+                        <span class="gfx-option-label">ปานกลาง</span>
+                        <span class="gfx-option-desc">สมดุลดี</span>
+                      </div>
+                      <div v-if="graphicsQuality === 'medium'" class="gfx-option-check">✓</div>
+                    </button>
+                    <button 
+                      class="gfx-option" 
+                      :class="{ selected: graphicsQuality === 'high' }"
+                      @click="setGraphicsQuality('high')"
+                    >
+                      <div class="gfx-option-icon">✨</div>
+                      <div class="gfx-option-content">
+                        <span class="gfx-option-label">สูง</span>
+                        <span class="gfx-option-desc">เอฟเฟกต์เต็มที่</span>
+                      </div>
+                      <div v-if="graphicsQuality === 'high'" class="gfx-option-check">✓</div>
+                    </button>
+                  </div>
+                </div>
+              </transition>
+            </div>
 
             <div class="overlay-backdrop-2"></div>
           </div>
@@ -576,7 +645,8 @@
                       </div>
                     </div>
 
-                  <div v-if="msg.type === 'bot' && msg.typing" class="typing-indicator">
+                  <!-- แสดง typing indicator เฉพาะตอนที่ยังไม่มีข้อความ (ไม่แสดงตอน streaming) -->
+                  <div v-if="msg.type === 'bot' && msg.typing && !msg.text" class="typing-indicator">
                     <span></span><span></span><span></span>
                   </div>
                   
@@ -1093,6 +1163,9 @@ export default {
       protectedKeywords: new Set(),
       allProtectedWords: new Set(), // 🛡️ All protected words from keywords, negative keywords, synonyms
       segmenter: null,
+      // 🎮 Graphics quality setting for user (low, medium, high)
+      graphicsQuality: 'high', // 'low' | 'medium' | 'high'
+      showGraphicsMenu: false,
       // 🔐 Long press to admin login
       longPressTimer: null,
       longPressCountdown: 0,
@@ -1323,6 +1396,12 @@ export default {
       if (this.theme === 'light') return 'Light';
       if (this.theme === 'dark') return 'Dark';
       return 'Auto';
+    },
+    // 🎮 Graphics quality label for display
+    graphicsQualityLabel() {
+      if (this.graphicsQuality === 'low') return 'ต่ำ';
+      if (this.graphicsQuality === 'medium') return 'กลาง';
+      return 'สูง';
     }
   },
   
@@ -1337,6 +1416,9 @@ export default {
       console.warn('Intl.Segmenter not supported, frontend stopword filtering will be disabled.');
     }
     this.fetchStopwordsAndKeywords();
+
+    // 🎮 Load user's graphics quality preference
+    this.loadGraphicsQuality();
 
     // Check if it's winter season FIRST (November - February in Thailand)
     this.checkWinterSeason()
@@ -2430,6 +2512,87 @@ export default {
       } else {
         return 'สลับเป็นโหมดสว่าง'
       }
+    },
+
+    // 🎮 Graphics Quality Methods
+    toggleGraphicsMenu() {
+      this.showGraphicsMenu = !this.showGraphicsMenu;
+      
+      // Close menu when clicking outside
+      if (this.showGraphicsMenu) {
+        setTimeout(() => {
+          document.addEventListener('click', this.closeGraphicsMenu, { once: true });
+        }, 0);
+      }
+    },
+    
+    closeGraphicsMenu() {
+      this.showGraphicsMenu = false;
+    },
+    
+    setGraphicsQuality(quality) {
+      this.graphicsQuality = quality;
+      this.showGraphicsMenu = false;
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem('chatbot_graphics_quality', quality);
+      } catch (e) { /* ignore */ }
+      
+      // Apply graphics settings
+      this.applyGraphicsQuality(quality);
+    },
+    
+    applyGraphicsQuality(quality) {
+      const root = document.documentElement;
+      const body = document.body;
+      
+      // Remove all quality classes first
+      root.classList.remove('gfx-low', 'gfx-medium', 'gfx-high');
+      body.classList.remove('gfx-low', 'gfx-medium', 'gfx-high');
+      
+      // Add current quality class
+      root.classList.add(`gfx-${quality}`);
+      body.classList.add(`gfx-${quality}`);
+      
+      // Apply settings based on quality
+      if (quality === 'low') {
+        // Low: Disable all effects
+        this.snowEnabled = false;
+        this.particleEnabled = false;
+        this.shadowEnabled = false;
+        this.animationEnabled = false;
+        body.classList.add('no-effects');
+      } else if (quality === 'medium') {
+        // Medium: Some effects, reduced
+        this.snowEnabled = false;
+        this.particleEnabled = false;
+        this.shadowEnabled = true;
+        this.animationEnabled = true;
+        body.classList.remove('no-effects');
+      } else {
+        // High: All effects enabled
+        this.snowEnabled = this.isWinterSeason;
+        this.particleEnabled = true;
+        this.shadowEnabled = true;
+        this.animationEnabled = true;
+        body.classList.remove('no-effects');
+      }
+      
+      // Regenerate snowflakes if needed
+      if (this.snowEnabled) {
+        this.generateSnowflakeStyles();
+      }
+    },
+    
+    loadGraphicsQuality() {
+      try {
+        const saved = localStorage.getItem('chatbot_graphics_quality');
+        if (saved && ['low', 'medium', 'high'].includes(saved)) {
+          this.graphicsQuality = saved;
+          this.applyGraphicsQuality(saved);
+        }
+      } catch (e) { /* ignore */ }
     },
 
     // Resolve 'auto' to an actual theme based on local time (day -> light, night -> dark)
