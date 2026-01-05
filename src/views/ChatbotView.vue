@@ -96,142 +96,94 @@
                 </path>
               </svg>
             </button>
-            <button v-if="showClearBtn" class="clear-chat-btn" @click="clearChatHistory" aria-label="clear chat" title="ล้างประวัติการสนทนา">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="trash-icon">
-                <path class="trash-lid" d="M3 6h18" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="20" stroke-dashoffset="20">
-                  <animate attributeName="stroke-dashoffset" to="0" dur="0.3s" fill="freeze"/>
-                </path>
-                <path class="trash-body" d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="60" stroke-dashoffset="60">
-                  <animate attributeName="stroke-dashoffset" to="0" dur="0.4s" begin="0.2s" fill="freeze"/>
-                </path>
-                <path class="trash-handle" d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="30" stroke-dashoffset="30">
-                  <animate attributeName="stroke-dashoffset" to="0" dur="0.3s" begin="0.1s" fill="freeze"/>
-                </path>
-              </svg>
-            </button>
-
-            <!-- Theme toggle button -->
-            <button class="theme-toggle-btn" :class="{ expanded: isExpanded }" @click.stop="toggleTheme" :title="getThemeButtonTitle()" :aria-pressed="theme === 'dark'">
-              <div class="icon-wrapper">
-                <!-- Sun when dark (toggle to auto) -->
-                <svg v-if="theme === 'dark'" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="sun-icon">
-                  <circle cx="12" cy="12" r="4" fill="#FFD54F">
-                    <animate attributeName="r" values="4;5;4" dur="2s" repeatCount="indefinite"/>
-                  </circle>
-                  <g stroke="#FFD54F" stroke-width="1.6" stroke-linecap="round">
-                    <path d="M12 2v2">
-                      <animate attributeName="d" values="M12 2v2;M12 1.5v3;M12 2v2" dur="2.5s" repeatCount="indefinite"/>
-                    </path>
-                    <path d="M12 20v2">
-                      <animate attributeName="d" values="M12 20v2;M12 19.5v3;M12 20v2" dur="2.5s" repeatCount="indefinite"/>
-                    </path>
-                    <path d="M2 12h2">
-                      <animate attributeName="d" values="M2 12h2;M1.5 12h3;M2 12h2" dur="2.5s" repeatCount="indefinite"/>
-                    </path>
-                    <path d="M20 12h2">
-                      <animate attributeName="d" values="M20 12h2;M19.5 12h3;M20 12h2" dur="2.5s" repeatCount="indefinite"/>
-                    </path>
-                    <path d="M4.9 4.9l1.4 1.4" />
-                    <path d="M17.7 17.7l1.4 1.4" />
-                    <path d="M4.9 19.1l1.4-1.4" />
-                    <path d="M17.7 6.3l1.4-1.4" />
-                  </g>
-                </svg>
-                <!-- Moon when light (toggle to dark) -->
-                <svg v-else-if="theme === 'light'" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="moon-icon">
-                  <path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" fill="#000000">
-                    <animate attributeName="opacity" values="0.8;1;0.8" dur="2.5s" repeatCount="indefinite"/>
-                  </path>
-                  <circle cx="15" cy="8" r="0.8" fill="#FFD54F" opacity="0.6">
-                    <animate attributeName="cy" values="8;7;8" dur="2s" repeatCount="indefinite"/>
-                    <animate attributeName="opacity" values="0.4;0.8;0.4" dur="2s" repeatCount="indefinite"/>
-                  </circle>
-                </svg>
-                <!-- Auto icon when auto (toggle to light) -->
-                <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="auto-icon">
-                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none">
-                    <animate attributeName="r" values="9;10;9" dur="2s" repeatCount="indefinite"/>
-                    <animate attributeName="stroke-width" values="1.5;1;1.5" dur="2s" repeatCount="indefinite"/>
-                  </circle>
-                  <circle cx="12" cy="12" r="2" fill="currentColor">
-                    <animate attributeName="r" values="2;2.5;2" dur="2s" repeatCount="indefinite"/>
-                  </circle>
-                  <path d="M12 4v2M12 18v2M4 12h2M18 12h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                    <animate attributeName="stroke-width" values="1.5;2;1.5" dur="2s" repeatCount="indefinite"/>
-                  </path>
-                </svg>
-              </div>
-              <span class="theme-label">{{ themeDisplayOnly }}</span>
-            </button>
             
-            <!-- 🎮 Graphics Quality Button (Apple-style) -->
-            <div class="graphics-quality-wrapper">
+            <!-- 🎯 More Options Menu (3-dot button) -->
+            <div class="more-options-wrapper">
               <button 
-                class="graphics-quality-btn" 
-                :class="{ active: showGraphicsMenu }"
-                @click.stop="toggleGraphicsMenu"
-                :title="'กราฟิก: ' + graphicsQualityLabel"
-                aria-label="ปรับคุณภาพกราฟิก"
+                class="more-options-btn" 
+                :class="{ active: showMoreMenu }"
+                @click.stop="toggleMoreMenu"
+                aria-label="ตัวเลือกเพิ่มเติม"
+                title="ตัวเลือกเพิ่มเติม"
               >
-                <div class="gfx-icon-wrapper">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <!-- GPU/Performance icon -->
-                    <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                    <path d="M7 10h2v4H7zM11 9h2v5h-2zM15 11h2v3h-2z" fill="currentColor">
-                      <animate v-if="graphicsQuality === 'high'" attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite"/>
-                    </path>
-                  </svg>
+                <div class="dots-container">
+                  <span class="dot" :class="{ 'dot-animated': graphicsQuality !== 'low' }"></span>
+                  <span class="dot" :class="{ 'dot-animated': graphicsQuality !== 'low' }"></span>
+                  <span class="dot" :class="{ 'dot-animated': graphicsQuality !== 'low' }"></span>
                 </div>
-                <span class="gfx-label">{{ graphicsQualityLabel }}</span>
               </button>
               
-              <!-- Graphics Menu Dropdown -->
-              <transition name="gfx-menu-fade">
-                <div v-if="showGraphicsMenu" class="graphics-menu" @click.stop>
-                  <div class="gfx-menu-header">
-                    <span class="gfx-menu-title">คุณภาพกราฟิก</span>
-                    <span class="gfx-menu-subtitle">สำหรับเครื่องที่ช้า</span>
+              <!-- Dropdown Menu Items (slide down one by one) -->
+              <div class="more-menu-items" :class="{ open: showMoreMenu, closing: isMoreMenuClosing }">
+                <!-- Item 1: Theme Toggle -->
+                <button 
+                  class="more-menu-item theme-item"
+                  :class="{ visible: moreMenuItemsVisible[0], hiding: moreMenuItemsHiding[0] }"
+                  @click="toggleThemeFromMenu"
+                  :title="getThemeButtonTitle()"
+                >
+                  <div class="menu-item-icon">
+                    <!-- Sun when dark -->
+                    <svg v-if="theme === 'dark'" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="4" fill="#FFD54F">
+                        <animate v-if="graphicsQuality !== 'low'" attributeName="r" values="4;5;4" dur="2s" repeatCount="indefinite"/>
+                      </circle>
+                      <g stroke="#FFD54F" stroke-width="1.6" stroke-linecap="round">
+                        <path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/>
+                        <path d="M4.9 4.9l1.4 1.4"/><path d="M17.7 17.7l1.4 1.4"/>
+                        <path d="M4.9 19.1l1.4-1.4"/><path d="M17.7 6.3l1.4-1.4"/>
+                      </g>
+                    </svg>
+                    <!-- Moon when light -->
+                    <svg v-else-if="theme === 'light'" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" fill="#1c1c1e">
+                        <animate v-if="graphicsQuality !== 'low'" attributeName="opacity" values="0.8;1;0.8" dur="2.5s" repeatCount="indefinite"/>
+                      </path>
+                    </svg>
+                    <!-- Auto icon -->
+                    <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                      <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                      <path d="M12 4v2M12 18v2M4 12h2M18 12h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
                   </div>
-                  <div class="gfx-menu-options">
-                    <button 
-                      class="gfx-option" 
-                      :class="{ selected: graphicsQuality === 'low' }"
-                      @click="setGraphicsQuality('low')"
-                    >
-                      <div class="gfx-option-icon">🔋</div>
-                      <div class="gfx-option-content">
-                        <span class="gfx-option-label">ต่ำ</span>
-                        <span class="gfx-option-desc">ประหยัดแบตเตอรี่</span>
-                      </div>
-                      <div v-if="graphicsQuality === 'low'" class="gfx-option-check">✓</div>
-                    </button>
-                    <button 
-                      class="gfx-option" 
-                      :class="{ selected: graphicsQuality === 'medium' }"
-                      @click="setGraphicsQuality('medium')"
-                    >
-                      <div class="gfx-option-icon">⚖️</div>
-                      <div class="gfx-option-content">
-                        <span class="gfx-option-label">ปานกลาง</span>
-                        <span class="gfx-option-desc">สมดุลดี</span>
-                      </div>
-                      <div v-if="graphicsQuality === 'medium'" class="gfx-option-check">✓</div>
-                    </button>
-                    <button 
-                      class="gfx-option" 
-                      :class="{ selected: graphicsQuality === 'high' }"
-                      @click="setGraphicsQuality('high')"
-                    >
-                      <div class="gfx-option-icon">✨</div>
-                      <div class="gfx-option-content">
-                        <span class="gfx-option-label">สูง</span>
-                        <span class="gfx-option-desc">เอฟเฟกต์เต็มที่</span>
-                      </div>
-                      <div v-if="graphicsQuality === 'high'" class="gfx-option-check">✓</div>
-                    </button>
+                  <span class="menu-item-label">{{ themeDisplayOnly }}</span>
+                </button>
+                
+                <!-- Item 2: Graphics Quality (tap to cycle) -->
+                <button 
+                  class="more-menu-item graphics-item"
+                  :class="{ visible: moreMenuItemsVisible[1], hiding: moreMenuItemsHiding[1] }"
+                  @click="cycleGraphicsQuality"
+                  title="กดเพื่อเปลี่ยนคุณภาพกราฟิก"
+                >
+                  <div class="menu-item-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                      <path d="M7 10h2v4H7zM11 9h2v5h-2zM15 11h2v3h-2z" fill="currentColor"/>
+                    </svg>
                   </div>
-                </div>
-              </transition>
+                  <span class="menu-item-label">{{ currentGraphicsOption.icon }} {{ currentGraphicsOption.label }}</span>
+                </button>
+                
+                <!-- Item 3: Clear Chat -->
+                <button 
+                  v-if="showClearBtn"
+                  class="more-menu-item clear-item"
+                  :class="{ visible: moreMenuItemsVisible[2], hiding: moreMenuItemsHiding[2] }"
+                  @click="clearChatFromMenu"
+                  title="ล้างประวัติการสนทนา"
+                >
+                  <div class="menu-item-icon trash-icon-wrapper">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </div>
+                  <span class="menu-item-label">ล้างแชท</span>
+                </button>
+              </div>
             </div>
 
             <div class="overlay-backdrop-2"></div>
@@ -1166,6 +1118,16 @@ export default {
       // 🎮 Graphics quality setting for user (low, medium, high)
       graphicsQuality: 'high', // 'low' | 'medium' | 'high'
       showGraphicsMenu: false,
+      // 🎯 More Options Menu (3-dot menu)
+      showMoreMenu: false,
+      isMoreMenuClosing: false,
+      moreMenuItemsVisible: [false, false, false],
+      moreMenuItemsHiding: [false, false, false],
+      graphicsOptions: [
+        { value: 'low', label: 'ต่ำ', icon: '🔋' },
+        { value: 'medium', label: 'กลาง', icon: '⚖️' },
+        { value: 'high', label: 'สูง', icon: '✨' }
+      ],
       // 🔐 Long press to admin login
       longPressTimer: null,
       longPressCountdown: 0,
@@ -1177,7 +1139,7 @@ export default {
       showIntroAnimation: false,
       introPhase: 0, // 0: not started, 1: logo, 2: particles, 3: reveal
       isFirstTimeUser: false,
-      hasShownIntroThisSession: false, // ใช้ variable แทน storage เพื่อให้ refresh แล้วแสดง intro ใหม่
+      hasShownIntroEver: false, // ใช้ localStorage เพื่อให้ intro แสดงเฉพาะครั้งแรกที่มาใช้ระบบ
       // 🎓 Feedback Tutorial (Heyday-style onboarding)
       showFeedbackTutorial: false,
       tutorialStep: 0,
@@ -1402,6 +1364,10 @@ export default {
       if (this.graphicsQuality === 'low') return 'ต่ำ';
       if (this.graphicsQuality === 'medium') return 'กลาง';
       return 'สูง';
+    },
+    // 🎮 Current graphics option object (for display in menu)
+    currentGraphicsOption() {
+      return this.graphicsOptions.find(opt => opt.value === this.graphicsQuality) || this.graphicsOptions[2];
     }
   },
   
@@ -1799,7 +1765,7 @@ export default {
     // BUT skip if intro animation will be shown (intro will set visible = true after completing)
     if (import.meta.env.VITE_AUTO_OPEN_CHATBOT === 'true' || (this.$route && this.$route.name === 'chatbot')) {
       // Only auto-open if intro animation won't be shown
-      if (this.hasShownIntroThisSession) {
+      if (this.hasShownIntroEver) {
         this.visible = true
       }
       // Otherwise, intro animation will set visible = true when it completes
@@ -1868,7 +1834,7 @@ export default {
     }
     window.removeEventListener('resize', this.updateAnchoring)
     window.removeEventListener('resize', this.handleKeyboardDetection)
-    document.removeEventListener('click', this.handleOutsideClick)
+    document.removeEventListener('click', this.handleOutsideClick, true)
     
     // 🍎 Remove visibility change listener
     if (this._handleVisibilityChange) {
@@ -2244,8 +2210,14 @@ export default {
       return isMobileUA && isSmallScreen;
     },
     checkFirstTimeUser() {
-      // ตรวจสอบว่าเคยเห็น intro ใน session นี้แล้วหรือยัง (ใช้ variable ไม่ใช่ storage)
-      return !this.hasShownIntroThisSession;
+      // ตรวจสอบว่าเคยเห็น intro แล้วหรือยัง (ใช้ localStorage เพื่อให้แสดงเฉพาะครั้งแรก)
+      try {
+        const hasShown = localStorage.getItem('chatbot_intro_shown');
+        this.hasShownIntroEver = hasShown === 'true';
+      } catch (e) {
+        this.hasShownIntroEver = false;
+      }
+      return !this.hasShownIntroEver;
     },
     checkAndShowFirstVisitIntro() {
       // ทั้ง Desktop และ Mobile: แสดง intro อัตโนมัติทุกครั้งที่โหลดหน้า/รีเฟรช
@@ -2283,8 +2255,11 @@ export default {
       this.showIntroAnimation = false;
       this.introPhase = 0;
       
-      // บันทึกว่าเคยเห็น intro แล้วใน session นี้
-      this.hasShownIntroThisSession = true;
+      // บันทึกว่าเคยเห็น intro แล้ว (ใช้ localStorage)
+      this.hasShownIntroEver = true;
+      try {
+        localStorage.setItem('chatbot_intro_shown', 'true');
+      } catch (e) { /* ignore */ }
       
       // หลังจาก intro จบ → เปิด chatbot
       this.$nextTick(() => {
@@ -2431,12 +2406,11 @@ export default {
         if (stored === 'dark' || stored === 'light' || stored === 'auto') {
           this.theme = stored
         } else {
-          // Respect system preference if nothing persisted
-          const prefers = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-          this.theme = prefers ? 'dark' : 'light'
+          // User ใหม่: เริ่มต้นด้วย 'auto' เสมอ
+          this.theme = 'auto'
         }
       } catch (e) {
-        this.theme = 'light'
+        this.theme = 'auto'
       }
       
       // Determine actual theme to apply (resolve 'auto' to 'light' or 'dark')
@@ -2528,6 +2502,86 @@ export default {
     
     closeGraphicsMenu() {
       this.showGraphicsMenu = false;
+    },
+    
+    // 🎯 More Options Menu Methods
+    toggleMoreMenu() {
+      if (this.showMoreMenu) {
+        this.closeMoreMenu();
+      } else {
+        this.openMoreMenu();
+      }
+    },
+    
+    openMoreMenu() {
+      this.showMoreMenu = true;
+      this.isMoreMenuClosing = false;
+      this.moreMenuItemsVisible = [false, false, false];
+      this.moreMenuItemsHiding = [false, false, false];
+      
+      // Staggered animation: show items one by one
+      const delay = this.graphicsQuality === 'low' ? 0 : 80;
+      setTimeout(() => { this.moreMenuItemsVisible = [true, false, false]; }, delay * 0);
+      setTimeout(() => { this.moreMenuItemsVisible = [true, true, false]; }, delay * 1);
+      setTimeout(() => { this.moreMenuItemsVisible = [true, true, true]; }, delay * 2);
+      
+      // Close when clicking anywhere outside - use nextTick to avoid immediate trigger
+      this.$nextTick(() => {
+        document.addEventListener('click', this.handleOutsideClick, true);
+      });
+    },
+    
+    closeMoreMenu() {
+      if (this.isMoreMenuClosing) return;
+      this.isMoreMenuClosing = true;
+      
+      // Remove listener immediately
+      document.removeEventListener('click', this.handleOutsideClick, true);
+      
+      // Staggered closing: hide items one by one (reverse order)
+      const delay = this.graphicsQuality === 'low' ? 0 : 60;
+      this.moreMenuItemsHiding = [false, false, true];
+      setTimeout(() => { 
+        this.moreMenuItemsVisible = [true, true, false];
+        this.moreMenuItemsHiding = [false, true, false];
+      }, delay * 1);
+      setTimeout(() => { 
+        this.moreMenuItemsVisible = [true, false, false];
+        this.moreMenuItemsHiding = [true, false, false];
+      }, delay * 2);
+      setTimeout(() => { 
+        this.moreMenuItemsVisible = [false, false, false];
+        this.moreMenuItemsHiding = [false, false, false];
+        this.showMoreMenu = false;
+        this.isMoreMenuClosing = false;
+      }, delay * 3);
+    },
+    
+    handleOutsideClick(e) {
+      const wrapper = document.querySelector('.more-options-wrapper');
+      if (wrapper && !wrapper.contains(e.target)) {
+        this.closeMoreMenu();
+      }
+    },
+    
+    toggleThemeFromMenu() {
+      this.toggleTheme();
+      // Don't close menu - let user see the change
+    },
+    
+    cycleGraphicsQuality() {
+      // Cycle: low -> medium -> high -> low
+      const order = ['low', 'medium', 'high'];
+      const currentIndex = order.indexOf(this.graphicsQuality);
+      const nextIndex = (currentIndex + 1) % order.length;
+      this.setGraphicsQuality(order[nextIndex]);
+    },
+    
+    clearChatFromMenu() {
+      this.closeMoreMenu();
+      setTimeout(() => {
+        this.clearChatHistory();
+      }, 150);
     },
     
     setGraphicsQuality(quality) {
@@ -2923,6 +2977,15 @@ export default {
     async streamText(messageIndex, textToStream) {
       if (!textToStream || !this.messages[messageIndex]) return;
 
+      // 🎮 Low/Medium graphics: แสดงข้อความทันทีโดยไม่ typing
+      if (this.graphicsQuality === 'low' || this.graphicsQuality === 'medium') {
+        this.messages[messageIndex].text = textToStream;
+        this.$nextTick(() => {
+          this.scrollToBottomInstant();
+        });
+        return;
+      }
+
       this.messages[messageIndex].text = ''; // Clear existing text
       // Determine typing delay (ms per character). Prefer explicit VITE_BOT_TYPING_DELAY_MS, fallback to legacy VITE_BOT_TYPING_SPEED.
       const envDelay = import.meta.env.VITE_BOT_TYPING_DELAY_MS ?? import.meta.env.VITE_BOT_TYPING_SPEED
@@ -2982,6 +3045,12 @@ export default {
       await this.streamToVariable('welcomeInstruction', instr)
     },
     async streamToVariable(key, text) {
+      // 🎮 Low/Medium graphics: แสดงข้อความทันทีโดยไม่ typing
+      if (this.graphicsQuality === 'low' || this.graphicsQuality === 'medium') {
+        this[key] = text;
+        return;
+      }
+
       // Use the same typed delay config as streamText
       const envDelay = import.meta.env.VITE_BOT_TYPING_DELAY_MS ?? import.meta.env.VITE_BOT_TYPING_SPEED
       let typingDelay = parseInt(envDelay || '12', 10)
