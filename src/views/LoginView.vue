@@ -1,5 +1,14 @@
 <template>
-  <form ref="loginForm" @submit.prevent="handleLogin" class="needs-validation" novalidate>
+  <div class="login-page-wrapper">
+    <!-- Apple-style Back Button -->
+    <router-link to="/" class="apple-back-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      <span>กลับ</span>
+    </router-link>
+
+    <form ref="loginForm" @submit.prevent="handleLogin" class="needs-validation" novalidate>
                 <div class="">
                     <header class="fs-1 fw-bold mb-4 text-center text-lg-start">
                         Login
@@ -62,11 +71,62 @@
                     
                 </div>
   </form>
+  </div>
 </template>
 
 
 <style>
   @import '@/assets/main.css';
+
+  .login-page-wrapper {
+    position: relative;
+  }
+
+  /* Apple-style Back Button */
+  .apple-back-btn {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 16px 8px 10px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #007AFF;
+    text-decoration: none;
+    border-radius: 20px;
+    background: rgba(0, 122, 255, 0.08);
+    transition: all 0.2s ease;
+  }
+
+  .apple-back-btn:hover {
+    background: rgba(0, 122, 255, 0.15);
+    color: #0056b3;
+    transform: translateX(-2px);
+  }
+
+  .apple-back-btn:active {
+    transform: scale(0.96);
+  }
+
+  .apple-back-btn svg {
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 768px) {
+    .apple-back-btn {
+      top: -50px;
+      padding: 6px 12px 6px 8px;
+      font-size: 14px;
+    }
+    
+    .apple-back-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
   #floatingInput::-webkit-outer-spin-button,
   #floatingInput::-webkit-inner-spin-button {
       -webkit-appearance: none;
