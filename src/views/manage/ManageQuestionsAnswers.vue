@@ -574,7 +574,19 @@
               </div>
 
               <div class="apple-input-group">
-                <label>Keywords</label>
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                  <label class="mb-0">Keywords</label>
+                  <button 
+                    v-if="canGenerateKeywords" 
+                    type="button" 
+                    class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+                    @click="generateKeywordsFromContent"
+                    :disabled="isGeneratingKeywords"
+                  >
+                    <i class="bi" :class="isGeneratingKeywords ? 'bi-hourglass-split' : 'bi-magic'"></i>
+                    <span>{{ isGeneratingKeywords ? 'กำลังสร้าง...' : 'Gen Keywords' }}</span>
+                  </button>
+                </div>
                 <div class="keyword-input-wrapper">
                   <input type="text" class="apple-input pe-5" v-model="keywordInput" placeholder="พิมพ์แล้วกด Enter หรือ +" @keydown.enter.prevent="addKeyword" />
                   <button class="btn-icon-absolute" type="button" @click="addKeyword"><i class="bi bi-plus-lg"></i></button>
@@ -622,7 +634,7 @@ const router = useRouter();
 const { appContext } = getCurrentInstance();
 const $axios = appContext.config.globalProperties.$axios;
 const $swal = appContext.config.globalProperties.$swal;
-const { success: toastSuccess, error: toastError, warning: toastWarning } = useAppleToast();
+const { success: toastSuccess, error: toastError, warning: toastWarning, info: toastInfo } = useAppleToast();
 const { confirmDelete, confirmAction, ConfirmModalComponent } = useConfirm();
 
 const userInfoObject = ref({});
@@ -803,6 +815,115 @@ watch(answerType, (newVal) => {
     gpsCoords.value = '';
   }
 });
+
+// 🆕 Auto-add category name as keyword when selecting category
+watch(() => formData.value.CategoriesID, (newCatId, oldCatId) => {
+  if (!newCatId || newCatId === oldCatId) return;
+  
+  // Find category name
+  const selectedCat = categoriesList.value.find(c => String(c.CategoriesID) === String(newCatId));
+  if (selectedCat && selectedCat.CategoriesName) {
+    const catName = selectedCat.CategoriesName.trim();
+    // Add to keywords if not already present
+    if (catName && !formData.value.keywords.includes(catName)) {
+      formData.value.keywords.push(catName);
+    }
+  }
+});
+
+// 🆕 Computed: Check if can generate keywords (both title and answer are filled)
+const canGenerateKeywords = computed(() => {
+  const hasTitle = formData.value.QuestionTitle && formData.value.QuestionTitle.trim().length > 0;
+  const hasAnswer = formData.value.QuestionText && formData.value.QuestionText.trim().length > 0;
+  return hasTitle && hasAnswer;
+});
+
+const isGeneratingKeywords = ref(false);
+
+// 🆕 Function: Generate keywords from title and answer
+async function generateKeywordsFromContent() {
+  if (!canGenerateKeywords.value) return;
+  
+  isGeneratingKeywords.value = true;
+  
+  try {
+    // Combine title and answer
+    const title = formData.value.QuestionTitle.trim();
+    const answer = formData.value.QuestionText.trim();
+    const combinedText = `${title} ${answer}`;
+    
+    // Call tokenizer API to extract keywords
+    const response = await $axios.post('/tokenize', { text: combinedText });
+    
+    if (response.data && response.data.tokens) {
+      // Filter tokens: keep only meaningful words (length > 1, not numbers only)
+      const tokens = response.data.tokens
+        .filter(t => t && t.length > 1 && !/^\d+$/.test(t))
+        .map(t => t.trim())
+        .filter(Boolean);
+      
+      // Add unique tokens to keywords
+      let addedCount = 0;
+      tokens.forEach(token => {
+        if (!formData.value.keywords.includes(token)) {
+          formData.value.keywords.push(token);
+          addedCount++;
+        }
+      });
+      
+      if (addedCount > 0) {
+        toastSuccess(`เพิ่ม ${addedCount} keywords สำเร็จ`);
+      } else {
+        toastInfo('Keywords ที่สร้างมีอยู่ในรายการแล้ว');
+      }
+    } else {
+      // Fallback: simple word extraction
+      const words = combinedText
+        .split(/[\s,.、。\n]+/)
+        .map(w => w.trim())
+        .filter(w => w.length > 1 && !/^\d+$/.test(w));
+      
+      let addedCount = 0;
+      words.slice(0, 10).forEach(word => {
+        if (!formData.value.keywords.includes(word)) {
+          formData.value.keywords.push(word);
+          addedCount++;
+        }
+      });
+      
+      if (addedCount > 0) {
+        toastSuccess(`เพิ่ม ${addedCount} keywords สำเร็จ`);
+      }
+    }
+  } catch (error) {
+    console.error('Gen keywords error:', error);
+    // Fallback: simple word extraction on error
+    const title = formData.value.QuestionTitle.trim();
+    const answer = formData.value.QuestionText.trim();
+    const combinedText = `${title} ${answer}`;
+    
+    const words = combinedText
+      .split(/[\s,.、。\n]+/)
+      .map(w => w.trim())
+      .filter(w => w.length > 2 && !/^\d+$/.test(w));
+    
+    let addedCount = 0;
+    words.slice(0, 8).forEach(word => {
+      if (!formData.value.keywords.includes(word)) {
+        formData.value.keywords.push(word);
+        addedCount++;
+      }
+    });
+    
+    if (addedCount > 0) {
+      toastSuccess(`เพิ่ม ${addedCount} keywords สำเร็จ (fallback)`);
+    } else {
+      toastWarning('ไม่สามารถสร้าง keywords ได้');
+    }
+  } finally {
+    isGeneratingKeywords.value = false;
+  }
+}
 
 const reviewDateOptions = [
   { label: '+1 เดือน', months: 1 },
