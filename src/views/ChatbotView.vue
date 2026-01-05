@@ -1714,9 +1714,13 @@ export default {
     // embedding removed; no persisted embed settings
 
     // Auto-open chatbot if enabled in env, or if the current route is the chatbot root
+    // BUT skip if intro animation will be shown (intro will set visible = true after completing)
     if (import.meta.env.VITE_AUTO_OPEN_CHATBOT === 'true' || (this.$route && this.$route.name === 'chatbot')) {
-      // Open immediately on mount without artificial delay
-      this.visible = true
+      // Only auto-open if intro animation won't be shown
+      if (this.hasShownIntroThisSession) {
+        this.visible = true
+      }
+      // Otherwise, intro animation will set visible = true when it completes
     }
   },
 
@@ -2168,9 +2172,8 @@ export default {
       // แสดง intro ทุกครั้งที่เข้าเว็บ (รีเฟรชก็แสดงใหม่)
       if (this.checkFirstTimeUser()) {
         console.log('[Intro] First time this session - showing intro');
-        setTimeout(() => {
-          this.startIntroAnimation();
-        }, 300);
+        // เริ่ม intro ทันทีเพื่อป้องกันการกะพริบของ chat box
+        this.startIntroAnimation();
       }
     },
     startIntroAnimation() {
