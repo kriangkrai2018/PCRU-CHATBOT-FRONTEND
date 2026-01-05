@@ -50,6 +50,32 @@
   }
 }
 
+/* Override for manual dark mode selection */
+[data-theme="dark"] {
+  --color-background: #000000;
+  --color-background-soft: #0D0511;
+  --color-background-mute: #100716;
+
+  --color-border: var(--vt-c-divider-dark-2);
+  --color-border-hover: var(--vt-c-divider-dark-1);
+
+  --color-heading: var(--vt-c-text-dark-1);
+  --color-text: var(--vt-c-text-dark-2);
+}
+
+/* Override for manual light mode selection */
+[data-theme="light"] {
+  --color-background: var(--vt-c-white);
+  --color-background-soft: var(--vt-c-white-soft);
+  --color-background-mute: var(--vt-c-white-mute);
+
+  --color-border: var(--vt-c-divider-light-2);
+  --color-border-hover: var(--vt-c-divider-light-1);
+
+  --color-heading: var(--vt-c-text-light-1);
+  --color-text: var(--vt-c-text-light-1);
+}
+
 *,
 *::before,
 *::after {
@@ -60,6 +86,8 @@
 
 html {
   overflow-x: hidden; /* Prevent horizontal scroll during theme transition */
+  color: var(--color-text);
+  transition: color 0.3s ease;
 }
 
 /* Lock scroll during theme transition */

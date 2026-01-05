@@ -78,7 +78,7 @@
           </div>
         </template>
         
-        <aside class="chat-panel" :style="{ width: drawerWidth, height: viewportHeight }">
+        <aside class="chat-panel" :style="{ width: drawerWidth, height: viewportHeight }" @click="onPanelClick">
           <div class="panel-top">
             <button class="close-circle" @click="visible = false" aria-label="close">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="close-icon">
@@ -966,6 +966,25 @@
       </div>
     </transition>
 
+    <!-- 📊 Performance Warning Notification (Auto Graphics Adjustment) -->
+    <transition name="perf-warning">
+      <div v-if="showPerfWarning" class="perf-warning-overlay" @click.self="dismissPerfWarning">
+        <div class="perf-warning-card">
+          <div class="perf-warning-icon">⚡</div>
+          <div class="perf-warning-content">
+            <h4 class="perf-warning-title">{{ perfWarningMessage }}</h4>
+            <p class="perf-warning-reason">{{ perfWarningReason }}</p>
+            <p class="perf-warning-hint">คุณสามารถปรับกราฟิกได้ที่ปุ่ม <span class="dots-icon">⋯</span> ด้านบน</p>
+          </div>
+          <button class="perf-warning-close" @click="dismissPerfWarning">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </transition>
+
     <!-- ChatbotHelpView Component -->
     <ChatbotHelpView :visible="showHelpModal" @close="closeHelpModal" />
   </div>
@@ -1224,6 +1243,21 @@ export default {
           showArrow: false
         }
       ],
+      // 📊 Performance Monitoring (Auto Graphics Adjustment)
+      fpsMonitorEnabled: true,
+      currentFps: 60,
+      fpsHistory: [],
+      fpsCheckInterval: null,
+      fpsAnimationFrame: null,
+      lastFrameTime: 0,
+      frameCount: 0,
+      lowFpsCount: 0, // Count consecutive low FPS readings
+      autoGraphicsAdjusted: false, // Track if we've already auto-adjusted
+      // 🔔 Performance Warning Notification
+      showPerfWarning: false,
+      perfWarningMessage: '',
+      perfWarningReason: '',
+      perfWarningTimer: null,
     }
   },
   computed: {
@@ -1985,11 +2019,21 @@ export default {
       this.systemThemeMediaQuery = null
     }
     
+    // 📊 Stop FPS monitoring
+    this.stopFpsMonitoring();
+    if (this.perfWarningTimer) {
+      clearTimeout(this.perfWarningTimer);
+      this.perfWarningTimer = null;
+    }
+    
     // Clean up FAB long press watcher (no longer needed)
   },
   watch: {
     visible(newVal) {
       if (newVal) {
+        // 📊 Start FPS monitoring when chat opens
+        this.startFpsMonitoring();
+        
         // Reset scroll button state when opening
         this.showScrollTop = false
         this.lastScrollTop = 0
@@ -2044,6 +2088,9 @@ export default {
         })
       } else {
         // Chat closed: cancel any pending welcome typing and bot typing timers
+        // 📊 Stop FPS monitoring when chat closes
+        this.stopFpsMonitoring();
+        
         if (this.welcomeTypingTimer) {
           clearTimeout(this.welcomeTypingTimer)
           this.welcomeTypingTimer = null
@@ -2656,10 +2703,36 @@ export default {
     },
     
     handleOutsideClick(e) {
-      const wrapper = document.querySelector('.more-options-wrapper');
-      if (wrapper && !wrapper.contains(e.target)) {
-        this.closeMoreMenu();
+      // ปิดเมนูเมื่อกดที่ไหนก็ได้ ยกเว้นกดที่ตัวเมนูเอง (more-menu-items) หรือปุ่ม 3 จุด
+      const menuItems = document.querySelector('.more-menu-items');
+      const dotsButton = document.querySelector('.more-options-btn');
+      
+      // ถ้ากดที่ตัว menu items หรือปุ่ม 3 จุด → ไม่ปิด
+      if (menuItems && menuItems.contains(e.target)) {
+        return;
       }
+      if (dotsButton && dotsButton.contains(e.target)) {
+        return;
+      }
+      
+      // กดที่อื่น → ปิดเมนู
+      this.closeMoreMenu();
+    },
+    
+    // 🎯 Click handler บน panel เพื่อปิดเมนู 3 จุด
+    onPanelClick(e) {
+      if (!this.showMoreMenu) return;
+      
+      // ไม่ปิดถ้ากดที่ตัวเมนูหรือปุ่ม 3 จุด
+      const menuItems = e.target.closest('.more-menu-items');
+      const dotsButton = e.target.closest('.more-options-btn');
+      
+      if (menuItems || dotsButton) {
+        return;
+      }
+      
+      // กดที่อื่นบน panel → ปิดเมนู
+      this.closeMoreMenu();
     },
     
     toggleThemeFromMenu() {
@@ -2745,6 +2818,163 @@ export default {
           this.applyGraphicsQuality(saved);
         }
       } catch (e) { /* ignore */ }
+    },
+    
+    // 📊 Performance Monitoring Methods
+    startFpsMonitoring() {
+      if (!this.fpsMonitorEnabled) return;
+      
+      // Reset counters
+      this.frameCount = 0;
+      this.lastFrameTime = performance.now();
+      this.lowFpsCount = 0;
+      this.autoGraphicsAdjusted = false;
+      
+      // Start FPS measurement loop
+      const measureFps = (timestamp) => {
+        this.frameCount++;
+        
+        const elapsed = timestamp - this.lastFrameTime;
+        
+        // Calculate FPS every 1 second
+        if (elapsed >= 1000) {
+          this.currentFps = Math.round((this.frameCount * 1000) / elapsed);
+          this.fpsHistory.push(this.currentFps);
+          
+          // Keep only last 10 readings
+          if (this.fpsHistory.length > 10) {
+            this.fpsHistory.shift();
+          }
+          
+          // Check for performance issues
+          this.checkPerformance();
+          
+          // Reset for next interval
+          this.frameCount = 0;
+          this.lastFrameTime = timestamp;
+        }
+        
+        // Continue monitoring only if panel is open and not already at lowest setting
+        if (this.panelOpen && this.fpsMonitorEnabled) {
+          this.fpsAnimationFrame = requestAnimationFrame(measureFps);
+        }
+      };
+      
+      this.fpsAnimationFrame = requestAnimationFrame(measureFps);
+    },
+    
+    stopFpsMonitoring() {
+      if (this.fpsAnimationFrame) {
+        cancelAnimationFrame(this.fpsAnimationFrame);
+        this.fpsAnimationFrame = null;
+      }
+      if (this.fpsCheckInterval) {
+        clearInterval(this.fpsCheckInterval);
+        this.fpsCheckInterval = null;
+      }
+    },
+    
+    checkPerformance() {
+      // Don't adjust if user manually set quality or already at lowest
+      if (this.graphicsQuality === 'low') {
+        this.fpsMonitorEnabled = false; // Stop monitoring when at lowest
+        return;
+      }
+      
+      // Check for low FPS (< 30)
+      if (this.currentFps < 30) {
+        this.lowFpsCount++;
+        
+        // Require 3 consecutive low readings to avoid false positives
+        if (this.lowFpsCount >= 3) {
+          this.autoDowngradeGraphics('fps');
+          this.lowFpsCount = 0;
+        }
+      } else {
+        // Reset counter if FPS recovers
+        this.lowFpsCount = 0;
+      }
+      
+      // Check for device heating (Battery API if available)
+      this.checkDeviceHeat();
+    },
+    
+    async checkDeviceHeat() {
+      // Use Battery API to detect potential overheating
+      // (charging + discharging rapidly can indicate heat)
+      try {
+        if ('getBattery' in navigator) {
+          const battery = await navigator.getBattery();
+          
+          // If battery is discharging rapidly (level dropping fast), might indicate high load
+          // Also check if device reports it's overheating via charging time
+          if (battery.dischargingTime < 1800 && battery.dischargingTime > 0) { // Less than 30 min remaining
+            // Device is under heavy load
+            if (this.graphicsQuality === 'high') {
+              this.autoDowngradeGraphics('heat');
+            }
+          }
+        }
+      } catch (e) {
+        // Battery API not available, skip heat check
+      }
+    },
+    
+    autoDowngradeGraphics(reason) {
+      const prevQuality = this.graphicsQuality;
+      let newQuality;
+      let reasonText;
+      
+      if (this.graphicsQuality === 'high') {
+        newQuality = 'medium';
+        reasonText = reason === 'fps' 
+          ? `ตรวจพบว่าเครื่องทำงานช้า (${this.currentFps} FPS)` 
+          : 'ตรวจพบว่าเครื่องร้อนเกินไป';
+      } else if (this.graphicsQuality === 'medium') {
+        newQuality = 'low';
+        reasonText = reason === 'fps'
+          ? `เครื่องยังทำงานช้าอยู่ (${this.currentFps} FPS)`
+          : 'เครื่องยังร้อนอยู่';
+      } else {
+        return; // Already at lowest
+      }
+      
+      // Apply new quality
+      this.setGraphicsQuality(newQuality);
+      
+      // Show warning notification
+      this.showPerformanceWarning(
+        `ปรับกราฟิกเป็น "${this.graphicsQualityLabel}" โดยอัตโนมัติ`,
+        reasonText
+      );
+      
+      console.log(`⚡ Auto-downgraded graphics: ${prevQuality} → ${newQuality} (reason: ${reason})`);
+    },
+    
+    showPerformanceWarning(message, reason) {
+      // Clear any existing timer
+      if (this.perfWarningTimer) {
+        clearTimeout(this.perfWarningTimer);
+      }
+      
+      this.perfWarningMessage = message;
+      this.perfWarningReason = reason;
+      this.showPerfWarning = true;
+      
+      // Auto-hide after 5 seconds
+      this.perfWarningTimer = setTimeout(() => {
+        this.dismissPerfWarning();
+      }, 5000);
+    },
+    
+    dismissPerfWarning() {
+      this.showPerfWarning = false;
+      this.perfWarningMessage = '';
+      this.perfWarningReason = '';
+      if (this.perfWarningTimer) {
+        clearTimeout(this.perfWarningTimer);
+        this.perfWarningTimer = null;
+      }
     },
 
     // Resolve 'auto' to an actual theme based on local time (day -> light, night -> dark)

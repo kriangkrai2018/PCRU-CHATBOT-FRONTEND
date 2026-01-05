@@ -6942,3 +6942,177 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
 [data-theme="dark"] .scroll-tutorial-card .tutorial-description {
   color: #999;
 }
+
+/* ========================================
+   ⚡ Performance Warning Notification
+   (Auto Graphics Adjustment Alert)
+   ======================================== */
+
+.perf-warning-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999999;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 100px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.perf-warning-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 245, 247, 0.98) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 20px 24px;
+  max-width: 380px;
+  width: 90vw;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  animation: perf-warning-enter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes perf-warning-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.perf-warning-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+  animation: perf-icon-pulse 2s ease-in-out infinite;
+}
+
+@keyframes perf-icon-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.perf-warning-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.perf-warning-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1c1c1e;
+  margin: 0 0 6px 0;
+  line-height: 1.3;
+}
+
+.perf-warning-reason {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.perf-warning-hint {
+  font-size: 12px;
+  color: #999;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.perf-warning-hint .dots-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(139, 76, 184, 0.15);
+  color: #8B4CB8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.perf-warning-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  transition: all 0.2s ease;
+}
+
+.perf-warning-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+/* Transition animations */
+.perf-warning-enter-active {
+  animation: perf-warning-enter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.perf-warning-leave-active {
+  animation: perf-warning-leave 0.3s ease forwards;
+}
+
+@keyframes perf-warning-leave {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+}
+
+/* Dark mode support */
+[data-theme="dark"] .perf-warning-card {
+  background: linear-gradient(135deg, rgba(44, 44, 46, 0.98) 0%, rgba(30, 30, 32, 0.98) 100%);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .perf-warning-title {
+  color: #f5f5f7;
+}
+
+[data-theme="dark"] .perf-warning-reason {
+  color: #999;
+}
+
+[data-theme="dark"] .perf-warning-hint {
+  color: #666;
+}
+
+[data-theme="dark"] .perf-warning-close {
+  background: rgba(255, 255, 255, 0.1);
+  color: #999;
+}
+
+[data-theme="dark"] .perf-warning-close:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
