@@ -1101,7 +1101,7 @@ export default {
       longPressStartTimer: null, // Timer to detect long press vs normal click
       isLongPressing: false, // Track if we're in long press mode
       // 🎬 First-time intro animation (Genshin-style)
-      showIntroAnimation: false,
+      showIntroAnimation: true, // เริ่มต้นเป็น true เพื่อให้พื้นหลังดำแสดงทันที ก่อน Vue mount
       introPhase: 0, // 0: not started, 1: logo, 2: particles, 3: reveal
       isFirstTimeUser: false,
       hasShownIntroThisSession: false, // ใช้ variable แทน storage เพื่อให้ refresh แล้วแสดง intro ใหม่
@@ -2174,6 +2174,9 @@ export default {
         console.log('[Intro] First time this session - showing intro');
         // เริ่ม intro ทันทีเพื่อป้องกันการกะพริบของ chat box
         this.startIntroAnimation();
+      } else {
+        // ถ้าเคยเห็น intro แล้ว ปิด overlay ทันที
+        this.showIntroAnimation = false;
       }
     },
     startIntroAnimation() {
@@ -6318,6 +6321,7 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
+  background: #000;
   background: radial-gradient(ellipse at center, #1a0a2e 0%, #0d0015 50%, #000 100%);
   z-index: 99999;
   display: flex;
