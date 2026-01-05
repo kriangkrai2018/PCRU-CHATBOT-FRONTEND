@@ -3325,15 +3325,9 @@ export default {
       // Split by HTML tags and newlines to preserve them
       const parts = textToStream.split(/(<[^>]+>|\n)/g);
       
-      // Helper: scroll after DOM updates
-      const scrollAfterUpdate = () => {
-        return new Promise(resolve => {
-          requestAnimationFrame(() => {
-            this.scrollToBottomInstant();
-            resolve();
-          });
-        });
-      };
+      // Counter for batched scrolling (scroll every N characters to reduce lag)
+      let charCount = 0;
+      const scrollEvery = 3; // Scroll every 3 characters instead of every 1
       
       for (const part of parts) {
         if (!part) continue; // Skip empty parts from split
@@ -3341,20 +3335,26 @@ export default {
         if (part.match(/<[^>]+>/) || part === '\n') {
           // It's a tag or a newline, append it instantly
           this.messages[messageIndex].text += part;
-          // Scroll immediately after adding tags/newlines
-          await scrollAfterUpdate();
+          // Force scroll on tags/newlines
+          this.scrollToBottomInstant();
         } else {
           // It's text, type it out character by character
           for (let i = 0; i < part.length; i++) {
             await new Promise(resolve => setTimeout(resolve, typingDelay));
             if (!this.messages[messageIndex]) return; // Stop if message was cleared
             this.messages[messageIndex].text += part[i];
+            charCount++;
             
-            // Scroll to bottom EVERY character to keep it in view
-            await scrollAfterUpdate();
+            // Scroll every few characters to reduce jank while still keeping text visible
+            if (charCount % scrollEvery === 0) {
+              this.scrollToBottomInstant();
+            }
           }
         }
       }
+      
+      // Final scroll to ensure we're at the bottom
+      this.scrollToBottomInstant();
     },
     async typeWelcomeMessage() {
       // Construct text with current bot settings
