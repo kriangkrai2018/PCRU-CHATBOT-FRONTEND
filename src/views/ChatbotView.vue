@@ -566,15 +566,20 @@
                   </div>
                   
                   <!-- 💬 Apple-style Inline Feedback (subtle icons at bottom-right) -->
+                  <!-- Show on ALL bot messages with answers (not just latest) -->
+                  <!-- If feedback is locked (user asked new question), show only the selected one -->
                   <div 
                     class="apple-feedback" 
+                    :class="{ 'has-feedback': msg.feedback, 'is-locked': msg.feedbackLocked }"
                     v-if="msg.type === 'bot' && !msg.typing && (msg.text || msg.results) && msg.found === true && !msg.multipleResults"
                   >
+                    <!-- Like button: show if not locked, OR if locked and was liked -->
                     <button
+                      v-if="!msg.feedbackLocked || msg.feedback === 'like'"
                       class="apple-feedback-btn"
-                      :class="{ active: msg.feedback === 'like', disabled: feedbackButtonsDisabled }"
-                      @click.stop="handleLikeClick(msg)"
-                      :disabled="feedbackButtonsDisabled"
+                      :class="{ active: msg.feedback === 'like', disabled: feedbackButtonsDisabled || msg.feedbackLocked }"
+                      @click.stop="!msg.feedbackLocked && handleLikeClick(msg)"
+                      :disabled="feedbackButtonsDisabled || msg.feedbackLocked"
                       aria-label="ถูกใจ"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -582,12 +587,13 @@
                           stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                       </svg>
                     </button>
-                    <div class="apple-feedback-wrapper">
+                    <!-- Dislike button: show if not locked, OR if locked and was disliked -->
+                    <div class="apple-feedback-wrapper" v-if="!msg.feedbackLocked || msg.feedback === 'dislike'">
                       <button
                         class="apple-feedback-btn"
-                        :class="{ active: msg.feedback === 'dislike', disabled: feedbackButtonsDisabled }"
-                        @click.stop="toggleFeedbackDropdown(idx)"
-                        :disabled="feedbackButtonsDisabled"
+                        :class="{ active: msg.feedback === 'dislike', disabled: feedbackButtonsDisabled || msg.feedbackLocked }"
+                        @click.stop="!msg.feedbackLocked && toggleFeedbackDropdown(idx)"
+                        :disabled="feedbackButtonsDisabled || msg.feedbackLocked"
                         aria-label="ไม่ถูกใจ"
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -595,10 +601,10 @@
                             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                       </button>
-                      <!-- Apple-style dropdown for unlike reasons -->
+                      <!-- Apple-style dropdown for unlike reasons (only if not locked) -->
                       <transition name="apple-dropdown">
                         <div 
-                          v-if="openFeedbackDropdownIndex === idx" 
+                          v-if="openFeedbackDropdownIndex === idx && !msg.feedbackLocked" 
                           class="apple-feedback-dropdown"
                           @click.stop
                         >
@@ -793,11 +799,26 @@
         <!-- Blur background except spotlight -->
         <div class="tutorial-backdrop"></div>
         
-        <!-- Spotlight highlight -->
+        <!-- Spotlight highlight with cloned button inside -->
         <div 
           class="tutorial-spotlight"
           :style="tutorialSpotlightStyle"
-        ></div>
+        >
+          <!-- Clone of Like button for spotlight -->
+          <div v-if="currentTutorialData.target === 'like'" class="spotlight-btn-clone like">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" 
+                stroke="#007AFF" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <!-- Clone of Dislike button for spotlight -->
+          <div v-if="currentTutorialData.target === 'dislike'" class="spotlight-btn-clone dislike">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" 
+                stroke="#FF3B30" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
         
         <!-- Tutorial tooltip/card -->
         <div class="tutorial-card" :style="tutorialCardStyle">
@@ -1090,6 +1111,13 @@ export default {
           description: 'หากต้องการให้ปรับปรุง กดปุ่มนี้แล้วบอกเหตุผลได้เลย',
           target: 'dislike',
           showArrow: true
+        },
+        {
+          icon: '🤖',
+          title: 'ถามใหม่ = ถูกใจอัตโนมัติ',
+          description: 'ถ้าไม่ได้กดปุ่มใดๆ แล้วถามคำถามใหม่ ระบบจะถือว่าคุณพอใจคำตอบก่อนหน้าและกด "ถูกใจ" ให้อัตโนมัติ',
+          target: null,
+          showArrow: false
         },
         {
           icon: '✨',
@@ -4261,6 +4289,9 @@ export default {
       // Stop welcome typing once user interacts
       this.welcomeTyping = false
       
+      // 🤖 Auto-like previous bot message if user didn't give feedback and asks new question
+      this.autoLikePreviousBotMessage()
+      
       // Add user message
       this.messages.push({
         id: ++this.messageIdCounter,
@@ -5412,12 +5443,50 @@ export default {
       return null
     },
     
+    // 🤖 Auto-like previous bot message when user asks new question without giving feedback
+    // Also lock ALL previous feedbacks so user can't change them
+    autoLikePreviousBotMessage() {
+      let autoLikedOne = false
+      
+      // Loop through all messages and lock all bot messages with feedback
+      for (let i = this.messages.length - 1; i >= 0; i--) {
+        const msg = this.messages[i]
+        if (msg.type === 'bot' && msg.found === true && !msg.multipleResults) {
+          // If no feedback yet and we haven't auto-liked one, auto-like this one
+          if (!msg.feedback && !autoLikedOne) {
+            msg.feedback = 'like'
+            msg.feedbackLocked = true
+            autoLikedOne = true
+            console.log('🤖 Auto-liked previous bot message:', msg.text?.substring(0, 50))
+            
+            // Send feedback to backend silently
+            if (this.$axios && msg.chatLogId) {
+              const payload = { chatLogId: msg.chatLogId, liked: true, autoLiked: true }
+              this.$axios.post('/chat/feedback', payload).catch(err => {
+                console.warn('Failed to send auto-like feedback:', err)
+              })
+            }
+          } else if (msg.feedback && !msg.feedbackLocked) {
+            // Already has feedback, just lock it
+            msg.feedbackLocked = true
+            console.log('🔒 Locked feedback for message:', msg.text?.substring(0, 50))
+          }
+        }
+      }
+      
+      // Save updated chat history
+      if (autoLikedOne) {
+        this.saveChatHistory()
+      }
+    },
+    
     // 📋 Handle like button click
     handleLikeClick(msg) {
       console.log('👍 Like button clicked:', msg)
       
-      // 💖 ถ้า user เปลี่ยนใจจาก unlike เป็น like ให้แสดงข้อความขอบคุณ
+      // 💖 ตรวจสอบว่าเป็นการกด like ครั้งแรก หรือ เปลี่ยนใจจาก unlike
       const wasDisliked = msg.feedback === 'dislike'
+      const isFirstLike = !msg.feedback // ยังไม่เคยให้ feedback
       
       // Close any open dropdowns first
       this.closeFeedbackDropdown()
@@ -5442,8 +5511,8 @@ export default {
       // 🎭 นับจำนวนการกด feedback ทุกครั้ง (ไม่ว่าจะเปลี่ยนใจหรือไม่)
       this.trackFeedbackToggle()
       
-      // แสดง tooltip ขอบคุณถ้าเปลี่ยนใจจาก unlike
-      if (wasDisliked) {
+      // 💖 แสดง tooltip ขอบคุณ (ทั้งกด like ครั้งแรก หรือ เปลี่ยนใจจาก unlike)
+      if (isFirstLike || wasDisliked) {
         this.showLikeTooltipMessage()
       }
     },
@@ -5793,13 +5862,17 @@ export default {
       if (this.$refs.panelBody) {
         const currentScrollTop = this.$refs.panelBody.scrollTop
         
+        // Hide immediately if at the very top (scrollTop is 0 or very close)
+        if (currentScrollTop <= 5) {
+          this.showScrollTop = false
+          this.lastScrollTop = currentScrollTop
+          return
+        }
+        
         // Show button only when user intentionally scrolls UP (not down)
         // and is not at the very top
         if (currentScrollTop < this.lastScrollTop && currentScrollTop > 100) {
           this.showScrollTop = true
-        } else if (currentScrollTop <= 50) {
-          // Hide when near top
-          this.showScrollTop = false
         } else if (currentScrollTop > this.lastScrollTop) {
           // Hide when scrolling down
           this.showScrollTop = false

@@ -3536,6 +3536,32 @@ body.no-effects .apple-help-button::after { display: none !important; }
   border-top: 0.5px solid rgba(0, 0, 0, 0.04);
 }
 
+/* When feedback is already given, make it more subtle (past messages) */
+.apple-feedback.has-feedback {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.apple-feedback.has-feedback:hover {
+  opacity: 1;
+}
+
+/* When feedback is locked, show only one button and make it read-only */
+.apple-feedback.is-locked {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.apple-feedback.is-locked .apple-feedback-btn {
+  cursor: default;
+  background: transparent;
+}
+
+.apple-feedback.is-locked .apple-feedback-btn:hover {
+  background: transparent;
+  transform: none;
+}
+
 /* Wrapper for dislike + dropdown */
 .apple-feedback-wrapper {
   position: relative;
@@ -5623,10 +5649,45 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
   box-shadow: 
     0 0 0 4px rgba(255, 255, 255, 0.9),
     0 0 0 9999px rgba(0, 0, 0, 0.75);
-  background: transparent;
+  background: rgba(255, 255, 255, 0.15);
   pointer-events: none;
   z-index: 1;
   animation: spotlight-pulse 2s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Cloned button inside spotlight for visibility */
+.spotlight-btn-clone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  animation: spotlight-btn-pulse 1.5s ease-in-out infinite;
+}
+
+.spotlight-btn-clone.like svg path {
+  stroke: #007AFF;
+}
+
+.spotlight-btn-clone.dislike svg path {
+  stroke: #FF3B30;
+}
+
+@keyframes spotlight-btn-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 4px 16px rgba(0, 122, 255, 0.4);
+  }
 }
 
 @keyframes spotlight-pulse {
