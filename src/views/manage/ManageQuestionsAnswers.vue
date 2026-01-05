@@ -157,7 +157,7 @@
               v-model="qaFilters"
               :show-sort="true"
               :sort-options="qaSortOptions"
-              default-sort-by="date"
+              default-sort-by="id"
               default-sort-order="desc"
               :categories="categoryOptions"
               category-label="หมวดหมู่"
@@ -658,7 +658,7 @@ const searchQuery = ref('');
 
 // Apple Filters Configuration
 const qaFilters = ref({
-  sortBy: 'date',
+  sortBy: 'id',
   sortOrder: 'desc',
   category: '',
   status: '',

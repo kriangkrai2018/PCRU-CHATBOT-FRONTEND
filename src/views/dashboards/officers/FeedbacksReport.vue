@@ -1,15 +1,6 @@
 <template>
   <div class="">
     <div class="card p-4 bg-light shadow-sm mb-4 rounded-4">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="fs-5 mb-0">Feedbacks Report</h3>
-        <span v-if="wsConnected" class="badge bg-success">
-          <i class="bi bi-wifi"></i> Live
-        </span>
-        <span v-else class="badge bg-secondary">
-          <i class="bi bi-wifi-off"></i> Offline
-        </span>
-      </div>
       <!-- Note: Removed Live badge and auto-delete note as requested -->
       <div v-if="feedbacksLoading" class="text-center py-3">
         <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
