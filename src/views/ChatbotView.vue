@@ -153,8 +153,9 @@
                 <!-- Item 2: Graphics Quality (tap to cycle) -->
                 <button 
                   class="more-menu-item graphics-item"
-                  :class="{ visible: moreMenuItemsVisible[1], hiding: moreMenuItemsHiding[1] }"
+                  :class="{ visible: moreMenuItemsVisible[1], hiding: moreMenuItemsHiding[1], disabled: graphicsQuality === 'low' }"
                   @click="cycleGraphicsQuality"
+                  :disabled="graphicsQuality === 'low'"
                   title="กดเพื่อเปลี่ยนคุณภาพกราฟิก"
                 >
                   <div class="menu-item-icon">
@@ -1014,6 +1015,9 @@ export default {
       loadError: '',
       query: '',
       placeholderText: 'ขอทุน, ปฏิทินวิชาการ, สวัสดิการ',
+      placeholderExamples: [], // Array of synonym examples from database
+      placeholderIndex: 0,
+      placeholderInterval: null,
       // embedding removed — external site not used in this deployment
       messages: [],
       welcomeTyping: false,
@@ -1861,6 +1865,9 @@ export default {
     // 💤 Start idle tracking for sleeping bot
     this.startIdleTracking()
 
+    // 🎠 Load synonyms for placeholder carousel
+    this.loadSynonymsCarousel()
+
     // 📜 Scroll to bottom to show latest messages
     setTimeout(() => {
       if (this.$refs.panelBody) {
@@ -1896,6 +1903,11 @@ export default {
     window.removeEventListener('resize', this.updateAnchoring)
     // 💤 Stop idle tracking
     this.stopIdleTracking()
+    // 🎠 Stop placeholder carousel
+    if (this.placeholderInterval) {
+      clearInterval(this.placeholderInterval)
+      this.placeholderInterval = null
+    }
     // clear any pending bot typing timers
     if (Array.isArray(this.botTypingTimers) && this.botTypingTimers.length) {
       this.botTypingTimers.forEach(id => clearTimeout(id))
@@ -2758,8 +2770,8 @@ export default {
     },
     
     cycleGraphicsQuality() {
-      // Cycle: low -> medium -> high -> low
-      const order = ['low', 'medium', 'high'];
+      // Cycle: medium -> high -> medium (skip low - disabled)
+      const order = ['medium', 'high'];
       const currentIndex = order.indexOf(this.graphicsQuality);
       const nextIndex = (currentIndex + 1) % order.length;
       this.setGraphicsQuality(order[nextIndex]);
@@ -5687,7 +5699,9 @@ export default {
     // Contacts pagination / Read More helpers
     getContactVisibleCount(msg) {
       const msgIndex = this.messages.indexOf(msg)
-      return this.contactVisibleCounts[msgIndex] || 3
+      // แสดงทั้งหมดทันที (ไม่จำกัด)
+      const groups = (msg.groupedContacts && msg.groupedContacts.length) ? msg.groupedContacts : (universityContacts || [])
+      return this.contactVisibleCounts[msgIndex] || groups.length || 999
     },
 
     getVisibleContactGroups(msg) {
@@ -5698,7 +5712,14 @@ export default {
         if (!group || !Array.isArray(group.categories)) return false
         for (const cat of group.categories) {
           if (!cat || !cat.contact) continue
-          const parts = this.parseContactParts(cat.contact)
+          const contactStr = cat.contact || ''
+          
+          // ตรวจสอบว่ามี URL หรือ phone number ใน contact string หรือไม่
+          if (/https?:\/\/|www\.|facebook\./i.test(contactStr)) return true
+          if (/0[0-9\-\s]{8,}/.test(contactStr)) return true
+          
+          // ถ้าไม่มี ให้ตรวจสอบ parts
+          const parts = this.parseContactParts(contactStr)
           for (const p of parts) {
             // link parts (start with url/www/facebook/ลิงค์) count as meaningful
             if (/^(https?:|www\.|facebook\.|ลิงค์)/i.test(p)) return true
@@ -6834,6 +6855,55 @@ export default {
       }
       
       animate()
+    },
+
+    // 🎠 Placeholder Carousel Methods
+    async loadSynonymsCarousel() {
+      try {
+        const res = await this.$axios.get('/synonyms')
+        const synonyms = res.data?.data || res.data || []
+        
+        // สุ่มเลือก 5 รายการ (หรือน้อยกว่าถ้ามีไม่พอ)
+        const shuffled = [...synonyms].sort(() => 0.5 - Math.random())
+        const selected = shuffled.slice(0, 5)
+        
+        // สร้างข้อความสำหรับแสดง: "คำที่ผู้ใช้พิมพ์ → KEYWORD"
+        this.placeholderExamples = selected.map(s => {
+          const original = s.OriginalWord || s.original || ''
+          const synonym = s.SynonymWord || s.synonym || ''
+          return `${original} → ${synonym}`
+        })
+        
+        // ถ้าไม่มีข้อมูลจาก database ใช้ default
+        if (this.placeholderExamples.length === 0) {
+          this.placeholderExamples = ['ขอทุน, ปฏิทินวิชาการ, สวัสดิการ']
+        }
+        
+        // เริ่ม carousel
+        this.startPlaceholderCarousel()
+      } catch (err) {
+        console.error('Failed to load synonyms for carousel:', err)
+        // Fallback to default
+        this.placeholderExamples = ['ขอทุน, ปฏิทินวิชาการ, สวัสดิการ']
+        this.startPlaceholderCarousel()
+      }
+    },
+    
+    startPlaceholderCarousel() {
+      // แสดงข้อความแรก
+      if (this.placeholderExamples.length > 0) {
+        this.placeholderText = this.placeholderExamples[0]
+      }
+      
+      // เลื่อนข้อความทุก 3 วินาที
+      if (this.placeholderInterval) {
+        clearInterval(this.placeholderInterval)
+      }
+      
+      this.placeholderInterval = setInterval(() => {
+        this.placeholderIndex = (this.placeholderIndex + 1) % this.placeholderExamples.length
+        this.placeholderText = this.placeholderExamples[this.placeholderIndex]
+      }, 3000)
     }
   }
 }

@@ -69,16 +69,12 @@
                 </template>
               </div>
               
-              <!-- ปุ่มดูเพิ่มเติม / ซ่อน -->
-              <div v-if="hiddenCategoriesCount > 0 || showAllCategories" class="show-more-wrapper">
-                <button class="show-more-btn" @click="showAllCategories = !showAllCategories">
-                  <span v-if="!showAllCategories">
+              <!-- ปุ่มดูเพิ่มเติม -->
+              <div v-if="hiddenCategoriesCount > 0 && !showAllCategories" class="show-more-wrapper">
+                <button class="show-more-btn" @click="showAllCategories = true">
+                  <span>
                     <i class="bi bi-chevron-down"></i>
                     ดูเพิ่มเติม (อีก {{ hiddenCategoriesCount }} หมวดหมู่)
-                  </span>
-                  <span v-else>
-                    <i class="bi bi-chevron-up"></i>
-                    ซ่อน
                   </span>
                 </button>
               </div>
@@ -96,13 +92,15 @@
               </div>
               
               <div class="example-container">
-                <div class="example-row magic">
+                <div class="example-row magic synonym-carousel">
                   <div class="indicator">
                     <i class="bi bi-stars"></i>
                   </div>
-                  <div class="text">
-                    <strong>คำพ้องเสียง:</strong> พิมพ์ "สามหกห้า" <i class="bi bi-arrow-right-short"></i> เข้าใจเป็น "365"
-                  </div>
+                  <transition name="slide-fade" mode="out-in">
+                    <div class="text" :key="synonymIndex">
+                      <strong>คำพ้องเสียง:</strong> พิมพ์ "{{ currentSynonym.original }}" <i class="bi bi-arrow-right-short"></i> เข้าใจเป็น "{{ currentSynonym.target }}"
+                    </div>
+                  </transition>
                 </div>
                 <div class="example-row magic">
                   <div class="indicator">
@@ -290,7 +288,11 @@ export default {
       ],
       categories: [],
       categoriesLoading: false,
-      showAllCategories: false
+      showAllCategories: false,
+      // 🎠 Synonyms carousel
+      synonyms: [],
+      synonymIndex: 0,
+      synonymInterval: null
     }
   },
   computed: {
@@ -310,6 +312,11 @@ export default {
     },
     hiddenCategoriesCount() {
       return Math.max(0, this.sortedCategories.length - 4);
+    },
+    // 🎠 Current synonym to display in carousel
+    currentSynonym() {
+      if (!this.synonyms.length) return { original: 'สามหกห้า', target: '365' };
+      return this.synonyms[this.synonymIndex];
     }
   },
   methods: {
@@ -363,10 +370,49 @@ export default {
       if (name.includes('หอ')) return 'orange';
       if (name.includes('กิจ')) return 'green';
       return 'blue';
+    },
+    // 🎠 Load synonyms from database
+    async loadSynonyms() {
+      try {
+        const res = await this.$axios.get('/synonyms');
+        const data = res.data?.data || res.data || [];
+        // Map to { original, target } format
+        this.synonyms = data.map(s => ({
+          original: s.OriginalWord || s.original || '',
+          target: s.SynonymWord || s.synonym || ''
+        })).filter(s => s.original && s.target);
+        
+        // Start carousel if we have synonyms
+        if (this.synonyms.length > 0) {
+          this.startSynonymCarousel();
+        }
+      } catch (e) {
+        console.error('Failed to load synonyms:', e);
+        // Keep default fallback
+        this.synonyms = [{ original: 'สามหกห้า', target: '365' }];
+      }
+    },
+    startSynonymCarousel() {
+      // Clear existing interval
+      if (this.synonymInterval) {
+        clearInterval(this.synonymInterval);
+      }
+      // Change synonym every 5 seconds
+      this.synonymInterval = setInterval(() => {
+        this.synonymIndex = (this.synonymIndex + 1) % this.synonyms.length;
+      }, 5000);
     }
   },
   mounted() {
     this.loadCategories();
+    this.loadSynonyms();
+  },
+  beforeDestroy() {
+    // Cleanup carousel interval
+    if (this.synonymInterval) {
+      clearInterval(this.synonymInterval);
+      this.synonymInterval = null;
+    }
   }
 }
 </script>
