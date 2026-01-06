@@ -128,13 +128,17 @@
                     </div>
                   </transition>
                 </div>
-                <div class="example-row good">
+                <div v-if="currentNavigationQuestion" class="example-row good navigation-carousel">
+                  <div class="indicator"><i class="bi bi-check-circle-fill"></i></div>
+                  <transition name="slide-fade" mode="out-in">
+                    <div class="text" :key="navigationIndex">
+                      <strong>แนะนำ (นำทาง/สถานที่):</strong> "{{ currentNavigationQuestion.title }}"
+                    </div>
+                  </transition>
+                </div>
+                <div v-else class="example-row good">
                   <div class="indicator"><i class="bi bi-check-circle-fill"></i></div>
                   <div class="text"><strong>แนะนำ (นำทาง/สถานที่):</strong> "ไปอาคารเรียนรวมจากหอพักต้องเดินทางยังไง"</div>
-                </div>
-                <div class="example-row good">
-                  <div class="indicator"><i class="bi bi-check-circle-fill"></i></div>
-                  <div class="text"><strong>แนะนำ (นำทาง/สถานที่):</strong> "ห้องทะเบียนอยู่ตึกไหน"</div>
                 </div>
                 <div class="example-row bad">
                   <div class="indicator"><i class="bi bi-x-circle-fill"></i></div>
@@ -295,6 +299,10 @@ export default {
       negativeKeywords: [],
       negativeIndex: 0,
       negativeInterval: null,
+      // 🗺️ Navigation questions carousel
+      navigationQuestions: [],
+      navigationIndex: 0,
+      navigationInterval: null,
       // 🌟 Popular questions carousel
       popularQuestions: [],
       popularIndex: 0,
@@ -328,6 +336,11 @@ export default {
     currentNegativeKeyword() {
       if (!this.negativeKeywords.length) return null;
       return this.negativeKeywords[this.negativeIndex];
+    },
+    // 🗺️ Current navigation question to display in carousel
+    currentNavigationQuestion() {
+      if (!this.navigationQuestions.length) return null;
+      return this.navigationQuestions[this.navigationIndex];
     },
     // 🌟 Current popular question to display in carousel
     currentPopularQuestion() {
@@ -451,6 +464,34 @@ export default {
         this.negativeIndex = (this.negativeIndex + 1) % this.negativeKeywords.length;
       }, 5000);
     },
+    // 🗺️ Load navigation questions from database
+    async loadNavigationQuestions() {
+      try {
+        const res = await this.$axios.get('/questionsanswers/navigation', { params: { limit: 10 } });
+        const data = res.data?.data || res.data || [];
+        this.navigationQuestions = data.filter(q => q.title);
+        
+        console.log('🗺️ Loaded navigation questions:', this.navigationQuestions.length, this.navigationQuestions);
+        
+        // Start carousel if we have questions
+        if (this.navigationQuestions.length > 0) {
+          this.startNavigationCarousel();
+        }
+      } catch (e) {
+        console.error('Failed to load navigation questions:', e);
+        this.navigationQuestions = [];
+      }
+    },
+    startNavigationCarousel() {
+      // Clear existing interval
+      if (this.navigationInterval) {
+        clearInterval(this.navigationInterval);
+      }
+      // Change question every 5 seconds
+      this.navigationInterval = setInterval(() => {
+        this.navigationIndex = (this.navigationIndex + 1) % this.navigationQuestions.length;
+      }, 5000);
+    },
     // 🌟 Load popular questions from database
     async loadPopularQuestions() {
       try {
@@ -485,6 +526,7 @@ export default {
     this.loadCategories();
     this.loadSynonyms();
     this.loadNegativeKeywords();
+    this.loadNavigationQuestions();
     this.loadPopularQuestions();
   },
   beforeDestroy() {
@@ -496,6 +538,10 @@ export default {
     if (this.negativeInterval) {
       clearInterval(this.negativeInterval);
       this.negativeInterval = null;
+    }
+    if (this.navigationInterval) {
+      clearInterval(this.navigationInterval);
+      this.navigationInterval = null;
     }
     if (this.popularInterval) {
       clearInterval(this.popularInterval);
