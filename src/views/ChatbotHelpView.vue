@@ -68,6 +68,20 @@
                   </div>
                 </template>
               </div>
+              
+              <!-- ปุ่มดูเพิ่มเติม / ซ่อน -->
+              <div v-if="hiddenCategoriesCount > 0 || showAllCategories" class="show-more-wrapper">
+                <button class="show-more-btn" @click="showAllCategories = !showAllCategories">
+                  <span v-if="!showAllCategories">
+                    <i class="bi bi-chevron-down"></i>
+                    ดูเพิ่มเติม (อีก {{ hiddenCategoriesCount }} หมวดหมู่)
+                  </span>
+                  <span v-else>
+                    <i class="bi bi-chevron-up"></i>
+                    ซ่อน
+                  </span>
+                </button>
+              </div>
             </section>
 
             <!-- 🆕 Section: Synonyms & Smart Search (New Feature) -->
@@ -275,11 +289,12 @@ export default {
         { q: 'ข้อมูลอัปเดตไหม?', a: 'ข้อมูลดึงจากฐานข้อมูลมหาวิทยาลัย บางส่วนอาจต้องรอการประกาศอย่างเป็นทางการ' },
       ],
       categories: [],
-      categoriesLoading: false
+      categoriesLoading: false,
+      showAllCategories: false
     }
   },
   computed: {
-    featureCategories() {
+    sortedCategories() {
       const list = Array.isArray(this.categories) ? [...this.categories] : [];
       list.sort((a, b) => {
         const aCount = Array.isArray(a.items) ? a.items.length : 0;
@@ -287,7 +302,14 @@ export default {
         if (bCount !== aCount) return bCount - aCount;
         return (a.title || '').localeCompare(b.title || '', 'th');
       });
-      return list.slice(0, 4);
+      return list;
+    },
+    featureCategories() {
+      // แสดงสูงสุด 4 รายการ หรือทั้งหมดถ้า showAllCategories = true
+      return this.showAllCategories ? this.sortedCategories : this.sortedCategories.slice(0, 4);
+    },
+    hiddenCategoriesCount() {
+      return Math.max(0, this.sortedCategories.length - 4);
     }
   },
   methods: {
@@ -483,6 +505,34 @@ export default {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+
+/* Show More Button */
+.show-more-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+.show-more-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: var(--color-primary, #007AFF);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-m, 12px);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+.show-more-btn:hover {
+  background: var(--color-primary-hover, #0056b3);
+  transform: scale(1.02);
+}
+.show-more-btn i {
+  font-size: 12px;
 }
 .feature-card {
   background: rgba(255, 255, 255, 0.6);
@@ -723,41 +773,117 @@ export default {
 }
 
 /* 🎮 Graphics Low Mode - ensure content stays visible */
-:global(.gfx-low) .apple-help-overlay,
-:global(.gfx-low) .apple-panel,
-:global(.gfx-low) .panel-content,
-:global(.gfx-low) .apple-section,
-:global(.gfx-low) .feature-card,
-:global(.gfx-low) .section-hero,
-:global(.gfx-low) .step-item,
-:global(.gfx-low) .category-tag {
+/* CRITICAL: Override any display:none from gfx-low mode */
+:global(body.gfx-low) .apple-help-overlay {
   display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
+}
+
+:global(body.gfx-low) .apple-help-overlay .backdrop {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
+:global(body.gfx-low) .apple-help-overlay .apple-panel {
+  display: flex !important;
+  flex-direction: column !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+  background: #ffffff !important;
+  position: relative !important;
+  z-index: 2 !important;
+  max-height: 100vh !important;
+  overflow-y: auto !important;
+}
+
+:global(body.gfx-low) .apple-help-overlay .panel-content {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  overflow-y: auto !important;
+}
+
+:global(body.gfx-low) .apple-help-overlay .apple-section,
+:global(body.gfx-low) .apple-help-overlay .feature-card,
+:global(body.gfx-low) .apple-help-overlay .section-hero,
+:global(body.gfx-low) .apple-help-overlay .panel-header {
+  display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
 }
 
-:global(.gfx-low) .panel-content {
-  display: block !important;
-}
-
-:global(.gfx-low) .feature-grid {
+:global(body.gfx-low) .apple-help-overlay .feature-grid {
   display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
-:global(.gfx-low) .apple-help-overlay * {
+/* Force all children visible */
+:global(body.gfx-low) .apple-help-overlay *,
+:global(body.gfx-low) .apple-help-overlay *::before,
+:global(body.gfx-low) .apple-help-overlay *::after {
+  visibility: visible !important;
+  opacity: 1 !important;
   animation: none !important;
   transition: none !important;
 }
 
-:global(.gfx-low) .apple-panel {
+/* 🔧 FIX: Override Vue transition classes in gfx-low mode */
+:global(.gfx-low) .apple-fade-enter-from,
+:global(.gfx-low) .apple-fade-enter-active,
+:global(.gfx-low) .apple-fade-enter-to,
+:global(.gfx-low) .apple-slide-enter-from,
+:global(.gfx-low) .apple-slide-enter-active,
+:global(.gfx-low) .apple-slide-enter-to,
+:global(body.gfx-low) .apple-fade-enter-from,
+:global(body.gfx-low) .apple-fade-enter-active,
+:global(body.gfx-low) .apple-slide-enter-from,
+:global(body.gfx-low) .apple-slide-enter-active {
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+  visibility: visible !important;
+}
+
+:global(.gfx-low) .fade-in-stagger,
+:global(body.gfx-low) .fade-in-stagger {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  animation: none !important;
+}
+
+:global(.gfx-low) .apple-help-overlay *,
+:global(body.gfx-low) .apple-help-overlay * {
+  animation: none !important;
+  transition: none !important;
+}
+
+:global(.gfx-low) .apple-panel,
+:global(body.gfx-low) .apple-panel {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   background: rgba(255, 255, 255, 0.98) !important;
+  flex-direction: column !important;
 }
 
-:global(.gfx-low) .backdrop {
+:global(.gfx-low) .backdrop,
+:global(body.gfx-low) .backdrop {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   background: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Dark mode support for gfx-low */
+:global(body.dark-mode.gfx-low) .apple-panel,
+:global([data-theme="dark"].gfx-low) .apple-panel {
+  background: rgba(28, 28, 30, 0.98) !important;
 }
 </style>

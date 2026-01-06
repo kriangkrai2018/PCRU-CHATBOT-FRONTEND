@@ -1197,6 +1197,7 @@ export default {
       longPressDuration: 3000, // 3 seconds
       longPressStartTimer: null, // Timer to detect long press vs normal click
       isLongPressing: false, // Track if we're in long press mode
+      fabPointerActive: false, // Track if pointer is actively pressed on FAB
       // 🎬 First-time intro animation (Genshin-style)
       showIntroAnimation: false,
       introPhase: 0, // 0: not started, 1: logo, 2: particles, 3: reveal
@@ -2239,6 +2240,7 @@ export default {
       if (this.longPressStartTimer) clearTimeout(this.longPressStartTimer);
       if (this.longPressTimer) clearInterval(this.longPressTimer);
       
+      this.fabPointerActive = true; // Mark that pointer is pressed
       this.isLongPressing = false;
       
       // Wait 500ms before starting countdown
@@ -2284,6 +2286,12 @@ export default {
     onFabPointerUp(e) {
       console.log('[FAB] pointerup/leave', e?.type, 'isLongPressing:', this.isLongPressing, 'showOverlay:', this.showLongPressOverlay);
       
+      // If pointerleave but we never pressed down, just ignore (hover only)
+      if (e?.type === 'pointerleave' && !this.fabPointerActive) {
+        console.log('[FAB] Ignoring pointerleave - no active press');
+        return;
+      }
+      
       // If overlay is showing, ignore ALL pointer events (countdown is running)
       if (this.showLongPressOverlay) {
         console.log('[FAB] Ignoring pointer event while overlay is shown');
@@ -2307,6 +2315,14 @@ export default {
       if (this.isLongPressing) {
         console.log('[FAB] Cancelling long press');
         this.isLongPressing = false;
+        this.fabPointerActive = false;
+        return;
+      }
+      
+      // If pointerleave (not pointerup), don't open - only open on actual click release
+      if (e?.type === 'pointerleave' || e?.type === 'pointercancel') {
+        console.log('[FAB] Pointer left/cancelled - not opening chat');
+        this.fabPointerActive = false;
         return;
       }
       
@@ -2321,6 +2337,7 @@ export default {
       }
       
       this.isLongPressing = false;
+      this.fabPointerActive = false;
     },
     completeLongPress() {
       console.log('[FAB] completeLongPress - navigating to login');
@@ -2780,6 +2797,9 @@ export default {
       root.classList.add(`gfx-${quality}`);
       body.classList.add(`gfx-${quality}`);
       
+      // 🔧 Dynamic CSS Loading - Load ONLY the selected quality CSS
+      this.loadGraphicsCss(quality);
+      
       // Apply settings based on quality
       if (quality === 'low') {
         // Low: Disable all effects
@@ -2810,14 +2830,48 @@ export default {
       }
     },
     
+    /**
+     * 🎨 Dynamic CSS loader for graphics modes
+     * Loads ONLY the CSS for the selected quality, removes others
+     */
+    loadGraphicsCss(quality) {
+      const qualities = ['low', 'medium', 'high'];
+      const cssId = (q) => `gfx-css-${q}`;
+      
+      // Remove ALL graphics CSS files first
+      qualities.forEach(q => {
+        const existing = document.getElementById(cssId(q));
+        if (existing) {
+          existing.remove();
+          console.log(`🗑️ Removed gfx-${q}.css`);
+        }
+      });
+      
+      // Create and load ONLY the selected quality CSS
+      const link = document.createElement('link');
+      link.id = cssId(quality);
+      link.rel = 'stylesheet';
+      // Use public folder path (works in both dev and production)
+      link.href = `/gfx-${quality}.css`;
+      
+      document.head.appendChild(link);
+      console.log(`✅ Loaded gfx-${quality}.css`);
+    },
+    
     loadGraphicsQuality() {
       try {
         const saved = localStorage.getItem('chatbot_graphics_quality');
         if (saved && ['low', 'medium', 'high'].includes(saved)) {
           this.graphicsQuality = saved;
           this.applyGraphicsQuality(saved);
+        } else {
+          // Default to high if not set
+          this.applyGraphicsQuality('high');
         }
-      } catch (e) { /* ignore */ }
+      } catch (e) { 
+        // Default to high on error
+        this.applyGraphicsQuality('high');
+      }
     },
     
     // 📊 Performance Monitoring Methods

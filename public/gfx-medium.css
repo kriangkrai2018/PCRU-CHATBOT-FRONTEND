@@ -1,0 +1,70 @@
+/* ==========================================================================
+   ⚖️ GRAPHICS MEDIUM MODE - Balanced Performance
+   ========================================================================== */
+
+/* Hide heavy decorative elements only */
+.snowflake,
+.intro-particle {
+  display: none !important;
+}
+
+/* Reduced blur for performance */
+.chat-panel::before,
+.chat-panel::after {
+  opacity: 0.3 !important;
+  filter: blur(60px) !important;
+}
+
+/* Reduced backdrop blur */
+.message-bubble,
+.backdrop-card {
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+/* Keep animations at normal speed - don't override */
+/* Just disable heavy effects like particles and snowflakes */
+
+/* Keep essential effects */
+.wave-hand,
+.bot-sleeping-zzz {
+  display: block;
+}
+
+/* Moderate shadows */
+.message-bubble,
+.chat-panel,
+.backdrop-card,
+.category-btn,
+.sub-item,
+.suggestion-btn {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+}
+
+/* ==========================================================================
+   📖 HELP OVERLAY - Normal display
+   ========================================================================== */
+.apple-help-overlay {
+  display: flex;
+  visibility: visible;
+  opacity: 1;
+}
+
+.apple-help-overlay .backdrop {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.apple-help-overlay .apple-panel {
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+/* ==========================================================================
+   🔘 FAB BUTTON
+   ========================================================================== */
+.fab-open {
+  display: flex;
+  visibility: visible;
+  opacity: 1;
+}

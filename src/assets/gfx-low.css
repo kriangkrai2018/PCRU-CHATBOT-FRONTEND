@@ -1,0 +1,265 @@
+/* ==========================================================================
+   🔋 GRAPHICS LOW MODE - Maximum Performance
+   ========================================================================== */
+
+/* Hide ALL decorative elements */
+.snowflake,
+.intro-particle,
+.wave-hand,
+.bot-sleeping-zzz,
+.sparkle,
+.glow-effect,
+.chat-panel::before,
+.chat-panel::after {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Disable ALL animations, transitions, and filters - EXCEPT FAB */
+*:not(.fab-open):not(.fab-open *),
+*:not(.fab-open)::before,
+*:not(.fab-open)::after {
+  animation: none !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition: none !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+  will-change: auto !important;
+}
+
+/* Simplified shadows */
+.message-bubble,
+.chat-panel,
+.backdrop-card,
+.category-btn,
+.sub-item,
+.suggestion-btn {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+/* Solid backgrounds - Light mode */
+.chat-panel {
+  background: rgba(255, 255, 255, 0.98) !important;
+}
+
+/* Solid backgrounds - Dark mode */
+.dark-mode .chat-panel,
+[data-theme="dark"] .chat-panel {
+  background: #1c1c1e !important;
+}
+
+/* Force visibility for essential elements */
+#app,
+main,
+.chat-overlay,
+.chat-panel,
+.chat-wrapper,
+.chatbot-container,
+.panel-body,
+.panel-footer,
+.panel-top,
+.panel-header,
+.messages-container,
+.message-wrapper,
+.message-text,
+.message-bubble,
+.category-btn,
+.sub-item,
+.suggestion-btn,
+button,
+input,
+textarea {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Chat overlay must display */
+.chat-overlay {
+  display: flex !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1400 !important;
+}
+
+/* ==========================================================================
+   🔘 FAB BUTTON - Must be visible (CRITICAL - highest specificity)
+   ========================================================================== */
+body.gfx-low .fab-open,
+html.gfx-low .fab-open,
+.gfx-low .fab-open,
+body.gfx-low button.fab-open,
+button.fab-open {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: fixed !important;
+  right: 24px !important;
+  bottom: 36px !important;
+  width: 58px !important;
+  height: 58px !important;
+  z-index: 2147483647 !important; /* Max z-index */
+  background: linear-gradient(135deg, #6B2C91 0%, #8B4CB8 100%) !important;
+  border-radius: 29px !important;
+  border: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 16px rgba(107, 44, 145, 0.3) !important;
+  transform: none !important;
+  pointer-events: auto !important;
+}
+
+/* Chat-root should not clip FAB */
+.chat-root {
+  overflow: visible !important;
+}
+
+/* ==========================================================================
+   📖 HELP OVERLAY - Apple Help Modal
+   ========================================================================== */
+.apple-help-overlay {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
+}
+
+.apple-help-overlay .backdrop {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
+.apple-help-overlay .apple-panel {
+  display: flex !important;
+  flex-direction: column !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+  background: #ffffff !important;
+  position: relative !important;
+  z-index: 2 !important;
+  max-height: 100vh !important;
+  overflow-y: auto !important;
+}
+
+.apple-help-overlay .panel-content {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  overflow-y: auto !important;
+}
+
+.apple-help-overlay .panel-header {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background: #ffffff !important;
+}
+
+.apple-help-overlay .apple-section,
+.apple-help-overlay .feature-card,
+.apple-help-overlay .section-hero {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.apple-help-overlay .feature-grid {
+  display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Force all children visible */
+.apple-help-overlay *,
+.apple-help-overlay *::before,
+.apple-help-overlay *::after {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Dark mode help overlay */
+.dark-mode .apple-help-overlay .apple-panel,
+[data-theme="dark"] .apple-help-overlay .apple-panel {
+  background: #1c1c1e !important;
+}
+
+.dark-mode .apple-help-overlay .panel-header,
+[data-theme="dark"] .apple-help-overlay .panel-header {
+  background: #1c1c1e !important;
+}
+
+/* ==========================================================================
+   🎬 INTRO ANIMATION - Allow ONLY intro to have effects
+   ========================================================================== */
+.intro-overlay,
+.intro-overlay *,
+.intro-overlay *::before,
+.intro-overlay *::after {
+  animation: revert !important;
+  animation-duration: revert !important;
+  animation-delay: revert !important;
+  transition: revert !important;
+  transform: revert !important;
+  backdrop-filter: revert !important;
+  -webkit-backdrop-filter: revert !important;
+  filter: revert !important;
+  will-change: revert !important;
+  visibility: visible !important;
+  opacity: revert !important;
+}
+
+.intro-overlay .intro-particle,
+.intro-overlay .intro-glow,
+.intro-overlay .intro-ring,
+.intro-overlay .sparkle,
+.intro-overlay .glow-effect {
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* ==========================================================================
+   📱 Vue Transition Overrides
+   ========================================================================== */
+.apple-fade-enter-from,
+.apple-fade-enter-active,
+.apple-fade-enter-to,
+.apple-slide-enter-from,
+.apple-slide-enter-active,
+.apple-slide-enter-to,
+.fade-enter-from,
+.fade-enter-active,
+.fade-enter-to {
+  opacity: 1 !important;
+  transform: translateX(0) translateY(0) !important;
+  visibility: visible !important;
+}
+
+/* More menu items */
+.more-menu-item,
+.submenu-option {
+  transition: none !important;
+}
+
+.more-menu-item.visible,
+.submenu-option.visible {
+  transform: translateY(0) scale(1) !important;
+  opacity: 1 !important;
+}
+
+.dot-animated {
+  animation: none !important;
+}

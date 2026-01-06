@@ -50,6 +50,8 @@ export default defineConfig(({ mode }) => {
       cssCodeSplit: true,
       // Target modern browsers for smaller bundle
       target: 'es2020',
+      // Copy gfx CSS files to assets folder
+      copyPublicDir: true,
     },
     // Dev server optimizations
     server: {
