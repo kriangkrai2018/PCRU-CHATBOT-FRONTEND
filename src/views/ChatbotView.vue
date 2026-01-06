@@ -223,7 +223,13 @@
                   <div class="bot-avatar-wrapper">
                     <div class="bot-avatar" role="button" tabindex="0" @click="openAiIntro" title="เปิด AI เต็มจอ">
                       <img :src="botAvatar" alt="Bot" class="bot-avatar-img" />
-                      <!-- 💤 Sleeping zzz - show only if no messages (last avatar) -->
+                      <!-- � Offline Badge on Bot Avatar -->
+                      <transition name="fade">
+                        <div v-if="isOffline" class="bot-avatar-offline-badge" title="ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้">
+                          <span class="offline-badge-dot"></span>
+                        </div>
+                      </transition>
+                      <!-- �💤 Sleeping zzz - show only if no messages (last avatar) -->
                       <transition name="zzz-fade">
                         <div v-if="isBotSleeping && messages.length === 0" class="bot-sleeping-zzz">
                           <span class="zzz-bubble zzz-1">z</span>
@@ -387,7 +393,13 @@
                 <div v-if="msg.type === 'bot'" class="bot-avatar-wrapper">
                   <div class="bot-avatar" role="button" tabindex="0" @click="openAiIntro" title="เปิด AI เต็มจอ">
                     <img :src="botAvatar" alt="Bot" class="bot-avatar-img" />
-                    <!-- 💤 Sleeping zzz animation -->
+                    <!-- � Offline Badge on Bot Avatar -->
+                    <transition name="fade">
+                      <div v-if="isOffline" class="bot-avatar-offline-badge" title="ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้">
+                        <span class="offline-badge-dot"></span>
+                      </div>
+                    </transition>
+                    <!-- �💤 Sleeping zzz animation -->
                     <transition name="zzz-fade">
                       <div v-if="isBotSleeping && idx === lastBotMessageIndex" class="bot-sleeping-zzz">
                         <span class="zzz-bubble zzz-1">z</span>
@@ -719,6 +731,12 @@
               <div class="bot-avatar-wrapper">
                 <div class="bot-avatar" role="button" tabindex="0" @click="openAiIntro" title="เปิด AI เต็มจอ">
                   <img :src="botAvatar" alt="Bot" class="bot-avatar-img" />
+                  <!-- 🔴 Offline Badge on Bot Avatar -->
+                  <transition name="fade">
+                    <div v-if="isOffline" class="bot-avatar-offline-badge" title="ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้">
+                      <span class="offline-badge-dot"></span>
+                    </div>
+                  </transition>
                 </div>
               </div>
               <div class="message-bubble bot">
@@ -5825,6 +5843,71 @@ export default {
         }
       }
       return false
+    },
+    // 🔄 Retry loading categories when offline
+    async retryLoadCategories() {
+      this.loading = true
+      this.loadError = ''
+      this.isOffline = false
+      try {
+        const res = await this.$axios.get('/categories', { params: { onlyWithAnswers: 1 } })
+        let payload = res.data
+        
+        if (payload && !Array.isArray(payload)) {
+          if (Array.isArray(payload.categories)) {
+            payload = payload.categories
+          } else {
+            throw new Error('Categories API returned unexpected structure')
+          }
+        }
+        
+        if (Array.isArray(payload) && payload.length && payload[0].hasOwnProperty('CategoriesID')) {
+          const byId = {}
+          const childrenByParent = {}
+          
+          payload.forEach(r => {
+            const id = String(r.CategoriesID)
+            const parentId = r.ParentCategoriesID == null ? null : String(r.ParentCategoriesID)
+            const isTopLevel = !parentId || parentId === id
+            
+            byId[id] = {
+              id,
+              title: r.CategoriesName || 'Untitled',
+              parent: isTopLevel ? null : parentId,
+              pdf: r.CategoriesPDF || null
+            }
+            
+            if (parentId && parentId !== id) {
+              if (!childrenByParent[parentId]) childrenByParent[parentId] = []
+              childrenByParent[parentId].push(id)
+            }
+          })
+          
+          const mappedCategories = []
+          Object.keys(byId).forEach(id => {
+            const cat = byId[id]
+            if (!cat.parent) {
+              const children = childrenByParent[id] || []
+              mappedCategories.push({
+                title: cat.title,
+                items: children.map(childId => byId[childId].title)
+              })
+            }
+          })
+          
+          if (mappedCategories.length > 0) {
+            this.categories = mappedCategories
+          }
+        }
+        
+        this.restoreCategoriesDisabledState()
+      } catch (err) {
+        console.error('Retry load categories failed:', err)
+        this.loadError = err?.message || 'Failed to load categories'
+        this.isOffline = true
+      } finally {
+        this.loading = false
+      }
     },
     // Restore disabled state from localStorage after loading categories
     restoreCategoriesDisabledState() {

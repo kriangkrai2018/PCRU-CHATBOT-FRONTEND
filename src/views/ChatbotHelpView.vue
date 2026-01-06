@@ -161,13 +161,15 @@
               </div>
 
               <div class="example-container">
-                <div class="example-row neutral">
+                <div v-if="currentNegativeKeyword" class="example-row neutral negative-carousel">
                   <div class="indicator"><i class="bi bi-hand-thumbs-down-fill"></i></div>
-                  <div class="text">
-                    <strong>ปฏิเสธการค้นหา:</strong> พิมพ์ "ไม่" หรือ "ไม่เอาทุน" บอทจะหยุดค้นหาเรื่องนั้นให้ทันที
-                  </div>
+                  <transition name="slide-fade" mode="out-in">
+                    <div class="text" :key="negativeIndex">
+                      <strong>ปฏิเสธการค้นหา:</strong> พิมพ์ "{{ currentNegativeKeyword }}" บอทจะหยุดค้นหาเรื่องนั้นให้ทันที
+                    </div>
+                  </transition>
                 </div>
-                <p class="helper-text">
+                <p v-if="currentNegativeKeyword" class="helper-text">
                   หากบอทตอบไม่ตรง สามารถกดปุ่ม "ส่งต่อ" เพื่อส่งคำถามให้เจ้าหน้าที่ได้
                 </p>
               </div>
@@ -289,6 +291,10 @@ export default {
       synonyms: [],
       synonymIndex: 0,
       synonymInterval: null,
+      // 🚫 Negative keywords carousel
+      negativeKeywords: [],
+      negativeIndex: 0,
+      negativeInterval: null,
       // 🌟 Popular questions carousel
       popularQuestions: [],
       popularIndex: 0,
@@ -317,6 +323,11 @@ export default {
     currentSynonym() {
       if (!this.synonyms.length) return null;
       return this.synonyms[this.synonymIndex];
+    },
+    // 🚫 Current negative keyword to display in carousel
+    currentNegativeKeyword() {
+      if (!this.negativeKeywords.length) return null;
+      return this.negativeKeywords[this.negativeIndex];
     },
     // 🌟 Current popular question to display in carousel
     currentPopularQuestion() {
@@ -410,6 +421,36 @@ export default {
         this.synonymIndex = (this.synonymIndex + 1) % this.synonyms.length;
       }, 5000);
     },
+    // 🚫 Load negative keywords from database
+    async loadNegativeKeywords() {
+      try {
+        const res = await this.$axios.get('/negativekeywords/public');
+        const data = res.data?.data || res.data || [];
+        // Extract keyword text - API returns { Word }
+        this.negativeKeywords = data.map(k => k.Word || k.KeywordText || k.keyword || '').filter(k => k);
+        
+        console.log('🚫 Loaded negative keywords:', this.negativeKeywords.length, this.negativeKeywords);
+        
+        // Start carousel if we have keywords
+        if (this.negativeKeywords.length > 0) {
+          this.startNegativeCarousel();
+        }
+      } catch (e) {
+        console.error('Failed to load negative keywords:', e);
+        // No fallback - only use database data
+        this.negativeKeywords = [];
+      }
+    },
+    startNegativeCarousel() {
+      // Clear existing interval
+      if (this.negativeInterval) {
+        clearInterval(this.negativeInterval);
+      }
+      // Change keyword every 5 seconds
+      this.negativeInterval = setInterval(() => {
+        this.negativeIndex = (this.negativeIndex + 1) % this.negativeKeywords.length;
+      }, 5000);
+    },
     // 🌟 Load popular questions from database
     async loadPopularQuestions() {
       try {
@@ -443,6 +484,7 @@ export default {
   mounted() {
     this.loadCategories();
     this.loadSynonyms();
+    this.loadNegativeKeywords();
     this.loadPopularQuestions();
   },
   beforeDestroy() {
@@ -450,6 +492,10 @@ export default {
     if (this.synonymInterval) {
       clearInterval(this.synonymInterval);
       this.synonymInterval = null;
+    }
+    if (this.negativeInterval) {
+      clearInterval(this.negativeInterval);
+      this.negativeInterval = null;
     }
     if (this.popularInterval) {
       clearInterval(this.popularInterval);
