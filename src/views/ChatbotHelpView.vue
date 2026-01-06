@@ -92,7 +92,7 @@
               </div>
               
               <div class="example-container">
-                <div class="example-row magic synonym-carousel">
+                <div v-if="currentSynonym" class="example-row magic synonym-carousel">
                   <div class="indicator">
                     <i class="bi bi-stars"></i>
                   </div>
@@ -102,15 +102,7 @@
                     </div>
                   </transition>
                 </div>
-                <div class="example-row magic">
-                  <div class="indicator">
-                    <i class="bi bi-translate"></i>
-                  </div>
-                  <div class="text">
-                    <strong>คำทับศัพท์:</strong> พิมพ์ "อีบุ๊ค" <i class="bi bi-arrow-right-short"></i> เข้าใจเป็น "E-Book"
-                  </div>
-                </div>
-                <p class="helper-text">
+                <p v-if="currentSynonym" class="helper-text">
                   ระบบช่วยแปลงคำพูดภาษาไทยให้เป็นคำค้นที่ถูกต้องโดยอัตโนมัติ ไม่ต้องกังวลเรื่องสะกดผิด
                 </p>
               </div>
@@ -128,9 +120,13 @@
               </div>
               
               <div class="example-container">
-                <div class="example-row good">
+                <div class="example-row good popular-carousel">
                   <div class="indicator"><i class="bi bi-check-circle-fill"></i></div>
-                  <div class="text"><strong>แนะนำ:</strong> "ขอรายละเอียดทุนเรียนดีปีล่าสุด"</div>
+                  <transition name="slide-fade" mode="out-in">
+                    <div class="text" :key="popularIndex">
+                      <strong>แนะนำ:</strong> "{{ currentPopularQuestion.title }}"
+                    </div>
+                  </transition>
                 </div>
                 <div class="example-row good">
                   <div class="indicator"><i class="bi bi-check-circle-fill"></i></div>
@@ -292,7 +288,11 @@ export default {
       // 🎠 Synonyms carousel
       synonyms: [],
       synonymIndex: 0,
-      synonymInterval: null
+      synonymInterval: null,
+      // 🌟 Popular questions carousel
+      popularQuestions: [],
+      popularIndex: 0,
+      popularInterval: null
     }
   },
   computed: {
@@ -315,8 +315,13 @@ export default {
     },
     // 🎠 Current synonym to display in carousel
     currentSynonym() {
-      if (!this.synonyms.length) return { original: 'สามหกห้า', target: '365' };
+      if (!this.synonyms.length) return null;
       return this.synonyms[this.synonymIndex];
+    },
+    // 🌟 Current popular question to display in carousel
+    currentPopularQuestion() {
+      if (!this.popularQuestions.length) return { title: 'ขอรายละเอียดทุนเรียนดีปีล่าสุด' };
+      return this.popularQuestions[this.popularIndex];
     }
   },
   methods: {
@@ -374,13 +379,16 @@ export default {
     // 🎠 Load synonyms from database
     async loadSynonyms() {
       try {
-        const res = await this.$axios.get('/synonyms');
+        const res = await this.$axios.get('/synonyms/public');
         const data = res.data?.data || res.data || [];
         // Map to { original, target } format
+        // API returns: InputWord (คำที่ผู้ใช้พิมพ์), TargetKeyword (keyword เป้าหมาย)
         this.synonyms = data.map(s => ({
-          original: s.OriginalWord || s.original || '',
-          target: s.SynonymWord || s.synonym || ''
+          original: s.InputWord || s.OriginalWord || s.original || '',
+          target: s.TargetKeyword || s.SynonymWord || s.synonym || ''
         })).filter(s => s.original && s.target);
+        
+        console.log('🎠 Loaded synonyms:', this.synonyms.length, this.synonyms);
         
         // Start carousel if we have synonyms
         if (this.synonyms.length > 0) {
@@ -388,8 +396,8 @@ export default {
         }
       } catch (e) {
         console.error('Failed to load synonyms:', e);
-        // Keep default fallback
-        this.synonyms = [{ original: 'สามหกห้า', target: '365' }];
+        // No fallback - only use database data
+        this.synonyms = [];
       }
     },
     startSynonymCarousel() {
@@ -401,17 +409,51 @@ export default {
       this.synonymInterval = setInterval(() => {
         this.synonymIndex = (this.synonymIndex + 1) % this.synonyms.length;
       }, 5000);
+    },
+    // 🌟 Load popular questions from database
+    async loadPopularQuestions() {
+      try {
+        const res = await this.$axios.get('/questionsanswers/popular', { params: { limit: 10 } });
+        const data = res.data?.data || res.data || [];
+        this.popularQuestions = data.filter(q => q.title);
+        
+        console.log('🌟 Loaded popular questions:', this.popularQuestions.length, this.popularQuestions);
+        
+        // Start carousel if we have questions
+        if (this.popularQuestions.length > 0) {
+          this.startPopularCarousel();
+        }
+      } catch (e) {
+        console.error('Failed to load popular questions:', e);
+        // Keep default fallback
+        this.popularQuestions = [{ title: 'ขอรายละเอียดทุนเรียนดีปีล่าสุด' }];
+      }
+    },
+    startPopularCarousel() {
+      // Clear existing interval
+      if (this.popularInterval) {
+        clearInterval(this.popularInterval);
+      }
+      // Change question every 5 seconds
+      this.popularInterval = setInterval(() => {
+        this.popularIndex = (this.popularIndex + 1) % this.popularQuestions.length;
+      }, 5000);
     }
   },
   mounted() {
     this.loadCategories();
     this.loadSynonyms();
+    this.loadPopularQuestions();
   },
   beforeDestroy() {
-    // Cleanup carousel interval
+    // Cleanup carousel intervals
     if (this.synonymInterval) {
       clearInterval(this.synonymInterval);
       this.synonymInterval = null;
+    }
+    if (this.popularInterval) {
+      clearInterval(this.popularInterval);
+      this.popularInterval = null;
     }
   }
 }
@@ -931,5 +973,31 @@ export default {
 :global(body.dark-mode.gfx-low) .apple-panel,
 :global([data-theme="dark"].gfx-low) .apple-panel {
   background: rgba(28, 28, 30, 0.98) !important;
+}
+
+/* 🎠 Synonym Carousel Transitions */
+.slide-fade-enter-active {
+  transition: all 0.5s ease-out;
+}
+.slide-fade-leave-active {
+  transition: all 0.3s ease-in;
+}
+.slide-fade-enter-from {
+  transform: translateX(30px);
+  opacity: 0;
+}
+.slide-fade-leave-to {
+  transform: translateX(-30px);
+  opacity: 0;
+}
+
+.synonym-carousel,
+.popular-carousel {
+  overflow: hidden;
+}
+
+.synonym-carousel .text,
+.popular-carousel .text {
+  min-width: 200px;
 }
 </style>

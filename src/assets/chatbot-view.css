@@ -692,6 +692,41 @@ html.keyboard-open .close-circle {
   stroke-width: 2.5;
 }
 
+/* 🔴 Offline Status Indicator */
+.offline-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px 5px 10px;
+  margin-left: 8px;
+  background: rgba(220, 53, 69, 0.95);
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
+  z-index: 10;
+}
+
+.offline-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  animation: offline-pulse 1.5s ease-in-out infinite;
+}
+
+.offline-text {
+  line-height: 1;
+}
+
+@keyframes offline-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
 /* Close icon hover nudge */
 .close-circle svg {
   display: block;

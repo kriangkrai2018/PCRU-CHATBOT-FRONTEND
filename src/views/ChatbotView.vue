@@ -97,6 +97,14 @@
               </svg>
             </button>
             
+            <!-- 🔴 Offline Status Indicator -->
+            <transition name="fade">
+              <div v-if="isOffline" class="offline-indicator" title="ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้">
+                <span class="offline-dot"></span>
+                <span class="offline-text">ออฟไลน์</span>
+              </div>
+            </transition>
+            
             <!-- 🎯 More Options Menu (3-dot button) -->
             <div class="more-options-wrapper">
               <button 
@@ -285,7 +293,27 @@
                         <div class="spinner-border text-secondary" role="status"><span class="visually-hidden">Loading...</span></div>
                       </div>
 
-                      <div v-else-if="loadError" class="py-4 text-center text-danger">{{ loadError }}</div>
+                      <div v-else-if="loadError" class="offline-categories-error">
+                        <div class="offline-icon">
+                          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+                            <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+                            <path d="M10.71 5.05A16 16 0 0 1 22.58 9"/>
+                            <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+                            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+                            <line x1="12" y1="20" x2="12.01" y2="20"/>
+                          </svg>
+                        </div>
+                        <div class="offline-title">ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์</div>
+                        <div class="offline-subtitle">กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วลองใหม่อีกครั้ง</div>
+                        <button class="offline-retry-btn" @click="retryLoadCategories">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                          </svg>
+                          ลองใหม่
+                        </button>
+                      </div>
 
                       <div v-else>
                         <div v-if="!displayedCategories || displayedCategories.length === 0" class="py-4 text-center text-muted">
@@ -553,7 +581,7 @@
                                     <span v-if="!/^ลิงค์/i.test(part)">ลิงค์ : </span>
                                     <span v-html="linkifyText(part)"></span>
                                   </div>
-                                  <div v-else-if="hasContact(part)">
+                                  <div v-else-if="hasPhoneOrUrl(part)">
                                     <span>ติดต่อ: </span><span v-html="linkifyText(part)"></span>
                                   </div>
                                 </div>
@@ -1013,6 +1041,7 @@ export default {
       drawerWidth: '400px',
       loading: false,
       loadError: '',
+      isOffline: false, // 🔴 Backend connection status
       query: '',
       placeholderText: 'ขอทุน, ปฏิทินวิชาการ, สวัสดิการ',
       placeholderExamples: [], // Array of synonym examples from database
@@ -1743,6 +1772,7 @@ export default {
     // shape: { CategoriesID, CategoriesName, ParentCategoriesID, CategoriesPDF }
     this.loading = true
     this.loadError = ''
+    this.isOffline = false // 🟢 Reset offline status before trying
     try {
       if (!this.$axios) throw new Error('axios plugin not available as $axios')
       const res = await this.$axios.get('/categories', { params: { onlyWithAnswers: 1 } })
@@ -1852,6 +1882,8 @@ export default {
     } catch (err) {
       console.error('Failed to load categories from backend, using local placeholders', err)
       this.loadError = err?.message || 'Failed to load categories'
+      // 🔴 Set offline status when backend fails
+      this.isOffline = true
       // Keep default categories from data() when API fails
     } finally {
       this.loading = false
@@ -2874,8 +2906,16 @@ export default {
       try {
         const saved = localStorage.getItem('chatbot_graphics_quality');
         if (saved && ['low', 'medium', 'high'].includes(saved)) {
-          this.graphicsQuality = saved;
-          this.applyGraphicsQuality(saved);
+          // 🚫 บังคับให้ผู้ที่อยู่โหมด low เปลี่ยนมาเป็น medium
+          if (saved === 'low') {
+            console.log('⚠️ Graphics low mode is disabled, switching to medium');
+            this.graphicsQuality = 'medium';
+            localStorage.setItem('chatbot_graphics_quality', 'medium');
+            this.applyGraphicsQuality('medium');
+          } else {
+            this.graphicsQuality = saved;
+            this.applyGraphicsQuality(saved);
+          }
         } else {
           // Default to high if not set
           this.applyGraphicsQuality('high');
@@ -3174,6 +3214,19 @@ export default {
       // Return true if linkifyText(raw) contains meaningful contact info (not blank or 'ไม่มี')
       const plain = (this.linkifyText(raw || '') || '').replace(/<[^>]+>/g, '').trim();
       return !!plain && !/^ไม่มี$/i.test(plain);
+    },
+    hasPhoneOrUrl(raw) {
+      // Return true ONLY if raw contains a phone number or URL
+      // ไม่แสดงข้อความทั่วไปเช่น "สมัครเรียนและทุนอุดหนุนการศึกษา"
+      if (!raw) return false;
+      const str = String(raw);
+      // Check for phone number pattern (Thai format)
+      const hasPhone = /0[- ]?\d{1,2}[- ]?\d{3}[- ]?\d{3,4}/.test(str);
+      // Check for URL
+      const hasUrl = /https?:\/\/|www\.|facebook\./i.test(str);
+      // Check for extension pattern (ต่อ XXXX)
+      const hasExt = /ต่อ\s*\d{3,5}/i.test(str);
+      return hasPhone || hasUrl || hasExt;
     },
     // 🗺️ Create Apple-style embedded Google Map widget
     createMapWidget(mapUrl, lat, lng, label = 'ดูแผนที่') {
@@ -5464,16 +5517,19 @@ export default {
                     return false;
                   }
 
-                  // New logic: aggregate extensions for same base phone into one entry
-                  const phoneAggregateMap = new Map(); // phone -> { idx, exts: Set, urls: Set }
+                  // New logic: aggregate extensions for same base phone AND same organization into one entry
+                  const phoneAggregateMap = new Map(); // "org|phone" -> { idx, exts: Set, urls: Set }
 
                   for (const item of normalized) {
                     const phone = extractPhone(item.contact);
                     const extsArr = extractExts(item.contact);
                     const urlsFound = extractUrls(item.contact);
+                    const org = (item.organization || '').trim();
 
                     if (phone) {
-                      if (!phoneAggregateMap.has(phone)) {
+                      // Use org + phone as key to keep different organizations separate
+                      const aggregateKey = `${org}|${phone}`;
+                      if (!phoneAggregateMap.has(aggregateKey)) {
                         const exts = new Set();
                         const urlsSet = new Set();
                         if (extsArr && extsArr.length) extsArr.forEach(e => exts.add(e));
@@ -5481,10 +5537,10 @@ export default {
                         const contactText = `${formatPhone(phone)}${exts.size ? ' ต่อ ' + Array.from(exts).join(' หรือ ') : ''}${urlsSet.size ? '\nลิงค์ : ' + Array.from(urlsSet).join(' หรือ ') : ''}`;
                         const idx = result.length;
                         result.push({ organization: item.organization, contact: contactText });
-                        phoneAggregateMap.set(phone, { idx, exts, urls: urlsSet });
+                        phoneAggregateMap.set(aggregateKey, { idx, exts, urls: urlsSet });
                       } else {
-                        // merge extension and urls into existing
-                        const entry = phoneAggregateMap.get(phone);
+                        // merge extension and urls into existing (same org + same phone)
+                        const entry = phoneAggregateMap.get(aggregateKey);
                         if (extsArr && extsArr.length) extsArr.forEach(e => entry.exts.add(e));
                         if (urlsFound && urlsFound.length) urlsFound.forEach(u => entry.urls.add(u));
                         const contactText = `${formatPhone(phone)}${entry.exts.size ? ' ต่อ ' + Array.from(entry.exts).join(' หรือ ') : ''}${entry.urls.size ? '\nลิงค์ : ' + Array.from(entry.urls).join(' หรือ ') : ''}`;
