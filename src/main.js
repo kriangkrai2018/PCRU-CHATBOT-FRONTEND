@@ -26,7 +26,7 @@ const app = createApp(App)
 
 // กำหนด Global Properties
 app.config.globalProperties.$axios = axios.create({
-  baseURL: 'http://project.3bbddns.com:36145'
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://pcru-chatbot-backend-tau.vercel.app'
 });
 app.config.globalProperties.$swal = Swal;
 app.config.devtools = false;
