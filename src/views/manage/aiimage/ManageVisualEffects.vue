@@ -112,7 +112,9 @@
                 type="checkbox"
                 :checked="summerEnabled"
                 @change="toggleSummer"
-                :disabled="isSaving || !masterEnabled"
+                :disabled="true"
+                data-bs-toggle="tooltip"
+                data-bs-title="Coming Soon"
               />
               <span class="toggle-slider"></span>
             </label>
@@ -142,7 +144,9 @@
                 type="checkbox"
                 :checked="rainEnabled"
                 @change="toggleRain"
-                :disabled="isSaving || !masterEnabled"
+                :disabled="true"
+                data-bs-toggle="tooltip"
+                data-bs-title="Coming Soon"
               />
               <span class="toggle-slider"></span>
             </label>
@@ -315,18 +319,22 @@
               </button>
               <button 
                 class="season-btn" 
-                :class="{ active: previewSeason === 'summer', disabled: !summerEnabled || !masterEnabled }"
+                :class="{ active: previewSeason === 'summer', disabled: true }"
                 @click="previewSeason = 'summer'"
-                :disabled="!summerEnabled || !masterEnabled"
+                :disabled="true"
+                data-bs-toggle="tooltip"
+                data-bs-title="Coming Soon"
               >
                 <span class="season-icon">☀️</span>
                 <span class="season-name">ร้อน</span>
               </button>
               <button 
                 class="season-btn" 
-                :class="{ active: previewSeason === 'rainy', disabled: !rainEnabled || !masterEnabled }"
+                :class="{ active: previewSeason === 'rainy', disabled: true }"
                 @click="previewSeason = 'rainy'"
-                :disabled="!rainEnabled || !masterEnabled"
+                :disabled="true"
+                data-bs-toggle="tooltip"
+                data-bs-title="Coming Soon"
               >
                 <span class="season-icon">🌧️</span>
                 <span class="season-name">ฝน</span>
@@ -581,6 +589,7 @@
 
 <script setup>
 import { ref, computed, onMounted, getCurrentInstance } from 'vue'
+import { Tooltip } from 'bootstrap'
 
 // Get global properties
 const { appContext } = getCurrentInstance()
@@ -915,8 +924,14 @@ const resetSettings = () => {
 }
 
 // Load settings on mount
+const initTooltips = () => {
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+  tooltipTriggerList.map((el) => new Tooltip(el))
+}
+
 onMounted(() => {
   loadSettings()
+  initTooltips()
 })
 </script>
 
