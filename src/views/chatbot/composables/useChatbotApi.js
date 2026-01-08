@@ -20,7 +20,7 @@ export function useChatbotApi(axios) {
       }
 
       // Fallback to fetch if axios not provided
-      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://project.3bbddns.com:36145';
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://pcru-chatbot-backend-elm8jysae-kriangkrai2018-1681s-projects.vercel.app/';
       const response = await fetch(`${baseURL}/chat/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': (localStorage.getItem('userToken') ? `Bearer ${localStorage.getItem('userToken')}` : '') },
