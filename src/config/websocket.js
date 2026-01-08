@@ -9,7 +9,7 @@
  * @returns {string} WebSocket base URL
  */
 export function getWebSocketBaseUrl(axios = null) {
-  const baseURL = axios?.defaults?.baseURL || import.meta.env.VITE_API_BASE_URL || 'https://pcru-chatbot-backend-elm8jysae-kriangkrai2018-1681s-projects.vercel.app/';
+  const baseURL = axios?.defaults?.baseURL || import.meta.env.VITE_API_BASE_URL;
   // Remove trailing slash if present before converting to ws protocol
   const cleanUrl = baseURL.replace(/\/$/, '');
   return cleanUrl.replace(/^http/, 'ws');

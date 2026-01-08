@@ -6661,7 +6661,7 @@ export default {
           })
       } else {
         // Fallback to fetch (ensure leading slash)
-        const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://pcru-chatbot-backend-elm8jysae-kriangkrai2018-1681s-projects.vercel.app/';
+        const baseURL = import.meta.env.VITE_API_BASE_URL;
         fetch(`${baseURL}/chat/feedback`, {
           method: 'POST',
           headers: {

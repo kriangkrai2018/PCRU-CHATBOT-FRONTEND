@@ -6,7 +6,7 @@ let swalInstance = null;
 // สร้าง Axios instance
 const axiosInstance = axios.create({
   // กำหนด Base URL ของ Backend API
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://pcru-chatbot-backend-elm8jysae-kriangkrai2018-1681s-projects.vercel.app/', // ตรวจสอบให้แน่ใจว่าเป็น URL ของ Backend ของคุณ
+  baseURL: import.meta.env.VITE_API_BASE_URL, // ตรวจสอบให้แน่ใจว่าเป็น URL ของ Backend ของคุณ
   timeout: parseInt(import.meta.env.VITE_AXIOS_TIMEOUT || '10000'), // 🕒 increase default timeout to avoid quick aborts
   headers: {
     'Content-Type': 'application/json',
