@@ -1,23 +1,38 @@
 <template>
-  <div class="manage-google-account">
-    <div class="page-header mb-4">
-      <h4 class="mb-1">
-        <i class="bi bi-google me-2"></i>
-        จัดการบัญชี Google
-      </h4>
-      <p class="text-muted mb-0">ผูกหรือยกเลิกการผูกบัญชี Google กับบัญชีของคุณ</p>
-    </div>
+  <div class="dashboard-container">
+    <!-- Mobile Sidebar Backdrop -->
+    <div v-if="isMobileSidebarOpen" class="mobile-sidebar-backdrop" @click="toggleSidebar" aria-hidden="true"></div>
+    
+    <!-- Sidebar -->
+    <Sidebar :userType="userType" :userInfoObject="userInfoObject" />
 
-    <!-- Loading State -->
-    <div v-if="isLoading" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">กำลังโหลด...</span>
-      </div>
-      <p class="text-muted mt-3">กำลังโหลดข้อมูล...</p>
-    </div>
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Mobile Sidebar Toggle -->
+      <button v-if="isMobile" class="mobile-sidebar-toggle mobile-inline-toggle" @click.stop="toggleSidebar" :aria-label="isMobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'">
+        <i class="bi bi-list"></i>
+      </button>
+      
+      <div class="container-fluid">
+        <div class="manage-google-account">
+          <div class="page-header mb-4">
+            <h4 class="mb-1">
+              <i class="bi bi-google me-2"></i>
+              จัดการบัญชี Google
+            </h4>
+            <p class="text-muted mb-0">ผูกหรือยกเลิกการผูกบัญชี Google กับบัญชีของคุณ</p>
+          </div>
 
-    <!-- Content -->
-    <div v-else class="google-account-content">
+          <!-- Loading State -->
+          <div v-if="isLoading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">กำลังโหลด...</span>
+            </div>
+            <p class="text-muted mt-3">กำลังโหลดข้อมูล...</p>
+          </div>
+
+          <!-- Content -->
+          <div v-else class="google-account-content">
       <!-- Already Linked -->
       <div v-if="isLinked" class="linked-card">
         <div class="card">
@@ -113,13 +128,82 @@
         </div>
       </div>
     </div>
+        </div>
+      </div>
+    </main>
+    
+    <!-- Confirm Modal Component -->
+    <ConfirmModalComponent />
   </div>
 </template>
 
 <style scoped>
+@import '@/assets/dashboard-styles.css';
+@import '@/assets/sidebar.css';
+
+.dashboard-container {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex-grow: 1;
+  background-color: #f5f5f7;
+  overflow-x: hidden;
+  padding: 0.5rem !important;
+}
+
+.mobile-sidebar-toggle {
+  display: none;
+  background: #fff;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  padding: 0.6rem 0.8rem;
+  font-size: 1.4rem;
+  line-height: 1;
+  margin-left: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  color: #007AFF;
+}
+
+.mobile-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+}
+
+@media (max-width: 768px) {
+  .mobile-sidebar-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-sidebar-backdrop {
+    display: block;
+  }
+
+  .dashboard-container {
+    grid-template-columns: 1fr;
+  }
+
+  .main-content {
+    grid-column: 1 / -1;
+  }
+}
+
 .manage-google-account {
-  max-width: 600px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
   padding: 20px;
 }
 
@@ -239,8 +323,11 @@
 </style>
 
 <script setup>
-import { ref, onMounted, getCurrentInstance } from 'vue';
+import { ref, onMounted, onUnmounted, getCurrentInstance, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import Sidebar from '@/components/Sidebar.vue';
+import { bindSidebarResize, isSidebarCollapsed, isMobileSidebarOpen } from '@/stores/sidebarState';
+import { useConfirm } from '@/composables/useConfirm';
 
 const route = useRoute();
 const router = useRouter();
@@ -248,13 +335,80 @@ const router = useRouter();
 const { appContext } = getCurrentInstance();
 const { $axios, $swal } = appContext.config.globalProperties;
 
+// Confirm Modal
+const { confirmAction, ConfirmModalComponent } = useConfirm();
+
+// User state
+const userType = ref('');
+const userInfoObject = ref({});
+
+// Sidebar state
+const isMobile = ref(window.innerWidth <= 768);
+let unbindSidebarResize = null;
+let resizeHandler = null;
+let _savedSidebarCollapsed = null;
+
 const isLoading = ref(true);
 const isLinked = ref(false);
 const isLinking = ref(false);
 const isUnlinking = ref(false);
 const googleData = ref({});
 
+function toggleSidebar() {
+  if (isMobile.value) {
+    isMobileSidebarOpen.value = !isMobileSidebarOpen.value;
+    if (isMobileSidebarOpen.value) {
+      if (_savedSidebarCollapsed === null) {
+        _savedSidebarCollapsed = isSidebarCollapsed.value;
+      }
+      isSidebarCollapsed.value = false;
+      document.body.classList.add('sidebar-open', 'sidebar-mobile-expanded');
+    } else {
+      document.body.classList.remove('sidebar-open', 'sidebar-mobile-expanded');
+      if (_savedSidebarCollapsed !== null) {
+        isSidebarCollapsed.value = _savedSidebarCollapsed;
+        _savedSidebarCollapsed = null;
+      }
+    }
+  }
+}
+
 onMounted(async () => {
+  unbindSidebarResize = bindSidebarResize();
+
+  const token = localStorage.getItem('userToken');
+  const type = localStorage.getItem('userType');
+  const userInfoString = localStorage.getItem('userInfo');
+
+  if (!token) {
+    router.replace({ name: 'login' });
+    return;
+  }
+
+  if (type) userType.value = type;
+  if (userInfoString) {
+    try {
+      userInfoObject.value = JSON.parse(userInfoString);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // Mobile resize listener
+  resizeHandler = () => {
+    const newIsMobile = window.innerWidth <= 768;
+    if (newIsMobile !== isMobile.value) {
+      isMobile.value = newIsMobile;
+      if (!newIsMobile && isMobileSidebarOpen.value) {
+        isMobileSidebarOpen.value = false;
+        document.body.classList.remove('sidebar-open', 'sidebar-mobile-expanded');
+        isSidebarCollapsed.value = _savedSidebarCollapsed ?? isSidebarCollapsed.value;
+        _savedSidebarCollapsed = null;
+      }
+    }
+  };
+  window.addEventListener('resize', resizeHandler);
+
   // ตรวจสอบว่ามีการผูกบัญชีสำเร็จหรือไม่
   if (route.query.linked === 'success') {
     $swal.fire({
@@ -271,6 +425,13 @@ onMounted(async () => {
   }
   
   await fetchGoogleLinkStatus();
+});
+
+onUnmounted(() => {
+  if (typeof unbindSidebarResize === 'function') unbindSidebarResize();
+  if (resizeHandler) window.removeEventListener('resize', resizeHandler);
+  isMobileSidebarOpen.value = false;
+  document.body.classList.remove('sidebar-open', 'sidebar-mobile-expanded');
 });
 
 async function fetchGoogleLinkStatus() {
@@ -329,18 +490,19 @@ function handleLinkGoogle() {
 }
 
 async function confirmUnlink() {
-  const result = await $swal.fire({
-    icon: 'warning',
-    title: 'ยืนยันการยกเลิก',
-    text: 'คุณต้องการยกเลิกการผูกบัญชี Google หรือไม่?',
-    showCancelButton: true,
-    confirmButtonText: 'ยกเลิกการผูก',
-    cancelButtonText: 'ไม่',
-    confirmButtonColor: '#dc3545'
-  });
-
-  if (result.isConfirmed) {
-    await unlinkGoogle();
+  try {
+    await confirmAction({
+      title: 'ยืนยันการยกเลิก',
+      message: 'คุณต้องการยกเลิกการผูกบัญชี Google หรือไม่?',
+      variant: 'danger',
+      confirmText: 'ยกเลิกการผูก',
+      loadingText: 'กำลังยกเลิก...',
+      onConfirm: async () => {
+        await unlinkGoogle();
+      }
+    });
+  } catch (err) {
+    // User cancelled
   }
 }
 

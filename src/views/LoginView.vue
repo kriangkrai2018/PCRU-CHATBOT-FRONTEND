@@ -61,8 +61,8 @@
                         </ul>
                     </div>
               
-                    <div class=""><router-link to="/forgotpassword" class="fw-bold text-dark">Forgot password</router-link></div>
-                    <div class="d-grid gap-2 mb-5 col-12 col-lg-4 mx-auto mx-lg-0">
+                    <div class="mb-3"><router-link to="/forgotpassword" class="fw-bold text-dark">Forgot password</router-link></div>
+                    <div class="d-grid gap-2 mb-3 col-12 col-lg-4 mx-auto mx-lg-0">
                         <button type="submit" class="btn rounded-3 fw-bold py-3 px-5 mt-4 fs-5 text-nowrap" style="background-color: #E3E3E3;" :disabled="isSubmitting">
                             <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
                             <span role="status">{{ isSubmitting ? 'Logging in...' : 'Login' }}</span>
@@ -70,13 +70,13 @@
                     </div>
 
                     <!-- Divider -->
-                    <div class="divider-with-text mb-4">
+                    <div class="divider-with-text mb-3">
                       <span>หรือ</span>
                     </div>
 
                     <!-- Google Sign-In Button -->
-                    <div class="d-grid gap-2 col-12 col-lg-6 mx-auto mx-lg-0">
-                        <button type="button" class="btn btn-google rounded-3 py-3 px-4" @click="handleGoogleLogin" :disabled="isGoogleLoading">
+                    <div class="google-btn-container mb-4">
+                        <button type="button" class="btn btn-google rounded-3" @click="handleGoogleLogin" :disabled="isGoogleLoading">
                             <span v-if="isGoogleLoading" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
                             <svg v-else class="google-icon me-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24" height="24">
                               <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -84,7 +84,7 @@
                               <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
                               <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
                             </svg>
-                            <span>เข้าสู่ระบบด้วย Google</span>
+                            <span class="google-btn-text">เข้าสู่ระบบด้วย Google</span>
                         </button>
                     </div>
                     
@@ -182,6 +182,7 @@
   text-align: center;
   color: #6c757d;
   font-size: 14px;
+  margin-top: 20px;
 }
 
 .divider-with-text::before,
@@ -195,8 +196,15 @@
   padding: 0 16px;
 }
 
+/* Google button container */
+.google-btn-container {
+  width: 100%;
+  margin-top: 16px;
+}
+
 /* Google Sign-In Button */
 .btn-google {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -206,6 +214,8 @@
   font-weight: 500;
   font-size: 15px;
   transition: all 0.2s ease;
+  white-space: nowrap;
+  padding: 12px 16px;
 }
 
 .btn-google:hover {
@@ -225,6 +235,97 @@
 
 .btn-google .google-icon {
   flex-shrink: 0;
+}
+
+.btn-google .google-btn-text {
+  flex-shrink: 0;
+}
+
+/* Responsive adjustments for Google button */
+@media (max-width: 375px) {
+  /* Very small phones */
+  .btn-google {
+    font-size: 13px;
+    padding: 10px 12px !important;
+  }
+  
+  .btn-google .google-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px !important;
+  }
+  
+  .btn-google .google-btn-text {
+    font-size: 13px;
+  }
+  
+  .google-btn-container {
+    margin-top: 12px;
+  }
+}
+
+@media (min-width: 376px) and (max-width: 575px) {
+  /* Mobile phones */
+  .btn-google {
+    font-size: 14px;
+    padding: 12px 16px !important;
+  }
+  
+  .btn-google .google-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+  /* Large phones / Small tablets */
+  .btn-google {
+    font-size: 15px;
+    padding: 14px 20px !important;
+  }
+  
+  .btn-google .google-icon {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .google-btn-container {
+    max-width: 400px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  /* Tablets / iPad */
+  .btn-google {
+    font-size: 15px;
+    padding: 16px 24px !important;
+  }
+  
+  .btn-google .google-icon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .google-btn-container {
+    max-width: 450px;
+  }
+}
+
+@media (min-width: 992px) {
+  /* Notebooks / Desktops */
+  .btn-google {
+    font-size: 16px;
+    padding: 16px 28px !important;
+  }
+  
+  .btn-google .google-icon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .google-btn-container {
+    max-width: 500px;
+  }
 }
 
 </style>
