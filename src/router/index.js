@@ -121,6 +121,12 @@ const router = createRouter({
       meta: { requiresAuth: true, allowedRoles: ['admin', 'officer'] }
     },
     {
+      path: '/managegoogleaccount',
+      name: 'managegoogleaccount',
+      component: () => import('@/views/manage/ManageGoogleAccountView.vue'),
+      meta: { requiresAuth: true } // All logged in users can access
+    },
+    {
       path: '/manageadminuser',
       name: 'manageadminuser',
       component: () => import('@/views/manage/ManageAdminUserView.vue'),
@@ -175,6 +181,12 @@ const router = createRouter({
           component: () => import('../views/SetnewpasswordView.vue')
         }
       ]
+    },
+    // Google OAuth Callback route (outside AuthLayout)
+    {
+      path: '/auth/google/callback',
+      name: 'google-callback',
+      component: () => import('../views/GoogleCallbackView.vue')
     },
     {
       path: '/passwordupdated',
