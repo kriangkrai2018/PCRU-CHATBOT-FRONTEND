@@ -695,13 +695,46 @@ html.keyboard-open .close-circle {
   stroke-width: 2.5;
 }
 
-/* 🌟 Floating Orbs - Small purple glowing spheres */
+/* � PCRU Watermark Logo */
+.pcru-watermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.pcru-watermark img {
+  width: 85%;
+  height: auto;
+  max-width: 200px;
+  opacity: 0.18;
+  filter: grayscale(100%);
+  object-fit: contain;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* Dark mode - slightly more visible */
+[data-theme="dark"] .pcru-watermark img {
+  opacity: 0.04;
+  filter: grayscale(100%) brightness(1.2);
+}
+
+/* �🌟 Floating Orbs - Small purple glowing spheres */
 .floating-orbs {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+  transform: translate3d(0, 0, 0);
+  will-change: auto;
+  isolation: isolate;
 }
 
 .orb {
@@ -783,6 +816,9 @@ html.keyboard-open .close-circle {
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+  transform: translate3d(0, 0, 0);
+  will-change: auto;
+  isolation: isolate;
 }
 
 .particle {

@@ -78,8 +78,13 @@
           </div>
         </template>
         
-        <aside class="chat-panel" :style="{ width: drawerWidth, height: viewportHeight }" @click="onPanelClick">
-          <!-- 🌟 Floating Orbs Background (3 small purple glowing spheres) -->
+        <aside class="chat-panel" :style="{ width: drawerWidth, height: viewportHeight }" @click="onPanelClick" @mousemove="onPanelMouseMove">
+          <!-- � PCRU Watermark Logo -->
+          <div class="pcru-watermark">
+            <img src="@/assets/logo.png" alt="PCRU Logo" :style="pcruWatermarkStyle" />
+          </div>
+
+          <!-- �🌟 Floating Orbs Background (3 small purple glowing spheres) -->
           <div v-if="graphicsQuality !== 'low'" class="floating-orbs">
             <div class="orb orb-1"></div>
             <div class="orb orb-2"></div>
@@ -1434,6 +1439,9 @@ export default {
       particleMinDuration: parseFloat(import.meta.env.VITE_PARTICLE_MIN_DURATION) || 8,
       particleMaxDuration: parseFloat(import.meta.env.VITE_PARTICLE_MAX_DURATION) || 20,
       particleOpacity: parseFloat(import.meta.env.VITE_PARTICLE_OPACITY) || 0.7,
+      particleStyles: [], // Pre-generated particle styles (frozen)
+      // 🎓 PCRU Watermark gyroscope tilt
+      pcruTilt: { x: 0, y: 0 },
       showAiIntro: false,
       aiTilt: { x: 0, y: 0, s: 1 },
       // rAF id for ai tilt updates (reduce reflows)
@@ -2041,6 +2049,13 @@ export default {
     // 🎮 Current graphics option object (for display in menu)
     currentGraphicsOption() {
       return this.graphicsOptions.find(opt => opt.value === this.graphicsQuality) || this.graphicsOptions[2];
+    },
+    // 🎓 PCRU Watermark transform style
+    pcruWatermarkStyle() {
+      if (this.graphicsQuality === 'low') return {};
+      return {
+        transform: `perspective(1000px) rotateX(${this.pcruTilt.y}deg) rotateY(${this.pcruTilt.x}deg)`
+      };
     }
   },
   
@@ -2074,6 +2089,9 @@ export default {
 
     // Generate snowflake styles once to prevent jank on re-render
     this.generateSnowflakeStyles()
+
+    // Generate particle styles once to prevent jank on re-render
+    this.generateParticleStyles()
     
     // � PERFORMANCE: Pause animations when tab is not visible
     this._handleVisibilityChange = () => {
@@ -3382,7 +3400,7 @@ export default {
         '--hue': hue,
       };
     },
-    getParticleStyle(n) {
+    generateParticleStyles() {
       const colors = [
         'rgba(139, 76, 184, 0.6)',  // Purple
         'rgba(107, 44, 145, 0.6)',  // Dark purple
@@ -3392,21 +3410,45 @@ export default {
         'rgba(168, 85, 247, 0.6)',  // Violet
       ];
       
-      const color = colors[Math.floor(Math.random() * colors.length)];
-      const left = Math.random() * 100;
-      const size = this.particleMinSize + Math.random() * (this.particleMaxSize - this.particleMinSize);
-      const duration = this.particleMinDuration + Math.random() * (this.particleMaxDuration - this.particleMinDuration);
-      const delay = Math.random() * 10;
+      const styles = [];
+      for (let i = 0; i < this.particleCount; i++) {
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const left = Math.random() * 100;
+        const size = this.particleMinSize + Math.random() * (this.particleMaxSize - this.particleMinSize);
+        const duration = this.particleMinDuration + Math.random() * (this.particleMaxDuration - this.particleMinDuration);
+        const delay = Math.random() * 10;
+        
+        styles.push({
+          left: left + '%',
+          width: size + 'px',
+          height: size + 'px',
+          background: color,
+          opacity: this.particleOpacity,
+          animationDuration: duration + 's',
+          animationDelay: delay + 's',
+        });
+      }
+      // Freeze styles to avoid Vue creating reactive proxies (perf win)
+      this.particleStyles = Object.freeze(styles);
+    },
+    getParticleStyle(n) {
+      // Return pre-generated style (n is 1-indexed from v-for)
+      return this.particleStyles[n - 1] || {};
+    },
+    onPanelMouseMove(e) {
+      if (this.graphicsQuality === 'low') return;
       
-      return {
-        left: left + '%',
-        width: size + 'px',
-        height: size + 'px',
-        background: color,
-        opacity: this.particleOpacity,
-        animationDuration: duration + 's',
-        animationDelay: delay + 's',
-      };
+      const rect = e.currentTarget.getBoundingClientRect();
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      
+      // Calculate tilt based on mouse position (max ±20 degrees for stronger parallax)
+      const tiltX = ((mouseX - centerX) / centerX) * 20;
+      const tiltY = -((mouseY - centerY) / centerY) * 20;
+      
+      this.pcruTilt = { x: tiltX, y: tiltY };
     },
     onEnterKey() {
       // Ignore enter while IME composition is active
@@ -3722,9 +3764,8 @@ export default {
     },
     
     cycleGraphicsQuality() {
-      // 📱 Low mode only available on mobile (screen width <= 768px)
-      const isMobile = window.innerWidth <= 768;
-      const order = isMobile ? ['low', 'medium', 'high'] : ['medium', 'high'];
+      // ✅ Low mode now available on all devices
+      const order = ['low', 'medium', 'high'];
       
       const currentIndex = order.indexOf(this.graphicsQuality);
       const nextIndex = (currentIndex + 1) % order.length;
@@ -3741,13 +3782,7 @@ export default {
     },
     
     setGraphicsQuality(quality) {
-      // 📱 Low mode is only allowed on mobile devices
-      const isMobile = window.innerWidth <= 768;
-      
-      if (quality === 'low' && !isMobile) {
-        console.log('⚠️ Low graphics mode is only available on mobile. Switching to medium.');
-        quality = 'medium';
-      }
+      // ✅ Low mode now available on all devices
       
       this.graphicsQuality = quality;
       this.showGraphicsMenu = false;
