@@ -99,6 +99,22 @@ button.fab-open circle {
   background: #1c1c1e !important;
 }
 
+/* 🌙 Dark mode - Solid backgrounds for message bubbles (NO blur in low mode) */
+[data-theme="dark"] .message-bubble.bot,
+[data-theme="dark"] .backdrop-card,
+[data-theme="dark"] .bot-with-categories {
+  background: #1c1c1e !important;
+  color: #f5f5f7 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .message-text,
+[data-theme="dark"] .ai-greet-title,
+[data-theme="dark"] .ai-greet-sub,
+[data-theme="dark"] .category-title {
+  color: #f5f5f7 !important;
+}
+
 /* Force visibility for essential elements */
 #app,
 main,
