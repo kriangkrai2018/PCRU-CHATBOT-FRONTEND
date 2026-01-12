@@ -78,7 +78,7 @@
           </div>
         </template>
         
-        <aside class="chat-panel" :style="{ width: drawerWidth, height: viewportHeight }" @click="onPanelClick" @mousemove="onPanelMouseMove">
+        <aside class="chat-panel" :style="{ width: drawerWidth, height: viewportHeight }" @click="onPanelClick" @mousemove="onPanelMouseMove" @touchstart.once="requestGyroscopePermission">
           <!-- � PCRU Watermark Logo -->
           <div class="pcru-watermark">
             <img src="@/assets/logo.png" alt="PCRU Logo" :style="pcruWatermarkStyle" />
@@ -1442,6 +1442,7 @@ export default {
       particleStyles: [], // Pre-generated particle styles (frozen)
       // 🎓 PCRU Watermark gyroscope tilt
       pcruTilt: { x: 0, y: 0 },
+      gyroscopeEnabled: false, // iOS requires permission
       showAiIntro: false,
       aiTilt: { x: 0, y: 0, s: 1 },
       // rAF id for ai tilt updates (reduce reflows)
@@ -2092,6 +2093,9 @@ export default {
 
     // Generate particle styles once to prevent jank on re-render
     this.generateParticleStyles()
+
+    // 📱 Add gyroscope support for mobile devices
+    this.initGyroscope();
     
     // � PERFORMANCE: Pause animations when tab is not visible
     this._handleVisibilityChange = () => {
@@ -2468,6 +2472,10 @@ export default {
       this.welcomeTypingTimer = null
     }
     window.removeEventListener('resize', this.updateAnchoring)
+    // Remove gyroscope listener
+    if (window.DeviceOrientationEvent) {
+      window.removeEventListener('deviceorientation', this.handleDeviceOrientation, true);
+    }
     // 💤 Stop idle tracking
     this.stopIdleTracking()
     // 🎠 Stop placeholder carousel
@@ -3435,6 +3443,69 @@ export default {
       // Return pre-generated style (n is 1-indexed from v-for)
       return this.particleStyles[n - 1] || {};
     },
+    async initGyroscope() {
+      if (!window.DeviceOrientationEvent) return;
+      
+      // Check if iOS 13+ (requires permission)
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        // iOS 13+ - need user gesture to request permission
+        this.gyroscopeEnabled = false;
+        console.log('📱 iOS detected - gyroscope permission will be requested on first interaction');
+      } else {
+        // Android and other devices - just add listener
+        window.addEventListener('deviceorientation', this.handleDeviceOrientation, true);
+        this.gyroscopeEnabled = true;
+        console.log('📱 Gyroscope enabled (non-iOS)');
+      }
+    },
+    requestGyroscopePermission() {
+      console.log('📱 requestGyroscopePermission called, enabled:', this.gyroscopeEnabled);
+      if (this.gyroscopeEnabled) return;
+      if (typeof DeviceOrientationEvent === 'undefined') {
+        console.log('📱 DeviceOrientationEvent not available');
+        return;
+      }
+      if (typeof DeviceOrientationEvent.requestPermission !== 'function') {
+        console.log('📱 requestPermission not a function (not iOS 13+)');
+        // Try to add listener anyway for older iOS or other browsers
+        window.addEventListener('deviceorientation', this.handleDeviceOrientation, true);
+        this.gyroscopeEnabled = true;
+        return;
+      }
+      
+      console.log('📱 Requesting iOS gyroscope permission...');
+      // MUST be called synchronously from user gesture!
+      DeviceOrientationEvent.requestPermission()
+        .then(permission => {
+          console.log('📱 Permission result:', permission);
+          if (permission === 'granted') {
+            window.addEventListener('deviceorientation', this.handleDeviceOrientation, true);
+            this.gyroscopeEnabled = true;
+            console.log('📱 iOS gyroscope permission granted!');
+          } else {
+            console.warn('📱 iOS gyroscope permission denied');
+          }
+        })
+        .catch(err => {
+          console.error('📱 Error requesting gyroscope permission:', err);
+        });
+    },
+    handleDeviceOrientation(e) {
+      if (this.graphicsQuality === 'low') return;
+      
+      // beta: front-to-back tilt (-180 to 180)
+      // gamma: left-to-right tilt (-90 to 90)
+      const beta = e.beta || 0;   // X-axis (pitch)
+      const gamma = e.gamma || 0;  // Y-axis (roll)
+      
+      // Normalize to ±20 degrees range (matching mouse parallax)
+      // beta: 0 = flat, positive = tilted forward, negative = tilted back
+      // gamma: 0 = flat, positive = tilted right, negative = tilted left
+      const tiltX = Math.max(-20, Math.min(20, gamma * 0.8));
+      const tiltY = Math.max(-20, Math.min(20, beta * 0.3));
+      
+      this.pcruTilt = { x: tiltX, y: tiltY };
+    },
     onPanelMouseMove(e) {
       if (this.graphicsQuality === 'low') return;
       
@@ -3743,6 +3814,11 @@ export default {
     
     // 🎯 Click handler บน panel เพื่อปิดเมนู 3 จุด
     onPanelClick(e) {
+      // 📱 Request gyroscope permission on first interaction (iOS)
+      if (!this.gyroscopeEnabled) {
+        this.requestGyroscopePermission();
+      }
+      
       if (!this.showMoreMenu) return;
       
       // ไม่ปิดถ้ากดที่ตัวเมนูหรือปุ่ม 3 จุด
