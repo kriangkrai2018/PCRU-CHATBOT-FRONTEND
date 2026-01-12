@@ -959,7 +959,7 @@ html.keyboard-open .close-circle {
   flex-direction: column;
   gap: 0;
   padding: 8px;
-  background: rgba(249, 249, 249, 0.88);
+  background: rgba(249, 249, 249, 0.932);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   backdrop-filter: saturate(180%) blur(20px);
   border: 0.5px solid rgba(0, 0, 0, 0.04);
@@ -972,8 +972,8 @@ html.keyboard-open .close-circle {
   transform: scale(0.5);
   transform-origin: top right;
   transition: 
-    opacity 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.1),
-    transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.05);
+    opacity 2.25s cubic-bezier(0.2, 0.9, 0.3, 1.1) ease-in-out,
+    transform 2.3s cubic-bezier(0.2, 0.9, 0.3, 1.05) ease-in-out;
 }
 
 .more-menu-items.open {
@@ -1068,6 +1068,44 @@ html.keyboard-open .close-circle {
 .menu-item-icon svg {
   width: 18px;
   height: 18px;
+  animation: iconFloat 3s ease-in-out infinite;
+}
+
+/* Theme icon (sun) rotation */
+.theme-item .menu-item-icon svg {
+  animation: iconRotate 8s linear infinite;
+}
+
+/* Graphics icon pulse */
+.graphics-item .menu-item-icon svg {
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+/* Trash icon shake */
+.clear-item .menu-item-icon svg {
+  animation: iconShake 2.5s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes iconRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes iconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@keyframes iconShake {
+  0%, 100% { transform: rotate(0deg); }
+  10%, 30% { transform: rotate(-5deg); }
+  20%, 40% { transform: rotate(5deg); }
+  50% { transform: rotate(0deg); }
 }
 
 .menu-item-label {

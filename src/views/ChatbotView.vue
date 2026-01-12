@@ -2009,9 +2009,9 @@ export default {
       return (Array.isArray(this.messages) && this.messages.length > 0) || !!this.hasAskedBot
     },
     themeDisplayOnly() {
-      if (this.theme === 'light') return 'Light';
-      if (this.theme === 'dark') return 'Dark';
-      return 'Auto';
+      if (this.theme === 'light') return 'สว่าง';
+      if (this.theme === 'dark') return 'มืด';
+      return 'อัตโนมัติ';
     },
     // 🎮 Graphics quality label for display
     graphicsQualityLabel() {
