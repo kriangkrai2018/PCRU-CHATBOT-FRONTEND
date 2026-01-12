@@ -3942,7 +3942,6 @@ export default {
       }
     },
     onInputFocus() {
-      // 💬 แสดง tooltip เมื่อคลิกที่ช่องพิมพ์
       // Clear timer ก่อนหน้า
       if (this.unlikeTooltipTimer) {
         clearTimeout(this.unlikeTooltipTimer)
@@ -3953,24 +3952,7 @@ export default {
       // บันทึกการกดช่องคำถามถี่ ๆ และตอบกลับแบบน่ารักเมื่อถึงเกณฑ์
       this.trackRapidInputFocus()
       
-      // แสดง tooltip บางครั้งเท่านั้น: จำกัดความถี่ + random chance
-      try {
-        const now = Date.now()
-        const allowByTime = now >= (this.inputTooltipCooldownUntil || 0)
-        const allowByChance = Math.random() <= (this.inputTooltipShowProbability || 0.5)
-        if (allowByTime && allowByChance) {
-          const randomIndex = Math.floor(Math.random() * this.dynamicUnlikeMessages.length)
-          this.unlikeTooltipText = this.dynamicUnlikeMessages[randomIndex]
-          this.showUnlikeTooltip = true
-          // ปิด tooltip หลัง 5 วินาที
-          this.unlikeTooltipTimer = setTimeout(() => {
-            this.showUnlikeTooltip = false
-            this.unlikeTooltipTimer = null
-          }, 5000)
-          // ตั้งคูลดาวน์ครั้งต่อไป
-          this.inputTooltipCooldownUntil = now + (this.inputTooltipMinIntervalMs || 3000)
-        }
-      } catch (e) { /* ignore */ }
+      // *** ลบการแสดง tooltip ตอน focus ออก ***
 
       // Slight delay to let viewport adjust
       setTimeout(() => {
@@ -4560,6 +4542,52 @@ export default {
         }
       }
 
+      // --- ตรวจสอบความเร็วในการพิมพ์ (30 คำ/วินาที) ---
+      try {
+        const now = Date.now()
+        const currentLength = (this.query || '').length
+        
+        // Initialize tracking
+        if (!this.typingSpeedTimestamps) this.typingSpeedTimestamps = []
+        if (!this.typingSpeedLengths) this.typingSpeedLengths = []
+        
+        // บันทึก timestamp และความยาวข้อความ
+        this.typingSpeedTimestamps.push(now)
+        this.typingSpeedLengths.push(currentLength)
+        
+        // เก็บข้อมูลแค่ 1 วินาทีล่าสุด
+        const oneSecondAgo = now - 1000
+        while (this.typingSpeedTimestamps.length > 0 && this.typingSpeedTimestamps[0] < oneSecondAgo) {
+          this.typingSpeedTimestamps.shift()
+          this.typingSpeedLengths.shift()
+        }
+        
+        // คำนวณจำนวนตัวอักษรที่พิมพ์ภายใน 1 วินาที
+        if (this.typingSpeedTimestamps.length >= 2) {
+          const firstLength = this.typingSpeedLengths[0] || 0
+          const charsPerSecond = currentLength - firstLength
+          
+          // ถ้าพิมพ์เร็วกว่า 3.dw ตัวอักษร/วินาที แสดง tooltip
+          if (charsPerSecond > 4) {
+            const allowByTime = now >= (this.inputTooltipCooldownUntil || 0)
+            if (allowByTime) {
+              this.hideAllTooltips()
+              this.unlikeTooltipText = 'พิมพ์ช้าๆ นะคะ 😊'
+              this.showUnlikeTooltip = true
+              
+              if (this.unlikeTooltipTimer) { clearTimeout(this.unlikeTooltipTimer); this.unlikeTooltipTimer = null }
+              this.unlikeTooltipTimer = setTimeout(() => {
+                this.showUnlikeTooltip = false
+                this.unlikeTooltipTimer = null
+              }, 3000)
+              
+              // ตั้งคูลดาวน์ 5 วินาที
+              this.inputTooltipCooldownUntil = now + 5000
+            }
+          }
+        }
+      } catch (e) { /* ignore */ }
+
       // --- 1) Typing hint for 'เมนู' (show fixed instructional message) ---
       try {
         const raw = (this.query || '').toString()
@@ -4585,8 +4613,8 @@ export default {
             this.inputTooltipCooldownUntil = now + (this.inputTooltipMinIntervalMs || 3000)
           }
         } else {
-          // If user stops matching 'เมนู', hide the tooltip
-          if (this.showUnlikeTooltip) {
+          // If user stops matching 'เมนู', hide the tooltip (but not if it's the typing speed tooltip)
+          if (this.showUnlikeTooltip && this.unlikeTooltipText !== 'พิมพ์ช้าๆ นะคะ 😊') {
             this.showUnlikeTooltip = false
             if (this.unlikeTooltipTimer) { clearTimeout(this.unlikeTooltipTimer); this.unlikeTooltipTimer = null }
           }
