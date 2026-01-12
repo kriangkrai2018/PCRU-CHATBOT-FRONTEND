@@ -642,11 +642,12 @@ html.theme-transitioning [data-theme="light"] * {
   }
 }
 
-/* 📱 LINE-style Menu Dark Mode */
-[data-theme="dark"] .line-menu-container {
-  background: rgba(16, 7, 22, 0.98);
-  border-top-color: rgba(139, 76, 184, 0.2);
-  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
+
+
+
+
+[data-theme="dark"] .line-menu-handle {
+  background: transparent !important;
 }
 
 [data-theme="dark"] .line-menu-item {
@@ -690,4 +691,9 @@ html.theme-transitioning [data-theme="light"] * {
 
 [data-theme="dark"] .line-menu-back:hover {
   background: rgba(139, 76, 184, 0.3);
+}
+
+
+[data-theme="dark"] .line-menu-wrapper {
+  background-color: rgba(20, 20, 35, 0.983) !important;
 }

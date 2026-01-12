@@ -770,6 +770,9 @@
                 :style="menuDragStyle"
                 :key="selectedParentCategory ? selectedParentCategory.id : 'main'"
               >
+                <!-- Blur backdrop layer -->
+                <div class="line-menu-blur-backdrop"></div>
+                
                 <!-- Expand/Collapse handle -->
                 <div 
                   class="line-menu-handle" 
@@ -7885,9 +7888,6 @@ export default {
   bottom: 100%;
   left: 0;
   right: 0;
-  background: rgba(20, 20, 30, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border-radius: 16px 16px 0 0;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
   z-index: 10000; /* Above snow (1500) and other elements */
@@ -7896,7 +7896,12 @@ export default {
   height: 380px;
   max-height: none;
   transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
+  overflow: visible;
+  /* Allow backdrop-filter to work */
+  isolation: isolate;
 }
+
+
 
 /* Disable transition while dragging for smooth real-time feedback */
 .line-menu-wrapper.is-dragging {
@@ -7909,11 +7914,13 @@ export default {
   justify-content: center;
   padding: 12px 0;
   cursor: grab;
-  background-color: rgba(20, 20, 30, 0.6);
+  background-color: transparent;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   touch-action: none; /* Prevent scroll interference */
   user-select: none;
   transition: background-color 0.3s ease;
+  position: relative;
+  z-index: 1;
 }
 
 .line-menu-handle:active {
@@ -7950,6 +7957,8 @@ export default {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 .line-menu-wrapper.expanded .line-menu-container {
@@ -8254,22 +8263,14 @@ export default {
   max-height: 2000px;
 }
 
-/* Dark mode support */
-:deep(.dark) .line-menu-wrapper,
-html[data-theme="dark"] .line-menu-wrapper {
-  background: rgba(30, 30, 30, 0.98);
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
-}
 
-:deep(.dark) .line-menu-container,
-html[data-theme="dark"] .line-menu-container {
-  background-color: rgba(20, 20, 30, 0.98);
-  border-top-color: rgba(255, 255, 255, 0.1);
-}
+
+
+
 
 :deep(.dark) .line-menu-handle,
 html[data-theme="dark"] .line-menu-handle {
-  background-color: rgba(20, 20, 30, 0.98);
+  background-color: transparent !important;
 }
 
 :deep(.dark) .line-menu-handle-bar,
@@ -8355,21 +8356,21 @@ html[data-theme="dark"] .line-menu-fullscreen-wrapper .input-row.fullscreen-inpu
   border-top-color: rgba(139, 76, 184, 0.3);
 }
 
-/* Light mode support */
-html[data-theme="light"] .line-menu-wrapper {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 -4px 20px rgba(139, 76, 184, 0.15);
+
+
+html[data-theme="light"] .line-menu-blur-backdrop {
+  background: rgba(255, 255, 255, 0.55) !important;
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
 }
 
 html[data-theme="light"] .line-menu-handle {
-  background-color: rgba(245, 245, 247, 0.6);
+  background-color: transparent !important;
   border-bottom: 1px solid rgba(139, 76, 184, 0.1);
 }
 
 html[data-theme="light"] .line-menu-container {
-  background: transparent;
+  background: transparent !important;
 }
 
 html[data-theme="light"] .line-menu-handle-bar {

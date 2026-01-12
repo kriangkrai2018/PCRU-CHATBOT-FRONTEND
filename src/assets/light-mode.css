@@ -349,3 +349,79 @@ html.theme-transitioning [data-theme="light"] * {
   -o-animation: none !important;
   animation: none !important;
 }
+
+/* ============================================
+   📱 LINE-style Menu Light Mode
+   ============================================ */
+
+[data-theme="light"] .line-menu-blur-backdrop {
+  background: rgba(255, 255, 255, 0.55) !important;
+  backdrop-filter: blur(30px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+}
+
+[data-theme="light"] .line-menu-container {
+  background: transparent !important;
+  border-top-color: rgba(139, 76, 184, 0.1);
+}
+
+[data-theme="light"] .line-menu-handle {
+  background: transparent !important;
+}
+
+[data-theme="light"] .line-menu-handle-bar {
+  background: rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-theme="light"] .line-menu-item {
+  background: rgba(139, 76, 184, 0.08);
+}
+
+[data-theme="light"] .line-menu-item:hover {
+  background: rgba(139, 76, 184, 0.15);
+}
+
+[data-theme="light"] .line-menu-label {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+[data-theme="light"] .line-toggle-btn {
+  background: rgba(139, 76, 184, 0.1);
+  color: #6B2C91;
+}
+
+[data-theme="light"] .line-toggle-btn:hover {
+  background: rgba(139, 76, 184, 0.18);
+}
+
+[data-theme="light"] .line-submenu-container {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .line-submenu-item {
+  background: rgba(139, 76, 184, 0.06);
+  color: #1d1d1f;
+}
+
+[data-theme="light"] .line-submenu-item:hover {
+  background: rgba(139, 76, 184, 0.12);
+}
+
+[data-theme="light"] .line-category-header {
+  color: #1d1d1f;
+}
+
+[data-theme="light"] .line-back-btn {
+  background: rgba(139, 76, 184, 0.08);
+  color: #6B2C91;
+}
+
+[data-theme="light"] .line-back-btn:hover {
+  background: rgba(139, 76, 184, 0.15);
+}
+
+
+[data-theme="light"] .line-menu-wrapper {
+  background-color: rgba(255, 255, 255, 0.983) !important;
+}
