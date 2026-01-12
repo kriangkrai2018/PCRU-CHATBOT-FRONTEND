@@ -291,8 +291,25 @@
                     </div>
                     <div class="message-text text-center" style="margin-bottom: 1.5rem" v-html="welcomeInstruction"></div>
                     
+                    <!-- Categories Toggle Button -->
+                    <div class="categories-toggle-wrapper">
+                      <button class="categories-toggle-btn" @click="showWelcomeCategories = !showWelcomeCategories">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="3" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                          <rect x="14" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                          <rect x="3" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                          <rect x="14" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <span>{{ showWelcomeCategories ? 'ซ่อนหมวดหมู่' : 'แสดงหมวดหมู่' }}</span>
+                        <svg class="toggle-arrow" :class="{ 'arrow-up': showWelcomeCategories }" width="14" height="14" viewBox="0 0 24 24">
+                          <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </button>
+                    </div>
+                    
                     <!-- Categories inside bot message -->
-                    <div class="category-section">
+                    <transition name="categories-expand">
+                      <div v-show="showWelcomeCategories" class="category-section">
                       <div class="category-title no-underline">หมวดหมู่</div>
 
                       <div v-if="loading" class="py-5 text-center">
@@ -385,6 +402,7 @@
                         </transition>
                       </div>
                     </div>
+                    </transition>
                   </div>
                 </div>
               </div>
@@ -746,7 +764,7 @@
             <!-- 📱 LINE-style Menu Categories (shown when menu is open) -->
             <transition name="line-menu-slide">
               <div 
-                v-if="showLineMenu && !lineMenuExpanded" 
+                v-if="showLineMenu && !lineMenuExpanded && !lineMenuCollapsed" 
                 class="line-menu-wrapper" 
                 :class="{ 'is-dragging': isDragging }"
                 :style="menuDragStyle"
@@ -811,7 +829,7 @@
               <button 
                 class="line-toggle-btn" 
                 :class="{ active: showLineMenu }"
-                @click="toggleLineMenu(!showLineMenu)"
+                @click="onToggleLineMenuClick"
                 :aria-label="showLineMenu ? 'แป้นพิมพ์' : 'เมนู'"
                 :title="showLineMenu ? 'แป้นพิมพ์' : 'เมนู'"
               >
@@ -866,8 +884,8 @@
               </div>
               
               <!-- Menu Label (shown when menu is open) -->
-              <div class="line-menu-label-center" v-show="showLineMenu" @click="showLineMenu = false">
-                <span class="menu-arrow" :class="{ 'arrow-up': showLineMenu }">▼</span>
+              <div class="line-menu-label-center" v-show="showLineMenu" @click="toggleLineMenuCollapse">
+                <span class="menu-arrow" :class="{ 'arrow-up': !lineMenuCollapsed }">▼</span>
                 <span>เมนู</span>
               </div>
               
@@ -943,6 +961,37 @@
                     <span class="line-menu-label">{{ cat.title }}</span>
                     <span v-if="hasSubcategories(cat.id)" class="line-menu-badge">›</span>
                   </button>
+                </div>
+              </div>
+              
+              <!-- Input Row at bottom of fullscreen menu -->
+              <div class="input-row menu-mode fullscreen-input">
+                <!-- Keyboard Toggle Button -->
+                <button 
+                  class="line-toggle-btn active" 
+                  @click="onToggleLineMenuClick"
+                  :aria-label="'แป้นพิมพ์'"
+                  :title="'แป้นพิมพ์'"
+                >
+                  <!-- Keyboard icon -->
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
+                    <rect x="5" y="8" width="2" height="2" rx="0.5" fill="currentColor"/>
+                    <rect x="9" y="8" width="2" height="2" rx="0.5" fill="currentColor"/>
+                    <rect x="13" y="8" width="2" height="2" rx="0.5" fill="currentColor"/>
+                    <rect x="17" y="8" width="2" height="2" rx="0.5" fill="currentColor"/>
+                    <rect x="5" y="12" width="2" height="2" rx="0.5" fill="currentColor"/>
+                    <rect x="9" y="12" width="2" height="2" rx="0.5" fill="currentColor"/>
+                    <rect x="13" y="12" width="2" height="2" rx="0.5" fill="currentColor"/>
+                    <rect x="17" y="12" width="2" height="2" rx="0.5" fill="currentColor"/>
+                    <rect x="7" y="16" width="10" height="2" rx="0.5" fill="currentColor"/>
+                  </svg>
+                </button>
+                
+                <!-- Menu Label -->
+                <div class="line-menu-label-center" @click="lineMenuExpanded = false">
+                  <span class="menu-arrow arrow-up">▼</span>
+                  <span>เมนู</span>
                 </div>
               </div>
             </div>
@@ -1528,9 +1577,12 @@ export default {
       fabPointerActive: false, // Track if pointer is actively pressed on FAB
       // 📱 LINE-style bottom menu toggle
       showLineMenu: false, // false = keyboard mode, true = menu mode
+      lineMenuCollapsed: false, // true = hide grid items, false = show grid items
       lineMenuCategories: [], // Categories to show in LINE menu
       selectedParentCategory: null, // Currently selected parent category for subcategories
       lineMenuExpanded: false, // Fullscreen expanded mode
+      // Welcome screen categories toggle
+      showWelcomeCategories: false, // true = show categories, false = hide categories (default)
       // Drag to expand
       isDragging: false,
       dragStartY: 0,
@@ -1803,47 +1855,28 @@ export default {
           transform: 'translate(-50%, -50%)'
         }
       }
-      // Position card above or below the spotlight
+      // Always show card above the target (menu is at bottom of screen)
       const viewportHeight = window.innerHeight
       const targetTop = this.menuTutorialTargetRect.top
       
-      if (targetTop > viewportHeight / 2) {
-        // Target is in lower half, show card above
-        return {
-          bottom: `${viewportHeight - targetTop + 30}px`,
-          left: '50%',
-          transform: 'translateX(-50%)'
-        }
-      } else {
-        // Target is in upper half, show card below
-        return {
-          top: `${this.menuTutorialTargetRect.bottom + 30}px`,
-          left: '50%',
-          transform: 'translateX(-50%)'
-        }
+      // Card appears above the menu/target
+      return {
+        bottom: `${viewportHeight - targetTop + 30}px`,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        maxWidth: 'calc(100vw - 40px)'
       }
     },
     menuTutorialArrowStyle() {
       if (!this.menuTutorialTargetRect) {
         return { display: 'none' }
       }
-      const viewportHeight = window.innerHeight
-      const targetTop = this.menuTutorialTargetRect.top
       
-      if (targetTop > viewportHeight / 2) {
-        // Arrow pointing down (target below card)
-        return {
-          top: `${this.menuTutorialTargetRect.top - 65}px`,
-          left: `${this.menuTutorialTargetRect.left + this.menuTutorialTargetRect.width / 2 - 20}px`,
-          transform: 'rotate(0deg)'
-        }
-      } else {
-        // Arrow pointing up (target above card)
-        return {
-          top: `${this.menuTutorialTargetRect.bottom + 5}px`,
-          left: `${this.menuTutorialTargetRect.left + this.menuTutorialTargetRect.width / 2 - 20}px`,
-          transform: 'rotate(180deg)'
-        }
+      // Arrow always points down (card is above target)
+      return {
+        top: `${this.menuTutorialTargetRect.top - 65}px`,
+        left: `${this.menuTutorialTargetRect.left + this.menuTutorialTargetRect.width / 2 - 20}px`,
+        transform: 'rotate(0deg)'
       }
     },
     
@@ -2185,6 +2218,14 @@ export default {
     
     // Load category open/close state
     this.loadCategoryState()
+    
+    // Load welcome categories toggle state
+    try {
+      const savedState = localStorage.getItem('chatbot_welcome_categories_visible')
+      if (savedState !== null) {
+        this.showWelcomeCategories = savedState === 'true'
+      }
+    } catch (e) { /* ignore */ }
     
     // Close feedback dropdown when clicking outside
     document.addEventListener('click', this.handleOutsideClick)
@@ -2528,6 +2569,12 @@ export default {
     // Clean up FAB long press watcher (no longer needed)
   },
   watch: {
+    showWelcomeCategories(newVal) {
+      // Save state to localStorage
+      try {
+        localStorage.setItem('chatbot_welcome_categories_visible', String(newVal))
+      } catch (e) { /* ignore */ }
+    },
     visible(newVal) {
       if (newVal) {
         // 📊 Start FPS monitoring when chat opens
@@ -2607,8 +2654,32 @@ export default {
   },
   methods: {
     // 📱 LINE-style Menu Methods
+    onToggleLineMenuClick() {
+      if (this.showLineMenu) {
+        // Currently showing menu - switch to keyboard and focus input
+        this.showLineMenu = false
+        this.lineMenuCollapsed = false
+        this.selectedParentCategory = null
+        this.lineMenuExpanded = false
+        this.$nextTick(() => {
+          if (this.$refs.inputBox) {
+            this.$refs.inputBox.focus()
+          }
+        })
+      } else {
+        // Currently showing keyboard - switch to menu
+        this.toggleLineMenu(true)
+      }
+    },
+    
+    toggleLineMenuCollapse() {
+      // Toggle collapse state (hide/show grid items)
+      this.lineMenuCollapsed = !this.lineMenuCollapsed
+    },
+    
     toggleLineMenu(showMenu) {
       this.showLineMenu = showMenu
+      this.lineMenuCollapsed = false // Reset collapse state when toggling menu
       this.selectedParentCategory = null // Reset subcategory view
       this.lineMenuExpanded = false // Reset expanded state
       if (showMenu) {
@@ -3030,7 +3101,8 @@ export default {
     
     completeMenuTutorial() {
       this.showMenuTutorial = false
-      this.showLineMenu = false
+      // Keep menu open for user to explore
+      // this.showLineMenu stays true
       this.selectedParentCategory = null
       localStorage.setItem('pcru_menu_tutorial_seen', 'true')
       // Light haptic feedback
@@ -3039,7 +3111,8 @@ export default {
     
     skipMenuTutorial() {
       this.showMenuTutorial = false
-      this.showLineMenu = false
+      // Keep menu open even when skipping
+      // this.showLineMenu stays true
       this.selectedParentCategory = null
       localStorage.setItem('pcru_menu_tutorial_seen', 'true')
     },
@@ -7812,14 +7885,15 @@ export default {
   bottom: 100%;
   left: 0;
   right: 0;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.98);
   border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 20px rgba(139, 76, 184, 0.15);
   z-index: 10000; /* Above snow (1500) and other elements */
   display: flex;
   flex-direction: column;
   height: 380px;
   max-height: none;
-  transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
 }
 
 /* Disable transition while dragging for smooth real-time feedback */
@@ -7833,9 +7907,11 @@ export default {
   justify-content: center;
   padding: 12px 0;
   cursor: grab;
-  background-color: #000;
+  background-color: #f5f5f7; /* Light mode default */
+  border-bottom: 1px solid rgba(139, 76, 184, 0.1);
   touch-action: none; /* Prevent scroll interference */
   user-select: none;
+  transition: background-color 0.3s ease;
 }
 
 .line-menu-handle:active {
@@ -7851,13 +7927,13 @@ export default {
 .line-menu-handle-bar {
   width: 36px;
   height: 5px;
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(139, 76, 184, 0.3); /* Light mode default */
   border-radius: 3px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .line-menu-handle:hover .line-menu-handle-bar {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(139, 76, 184, 0.5);
   width: 44px;
 }
 
@@ -8095,11 +8171,108 @@ export default {
   transform: translateY(10px);
 }
 
+/* Menu collapse animation */
+.menu-collapse-enter-active,
+.menu-collapse-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.menu-collapse-enter-from,
+.menu-collapse-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+  max-height: 0;
+}
+
+.menu-collapse-enter-to,
+.menu-collapse-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 500px;
+}
+
+/* Categories Toggle Button */
+.categories-toggle-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.categories-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%);
+  color: white;
+  border: none;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(139, 76, 184, 0.3);
+}
+
+.categories-toggle-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(139, 76, 184, 0.4);
+}
+
+.categories-toggle-btn:active {
+  transform: translateY(0);
+}
+
+.categories-toggle-btn .toggle-arrow {
+  transition: transform 0.3s ease;
+}
+
+.categories-toggle-btn .toggle-arrow.arrow-up {
+  transform: rotate(180deg);
+}
+
+/* Categories expand animation */
+.categories-expand-enter-active,
+.categories-expand-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.categories-expand-enter-from,
+.categories-expand-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
+  max-height: 0;
+  overflow: hidden;
+}
+
+.categories-expand-enter-to,
+.categories-expand-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 2000px;
+}
+
 /* Dark mode support */
+:deep(.dark) .line-menu-wrapper,
+.chat-root[data-theme="dark"] .line-menu-wrapper {
+  background: rgba(30, 30, 30, 0.98);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+}
+
 :deep(.dark) .line-menu-container,
 .chat-root[data-theme="dark"] .line-menu-container {
   background: rgba(30, 30, 30, 0.98);
   border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+:deep(.dark) .line-menu-handle,
+.chat-root[data-theme="dark"] .line-menu-handle {
+  background-color: rgba(20, 20, 30, 0.98);
+}
+
+:deep(.dark) .line-menu-handle-bar,
+.chat-root[data-theme="dark"] .line-menu-handle-bar {
+  background: rgba(255, 255, 255, 0.4);
 }
 
 :deep(.dark) .line-menu-item,
@@ -8123,12 +8296,149 @@ export default {
   color: #b794d4;
 }
 
+:deep(.dark) .line-menu-back,
+.chat-root[data-theme="dark"] .line-menu-back {
+  background: rgba(139, 76, 184, 0.2);
+  color: #b794d4;
+}
+
 :deep(.dark) .line-menu-label-center,
 .chat-root[data-theme="dark"] .line-menu-label-center {
   color: #b794d4;
 }
 
-/* �🔐 Long Press Countdown Overlay */
+/* Dark mode fullscreen support */
+:deep(.dark) .line-menu-fullscreen-wrapper,
+.chat-root[data-theme="dark"] .line-menu-fullscreen-wrapper {
+  background: rgba(20, 20, 35, 0.98) !important;
+}
+
+:deep(.dark) .line-menu-fullscreen-wrapper .line-menu-handle-bar,
+.chat-root[data-theme="dark"] .line-menu-fullscreen-wrapper .line-menu-handle-bar {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+:deep(.dark) .line-menu-fullscreen-wrapper .line-menu-back,
+.chat-root[data-theme="dark"] .line-menu-fullscreen-wrapper .line-menu-back {
+  background: rgba(139, 76, 184, 0.25);
+  color: #fff;
+}
+
+:deep(.dark) .line-menu-fullscreen-wrapper .line-menu-item,
+.chat-root[data-theme="dark"] .line-menu-fullscreen-wrapper .line-menu-item {
+  background: rgba(139, 76, 184, 0.12);
+  border-color: rgba(139, 76, 184, 0.2);
+}
+
+:deep(.dark) .line-menu-fullscreen-wrapper .line-menu-item:hover,
+.chat-root[data-theme="dark"] .line-menu-fullscreen-wrapper .line-menu-item:hover {
+  background: rgba(139, 76, 184, 0.2);
+}
+
+:deep(.dark) .line-menu-fullscreen-wrapper .line-menu-label,
+.chat-root[data-theme="dark"] .line-menu-fullscreen-wrapper .line-menu-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:deep(.dark) .line-menu-fullscreen-wrapper .line-menu-badge,
+.chat-root[data-theme="dark"] .line-menu-fullscreen-wrapper .line-menu-badge {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+:deep(.dark) .line-menu-fullscreen-wrapper .input-row.fullscreen-input,
+.chat-root[data-theme="dark"] .line-menu-fullscreen-wrapper .input-row.fullscreen-input {
+  background: rgba(30, 30, 45, 0.95);
+  border-top-color: rgba(139, 76, 184, 0.3);
+}
+
+/* Light mode support */
+.chat-root[data-theme="light"] .line-menu-handle,
+:root:not([data-theme="dark"]) .line-menu-handle {
+  background-color: #f5f5f7;
+  border-bottom: 1px solid rgba(139, 76, 184, 0.1);
+}
+
+.chat-root[data-theme="light"] .line-menu-handle-bar,
+:root:not([data-theme="dark"]) .line-menu-handle-bar {
+  background: rgba(139, 76, 184, 0.3);
+}
+
+.chat-root[data-theme="light"] .line-menu-handle:hover .line-menu-handle-bar,
+:root:not([data-theme="dark"]) .line-menu-handle:hover .line-menu-handle-bar {
+  background: rgba(139, 76, 184, 0.5);
+}
+
+.chat-root[data-theme="light"] .line-menu-container,
+:root:not([data-theme="dark"]) .line-menu-container {
+  background: rgba(255, 255, 255, 0.98);
+  border-top: 1px solid rgba(139, 76, 184, 0.1);
+}
+
+.chat-root[data-theme="light"] .line-menu-item,
+:root:not([data-theme="dark"]) .line-menu-item {
+  background: rgba(139, 76, 184, 0.06);
+}
+
+.chat-root[data-theme="light"] .line-menu-item:hover,
+:root:not([data-theme="dark"]) .line-menu-item:hover {
+  background: rgba(139, 76, 184, 0.12);
+}
+
+.chat-root[data-theme="light"] .line-menu-label,
+:root:not([data-theme="dark"]) .line-menu-label {
+  color: #1d1d1f;
+}
+
+.chat-root[data-theme="light"] .line-toggle-btn,
+:root:not([data-theme="dark"]) .line-toggle-btn {
+  background: rgba(139, 76, 184, 0.08);
+  color: #6B2C91;
+}
+
+.chat-root[data-theme="light"] .line-menu-label-center,
+:root:not([data-theme="dark"]) .line-menu-label-center {
+  color: #6B2C91;
+}
+
+/* Light mode fullscreen support */
+.chat-root[data-theme="light"] .line-menu-fullscreen-wrapper,
+:root:not([data-theme="dark"]) .line-menu-fullscreen-wrapper {
+  background: rgba(255, 255, 255, 0.98) !important;
+}
+
+.chat-root[data-theme="light"] .line-menu-fullscreen-wrapper .line-menu-handle-bar,
+:root:not([data-theme="dark"]) .line-menu-fullscreen-wrapper .line-menu-handle-bar {
+  background: rgba(139, 76, 184, 0.4);
+}
+
+.chat-root[data-theme="light"] .line-menu-fullscreen-wrapper .line-menu-back,
+:root:not([data-theme="dark"]) .line-menu-fullscreen-wrapper .line-menu-back {
+  background: rgba(139, 76, 184, 0.15);
+  color: #6B2C91;
+}
+
+.chat-root[data-theme="light"] .line-menu-fullscreen-wrapper .line-menu-item,
+:root:not([data-theme="dark"]) .line-menu-fullscreen-wrapper .line-menu-item {
+  background: rgba(139, 76, 184, 0.06);
+  border-color: rgba(139, 76, 184, 0.1);
+}
+
+.chat-root[data-theme="light"] .line-menu-fullscreen-wrapper .line-menu-item:hover,
+:root:not([data-theme="dark"]) .line-menu-fullscreen-wrapper .line-menu-item:hover {
+  background: rgba(139, 76, 184, 0.12);
+}
+
+.chat-root[data-theme="light"] .line-menu-fullscreen-wrapper .line-menu-label,
+:root:not([data-theme="dark"]) .line-menu-fullscreen-wrapper .line-menu-label {
+  color: #1d1d1f;
+}
+
+.chat-root[data-theme="light"] .line-menu-fullscreen-wrapper .line-menu-badge,
+:root:not([data-theme="dark"]) .line-menu-fullscreen-wrapper .line-menu-badge {
+  color: rgba(139, 76, 184, 0.5);
+}
+
+/* 🔐 Long Press Countdown Overlay */
 .long-press-overlay {
   position: fixed;
   top: 0;
@@ -8543,7 +8853,7 @@ export default {
   bottom: 0 !important;
   width: 100% !important;
   height: 100%;
-  background: rgba(20, 20, 35, 0.98) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   z-index: 99999 !important;
@@ -8551,7 +8861,7 @@ export default {
   flex-direction: column;
   overflow: hidden;
   border-radius: inherit;
-  transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
 }
 
 /* Disable transition while dragging */
@@ -8582,7 +8892,7 @@ export default {
 .line-menu-fullscreen-wrapper .line-menu-handle-bar {
   width: 44px;
   height: 5px;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(139, 76, 184, 0.4);
   border-radius: 3px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -8617,11 +8927,11 @@ export default {
   gap: 8px;
   padding: 10px 16px;
   border: none;
-  background: rgba(139, 76, 184, 0.2);
+  background: rgba(139, 76, 184, 0.15);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-radius: 24px;
-  color: #fff;
+  color: #6B2C91;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
@@ -8639,8 +8949,8 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 16px 8px;
-  background: rgba(139, 76, 184, 0.12);
-  border: 1px solid rgba(139, 76, 184, 0.2);
+  background: rgba(139, 76, 184, 0.06);
+  border: 1px solid rgba(139, 76, 184, 0.1);
   border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -8649,7 +8959,7 @@ export default {
 }
 
 .line-menu-fullscreen-wrapper .line-menu-item:hover {
-  background: rgba(139, 76, 184, 0.2);
+  background: rgba(139, 76, 184, 0.12);
   transform: scale(1.02);
 }
 
@@ -8671,7 +8981,7 @@ export default {
 .line-menu-fullscreen-wrapper .line-menu-label {
   font-size: 13px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
+  color: #1d1d1f;
   text-align: center;
   line-height: 1.3;
 }
@@ -8681,7 +8991,21 @@ export default {
   top: 8px;
   right: 8px;
   font-size: 18px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(139, 76, 184, 0.5);
+}
+
+/* Input row at bottom of fullscreen menu */
+.line-menu-fullscreen-wrapper .input-row.fullscreen-input {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(139, 76, 184, 0.15);
+  padding: 12px 16px;
+  z-index: 100;
 }
 
 /* Fullscreen transition */
