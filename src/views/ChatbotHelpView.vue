@@ -752,6 +752,74 @@ export default {
   text-align: center;
 }
 
+/* Dark Mode - Feature Cards */
+:global([data-theme="dark"]) .feature-card {
+  background: rgba(58, 58, 60, 0.6);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+:global([data-theme="dark"]) .feature-card:hover {
+  background: rgba(72, 72, 74, 0.8);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+}
+
+:global([data-theme="dark"]) .feature-card span {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Dark Mode - Icon Circles */
+:global([data-theme="dark"]) .icon-circle.purple {
+  background: rgba(175, 82, 222, 0.25);
+  color: #BF5AF2;
+}
+
+:global([data-theme="dark"]) .icon-circle.orange {
+  background: rgba(255, 149, 0, 0.25);
+  color: #FF9F0A;
+}
+
+:global([data-theme="dark"]) .icon-circle.green {
+  background: rgba(52, 199, 89, 0.25);
+  color: #30D158;
+}
+
+:global([data-theme="dark"]) .icon-circle.blue {
+  background: rgba(0, 113, 227, 0.25);
+  color: #0A84FF;
+}
+
+:global([data-theme="dark"]) .icon-circle.gray {
+  background: rgba(142, 142, 147, 0.25);
+  color: #98989D;
+}
+
+/* Low Mode - Feature Cards (solid backgrounds, no transitions) */
+:global(body.gfx-low) .feature-card {
+  background: rgba(255, 255, 255, 0.95) !important;
+  transition: none !important;
+}
+
+:global(body.gfx-low) .feature-card:hover {
+  transform: none !important;
+  background: rgba(255, 255, 255, 1) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Low Mode + Dark Mode - Feature Cards */
+:global(body.gfx-low[data-theme="dark"]) .feature-card,
+:global([data-theme="dark"].gfx-low) .feature-card,
+:global(html.gfx-low[data-theme="dark"]) .feature-card {
+  background: rgba(28, 28, 30, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+:global(body.gfx-low[data-theme="dark"]) .feature-card:hover,
+:global([data-theme="dark"].gfx-low) .feature-card:hover,
+:global(html.gfx-low[data-theme="dark"]) .feature-card:hover {
+  background: rgba(44, 44, 46, 0.98) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
 /* Section Header */
 .section-header {
   display: flex;

@@ -161,9 +161,8 @@
                 <!-- Item 2: Graphics Quality (tap to cycle) -->
                 <button 
                   class="more-menu-item graphics-item"
-                  :class="{ visible: moreMenuItemsVisible[1], hiding: moreMenuItemsHiding[1], disabled: graphicsQuality === 'low' }"
+                  :class="{ visible: moreMenuItemsVisible[1], hiding: moreMenuItemsHiding[1] }"
                   @click="cycleGraphicsQuality"
-                  :disabled="graphicsQuality === 'low'"
                   title="กดเพื่อเปลี่ยนคุณภาพกราฟิก"
                 >
                   <div class="menu-item-icon">
@@ -3676,8 +3675,10 @@ export default {
     },
     
     cycleGraphicsQuality() {
-      // Cycle: medium -> high -> medium (skip low - disabled)
-      const order = ['medium', 'high'];
+      // 📱 Low mode only available on mobile (screen width <= 768px)
+      const isMobile = window.innerWidth <= 768;
+      const order = isMobile ? ['low', 'medium', 'high'] : ['medium', 'high'];
+      
       const currentIndex = order.indexOf(this.graphicsQuality);
       const nextIndex = (currentIndex + 1) % order.length;
       this.setGraphicsQuality(order[nextIndex]);
@@ -3691,6 +3692,14 @@ export default {
     },
     
     setGraphicsQuality(quality) {
+      // 📱 Low mode is only allowed on mobile devices
+      const isMobile = window.innerWidth <= 768;
+      
+      if (quality === 'low' && !isMobile) {
+        console.log('⚠️ Low graphics mode is only available on mobile. Switching to medium.');
+        quality = 'medium';
+      }
+      
       this.graphicsQuality = quality;
       this.showGraphicsMenu = false;
       
@@ -3779,10 +3788,12 @@ export default {
     loadGraphicsQuality() {
       try {
         const saved = localStorage.getItem('chatbot_graphics_quality');
+        const isMobile = window.innerWidth <= 768;
+        
         if (saved && ['low', 'medium', 'high'].includes(saved)) {
-          // 🚫 บังคับให้ผู้ที่อยู่โหมด low เปลี่ยนมาเป็น medium
-          if (saved === 'low') {
-            console.log('⚠️ Graphics low mode is disabled, switching to medium');
+          // 📱 If low mode is saved but on desktop, switch to medium
+          if (saved === 'low' && !isMobile) {
+            console.log('⚠️ Low graphics mode is only available on mobile. Switching to medium.');
             this.graphicsQuality = 'medium';
             localStorage.setItem('chatbot_graphics_quality', 'medium');
             this.applyGraphicsQuality('medium');

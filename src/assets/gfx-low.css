@@ -15,10 +15,8 @@
   visibility: hidden !important;
 }
 
-/* Disable ALL animations, transitions, and filters - EXCEPT FAB */
-*:not(.fab-open):not(.fab-open *),
-*:not(.fab-open)::before,
-*:not(.fab-open)::after {
+/* Disable ALL animations, transitions, and filters */
+*:not(.fab-open):not([class*="fab-"]):not(.apple-help-overlay) {
   animation: none !important;
   animation-duration: 0s !important;
   animation-delay: 0s !important;
@@ -29,6 +27,55 @@
   -webkit-backdrop-filter: none !important;
   filter: none !important;
   will-change: auto !important;
+}
+
+*:not(.fab-open):not(.apple-help-overlay)::before,
+*:not(.fab-open):not(.apple-help-overlay)::after {
+  animation: none !important;
+  transition: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+}
+
+/* ✅ FAB BUTTON - Force display */
+.fab-open,
+button.fab-open {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: fixed !important;
+  right: 24px !important;
+  bottom: 36px !important;
+  width: 58px !important;
+  height: 58px !important;
+  z-index: 2147483647 !important;
+  background: linear-gradient(135deg, #6B2C91 0%, #8B4CB8 100%) !important;
+  border-radius: 29px !important;
+  border: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 16px rgba(107, 44, 145, 0.3) !important;
+  pointer-events: auto !important;
+}
+
+.fab-open svg,
+.fab-open path,
+.fab-open circle,
+button.fab-open svg,
+button.fab-open path,
+button.fab-open circle {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* ✅ RESTORE Help overlay */
+.apple-help-overlay,
+.apple-help-overlay * {
+  animation: revert !important;
+  transition: revert !important;
 }
 
 /* Simplified shadows */
@@ -88,11 +135,15 @@ textarea {
 /* ==========================================================================
    🔘 FAB BUTTON - Must be visible (CRITICAL - highest specificity)
    ========================================================================== */
+/* Ultra-high specificity to override everything */
+body.gfx-low button.fab-open,
+html.gfx-low button.fab-open,
 body.gfx-low .fab-open,
 html.gfx-low .fab-open,
+.gfx-low button.fab-open,
 .gfx-low .fab-open,
-body.gfx-low button.fab-open,
-button.fab-open {
+button.fab-open.fab-open.fab-open,
+.fab-open.fab-open.fab-open {
   display: flex !important;
   visibility: visible !important;
   opacity: 1 !important;
@@ -111,6 +162,42 @@ button.fab-open {
   box-shadow: 0 4px 16px rgba(107, 44, 145, 0.3) !important;
   transform: none !important;
   pointer-events: auto !important;
+}
+
+/* FAB Icon and SVG - Must be visible with ultra-high specificity */
+body.gfx-low button.fab-open svg,
+html.gfx-low button.fab-open svg,
+body.gfx-low .fab-open svg,
+html.gfx-low .fab-open svg,
+.gfx-low .fab-open svg,
+body.gfx-low .fab-open .fab-icon,
+html.gfx-low .fab-open .fab-icon,
+.gfx-low .fab-open .fab-icon,
+body.gfx-low .fab-open path,
+html.gfx-low .fab-open path,
+.gfx-low .fab-open path,
+body.gfx-low .fab-open circle,
+html.gfx-low .fab-open circle,
+.gfx-low .fab-open circle,
+.fab-open svg,
+.fab-open path,
+.fab-open circle {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Allow FAB animations to work - highest specificity */
+body.gfx-low button.fab-open *,
+html.gfx-low button.fab-open *,
+body.gfx-low .fab-open *,
+html.gfx-low .fab-open *,
+.gfx-low .fab-open *,
+.fab-open * {
+  animation: revert !important;
+  transition: revert !important;
+  visibility: visible !important;
+  opacity: revert !important;
 }
 
 /* Chat-root should not clip FAB */
@@ -262,4 +349,151 @@ button.fab-open {
 
 .dot-animated {
   animation: none !important;
+}
+/* ==========================================================================
+   📱 LINE Menu & Dropdown Support for Low Mode
+   ========================================================================== */
+/* LINE Menu Container */
+.line-menu-container,
+.line-menu-grid,
+.line-menu-item,
+.line-category-btn,
+.line-subcategory-btn,
+.category-icon-wrapper,
+.cat-item,
+.cat-toggle,
+.sub-list,
+.sub-item {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: flex !important;
+}
+
+.line-menu-grid {
+  display: grid !important;
+}
+
+.sub-list {
+  display: block !important;
+}
+
+/* Dropdown Menu */
+.more-menu-items {
+  visibility: visible !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+}
+
+.more-menu-items.open {
+  opacity: 1 !important;
+  transform: scale(1) !important;
+}
+
+[data-theme="dark"] .more-menu-items {
+  background: rgba(44, 44, 46, 0.98) !important;
+}
+
+/* Input & Send Button */
+.input-wrapper,
+.input-pill,
+.btn-send,
+.btn-menu-toggle,
+.dots-container,
+.dot {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Panel Elements */
+.panel-top,
+.panel-header,
+.panel-body,
+.panel-footer,
+.chat-messages,
+.message-wrapper,
+.message-bubble {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Scroll buttons */
+.scroll-to-top-btn,
+.scroll-to-bottom-btn {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Welcome screen */
+.welcome-content,
+.ai-greet-wrapper,
+.welcome-categories-toggle,
+.welcome-categories-grid {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Solid backgrounds without blur */
+.input-wrapper {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+[data-theme="dark"] .input-wrapper {
+  background: rgba(44, 44, 46, 0.95) !important;
+}
+
+/* Simplified transitions for essential interactions */
+.btn-send:hover,
+.cat-toggle:hover,
+.sub-item:hover,
+.more-menu-item:hover,
+.line-category-btn:hover {
+  opacity: 0.85 !important;
+}
+
+/* ==========================================================================
+   🔘 FAB BUTTON OVERRIDE - CRITICAL: Must appear at END of file
+   ========================================================================== */
+button.fab-open,
+.fab-open,
+button[class*="fab-open"],
+[class*="fab-open"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: fixed !important;
+  right: 24px !important;
+  bottom: 36px !important;
+  width: 58px !important;
+  height: 58px !important;
+  z-index: 2147483647 !important;
+  background: linear-gradient(135deg, #6B2C91 0%, #8B4CB8 100%) !important;
+  border-radius: 29px !important;
+  border: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 16px rgba(107, 44, 145, 0.3) !important;
+  transform: none !important;
+  pointer-events: auto !important;
+}
+
+button.fab-open svg,
+button.fab-open path,
+button.fab-open circle,
+.fab-open svg,
+.fab-open path,
+.fab-open circle {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+button.fab-open *,
+.fab-open * {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
 }

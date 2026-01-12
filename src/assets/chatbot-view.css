@@ -2,6 +2,9 @@
 .chat-root { 
   font-family: -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   overflow: hidden; /* Prevent scrollbar during theme transition */
+  min-height: 100vh;
+  min-height: 100dvh;
+  position: relative;
 }
 .chat-overlay { position: fixed; inset: 0; display: flex; justify-content: flex-end; z-index: 1400; }
 
@@ -1484,11 +1487,11 @@ html.keyboard-open .close-circle {
   opacity: 0 !important;
 }
 
-/* Remove blur and effects for performance (except intro overlay) */
+/* Remove blur and effects for performance (except intro overlay and FAB button) */
 .gfx-low:not(.intro-playing),
-.gfx-low:not(.intro-playing) *:not(.intro-overlay):not(.intro-overlay *),
-.gfx-low:not(.intro-playing) *:not(.intro-overlay)::before,
-.gfx-low:not(.intro-playing) *:not(.intro-overlay)::after {
+.gfx-low:not(.intro-playing) *:not(.intro-overlay):not(.intro-overlay *):not(.fab-open):not(.fab-open *):not(.apple-help-overlay):not(.apple-help-overlay *),
+.gfx-low:not(.intro-playing) *:not(.intro-overlay):not(.fab-open)::before,
+.gfx-low:not(.intro-playing) *:not(.intro-overlay):not(.fab-open)::after {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   filter: none !important;
@@ -1500,6 +1503,40 @@ html.keyboard-open .close-circle {
   transition-delay: 0s !important;
   will-change: auto !important;
 }
+
+/* 🔘 FAB Button - Force visible in gfx-low mode */
+.gfx-low .fab-open,
+.gfx-low button.fab-open,
+body.gfx-low .fab-open,
+html.gfx-low .fab-open {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: fixed !important;
+  right: 24px !important;
+  bottom: 36px !important;
+  width: 58px !important;
+  height: 58px !important;
+  z-index: 2147483647 !important;
+  background: linear-gradient(135deg, #6B2C91 0%, #8B4CB8 100%) !important;
+  border-radius: 29px !important;
+  border: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 16px rgba(107, 44, 145, 0.3) !important;
+  transform: none !important;
+  pointer-events: auto !important;
+}
+
+.gfx-low .fab-open *,
+body.gfx-low .fab-open *,
+html.gfx-low .fab-open * {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 
 /* When intro is playing, allow full effects even in low mode */
 .gfx-low.intro-playing .intro-overlay,
@@ -1584,6 +1621,60 @@ html[data-theme="dark"] body.gfx-low {
   background: #000 !important;
 }
 
+/* 🌙 Dark mode cards in gfx-low mode */
+html.gfx-low[data-theme="dark"] .message-bubble.bot,
+html.gfx-low[data-theme="dark"] .backdrop-card,
+body.gfx-low.dark-mode .message-bubble.bot,
+body.gfx-low.dark-mode .backdrop-card,
+[data-theme="dark"].gfx-low .message-bubble.bot,
+[data-theme="dark"].gfx-low .backdrop-card {
+  background: #1c1c1e !important;
+  color: #f5f5f7 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Dark mode category cards/items */
+html.gfx-low[data-theme="dark"] .cat-item,
+html.gfx-low[data-theme="dark"] .category-card,
+html.gfx-low[data-theme="dark"] .feature-card,
+body.gfx-low.dark-mode .cat-item,
+body.gfx-low.dark-mode .category-card,
+body.gfx-low.dark-mode .feature-card,
+[data-theme="dark"].gfx-low .cat-item,
+[data-theme="dark"].gfx-low .category-card,
+[data-theme="dark"].gfx-low .feature-card {
+  background: #2c2c2e !important;
+  color: #f5f5f7 !important;
+}
+
+/* Dark mode sub-items */
+html.gfx-low[data-theme="dark"] .sub-item,
+body.gfx-low.dark-mode .sub-item,
+[data-theme="dark"].gfx-low .sub-item {
+  background: #3a3a3c !important;
+  color: #f5f5f7 !important;
+}
+
+/* Dark mode message text */
+html.gfx-low[data-theme="dark"] .message-text,
+html.gfx-low[data-theme="dark"] .ai-greet-title,
+html.gfx-low[data-theme="dark"] .ai-greet-sub,
+body.gfx-low.dark-mode .message-text,
+body.gfx-low.dark-mode .ai-greet-title,
+body.gfx-low.dark-mode .ai-greet-sub,
+[data-theme="dark"].gfx-low .message-text,
+[data-theme="dark"].gfx-low .ai-greet-title,
+[data-theme="dark"].gfx-low .ai-greet-sub {
+  color: #f5f5f7 !important;
+}
+
+/* Dark mode category title */
+html.gfx-low[data-theme="dark"] .category-title,
+body.gfx-low.dark-mode .category-title,
+[data-theme="dark"].gfx-low .category-title {
+  color: #f5f5f7 !important;
+}
+
 /* Don't force chatbot-view to be visible - it should hide when visible=false */
 html.gfx-low,
 body.gfx-low,
@@ -1629,8 +1720,11 @@ html.gfx-low .fab-open {
 
 /* Ensure .chat-root doesn't clip FAB */
 .gfx-low .chat-root,
-body.gfx-low .chat-root {
+body.gfx-low .chat-root,
+html.gfx-low .chat-root {
   overflow: visible !important;
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
 }
 
 .gfx-low .chat-panel,
@@ -1654,18 +1748,20 @@ body.gfx-low .chat-root {
 }
 
 /* 🔧 FIX: Apple Help Modal - ensure visibility in gfx-low mode */
-/* Override Vue transition initial states */
+/* Override Vue transition initial states - using > for direct child since teleported to body */
+body.gfx-low > .apple-help-overlay,
+body.gfx-low > .apple-help-overlay .apple-panel,
+body.gfx-low > .apple-help-overlay .panel-content,
+body.gfx-low > .apple-help-overlay .apple-section,
+body.gfx-low > .apple-help-overlay .backdrop,
+html.gfx-low body > .apple-help-overlay,
+html.gfx-low body > .apple-help-overlay .apple-panel,
+html.gfx-low body > .apple-help-overlay .backdrop,
 .gfx-low .apple-help-overlay,
 .gfx-low .apple-help-overlay .apple-panel,
 .gfx-low .apple-help-overlay .panel-content,
 .gfx-low .apple-help-overlay .apple-section,
-.gfx-low .apple-help-overlay .backdrop,
-body.gfx-low .apple-help-overlay,
-body.gfx-low .apple-help-overlay .apple-panel,
-body.gfx-low .apple-help-overlay .backdrop,
-html.gfx-low .apple-help-overlay,
-html.gfx-low .apple-help-overlay .apple-panel,
-html.gfx-low .apple-help-overlay .backdrop {
+.gfx-low .apple-help-overlay .backdrop {
   visibility: visible !important;
   opacity: 1 !important;
   transform: translateX(0) translateY(0) !important;
@@ -1687,18 +1783,14 @@ html.gfx-low .apple-help-overlay .backdrop {
 }
 
 /* 🔧 FIX: Make apple-panel solid and readable in gfx-low mode */
-/* Display full within chatbot panel, not full browser screen */
-.gfx-low .apple-help-overlay .apple-panel,
-body.gfx-low .apple-help-overlay .apple-panel,
-html.gfx-low .apple-help-overlay .apple-panel {
+/* Display full within chatbot panel only */
+body.gfx-low > .apple-help-overlay .apple-panel,
+html.gfx-low body > .apple-help-overlay .apple-panel,
+.gfx-low .apple-help-overlay .apple-panel {
   background: #ffffff !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
+  position: relative !important;
   width: 100% !important;
   height: 100% !important;
   max-height: 100% !important;
@@ -1708,57 +1800,59 @@ html.gfx-low .apple-help-overlay .apple-panel {
   -webkit-overflow-scrolling: touch !important;
   border-radius: 0 !important;
   margin: 0 !important;
-  display: block !important;
+  display: flex !important;
+  flex-direction: column !important;
   visibility: visible !important;
   opacity: 1 !important;
+  transform: translateX(0) !important;
 }
 
-/* Make overlay fill the chat panel */
-.gfx-low .apple-help-overlay,
-body.gfx-low .apple-help-overlay,
-html.gfx-low .apple-help-overlay {
-  position: absolute !important;
+/* Make overlay fill the chat panel only - positioned to match chat drawer */
+body.gfx-low > .apple-help-overlay,
+html.gfx-low body > .apple-help-overlay,
+.gfx-low .apple-help-overlay {
+  position: fixed !important;
+  /* Position to match chat-panel (right side drawer) */
   top: 0 !important;
-  left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
+  left: auto !important;
+  width: min(460px, 100vw) !important;
+  height: 100vh !important;
+  height: 100dvh !important;
   display: flex !important;
   visibility: visible !important;
   opacity: 1 !important;
-  z-index: 9999 !important;
+  z-index: 999999 !important;
 }
 
 /* Force all help overlay children to be visible */
-.gfx-low .apple-help-overlay *,
-body.gfx-low .apple-help-overlay * {
+body.gfx-low > .apple-help-overlay *,
+html.gfx-low body > .apple-help-overlay *,
+.gfx-low .apple-help-overlay * {
   visibility: visible !important;
   opacity: 1 !important;
 }
 
-/* Backdrop styling */
-.gfx-low .apple-help-overlay .backdrop,
-body.gfx-low .apple-help-overlay .backdrop {
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  background: rgba(0, 0, 0, 0.5) !important;
-  z-index: 1 !important;
+/* Backdrop styling - hide it since we're inside chat panel */
+body.gfx-low > .apple-help-overlay .backdrop,
+html.gfx-low body > .apple-help-overlay .backdrop,
+.gfx-low .apple-help-overlay .backdrop {
+  display: none !important;
 }
 
 /* Panel content */
-.gfx-low .apple-help-overlay .panel-content,
-body.gfx-low .apple-help-overlay .panel-content {
+body.gfx-low > .apple-help-overlay .panel-content,
+html.gfx-low body > .apple-help-overlay .panel-content,
+.gfx-low .apple-help-overlay .panel-content {
   display: block !important;
   overflow-y: auto !important;
 }
 
 /* Panel header */
-.gfx-low .apple-help-overlay .panel-header,
-body.gfx-low .apple-help-overlay .panel-header {
+body.gfx-low > .apple-help-overlay .panel-header,
+html.gfx-low body > .apple-help-overlay .panel-header,
+.gfx-low .apple-help-overlay .panel-header {
   display: flex !important;
   position: sticky !important;
   top: 0 !important;
@@ -1767,8 +1861,9 @@ body.gfx-low .apple-help-overlay .panel-header {
 }
 
 /* Sections */
-.gfx-low .apple-help-overlay .apple-section,
-body.gfx-low .apple-help-overlay .apple-section {
+body.gfx-low > .apple-help-overlay .apple-section,
+html.gfx-low body > .apple-help-overlay .apple-section,
+.gfx-low .apple-help-overlay .apple-section {
   display: block !important;
   background: transparent !important;
 }
