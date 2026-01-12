@@ -103,9 +103,10 @@
 
   /* Apple-style Back Button */
   .apple-back-btn {
-    position: absolute;
-    top: -40px;
-    left: 0;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -135,7 +136,8 @@
 
   @media (max-width: 768px) {
     .apple-back-btn {
-      top: -50px;
+      top: 15px;
+      left: 15px;
       padding: 6px 12px 6px 8px;
       font-size: 14px;
     }
@@ -143,6 +145,37 @@
     .apple-back-btn svg {
       width: 18px;
       height: 18px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .apple-back-btn {
+      top: 12px;
+      left: 12px;
+      padding: 5px 10px 5px 6px;
+      font-size: 13px;
+      gap: 2px;
+      border-radius: 16px;
+    }
+    
+    .apple-back-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  @media (max-width: 375px) {
+    .apple-back-btn {
+      top: 10px;
+      left: 10px;
+      padding: 4px 8px 4px 5px;
+      font-size: 12px;
+      border-radius: 14px;
+    }
+    
+    .apple-back-btn svg {
+      width: 14px;
+      height: 14px;
     }
   }
 
