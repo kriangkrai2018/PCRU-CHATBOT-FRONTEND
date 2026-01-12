@@ -745,43 +745,61 @@
 
             <!-- 📱 LINE-style Menu Categories (shown when menu is open) -->
             <transition name="line-menu-slide">
-              <div v-if="showLineMenu" class="line-menu-container" :key="selectedParentCategory ? selectedParentCategory.id : 'main'">
-                <!-- Back button when viewing subcategories -->
-                <div v-if="selectedParentCategory" class="line-menu-header">
-                  <button class="line-menu-back" @click="selectedParentCategory = null">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                      <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <span>{{ selectedParentCategory.title }}</span>
-                  </button>
+              <div 
+                v-if="showLineMenu && !lineMenuExpanded" 
+                class="line-menu-wrapper" 
+                :class="{ 'is-dragging': isDragging }"
+                :style="menuDragStyle"
+                :key="selectedParentCategory ? selectedParentCategory.id : 'main'"
+              >
+                <!-- Expand/Collapse handle -->
+                <div 
+                  class="line-menu-handle" 
+                  @mousedown="handleDragStart"
+                  @touchstart.prevent="handleDragStart"
+                >
+                  <div class="line-menu-handle-bar"></div>
                 </div>
                 
-                <!-- Subcategories view -->
-                <div v-if="selectedParentCategory" class="line-menu-grid">
-                  <button 
-                    v-for="sub in getSubcategories(selectedParentCategory.id)" 
-                    :key="sub.id" 
-                    class="line-menu-item"
-                    @click="selectLineMenuCategory(sub)"
-                  >
-                    <div class="line-menu-icon" v-html="getCategoryIcon(sub.title)"></div>
-                    <span class="line-menu-label">{{ sub.title }}</span>
-                  </button>
-                </div>
-                
-                <!-- Main categories view -->
-                <div v-else class="line-menu-grid">
-                  <button 
-                    v-for="cat in lineMenuCategories" 
-                    :key="cat.id" 
-                    class="line-menu-item"
-                    :class="{ 'has-children': hasSubcategories(cat.id) }"
-                    @click="onMenuCategoryClick(cat)"
-                  >
-                    <div class="line-menu-icon" v-html="getCategoryIcon(cat.title)"></div>
-                    <span class="line-menu-label">{{ cat.title }}</span>
-                    <span v-if="hasSubcategories(cat.id)" class="line-menu-badge">›</span>
-                  </button>
+                <!-- Scrollable content area -->
+                <div class="line-menu-container">
+                  <!-- Back button when viewing subcategories (always visible) -->
+                  <div v-if="selectedParentCategory" class="line-menu-header">
+                    <button class="line-menu-back" @click="selectedParentCategory = null">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      <span>{{ selectedParentCategory.title }}</span>
+                    </button>
+                  </div>
+                  
+                  <!-- Subcategories view -->
+                  <div v-if="selectedParentCategory" class="line-menu-grid">
+                    <button 
+                      v-for="sub in getSubcategories(selectedParentCategory.id)" 
+                      :key="sub.id" 
+                      class="line-menu-item"
+                      @click="selectLineMenuCategory(sub)"
+                    >
+                      <div class="line-menu-icon" v-html="getCategoryIcon(sub.title)"></div>
+                      <span class="line-menu-label">{{ sub.title }}</span>
+                    </button>
+                  </div>
+                  
+                  <!-- Main categories view -->
+                  <div v-else class="line-menu-grid">
+                    <button 
+                      v-for="cat in lineMenuCategories" 
+                      :key="cat.id" 
+                      class="line-menu-item"
+                      :class="{ 'has-children': hasSubcategories(cat.id) }"
+                      @click="onMenuCategoryClick(cat)"
+                    >
+                      <div class="line-menu-icon" v-html="getCategoryIcon(cat.title)"></div>
+                      <span class="line-menu-label">{{ cat.title }}</span>
+                      <span v-if="hasSubcategories(cat.id)" class="line-menu-badge">›</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </transition>
@@ -848,7 +866,7 @@
               </div>
               
               <!-- Menu Label (shown when menu is open) -->
-              <div class="line-menu-label-center" v-show="showLineMenu" @click="toggleLineMenu(!showLineMenu)">
+              <div class="line-menu-label-center" v-show="showLineMenu" @click="showLineMenu = false">
                 <span class="menu-arrow" :class="{ 'arrow-up': showLineMenu }">▼</span>
                 <span>เมนู</span>
               </div>
@@ -869,6 +887,66 @@
           </div>
           
           <!-- Feedback Dropdown moved inline with unlike button above -->
+          
+          <!-- Fullscreen Menu (Inside chat-panel, directly in aside) -->
+          <transition name="line-menu-fullscreen">
+            <div 
+              v-if="showLineMenu && lineMenuExpanded" 
+              class="line-menu-fullscreen-wrapper"
+              :class="{ 'is-dragging': isDragging }"
+              :style="fullscreenDragStyle"
+            >
+              <!-- Collapse handle -->
+              <div 
+                class="line-menu-handle" 
+                @mousedown="handleDragStartFullscreen"
+                @touchstart.prevent="handleDragStartFullscreen"
+              >
+                <div class="line-menu-handle-bar"></div>
+              </div>
+              
+              <!-- Scrollable content area -->
+              <div class="line-menu-container-fullscreen">
+                <!-- Back button when viewing subcategories -->
+                <div v-if="selectedParentCategory" class="line-menu-header">
+                  <button class="line-menu-back" @click="selectedParentCategory = null">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>{{ selectedParentCategory.title }}</span>
+                  </button>
+                </div>
+                
+                <!-- Subcategories view -->
+                <div v-if="selectedParentCategory" class="line-menu-grid">
+                  <button 
+                    v-for="sub in getSubcategories(selectedParentCategory.id)" 
+                    :key="sub.id" 
+                    class="line-menu-item"
+                    @click="selectLineMenuCategory(sub)"
+                  >
+                    <div class="line-menu-icon" v-html="getCategoryIcon(sub.title)"></div>
+                    <span class="line-menu-label">{{ sub.title }}</span>
+                  </button>
+                </div>
+                
+                <!-- Main categories view -->
+                <div v-else class="line-menu-grid">
+                  <button 
+                    v-for="cat in lineMenuCategories" 
+                    :key="cat.id" 
+                    class="line-menu-item"
+                    :class="{ 'has-children': hasSubcategories(cat.id) }"
+                    @click="onMenuCategoryClick(cat)"
+                  >
+                    <div class="line-menu-icon" v-html="getCategoryIcon(cat.title)"></div>
+                    <span class="line-menu-label">{{ cat.title }}</span>
+                    <span v-if="hasSubcategories(cat.id)" class="line-menu-badge">›</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </transition>
         </aside>
 
         <!-- Global avatar-anchored typing tooltip (rendered once, positioned with fixed coords to avoid clipping) -->
@@ -940,7 +1018,125 @@
       </div>
     </transition>
 
-    <!-- 🎓 Feedback Tutorial Overlay (Heyday-style) -->
+    <!-- 📱 Menu Tutorial Overlay (LINE-style guide) -->
+    <transition name="tutorial-fade">
+      <div 
+        v-if="showMenuTutorial" 
+        class="tutorial-overlay menu-tutorial"
+        @click.self="skipMenuTutorial"
+      >
+        <!-- Blur background except spotlight -->
+        <div class="tutorial-backdrop"></div>
+        
+        <!-- Spotlight highlight -->
+        <div 
+          v-if="menuTutorialTargetRect"
+          class="tutorial-spotlight menu-spotlight"
+          :style="menuTutorialSpotlightStyle"
+        >
+          <!-- Clone of menu toggle button -->
+          <div v-if="currentMenuTutorialData.target === 'menu-toggle'" class="spotlight-btn-clone menu-toggle-clone">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="4" width="7" height="7" rx="1.5" stroke="#8B4CB8" stroke-width="2"/>
+              <rect x="14" y="4" width="7" height="7" rx="1.5" stroke="#8B4CB8" stroke-width="2"/>
+              <rect x="3" y="13" width="7" height="7" rx="1.5" stroke="#8B4CB8" stroke-width="2"/>
+              <rect x="14" y="13" width="7" height="7" rx="1.5" stroke="#8B4CB8" stroke-width="2"/>
+            </svg>
+          </div>
+          <!-- Clone of keyboard toggle button -->
+          <div v-if="currentMenuTutorialData.target === 'keyboard-toggle'" class="spotlight-btn-clone keyboard-toggle-clone">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="4" width="20" height="16" rx="3" stroke="#8B4CB8" stroke-width="2"/>
+              <rect x="5" y="8" width="2" height="2" rx="0.5" fill="#8B4CB8"/>
+              <rect x="9" y="8" width="2" height="2" rx="0.5" fill="#8B4CB8"/>
+              <rect x="13" y="8" width="2" height="2" rx="0.5" fill="#8B4CB8"/>
+              <rect x="17" y="8" width="2" height="2" rx="0.5" fill="#8B4CB8"/>
+              <rect x="7" y="16" width="10" height="2" rx="0.5" fill="#8B4CB8"/>
+            </svg>
+          </div>
+          <!-- Clone of handle bar -->
+          <div v-if="currentMenuTutorialData.target === 'menu-handle'" class="spotlight-btn-clone handle-clone">
+            <div class="handle-bar-clone"></div>
+          </div>
+          <!-- Clone of menu grid -->
+          <div v-if="currentMenuTutorialData.target === 'menu-grid'" class="spotlight-btn-clone grid-clone">
+            <div class="grid-item-clone"></div>
+            <div class="grid-item-clone"></div>
+          </div>
+          <!-- Clone of back button -->
+          <div v-if="currentMenuTutorialData.target === 'menu-back'" class="spotlight-btn-clone back-clone">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M15 18l-6-6 6-6" stroke="#8B4CB8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>ย้อนกลับ</span>
+          </div>
+        </div>
+        
+        <!-- Tutorial tooltip/card -->
+        <div class="tutorial-card menu-tutorial-card" :style="menuTutorialCardStyle">
+          <div class="tutorial-step-indicator">
+            <span 
+              v-for="n in menuTutorialSteps.length" 
+              :key="n"
+              class="step-dot"
+              :class="{ active: n - 1 === menuTutorialStep, completed: n - 1 < menuTutorialStep }"
+            ></span>
+          </div>
+          
+          <div class="tutorial-content">
+            <div class="tutorial-icon">{{ currentMenuTutorialData.icon }}</div>
+            <h3 class="tutorial-title">{{ currentMenuTutorialData.title }}</h3>
+            <p class="tutorial-description">{{ currentMenuTutorialData.description }}</p>
+          </div>
+          
+          <div class="tutorial-actions">
+            <button 
+              v-if="menuTutorialStep > 0" 
+              class="tutorial-btn secondary"
+              @click="prevMenuTutorialStep"
+            >
+              ย้อนกลับ
+            </button>
+            <button 
+              v-if="menuTutorialStep < menuTutorialSteps.length - 1"
+              class="tutorial-btn primary"
+              @click="nextMenuTutorialStep"
+            >
+              ถัดไป
+            </button>
+            <button 
+              v-else
+              class="tutorial-btn primary"
+              @click="completeMenuTutorial"
+            >
+              เข้าใจแล้ว! ✨
+            </button>
+          </div>
+          
+          <button class="tutorial-skip" @click="skipMenuTutorial">
+            ข้าม
+          </button>
+        </div>
+        
+        <!-- Pointing arrow -->
+        <div 
+          v-if="currentMenuTutorialData.showArrow && menuTutorialTargetRect"
+          class="tutorial-arrow menu-arrow"
+          :style="menuTutorialArrowStyle"
+        >
+          <svg width="40" height="60" viewBox="0 0 40 60">
+            <path 
+              d="M20 0 L20 45 M10 35 L20 45 L30 35" 
+              stroke="#8B4CB8" 
+              stroke-width="3" 
+              fill="none"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+    </transition>    <!-- 🎓 Feedback Tutorial Overlay (Heyday-style) -->
     <transition name="tutorial-fade">
       <div 
         v-if="showFeedbackTutorial" 
@@ -1334,6 +1530,62 @@ export default {
       showLineMenu: false, // false = keyboard mode, true = menu mode
       lineMenuCategories: [], // Categories to show in LINE menu
       selectedParentCategory: null, // Currently selected parent category for subcategories
+      lineMenuExpanded: false, // Fullscreen expanded mode
+      // Drag to expand
+      isDragging: false,
+      dragStartY: 0,
+      dragCurrentY: 0,
+      menuBaseHeight: 380, // Base height of menu
+      panelHeight: 0, // Chat panel height for fullscreen calculation
+      fullscreenDragHeight: 0, // Track drag height when in fullscreen mode
+      // 📱 Menu Tutorial (LINE-style guide)
+      showMenuTutorial: false,
+      menuTutorialStep: 0,
+      menuTutorialTargetRect: null,
+      menuTutorialSteps: [
+        {
+          icon: '📱',
+          title: 'เมนูลัด',
+          description: 'กดปุ่มนี้เพื่อเปิดเมนูหมวดหมู่ ช่วยให้ค้นหาข้อมูลได้ง่ายขึ้น',
+          target: 'menu-toggle',
+          showArrow: true
+        },
+        {
+          icon: '📂',
+          title: 'เลือกหมวดหมู่',
+          description: 'กดที่หมวดหมู่ที่ต้องการ ถ้ามีหมวดย่อยจะแสดงให้เลือกต่อ',
+          target: 'menu-grid',
+          showArrow: true
+        },
+        {
+          icon: '↕️',
+          title: 'ลากขยาย/ย่อ',
+          description: 'ลากแถบด้านบนขึ้นเพื่อขยายเต็มจอ หรือลากลงเพื่อย่อ',
+          target: 'menu-handle',
+          showArrow: true
+        },
+        {
+          icon: '⬅️',
+          title: 'ย้อนกลับ',
+          description: 'กดปุ่มย้อนกลับเพื่อกลับไปหมวดหมู่หลัก',
+          target: 'menu-back',
+          showArrow: true
+        },
+        {
+          icon: '⌨️',
+          title: 'สลับโหมด',
+          description: 'กดปุ่มคีย์บอร์ดเพื่อกลับไปพิมพ์คำถามแทน',
+          target: 'keyboard-toggle',
+          showArrow: true
+        },
+        {
+          icon: '✨',
+          title: 'พร้อมใช้งาน!',
+          description: 'ลองใช้เมนูเพื่อค้นหาข้อมูลที่ต้องการได้เลย',
+          target: null,
+          showArrow: false
+        }
+      ],
       // 🎬 First-time intro animation (Genshin-style)
       showIntroAnimation: false,
       introPhase: 0, // 0: not started, 1: logo, 2: particles, 3: reveal
@@ -1391,6 +1643,48 @@ export default {
     }
   },
   computed: {
+    // 📱 Menu drag style for real-time resize
+    menuDragStyle() {
+      if (!this.isDragging) return {}
+      
+      const dragDistance = this.dragStartY - this.dragCurrentY // Positive = drag up
+      const baseHeight = this.menuBaseHeight
+      const maxHeight = this.panelHeight || 700
+      
+      // Calculate new height based on drag
+      let newHeight = baseHeight + dragDistance
+      
+      // Clamp between min (60px) and max (full panel height)
+      newHeight = Math.max(60, Math.min(newHeight, maxHeight))
+      
+      return {
+        height: `${newHeight}px`,
+        maxHeight: 'none',
+        transition: 'none'
+      }
+    },
+    
+    // 📱 Fullscreen menu drag style
+    fullscreenDragStyle() {
+      if (!this.isDragging || !this.lineMenuExpanded) return {}
+      
+      const dragDistance = this.dragStartY - this.dragCurrentY // Positive = drag up, Negative = drag down
+      const maxHeight = this.panelHeight || 700
+      
+      // Calculate new height - start from full height and drag down
+      let newHeight = maxHeight + dragDistance
+      
+      // Clamp between min (60px) and max (full panel height)
+      newHeight = Math.max(60, Math.min(newHeight, maxHeight))
+      
+      return {
+        height: `${newHeight}px`,
+        top: 'auto',
+        bottom: '0',
+        transition: 'none'
+      }
+    },
+    
     // 🎓 Tutorial computed properties
     currentTutorialData() {
       return this.tutorialSteps[this.tutorialStep] || this.tutorialSteps[0]
@@ -1483,6 +1777,76 @@ export default {
         left: `${this.scrollButtonRect.left + this.scrollButtonRect.width / 2 - 15}px`
       }
     },
+    
+    // 📱 Menu Tutorial Computed Properties
+    currentMenuTutorialData() {
+      return this.menuTutorialSteps[this.menuTutorialStep] || this.menuTutorialSteps[0]
+    },
+    menuTutorialSpotlightStyle() {
+      if (!this.menuTutorialTargetRect) {
+        return { display: 'none' }
+      }
+      const padding = 10
+      return {
+        top: `${this.menuTutorialTargetRect.top - padding}px`,
+        left: `${this.menuTutorialTargetRect.left - padding}px`,
+        width: `${this.menuTutorialTargetRect.width + padding * 2}px`,
+        height: `${this.menuTutorialTargetRect.height + padding * 2}px`
+      }
+    },
+    menuTutorialCardStyle() {
+      if (!this.menuTutorialTargetRect) {
+        // Center the card when no target
+        return {
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)'
+        }
+      }
+      // Position card above or below the spotlight
+      const viewportHeight = window.innerHeight
+      const targetTop = this.menuTutorialTargetRect.top
+      
+      if (targetTop > viewportHeight / 2) {
+        // Target is in lower half, show card above
+        return {
+          bottom: `${viewportHeight - targetTop + 30}px`,
+          left: '50%',
+          transform: 'translateX(-50%)'
+        }
+      } else {
+        // Target is in upper half, show card below
+        return {
+          top: `${this.menuTutorialTargetRect.bottom + 30}px`,
+          left: '50%',
+          transform: 'translateX(-50%)'
+        }
+      }
+    },
+    menuTutorialArrowStyle() {
+      if (!this.menuTutorialTargetRect) {
+        return { display: 'none' }
+      }
+      const viewportHeight = window.innerHeight
+      const targetTop = this.menuTutorialTargetRect.top
+      
+      if (targetTop > viewportHeight / 2) {
+        // Arrow pointing down (target below card)
+        return {
+          top: `${this.menuTutorialTargetRect.top - 65}px`,
+          left: `${this.menuTutorialTargetRect.left + this.menuTutorialTargetRect.width / 2 - 20}px`,
+          transform: 'rotate(0deg)'
+        }
+      } else {
+        // Arrow pointing up (target above card)
+        return {
+          top: `${this.menuTutorialTargetRect.bottom + 5}px`,
+          left: `${this.menuTutorialTargetRect.left + this.menuTutorialTargetRect.width / 2 - 20}px`,
+          transform: 'rotate(180deg)'
+        }
+      }
+    },
+    
     // PWA Standalone footer style - reduce padding since no Safari URL bar
     pwaFooterStyle() {
       if (this.isPwaStandalone) {
@@ -1497,7 +1861,17 @@ export default {
     },
     displayedCategories() {
       if (!this.categories || !Array.isArray(this.categories)) return []
-      const result = this.showAllCategories ? this.categories : this.categories.slice(0, 2)
+      // Filter only top-level categories (no parent) for welcome screen
+      const topLevel = this.categories.filter(c => !c.parent)
+      // Add items (subcategories) to each top-level category for backward compatibility
+      const withItems = topLevel.map(cat => {
+        const subs = this.categories.filter(c => c.parent === cat.id)
+        return {
+          ...cat,
+          items: subs.map(s => s.title)
+        }
+      })
+      const result = this.showAllCategories ? withItems : withItems.slice(0, 2)
       console.log('displayedCategories:', result, 'showAllCategories:', this.showAllCategories, 'categories.length:', this.categories.length)
       return result
     },
@@ -1923,32 +2297,15 @@ export default {
         console.log('byId:', byId)
         console.log('childrenByParent:', childrenByParent)
         
-        // Build final category structure for UI
-        const mappedCategories = []
+        // Build final category structure for UI - keep ALL categories with id and parent
+        const allCategories = Object.values(byId)
         
-        Object.keys(byId).forEach(id => {
-          const cat = byId[id]
-          
-          // Only process top-level categories (no parent)
-          if (!cat.parent) {
-            const children = childrenByParent[id] || []
-            const items = children.map(childId => byId[childId].title)
-            
-            mappedCategories.push({
-              title: cat.title,
-              items: items
-            })
-            
-            console.log(`Category "${cat.title}" has ${items.length} items:`, items)
-          }
-        })
-        
-        console.log('Final mapped categories:', mappedCategories)
+        console.log('All categories with id/parent:', allCategories)
         
         // Only update if we got valid categories from backend
-        if (mappedCategories.length > 0) {
-          this.categories = mappedCategories
-          console.log('Categories assigned to this.categories')
+        if (allCategories.length > 0) {
+          this.categories = allCategories
+          console.log('Categories assigned to this.categories:', this.categories.length)
           
           // Trigger re-render
           this.$nextTick(() => {
@@ -1957,18 +2314,19 @@ export default {
           })
         }
       } else {
-        // Fallback for other shapes
-        const mappedCategories = payload.map(c => {
+        // Fallback for other shapes - preserve id and parent if available
+        const mappedCategories = payload.map((c, idx) => {
+          const id = c.id || c.CategoriesID || String(idx + 1)
           const title = c.title || c.name || c.category || 'Untitled'
-          const subs = c.subcategories || c.children || c.items || c.options || []
-          const items = Array.isArray(subs)
-            ? subs.map(s => (typeof s === 'string' ? s : (s.title || s.name || s.label || 'Untitled')))
-            : []
-          return { title, items }
+          const parent = c.parent || c.ParentCategoriesID || null
+          const pdf = c.pdf || c.CategoriesPDF || null
+          return { id: String(id), title, parent: parent ? String(parent) : null, pdf }
         })
         // Only update if we got valid categories from backend
         if (mappedCategories.length > 0) {
           this.categories = mappedCategories
+          // Update LINE menu categories
+          this.lineMenuCategories = mappedCategories.filter(cat => !cat.parent).slice(0, 8)
         }
       }
 
@@ -2252,15 +2610,140 @@ export default {
     toggleLineMenu(showMenu) {
       this.showLineMenu = showMenu
       this.selectedParentCategory = null // Reset subcategory view
+      this.lineMenuExpanded = false // Reset expanded state
       if (showMenu) {
         // Populate menu categories from loaded categories (top-level only)
         this.lineMenuCategories = this.categories.filter(cat => !cat.parent).slice(0, 8)
-      } else {
-        // Focus input when switching to keyboard mode
-        this.$nextTick(() => {
-          this.$refs.inputBox?.focus()
-        })
+        
+        // Check if first time using menu - show tutorial
+        const tutorialSeen = localStorage.getItem('pcru_menu_tutorial_seen')
+        if (!tutorialSeen) {
+          // Delay tutorial to let menu animation finish
+          setTimeout(() => {
+            this.startMenuTutorial()
+          }, 500)
+        }
       }
+      // Don't auto-focus input - let user click to type
+    },
+    
+    // Handle drag to expand/collapse menu (Apple-style with real-time feedback)
+    handleDragStart(event) {
+      // Get panel height for calculations
+      const panel = this.$refs.chatPanel || document.querySelector('.chat-panel')
+      if (panel) {
+        this.panelHeight = panel.offsetHeight
+      }
+      
+      this.isDragging = true
+      this.dragStartY = event.type === 'touchstart' ? event.touches[0].clientY : event.clientY
+      this.dragCurrentY = this.dragStartY
+      
+      // Store handlers for cleanup
+      this._dragMoveHandler = (e) => this.handleDragMove(e)
+      this._dragEndHandler = (e) => this.handleDragEnd(e)
+      
+      if (event.type === 'touchstart') {
+        document.addEventListener('touchmove', this._dragMoveHandler, { passive: false })
+        document.addEventListener('touchend', this._dragEndHandler)
+        document.addEventListener('touchcancel', this._dragEndHandler)
+      } else {
+        document.addEventListener('mousemove', this._dragMoveHandler)
+        document.addEventListener('mouseup', this._dragEndHandler)
+      }
+    },
+    
+    handleDragMove(event) {
+      if (!this.isDragging) return
+      
+      this.dragCurrentY = event.type === 'touchmove' ? event.touches[0].clientY : event.clientY
+      event.preventDefault()
+    },
+    
+    handleDragEnd(event) {
+      if (!this.isDragging) return
+      
+      const dragDistance = this.dragStartY - this.dragCurrentY // Positive = drag up
+      const currentHeight = this.menuBaseHeight + dragDistance
+      const panelHeight = this.panelHeight || 700
+      
+      // Determine expand or collapse based on current drag height
+      if (currentHeight > panelHeight * 0.6) {
+        // Dragged up past 60% of panel - expand to fullscreen
+        this.lineMenuExpanded = true
+      } else if (currentHeight < 150) {
+        // Dragged down to less than 150px - close menu
+        this.showLineMenu = false
+      }
+      // Otherwise stay in normal mode with smooth snap back
+      
+      // Cleanup
+      this.isDragging = false
+      this.dragStartY = 0
+      this.dragCurrentY = 0
+      
+      document.removeEventListener('touchmove', this._dragMoveHandler)
+      document.removeEventListener('touchend', this._dragEndHandler)
+      document.removeEventListener('touchcancel', this._dragEndHandler)
+      document.removeEventListener('mousemove', this._dragMoveHandler)
+      document.removeEventListener('mouseup', this._dragEndHandler)
+    },
+    
+    // Handle drag for fullscreen menu (Apple-style)
+    handleDragStartFullscreen(event) {
+      // Get panel height for calculations
+      const panel = this.$refs.chatPanel || document.querySelector('.chat-panel')
+      if (panel) {
+        this.panelHeight = panel.offsetHeight
+      }
+      
+      this.isDragging = true
+      this.dragStartY = event.type === 'touchstart' ? event.touches[0].clientY : event.clientY
+      this.dragCurrentY = this.dragStartY
+      
+      // Store handlers for cleanup
+      this._dragMoveHandler = (e) => this.handleDragMove(e)
+      this._dragEndHandler = (e) => this.handleDragEndFullscreen(e)
+      
+      if (event.type === 'touchstart') {
+        document.addEventListener('touchmove', this._dragMoveHandler, { passive: false })
+        document.addEventListener('touchend', this._dragEndHandler)
+        document.addEventListener('touchcancel', this._dragEndHandler)
+      } else {
+        document.addEventListener('mousemove', this._dragMoveHandler)
+        document.addEventListener('mouseup', this._dragEndHandler)
+      }
+    },
+    
+    handleDragEndFullscreen(event) {
+      if (!this.isDragging) return
+      
+      const dragDistance = this.dragStartY - this.dragCurrentY // Negative = drag down
+      const panelHeight = this.panelHeight || 700
+      const currentHeight = panelHeight + dragDistance
+      
+      // Determine collapse or close based on current drag height
+      if (currentHeight < panelHeight * 0.4) {
+        // Dragged down past 40% - collapse to normal
+        this.lineMenuExpanded = false
+      }
+      if (currentHeight < 150) {
+        // Dragged down to less than 150px - close menu
+        this.showLineMenu = false
+        this.lineMenuExpanded = false
+      }
+      // Otherwise stay in fullscreen mode with smooth snap back
+      
+      // Cleanup
+      this.isDragging = false
+      this.dragStartY = 0
+      this.dragCurrentY = 0
+      
+      document.removeEventListener('touchmove', this._dragMoveHandler)
+      document.removeEventListener('touchend', this._dragEndHandler)
+      document.removeEventListener('touchcancel', this._dragEndHandler)
+      document.removeEventListener('mousemove', this._dragMoveHandler)
+      document.removeEventListener('mouseup', this._dragEndHandler)
     },
     
     selectLineMenuCategory(cat) {
@@ -2447,6 +2930,126 @@ export default {
       localStorage.setItem('pcru_scroll_tutorial_seen', 'true')
     },
     
+    // 📱 Menu Tutorial Methods
+    startMenuTutorial() {
+      // Check if tutorial has been seen before
+      const tutorialSeen = localStorage.getItem('pcru_menu_tutorial_seen')
+      if (tutorialSeen) return
+      
+      this.menuTutorialStep = 0
+      this.menuTutorialTargetRect = null
+      this.showMenuTutorial = true
+      this.updateMenuTutorialTarget()
+    },
+    
+    updateMenuTutorialTarget() {
+      const step = this.menuTutorialSteps[this.menuTutorialStep]
+      if (!step || !step.target) {
+        this.menuTutorialTargetRect = null
+        return
+      }
+      
+      this.$nextTick(() => {
+        let targetEl = null
+        
+        if (step.target === 'menu-toggle') {
+          // Find the menu toggle button
+          targetEl = document.querySelector('.line-toggle-btn:not(.active)')
+        } else if (step.target === 'keyboard-toggle') {
+          // Find the keyboard toggle button (when menu is open)
+          targetEl = document.querySelector('.line-toggle-btn.active')
+        } else if (step.target === 'menu-grid') {
+          // Find the menu grid
+          targetEl = document.querySelector('.line-menu-grid')
+        } else if (step.target === 'menu-handle') {
+          // Find the handle bar
+          targetEl = document.querySelector('.line-menu-handle')
+        } else if (step.target === 'menu-back') {
+          // Find the back button
+          targetEl = document.querySelector('.line-menu-back')
+        }
+        
+        if (targetEl) {
+          const rect = targetEl.getBoundingClientRect()
+          this.menuTutorialTargetRect = {
+            top: rect.top,
+            left: rect.left,
+            width: rect.width,
+            height: rect.height,
+            bottom: rect.bottom,
+            right: rect.right
+          }
+        } else {
+          this.menuTutorialTargetRect = null
+        }
+      })
+    },
+    
+    nextMenuTutorialStep() {
+      if (this.menuTutorialStep < this.menuTutorialSteps.length - 1) {
+        this.menuTutorialStep++
+        
+        // Open menu for steps that need it
+        if (this.menuTutorialStep >= 1 && this.menuTutorialStep <= 4) {
+          this.showLineMenu = true
+          this.lineMenuCategories = this.categories.filter(cat => !cat.parent).slice(0, 8)
+          
+          // For back button step, simulate having a selected parent
+          if (this.menuTutorialStep === 3) {
+            if (this.lineMenuCategories.length > 0 && this.hasSubcategories(this.lineMenuCategories[0].id)) {
+              this.selectedParentCategory = this.lineMenuCategories[0]
+            }
+          } else {
+            this.selectedParentCategory = null
+          }
+        }
+        
+        this.$nextTick(() => {
+          this.updateMenuTutorialTarget()
+        })
+      }
+    },
+    
+    prevMenuTutorialStep() {
+      if (this.menuTutorialStep > 0) {
+        this.menuTutorialStep--
+        
+        // Handle menu state for going back
+        if (this.menuTutorialStep === 0) {
+          this.showLineMenu = false
+        } else if (this.menuTutorialStep >= 1) {
+          this.showLineMenu = true
+          this.selectedParentCategory = null
+        }
+        
+        this.$nextTick(() => {
+          this.updateMenuTutorialTarget()
+        })
+      }
+    },
+    
+    completeMenuTutorial() {
+      this.showMenuTutorial = false
+      this.showLineMenu = false
+      this.selectedParentCategory = null
+      localStorage.setItem('pcru_menu_tutorial_seen', 'true')
+      // Light haptic feedback
+      if (navigator.vibrate) navigator.vibrate(50)
+    },
+    
+    skipMenuTutorial() {
+      this.showMenuTutorial = false
+      this.showLineMenu = false
+      this.selectedParentCategory = null
+      localStorage.setItem('pcru_menu_tutorial_seen', 'true')
+    },
+    
+    // Reset menu tutorial (for testing)
+    resetMenuTutorial() {
+      localStorage.removeItem('pcru_menu_tutorial_seen')
+      console.log('📱 Menu tutorial reset!')
+    },
+
     updateScrollButtonRect() {
       const scrollBtn = document.querySelector('.scroll-to-top-btn')
       if (scrollBtn) {
@@ -6064,41 +6667,24 @@ export default {
         }
         
         if (Array.isArray(payload) && payload.length && payload[0].hasOwnProperty('CategoriesID')) {
-          const byId = {}
-          const childrenByParent = {}
-          
-          payload.forEach(r => {
+          // Map to flat array preserving id and parent for hierarchy
+          const mappedCategories = payload.map(r => {
             const id = String(r.CategoriesID)
             const parentId = r.ParentCategoriesID == null ? null : String(r.ParentCategoriesID)
             const isTopLevel = !parentId || parentId === id
             
-            byId[id] = {
+            return {
               id,
               title: r.CategoriesName || 'Untitled',
               parent: isTopLevel ? null : parentId,
               pdf: r.CategoriesPDF || null
             }
-            
-            if (parentId && parentId !== id) {
-              if (!childrenByParent[parentId]) childrenByParent[parentId] = []
-              childrenByParent[parentId].push(id)
-            }
-          })
-          
-          const mappedCategories = []
-          Object.keys(byId).forEach(id => {
-            const cat = byId[id]
-            if (!cat.parent) {
-              const children = childrenByParent[id] || []
-              mappedCategories.push({
-                title: cat.title,
-                items: children.map(childId => byId[childId].title)
-              })
-            }
           })
           
           if (mappedCategories.length > 0) {
             this.categories = mappedCategories
+            // Update LINE menu categories
+            this.lineMenuCategories = mappedCategories.filter(cat => !cat.parent).slice(0, 8)
           }
         }
         
@@ -6209,6 +6795,7 @@ export default {
         // ignore
       }
       // Normalize categories items back to plain strings so buttons re-enable
+      // But preserve id and parent for proper category hierarchy
       try {
         if (Array.isArray(this.categories)) {
           this.categories = this.categories.map(c => {
@@ -6218,7 +6805,13 @@ export default {
               // object case: extract label/text or fallback to empty string
               return it.label || it.text || ''
             }) : []
-            return { title: c.title, items }
+            return { 
+              id: c.id,
+              title: c.title, 
+              parent: c.parent,
+              pdf: c.pdf,
+              items 
+            }
           })
         }
       } catch (e) {
@@ -7213,20 +7806,79 @@ export default {
 </script>
 
 <style scoped>
-/* � LINE-style Bottom Menu */
-.line-menu-container {
+/* 📱 LINE-style Bottom Menu */
+.line-menu-wrapper {
   position: absolute;
   bottom: 100%;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: transparent;
   border-radius: 16px 16px 0 0;
-  padding: 16px 12px;
-  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.1);
-  z-index: 100;
+  z-index: 10000; /* Above snow (1500) and other elements */
+  display: flex;
+  flex-direction: column;
+  height: 380px;
+  max-height: none;
+  transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Disable transition while dragging for smooth real-time feedback */
+.line-menu-wrapper.is-dragging {
+  transition: none !important;
+}
+
+/* Expand handle (Apple-style) */
+.line-menu-handle {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0;
+  cursor: grab;
+  background-color: #000;
+  touch-action: none; /* Prevent scroll interference */
+  user-select: none;
+}
+
+.line-menu-handle:active {
+  cursor: grabbing;
+}
+
+/* Visual feedback when dragging */
+.line-menu-wrapper.is-dragging .line-menu-handle-bar {
+  width: 52px;
+  background: rgba(139, 76, 184, 0.8);
+}
+
+.line-menu-handle-bar {
+  width: 36px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 3px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.line-menu-handle:hover .line-menu-handle-bar {
+  background: rgba(255, 255, 255, 0.6);
+  width: 44px;
+}
+
+.line-menu-wrapper.expanded .line-menu-handle-bar {
+  background: rgba(139, 76, 184, 0.6);
+  width: 44px;
+}
+
+.line-menu-container {
+  padding: 12px 12px 16px 12px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.line-menu-wrapper.expanded .line-menu-container {
+  max-height: none !important;
+  height: calc(100vh - 60px) !important;
+  height: calc(100dvh - 60px) !important;
+  padding: 16px 16px 100px 16px;
 }
 
 .line-menu-grid {
@@ -7235,11 +7887,14 @@ export default {
   gap: 10px;
 }
 
-/* Menu Header with back button */
+/* Menu Header with back button - sticky and always visible */
 .line-menu-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   margin-bottom: 12px;
   padding-bottom: 10px;
-  border-bottom: 1px solid rgba(139, 76, 184, 0.15);
+  background: transparent;
 }
 
 .line-menu-back {
@@ -7248,13 +7903,16 @@ export default {
   gap: 8px;
   padding: 8px 12px;
   border: none;
-  background: rgba(139, 76, 184, 0.08);
+  background: rgba(139, 76, 184, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-radius: 20px;
   color: #6B2C91;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  width: fit-content;
 }
 
 .line-menu-back:hover {
@@ -7874,6 +8532,174 @@ export default {
 }
 </style>
 
+<!-- Global styles for fullscreen menu inside chat-panel -->
+<style>
+/* Fullscreen Menu (Inside chat-panel) */
+.line-menu-fullscreen-wrapper {
+  position: absolute !important;
+  top: 0;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100%;
+  background: rgba(20, 20, 35, 0.98) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 99999 !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: inherit;
+  transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Disable transition while dragging */
+.line-menu-fullscreen-wrapper.is-dragging {
+  transition: none !important;
+}
+
+/* Visual feedback when dragging fullscreen */
+.line-menu-fullscreen-wrapper.is-dragging .line-menu-handle-bar {
+  width: 52px;
+  background: rgba(139, 76, 184, 0.8);
+}
+
+.line-menu-fullscreen-wrapper .line-menu-handle {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+  cursor: grab;
+  flex-shrink: 0;
+  touch-action: none;
+  user-select: none;
+}
+
+.line-menu-fullscreen-wrapper .line-menu-handle:active {
+  cursor: grabbing;
+}
+
+.line-menu-fullscreen-wrapper .line-menu-handle-bar {
+  width: 44px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 3px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.line-menu-fullscreen-wrapper .line-menu-handle:hover .line-menu-handle-bar {
+  background: rgba(139, 76, 184, 0.8);
+  width: 52px;
+}
+
+.line-menu-container-fullscreen {
+  flex: 1;
+  min-height: 0;
+  padding: 16px 16px 100px 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.line-menu-fullscreen-wrapper .line-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.line-menu-fullscreen-wrapper .line-menu-header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+}
+
+.line-menu-fullscreen-wrapper .line-menu-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  background: rgba(139, 76, 184, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 24px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: fit-content;
+}
+
+.line-menu-fullscreen-wrapper .line-menu-back:hover {
+  background: rgba(139, 76, 184, 0.35);
+}
+
+.line-menu-fullscreen-wrapper .line-menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 8px;
+  background: rgba(139, 76, 184, 0.12);
+  border: 1px solid rgba(139, 76, 184, 0.2);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 100px;
+  position: relative;
+}
+
+.line-menu-fullscreen-wrapper .line-menu-item:hover {
+  background: rgba(139, 76, 184, 0.2);
+  transform: scale(1.02);
+}
+
+.line-menu-fullscreen-wrapper .line-menu-item:active {
+  transform: scale(0.98);
+}
+
+.line-menu-fullscreen-wrapper .line-menu-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.line-menu-fullscreen-wrapper .line-menu-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+  line-height: 1.3;
+}
+
+.line-menu-fullscreen-wrapper .line-menu-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Fullscreen transition */
+.line-menu-fullscreen-enter-active,
+.line-menu-fullscreen-leave-active {
+  transition: all 0.3s ease;
+}
+
+.line-menu-fullscreen-enter-from {
+  opacity: 0;
+  transform: translateY(100%);
+}
+
+.line-menu-fullscreen-leave-to {
+  opacity: 0;
+  transform: translateY(100%);
+}
+</style>
 
 <style src="../assets/chatbot-view.css"></style>
 <style src="../assets/backdrop.css"></style>

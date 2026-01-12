@@ -5797,7 +5797,7 @@ body.no-effects .apple-help-button::after { display: none !important; }
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(107, 44, 145, 0.3), 0 2px 8px rgba(107, 44, 145, 0.2), 0 1px 0 rgba(255,255,255,0.15) inset;
-  z-index: 9999;
+  z-index: 999;
   transition: all 0.3s cubic-bezier(.2,.9,.2,1);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -7547,4 +7547,181 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
 [data-theme="dark"] .perf-warning-close:hover {
   background: rgba(255, 255, 255, 0.15);
   color: #fff;
+}
+
+/* ========================================
+   📱 Menu Tutorial (LINE-style guide)
+   ======================================== */
+
+.tutorial-overlay.menu-tutorial {
+  z-index: 999999;
+}
+
+.tutorial-spotlight.menu-spotlight {
+  border-radius: 12px;
+  box-shadow: 
+    0 0 0 4px rgba(139, 76, 184, 0.9),
+    0 0 0 9999px rgba(0, 0, 0, 0.75);
+  background: rgba(139, 76, 184, 0.15);
+  animation: menu-spotlight-pulse 2s ease-in-out infinite;
+}
+
+@keyframes menu-spotlight-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 0 4px rgba(139, 76, 184, 0.9),
+      0 0 20px 8px rgba(139, 76, 184, 0.3),
+      0 0 0 9999px rgba(0, 0, 0, 0.75);
+  }
+  50% {
+    box-shadow: 
+      0 0 0 6px rgba(139, 76, 184, 1),
+      0 0 30px 12px rgba(139, 76, 184, 0.5),
+      0 0 0 9999px rgba(0, 0, 0, 0.75);
+  }
+}
+
+/* Menu toggle clone */
+.spotlight-btn-clone.menu-toggle-clone,
+.spotlight-btn-clone.keyboard-toggle-clone {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(139, 76, 184, 0.15) 0%, rgba(107, 44, 145, 0.15) 100%);
+  border: 2px solid rgba(139, 76, 184, 0.3);
+  animation: menu-btn-pulse 1.5s ease-in-out infinite;
+}
+
+/* Handle bar clone */
+.spotlight-btn-clone.handle-clone {
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.handle-bar-clone {
+  width: 44px;
+  height: 5px;
+  background: rgba(139, 76, 184, 0.8);
+  border-radius: 3px;
+  animation: handle-bar-pulse 1s ease-in-out infinite;
+}
+
+@keyframes handle-bar-pulse {
+  0%, 100% { width: 44px; }
+  50% { width: 52px; }
+}
+
+/* Grid clone */
+.spotlight-btn-clone.grid-clone {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 8px;
+}
+
+.grid-item-clone {
+  background: rgba(139, 76, 184, 0.2);
+  border-radius: 12px;
+  height: 60px;
+  animation: grid-item-pulse 2s ease-in-out infinite;
+}
+
+.grid-item-clone:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+@keyframes grid-item-pulse {
+  0%, 100% {
+    background: rgba(139, 76, 184, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    background: rgba(139, 76, 184, 0.35);
+    transform: scale(1.02);
+  }
+}
+
+/* Back button clone */
+.spotlight-btn-clone.back-clone {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(139, 76, 184, 0.2);
+  border-radius: 20px;
+  color: #8B4CB8;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.spotlight-btn-clone.back-clone svg path {
+  stroke: #8B4CB8;
+}
+
+@keyframes menu-btn-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(139, 76, 184, 0.3);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 4px 16px rgba(139, 76, 184, 0.5);
+  }
+}
+
+/* Menu tutorial card with purple theme */
+.tutorial-card.menu-tutorial-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(250, 245, 255, 0.98) 100%);
+  border: 1px solid rgba(139, 76, 184, 0.2);
+}
+
+.tutorial-card.menu-tutorial-card .step-dot.active {
+  background: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%);
+}
+
+.tutorial-card.menu-tutorial-card .step-dot.completed {
+  background: #8B4CB8;
+}
+
+.tutorial-card.menu-tutorial-card .tutorial-btn.primary {
+  background: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%);
+}
+
+.tutorial-card.menu-tutorial-card .tutorial-btn.primary:hover {
+  background: linear-gradient(135deg, #7B3CA8 0%, #5B1C81 100%);
+  box-shadow: 0 4px 16px rgba(139, 76, 184, 0.4);
+}
+
+/* Menu tutorial arrow in purple */
+.tutorial-arrow.menu-arrow svg path {
+  stroke: #8B4CB8;
+}
+
+/* Dark mode for menu tutorial */
+[data-theme="dark"] .tutorial-card.menu-tutorial-card {
+  background: linear-gradient(135deg, rgba(44, 44, 46, 0.98) 0%, rgba(50, 40, 60, 0.98) 100%);
+  border-color: rgba(139, 76, 184, 0.3);
+}
+
+[data-theme="dark"] .spotlight-btn-clone.menu-toggle-clone,
+[data-theme="dark"] .spotlight-btn-clone.keyboard-toggle-clone {
+  background: linear-gradient(135deg, rgba(139, 76, 184, 0.25) 0%, rgba(107, 44, 145, 0.25) 100%);
+  border-color: rgba(139, 76, 184, 0.5);
+}
+
+[data-theme="dark"] .spotlight-btn-clone.back-clone {
+  background: rgba(139, 76, 184, 0.3);
+  color: #b794d4;
+}
+
+[data-theme="dark"] .spotlight-btn-clone.back-clone svg path {
+  stroke: #b794d4;
 }
