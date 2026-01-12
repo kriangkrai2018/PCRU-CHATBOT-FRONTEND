@@ -695,6 +695,123 @@ html.keyboard-open .close-circle {
   stroke-width: 2.5;
 }
 
+/* 🌟 Floating Orbs - Small purple glowing spheres */
+.floating-orbs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(25px);
+  opacity: 0.4;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.orb-1 {
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(139, 76, 184, 0.8) 0%, rgba(107, 44, 145, 0.6) 50%, transparent 100%);
+  top: 20%;
+  left: 15%;
+  animation: orbFloat1 15s infinite;
+}
+
+.orb-2 {
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(179, 123, 209, 0.7) 0%, rgba(139, 76, 184, 0.5) 50%, transparent 100%);
+  top: 60%;
+  right: 10%;
+  animation: orbFloat2 18s infinite;
+}
+
+.orb-3 {
+  width: 90px;
+  height: 90px;
+  background: radial-gradient(circle, rgba(107, 44, 145, 0.7) 0%, rgba(139, 76, 184, 0.5) 50%, transparent 100%);
+  bottom: 25%;
+  left: 25%;
+  animation: orbFloat3 20s infinite;
+}
+
+@keyframes orbFloat1 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(30px, -40px, 0) scale(1.1);
+  }
+  66% {
+    transform: translate3d(-20px, 30px, 0) scale(0.9);
+  }
+}
+
+@keyframes orbFloat2 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(-35px, 25px, 0) scale(0.95);
+  }
+  66% {
+    transform: translate3d(25px, -30px, 0) scale(1.05);
+  }
+}
+
+@keyframes orbFloat3 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(20px, 35px, 0) scale(1.08);
+  }
+  66% {
+    transform: translate3d(-30px, -25px, 0) scale(0.92);
+  }
+}
+
+/* ✨ Colorful Particles - Small colorful orbs floating up */
+.particle-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  bottom: -20px;
+  border-radius: 50%;
+  /* opacity controlled by inline style from getParticleStyle() */
+  filter: blur(1px);
+  box-shadow: 0 0 8px currentColor;
+  animation: particleFloat linear infinite;
+}
+
+@keyframes particleFloat {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(30px) scale(0.5);
+    opacity: 0;
+  }
+}
+
 /* 🔴 Offline Status Indicator */
 .offline-indicator {
   position: absolute;

@@ -79,6 +79,18 @@
         </template>
         
         <aside class="chat-panel" :style="{ width: drawerWidth, height: viewportHeight }" @click="onPanelClick">
+          <!-- 🌟 Floating Orbs Background (3 small purple glowing spheres) -->
+          <div v-if="graphicsQuality !== 'low'" class="floating-orbs">
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+            <div class="orb orb-3"></div>
+          </div>
+
+          <!-- ✨ Colorful Particles (floating up like bubbles) -->
+          <div v-if="graphicsQuality !== 'low'" class="particle-container">
+            <div v-for="n in particleCount" :key="'particle-' + n" class="particle" :style="getParticleStyle(n)"></div>
+          </div>
+
           <div class="panel-top">
             <button class="close-circle" @click="visible = false" aria-label="close">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="close-icon">
@@ -1415,6 +1427,13 @@ export default {
       userType: '',
       botName: 'ปลายฟ้า',
       botPronoun: import.meta.env.VITE_BOT_PRONOUN || 'หนู',
+      // ✨ Particle configuration from .env
+      particleCount: parseInt(import.meta.env.VITE_PARTICLE_COUNT) || 20,
+      particleMinSize: parseFloat(import.meta.env.VITE_PARTICLE_MIN_SIZE) || 4,
+      particleMaxSize: parseFloat(import.meta.env.VITE_PARTICLE_MAX_SIZE) || 12,
+      particleMinDuration: parseFloat(import.meta.env.VITE_PARTICLE_MIN_DURATION) || 8,
+      particleMaxDuration: parseFloat(import.meta.env.VITE_PARTICLE_MAX_DURATION) || 20,
+      particleOpacity: parseFloat(import.meta.env.VITE_PARTICLE_OPACITY) || 0.7,
       showAiIntro: false,
       aiTilt: { x: 0, y: 0, s: 1 },
       // rAF id for ai tilt updates (reduce reflows)
@@ -3361,6 +3380,32 @@ export default {
         '--duration': duration + 's',
         '--delay': delay + 's',
         '--hue': hue,
+      };
+    },
+    getParticleStyle(n) {
+      const colors = [
+        'rgba(139, 76, 184, 0.6)',  // Purple
+        'rgba(107, 44, 145, 0.6)',  // Dark purple
+        'rgba(179, 123, 209, 0.6)', // Light purple
+        'rgba(59, 130, 246, 0.6)',  // Blue
+        'rgba(236, 72, 153, 0.6)',  // Pink
+        'rgba(168, 85, 247, 0.6)',  // Violet
+      ];
+      
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const left = Math.random() * 100;
+      const size = this.particleMinSize + Math.random() * (this.particleMaxSize - this.particleMinSize);
+      const duration = this.particleMinDuration + Math.random() * (this.particleMaxDuration - this.particleMinDuration);
+      const delay = Math.random() * 10;
+      
+      return {
+        left: left + '%',
+        width: size + 'px',
+        height: size + 'px',
+        background: color,
+        opacity: this.particleOpacity,
+        animationDuration: duration + 's',
+        animationDelay: delay + 's',
       };
     },
     onEnterKey() {
