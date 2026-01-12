@@ -425,9 +425,6 @@ html.gfx-low .fab-open *,
   transform: scale(1) !important;
 }
 
-[data-theme="dark"] .more-menu-items {
-  background: rgba(44, 44, 46, 0.98) !important;
-}
 
 /* Input & Send Button */
 .input-wrapper,

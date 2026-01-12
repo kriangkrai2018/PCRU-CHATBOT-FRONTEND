@@ -108,6 +108,7 @@
             <!-- 🎯 More Options Menu (3-dot button) -->
             <div class="more-options-wrapper">
               <button 
+                v-show="!showMoreMenu"
                 class="more-options-btn" 
                 :class="{ active: showMoreMenu }"
                 @click.stop="toggleMoreMenu"
@@ -3671,7 +3672,8 @@ export default {
     
     toggleThemeFromMenu() {
       this.toggleTheme();
-      // Don't close menu - let user see the change
+      // Close menu after selection
+      this.closeMoreMenu();
     },
     
     cycleGraphicsQuality() {
@@ -3682,6 +3684,8 @@ export default {
       const currentIndex = order.indexOf(this.graphicsQuality);
       const nextIndex = (currentIndex + 1) % order.length;
       this.setGraphicsQuality(order[nextIndex]);
+      // Close menu after selection
+      this.closeMoreMenu();
     },
     
     clearChatFromMenu() {
