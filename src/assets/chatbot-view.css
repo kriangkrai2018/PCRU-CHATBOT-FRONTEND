@@ -705,6 +705,8 @@ html.keyboard-open .close-circle {
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+  perspective: 1000px;
+  transform-style: preserve-3d;
 }
 
 .pcru-watermark img {

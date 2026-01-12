@@ -2055,7 +2055,7 @@ export default {
     pcruWatermarkStyle() {
       if (this.graphicsQuality === 'low') return {};
       return {
-        transform: `perspective(1000px) rotateX(${this.pcruTilt.y}deg) rotateY(${this.pcruTilt.x}deg)`
+        transform: `rotateX(${this.pcruTilt.y}deg) rotateY(${this.pcruTilt.x}deg)`
       };
     }
   },
@@ -3493,16 +3493,17 @@ export default {
     handleDeviceOrientation(e) {
       if (this.graphicsQuality === 'low') return;
       
-      // beta: front-to-back tilt (-180 to 180)
-      // gamma: left-to-right tilt (-90 to 90)
-      const beta = e.beta || 0;   // X-axis (pitch)
-      const gamma = e.gamma || 0;  // Y-axis (roll)
+      // beta: front-to-back tilt (-180 to 180) - เอียงหน้า/หลัง
+      // gamma: left-to-right tilt (-90 to 90) - เอียงซ้าย/ขวา
+      const beta = e.beta || 0;
+      const gamma = e.gamma || 0;
       
-      // Normalize to ±20 degrees range (matching mouse parallax)
-      // beta: 0 = flat, positive = tilted forward, negative = tilted back
-      // gamma: 0 = flat, positive = tilted right, negative = tilted left
-      const tiltX = Math.max(-20, Math.min(20, gamma * 0.8));
-      const tiltY = Math.max(-20, Math.min(20, beta * 0.3));
+      // ลบ offset ~40° เพราะคนถือโทรศัพท์ปกติจะเอียงประมาณนี้
+      const adjustedBeta = beta - 40;
+      
+      // เพิ่ม sensitivity และขยาย range
+      const tiltX = Math.max(-25, Math.min(25, gamma * 0.8));
+      const tiltY = Math.max(-25, Math.min(25, adjustedBeta * 0.8));
       
       this.pcruTilt = { x: tiltX, y: tiltY };
     },
