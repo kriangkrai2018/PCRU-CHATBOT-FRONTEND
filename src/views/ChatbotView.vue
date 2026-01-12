@@ -8065,7 +8065,64 @@ export default {
   justify-content: center;
   color: white;
   box-shadow: 0 4px 12px rgba(139, 76, 184, 0.3);
+  /* 🎬 Continuous animation for icons */
+  animation: line-icon-pulse 2s ease-in-out infinite;
 }
+
+/* 🎬 Continuous SVG icon animations */
+@keyframes line-icon-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(139, 76, 184, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(139, 76, 184, 0.5);
+  }
+}
+
+/* 🎨 SVG stroke animations - continuous loop */
+.line-menu-icon svg path,
+.line-menu-icon svg rect,
+.line-menu-icon svg circle,
+.line-menu-icon svg line {
+  animation: line-svg-draw 3s ease-in-out infinite;
+}
+
+@keyframes line-svg-draw {
+  0%, 100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  50% {
+    stroke-dashoffset: 5;
+    opacity: 0.85;
+  }
+}
+
+/* 🌟 Icon glow effect on hover */
+.line-menu-item:hover .line-menu-icon {
+  animation: line-icon-glow 1s ease-in-out infinite;
+}
+
+@keyframes line-icon-glow {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(139, 76, 184, 0.3), 0 0 0 0 rgba(139, 76, 184, 0.4);
+  }
+  50% {
+    box-shadow: 0 6px 24px rgba(139, 76, 184, 0.5), 0 0 20px 5px rgba(139, 76, 184, 0.3);
+  }
+}
+
+/* 🎯 Staggered animation delays for each icon */
+.line-menu-item:nth-child(1) .line-menu-icon { animation-delay: 0s; }
+.line-menu-item:nth-child(2) .line-menu-icon { animation-delay: 0.2s; }
+.line-menu-item:nth-child(3) .line-menu-icon { animation-delay: 0.4s; }
+.line-menu-item:nth-child(4) .line-menu-icon { animation-delay: 0.6s; }
+.line-menu-item:nth-child(5) .line-menu-icon { animation-delay: 0.8s; }
+.line-menu-item:nth-child(6) .line-menu-icon { animation-delay: 1.0s; }
+.line-menu-item:nth-child(7) .line-menu-icon { animation-delay: 1.2s; }
+.line-menu-item:nth-child(8) .line-menu-icon { animation-delay: 1.4s; }
 
 .line-menu-label {
   font-size: 11px;
@@ -8978,7 +9035,27 @@ html[data-theme="light"] .line-menu-fullscreen-wrapper .input-row.fullscreen-inp
   align-items: center;
   justify-content: center;
   margin-bottom: 10px;
+  /* 🎬 Continuous animation for fullscreen icons */
+  animation: line-icon-pulse 2s ease-in-out infinite;
 }
+
+/* 🎨 Fullscreen SVG stroke animations */
+.line-menu-fullscreen-wrapper .line-menu-icon svg path,
+.line-menu-fullscreen-wrapper .line-menu-icon svg rect,
+.line-menu-fullscreen-wrapper .line-menu-icon svg circle,
+.line-menu-fullscreen-wrapper .line-menu-icon svg line {
+  animation: line-svg-draw 3s ease-in-out infinite;
+}
+
+/* 🎯 Staggered animation delays for fullscreen icons */
+.line-menu-fullscreen-wrapper .line-menu-item:nth-child(1) .line-menu-icon { animation-delay: 0s; }
+.line-menu-fullscreen-wrapper .line-menu-item:nth-child(2) .line-menu-icon { animation-delay: 0.15s; }
+.line-menu-fullscreen-wrapper .line-menu-item:nth-child(3) .line-menu-icon { animation-delay: 0.3s; }
+.line-menu-fullscreen-wrapper .line-menu-item:nth-child(4) .line-menu-icon { animation-delay: 0.45s; }
+.line-menu-fullscreen-wrapper .line-menu-item:nth-child(5) .line-menu-icon { animation-delay: 0.6s; }
+.line-menu-fullscreen-wrapper .line-menu-item:nth-child(6) .line-menu-icon { animation-delay: 0.75s; }
+.line-menu-fullscreen-wrapper .line-menu-item:nth-child(7) .line-menu-icon { animation-delay: 0.9s; }
+.line-menu-fullscreen-wrapper .line-menu-item:nth-child(8) .line-menu-icon { animation-delay: 1.05s; }
 
 .line-menu-fullscreen-wrapper .line-menu-label {
   font-size: 13px;
@@ -9024,6 +9101,38 @@ html[data-theme="light"] .line-menu-fullscreen-wrapper .input-row.fullscreen-inp
 .line-menu-fullscreen-leave-to {
   opacity: 0;
   transform: translateY(100%);
+}
+
+/* 🎮 Disable animations in low graphics mode */
+.gfx-low .line-menu-icon,
+.gfx-low .line-menu-fullscreen-wrapper .line-menu-icon {
+  animation: none !important;
+}
+
+.gfx-low .line-menu-icon svg path,
+.gfx-low .line-menu-icon svg rect,
+.gfx-low .line-menu-icon svg circle,
+.gfx-low .line-menu-icon svg line,
+.gfx-low .line-menu-fullscreen-wrapper .line-menu-icon svg path,
+.gfx-low .line-menu-fullscreen-wrapper .line-menu-icon svg rect,
+.gfx-low .line-menu-fullscreen-wrapper .line-menu-icon svg circle,
+.gfx-low .line-menu-fullscreen-wrapper .line-menu-icon svg line {
+  animation: none !important;
+}
+
+/* 🔇 Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .line-menu-icon,
+  .line-menu-fullscreen-wrapper .line-menu-icon {
+    animation: none !important;
+  }
+  
+  .line-menu-icon svg path,
+  .line-menu-icon svg rect,
+  .line-menu-icon svg circle,
+  .line-menu-icon svg line {
+    animation: none !important;
+  }
 }
 </style>
 
