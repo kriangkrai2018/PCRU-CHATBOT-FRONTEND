@@ -9145,6 +9145,29 @@ html[data-theme="light"] .line-menu-fullscreen-wrapper .input-row.fullscreen-inp
     animation: none !important;
   }
 }
+
+/* 🌙 GFX-LOW + Dark Mode - Solid backgrounds */
+html.gfx-low[data-theme="dark"] .message-bubble.bot,
+html.gfx-low[data-theme="dark"] .backdrop-card,
+html.gfx-low[data-theme="dark"] .bot-with-categories {
+  background: #1c1c1e !important;
+  background-color: #1c1c1e !important;
+  color: #f5f5f7 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.gfx-low[data-theme="dark"] .message-text,
+html.gfx-low[data-theme="dark"] .ai-greet-title,
+html.gfx-low[data-theme="dark"] .ai-greet-sub,
+html.gfx-low[data-theme="dark"] .category-title {
+  color: #f5f5f7 !important;
+}
+
+html.gfx-low[data-theme="dark"] .panel-body {
+  background: #000 !important;
+}
 </style>
 
 <style src="../assets/chatbot-view.css"></style>
