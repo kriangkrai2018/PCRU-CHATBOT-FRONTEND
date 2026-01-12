@@ -2,6 +2,10 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
+
+
+
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -60,7 +64,9 @@ export default defineConfig(({ mode }) => {
       host: devHost,
       port: devPort,
       strictPort: true,
-      allowedHosts: ['project.3bbddns.com'],
+      // ⬇️ แก้ไขบรรทัดนี้ ⬇️
+      allowedHosts: true, 
+      // ⬆️⬆️⬆️⬆️⬆️⬆️⬆️
       // Warm up frequently used files
       warmup: {
         clientFiles: [
