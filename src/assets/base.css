@@ -90,12 +90,6 @@ html {
   transition: color 0.3s ease;
 }
 
-/* Lock scroll during theme transition */
-html.theme-transitioning,
-body.theme-transitioning {
-  overflow: hidden !important;
-}
-
 /* Disable ALL transitions and animations during theme change to prevent flickering */
 html.theme-transitioning,
 html.theme-transitioning *,

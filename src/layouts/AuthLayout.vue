@@ -2,7 +2,7 @@
   <div class="overflow-hidden">
     <div class="bg-c vh-100 px-xl-c pt-xl-c vh-100 overflow-hidden justify-content-center align-items-center row">
       <div class="col-xl-12 col-xxl-8">
-        <div class="card-c px-5 pe-xl-5 row rounded-top-0 overflow-hidden rounded-top-5 justify-content-center align-items-lg-center bg-light vh-100" data-aos="fade-in" data-aos-duration="600">
+        <div class="card-c px-5 pe-xl-5 row rounded-top-0 overflow-auto overflow-hidden-lg rounded-top-5 justify-content-center align-items-lg-center bg-light vh-100" data-aos="fade-in" data-aos-duration="600">
           <div class="col-lg-6 col-xl-6 col-xl-4 pt-5 mt-5 pt-lg-0 mt-lg-0">
             <div class="logo-section d-flex justify-content-center align-items-center mb-lg-5 pb-lg-5">
               <img 
