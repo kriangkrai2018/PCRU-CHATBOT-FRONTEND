@@ -4585,7 +4585,6 @@ body.no-effects .apple-help-button::after { display: none !important; }
 .map-widget-container {
   margin: 12px 0;
   max-width: 300px;
-  cursor: pointer;
 }
 
 .map-widget-link {
@@ -4600,22 +4599,7 @@ body.no-effects .apple-help-button::after { display: none !important; }
   box-shadow: 
     0 2px 8px rgba(0, 0, 0, 0.08),
     0 4px 16px rgba(0, 0, 0, 0.04);
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   border: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.map-widget:hover {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.12),
-    0 8px 32px rgba(0, 0, 0, 0.08);
-}
-
-.map-widget:active {
-  transform: translateY(0);
-  box-shadow: 
-    0 2px 6px rgba(0, 0, 0, 0.1),
-    0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .map-preview {
@@ -4624,6 +4608,7 @@ body.no-effects .apple-help-button::after { display: none !important; }
   overflow: hidden;
   position: relative;
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  cursor: default;
 }
 
 .map-preview iframe {
@@ -4636,8 +4621,8 @@ body.no-effects .apple-help-button::after { display: none !important; }
 
 .map-widget-footer {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 10px;
   padding: 12px 14px;
   background: var(--color-background, #ffffff);
   border-top: 1px solid rgba(0, 0, 0, 0.04);
@@ -4646,7 +4631,10 @@ body.no-effects .apple-help-button::after { display: none !important; }
 .map-widget-info {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  cursor: default;
+  font-size: 13px;
 }
 
 .map-widget-icon {
@@ -4683,6 +4671,122 @@ body.no-effects .apple-help-button::after { display: none !important; }
   height: 14px;
 }
 
+/* 🗺️ Map Widget Actions Container */
+.map-widget-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.map-navigate-btn,
+.map-open-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 1;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.map-navigate-btn {
+  background: linear-gradient(135deg, #34c759 0%, #30b350 100%);
+  color: white;
+}
+
+.map-navigate-btn:hover {
+  background: linear-gradient(135deg, #30b350 0%, #28a745 100%);
+  transform: scale(1.02);
+}
+
+.map-navigate-btn:active {
+  transform: scale(0.98);
+}
+
+.map-navigate-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.map-open-btn {
+  background: rgba(0, 122, 255, 0.1);
+  color: #007aff;
+  padding: 6px 12px;
+}
+
+.map-open-btn:hover {
+  background: #007aff;
+  color: white;
+}
+
+.map-open-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.map-open-btn span {
+  font-size: 12px;
+}
+
+/* Loading spinner for navigate button */
+.loading-spinner-small {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 📱 Mobile Responsive - Map Widget Buttons */
+@media (max-width: 768px) {
+  .map-widget-footer {
+    gap: 12px;
+    padding: 14px;
+  }
+  
+  .map-widget-actions {
+    gap: 10px;
+  }
+  
+  .map-navigate-btn,
+  .map-open-btn {
+    padding: 12px 16px;
+    font-size: 14px;
+    gap: 6px;
+  }
+  
+  .map-navigate-btn svg,
+  .map-open-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Extra small screens - stack buttons vertically */
+@media (max-width: 400px) {
+  .map-widget-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .map-navigate-btn,
+  .map-open-btn {
+    width: 100%;
+  }
+}
+
 /* Dark mode support */
 [data-theme="dark"] .map-widget {
   background: var(--color-background-soft, #2c2c2e);
@@ -4705,6 +4809,16 @@ body.no-effects .apple-help-button::after { display: none !important; }
 
 [data-theme="dark"] .map-widget-label {
   color: var(--color-text, #f5f5f7);
+}
+
+[data-theme="dark"] .map-open-btn {
+  background: rgba(10, 132, 255, 0.2);
+  color: #0a84ff;
+}
+
+[data-theme="dark"] .map-open-btn:hover {
+  background: #0a84ff;
+  color: white;
 }
 
 [data-theme="dark"] .map-preview {

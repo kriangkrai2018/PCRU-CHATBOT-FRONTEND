@@ -1443,6 +1443,7 @@ export default {
       // 🎓 PCRU Watermark gyroscope tilt
       pcruTilt: { x: 0, y: 0 },
       gyroscopeEnabled: false, // iOS requires permission
+      userLocation: null, // { lat, lng } from GPS
       showAiIntro: false,
       aiTilt: { x: 0, y: 0, s: 1 },
       // rAF id for ai tilt updates (reduce reflows)
@@ -2097,7 +2098,10 @@ export default {
     // 📱 Add gyroscope support for mobile devices
     this.initGyroscope();
     
-    // � PERFORMANCE: Pause animations when tab is not visible
+    // 📍 Request user location for map navigation
+    this.requestUserLocation();
+    
+    // 🎯 PERFORMANCE: Pause animations when tab is not visible
     this._handleVisibilityChange = () => {
       const chatRoot = this.$el?.querySelector('.chat-root')
       if (chatRoot) {
@@ -2110,7 +2114,47 @@ export default {
     }
     document.addEventListener('visibilitychange', this._handleVisibilityChange)
     
-    // �🎬 Auto-open with intro animation on first visit
+    // 🗺️ Global function for map navigation (used by inline onclick)
+    window.pcruNavigateTo = (destLat, destLng) => {
+      if (!navigator.geolocation) {
+        alert('เบราว์เซอร์ของคุณไม่รองรับการระบุตำแหน่ง');
+        // Fallback: open directions without origin
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=driving`, '_blank');
+        return;
+      }
+      
+      // Show loading state
+      const btn = event.currentTarget;
+      const originalContent = btn.innerHTML;
+      btn.innerHTML = '<span class="loading-spinner-small"></span>';
+      btn.disabled = true;
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userLat = position.coords.latitude;
+          const userLng = position.coords.longitude;
+          // Store user location in Vue instance for map widget updates
+          this.userLocation = { lat: userLat, lng: userLng };
+          // Open Google Maps with directions from current location
+          const directionsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${destLat},${destLng}&travelmode=driving`;
+          window.open(directionsUrl, '_blank');
+          // Restore button
+          btn.innerHTML = originalContent;
+          btn.disabled = false;
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          // Fallback: open directions without origin (Google will ask for location)
+          window.open(`https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=driving`, '_blank');
+          // Restore button
+          btn.innerHTML = originalContent;
+          btn.disabled = false;
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    };
+    
+    // 🎬 Auto-open with intro animation on first visit
     this.checkAndShowFirstVisitIntro();
     
     // Prevent Bootstrap carousel auto-init from parent page (university website)
@@ -3458,6 +3502,28 @@ export default {
         console.log('📱 Gyroscope enabled (non-iOS)');
       }
     },
+    requestUserLocation() {
+      if (!navigator.geolocation) {
+        console.log('📍 Geolocation not supported');
+        return;
+      }
+      
+      // Silently request user location for map navigation
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          this.userLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          console.log('📍 User location obtained:', this.userLocation);
+        },
+        (error) => {
+          console.log('📍 Could not get user location:', error.message);
+          // Don't show error to user - maps will work without location
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    },
     requestGyroscopePermission() {
       console.log('📱 requestGyroscopePermission called, enabled:', this.gyroscopeEnabled);
       if (this.gyroscopeEnabled) return;
@@ -4277,11 +4343,26 @@ export default {
     // 🗺️ Create Apple-style embedded Google Map widget
     createMapWidget(mapUrl, lat, lng, label = 'ดูแผนที่') {
       const zoom = 15;
-      // Generate Google Maps embed URL
-      const embedUrl = `https://www.google.com/maps?q=${lat},${lng}&z=${zoom}&output=embed`;
+      let embedUrl;
       
-      // Apple-style map widget HTML - use onclick for reliable clicking
-      return `<div class="map-widget-container" onclick="window.open('${mapUrl}', '_blank')">
+      // If user location is available, show directions
+      if (this.userLocation) {
+        const userLat = this.userLocation.lat;
+        const userLng = this.userLocation.lng;
+        // Calculate center point between user and destination
+        const centerLat = (userLat + lat) / 2;
+        const centerLng = (userLng + lng) / 2;
+        // Google Maps directions embed URL
+        embedUrl = `https://www.google.com/maps/embed/v1/directions?key=&origin=${userLat},${userLng}&destination=${lat},${lng}&mode=driving`;
+        // Fallback if no API key: use regular directions URL
+        embedUrl = `https://www.google.com/maps?saddr=${userLat},${userLng}&daddr=${lat},${lng}&output=embed`;
+      } else {
+        // Default: show single location pin
+        embedUrl = `https://www.google.com/maps?q=${lat},${lng}&z=${zoom}&output=embed`;
+      }
+      
+      // Apple-style map widget HTML - clickable only on buttons
+      return `<div class="map-widget-container">
 <div class="map-widget">
 <div class="map-preview">
 <iframe src="${embedUrl}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
@@ -4291,13 +4372,22 @@ export default {
 <span class="map-widget-icon">📍</span>
 <span class="map-widget-label">${label}</span>
 </div>
-<span class="map-widget-action">
+<div class="map-widget-actions">
+<button class="map-navigate-btn" onclick="window.pcruNavigateTo(${lat}, ${lng});" title="นำทาง">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+</svg>
+<span>นำทาง</span>
+</button>
+<button class="map-open-btn" onclick="window.open('${mapUrl}', '_blank');" title="เปิดแผนที่">
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
 <polyline points="15,3 21,3 21,9"></polyline>
 <line x1="10" y1="14" x2="21" y2="3"></line>
 </svg>
-</span>
+<span>ดูแผนที่</span>
+</button>
+</div>
 </div>
 </div>
 </div>`;
