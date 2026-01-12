@@ -87,6 +87,10 @@
                     <i class="bi bi-hand-thumbs-down-fill text-danger me-2" aria-hidden="true"></i>
                     <span class="fw-semibold">Unlike</span>
                   </template>
+                  <template v-else-if="fb.FeedbackValue === 2">
+                    <i class="bi bi-hourglass-split text-warning me-2" aria-hidden="true"></i>
+                    <span class="fw-semibold">Pending</span>
+                  </template>
                   <template v-else>
                     <span>{{ fb.FeedbackValue }}</span>
                   </template>
@@ -312,6 +316,10 @@
               <i class="bi bi-hand-thumbs-down-fill text-danger fs-5"></i>
               <span class="fw-semibold text-danger">Unlike</span>
             </span>
+            <span v-else-if="drawerFeedback?.FeedbackValue === 2" class="d-flex align-items-center gap-2">
+              <i class="bi bi-hourglass-split text-warning fs-5"></i>
+              <span class="fw-semibold text-warning">Pending</span>
+            </span>
             <span v-else class="text-muted">-</span>
           </div>
         </div>
@@ -441,7 +449,8 @@ const feedbackSortOptions = [
 
 const feedbackStatuses = [
   { value: 'unlike', label: 'Unlike', icon: 'bi bi-hand-thumbs-down-fill', color: 'danger' },
-  { value: 'like', label: 'Like', icon: 'bi bi-hand-thumbs-up-fill', color: 'success' }
+  { value: 'like', label: 'Like', icon: 'bi bi-hand-thumbs-up-fill', color: 'success' },
+  { value: 'pending', label: 'Pending', icon: 'bi bi-hourglass-split', color: 'warning' }
 ];
 
 function onFiltersChange(newFilters) {
@@ -459,6 +468,10 @@ function isUnlikeValue(v) {
   const s = (v ?? '').toString().toLowerCase().trim();
   return s === '0' || s === 'unlike' || s === 'false';
 }
+function isPendingValue(v) {
+  const s = (v ?? '').toString().toLowerCase().trim();
+  return s === '2' || s === 'pending';
+}
 
 const filteredFeedbacks = computed(() => {
   let arr = all.value;
@@ -473,6 +486,8 @@ const filteredFeedbacks = computed(() => {
     arr = arr.filter(fb => isLikeValue(fb?.FeedbackValue));
   } else if (effectiveType === 'unlike') {
     arr = arr.filter(fb => isUnlikeValue(fb?.FeedbackValue));
+  } else if (effectiveType === 'pending') {
+    arr = arr.filter(fb => isPendingValue(fb?.FeedbackValue));
   }
   
   // Apply date range filter

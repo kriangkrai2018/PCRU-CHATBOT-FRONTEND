@@ -381,10 +381,10 @@ const keywordsChart = computed(() => {
 const feedbacksChart = computed(() => {
   const counts = {};
   feedbacks.value.forEach(f => { 
-    const v = f.FeedbackValue == null ? 'Other' : (f.FeedbackValue === 1 ? 'Like' : (f.FeedbackValue === 0 ? 'Unlike' : String(f.FeedbackValue))); 
+    const v = f.FeedbackValue == null ? 'Other' : (f.FeedbackValue === 1 ? 'Like' : (f.FeedbackValue === 0 ? 'Unlike' : (f.FeedbackValue === 2 ? 'Pending' : String(f.FeedbackValue)))); 
     counts[v] = (counts[v]||0)+1; 
   });
-  return { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: ['#34C759','#FF3B30','#FFC107','#6e6e73'] }] };
+  return { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: ['#34C759','#FF3B30','#FF9500','#6e6e73'] }] };
 });
 
 const chatHasChart = computed(() => ({ labels: ['Answered'], datasets: [{ data: [chatHas.value.length], backgroundColor: ['#007AFF'] }] }));

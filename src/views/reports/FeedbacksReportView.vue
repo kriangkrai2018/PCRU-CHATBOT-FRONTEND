@@ -150,9 +150,10 @@ const feedbacksPieChartData = computed(() => {
   const data = Array.isArray(feedbacks.value) ? feedbacks.value : [];
   const likes = data.filter(f => f.FeedbackValue === 1 || f.FeedbackValue === true).length;
   const dislikes = data.filter(f => f.FeedbackValue === 0 || f.FeedbackValue === false).length;
+  const pending = data.filter(f => f.FeedbackValue === 2).length;
   return {
-    labels: ['Like', 'Unlike'],
-    datasets: [{ data: [likes, dislikes], backgroundColor: ['#34C759', '#FF3B30'], borderWidth: 0 }]
+    labels: ['Like', 'Unlike', 'Pending'],
+    datasets: [{ data: [likes, dislikes, pending], backgroundColor: ['#34C759', '#FF3B30', '#FF9500'], borderWidth: 0 }]
   };
 });
 
@@ -160,9 +161,10 @@ const feedbacksBarChartData = computed(() => {
   const data = Array.isArray(feedbacks.value) ? feedbacks.value : [];
   const likes = data.filter(f => f.FeedbackValue === 1 || f.FeedbackValue === true).length;
   const dislikes = data.filter(f => f.FeedbackValue === 0 || f.FeedbackValue === false).length;
+  const pending = data.filter(f => f.FeedbackValue === 2).length;
   return {
-    labels: ['Like', 'Unlike'],
-    datasets: [{ label: 'Feedbacks', data: [likes, dislikes], backgroundColor: ['#34C759', '#FF3B30'], borderRadius: 6 }]
+    labels: ['Like', 'Unlike', 'Pending'],
+    datasets: [{ label: 'Feedbacks', data: [likes, dislikes, pending], backgroundColor: ['#34C759', '#FF3B30', '#FF9500'], borderRadius: 6 }]
   };
 });
 

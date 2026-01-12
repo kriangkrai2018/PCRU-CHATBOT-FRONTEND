@@ -634,16 +634,15 @@
                   <!-- 🆕 Only show if keywordMatch is true (matched by keyword, not just text/title) -->
                   <div 
                     class="apple-feedback" 
-                    :class="{ 'has-feedback': msg.feedback, 'is-locked': msg.feedbackLocked }"
+                    :class="{ 'has-feedback': msg.feedback }"
                     v-if="msg.type === 'bot' && !msg.typing && (msg.text || msg.results) && msg.found === true && !msg.multipleResults && msg.keywordMatch !== false"
                   >
-                    <!-- Like button: show if not locked, OR if locked and was liked -->
+                    <!-- Like button: always show -->
                     <button
-                      v-if="!msg.feedbackLocked || msg.feedback === 'like'"
                       class="apple-feedback-btn"
-                      :class="{ active: msg.feedback === 'like', disabled: feedbackButtonsDisabled || msg.feedbackLocked }"
-                      @click.stop="!msg.feedbackLocked && handleLikeClick(msg)"
-                      :disabled="feedbackButtonsDisabled || msg.feedbackLocked"
+                      :class="{ active: msg.feedback === 'like', disabled: feedbackButtonsDisabled }"
+                      @click.stop="handleLikeClick(msg)"
+                      :disabled="feedbackButtonsDisabled"
                       aria-label="ถูกใจ"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -651,13 +650,13 @@
                           stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                       </svg>
                     </button>
-                    <!-- Dislike button: show if not locked, OR if locked and was disliked -->
-                    <div class="apple-feedback-wrapper" v-if="!msg.feedbackLocked || msg.feedback === 'dislike'">
+                    <!-- Dislike button: always show -->
+                    <div class="apple-feedback-wrapper">
                       <button
                         class="apple-feedback-btn"
-                        :class="{ active: msg.feedback === 'dislike', disabled: feedbackButtonsDisabled || msg.feedbackLocked }"
-                        @click.stop="!msg.feedbackLocked && toggleFeedbackDropdown(idx)"
-                        :disabled="feedbackButtonsDisabled || msg.feedbackLocked"
+                        :class="{ active: msg.feedback === 'dislike', disabled: feedbackButtonsDisabled }"
+                        @click.stop="toggleFeedbackDropdown(idx)"
+                        :disabled="feedbackButtonsDisabled"
                         aria-label="ไม่ถูกใจ"
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -665,10 +664,10 @@
                             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                       </button>
-                      <!-- Apple-style dropdown for unlike reasons (only if not locked) -->
+                      <!-- Apple-style dropdown for unlike reasons -->
                       <transition name="apple-dropdown">
                         <div 
-                          v-if="openFeedbackDropdownIndex === idx && !msg.feedbackLocked" 
+                          v-if="openFeedbackDropdownIndex === idx" 
                           class="apple-feedback-dropdown"
                           @click.stop
                         >
@@ -1279,13 +1278,6 @@ export default {
           description: 'หากต้องการให้ปรับปรุง กดปุ่มนี้แล้วบอกเหตุผลได้เลย',
           target: 'dislike',
           showArrow: true
-        },
-        {
-          icon: '🤖',
-          title: 'ถามใหม่ = ถูกใจอัตโนมัติ',
-          description: 'ถ้าไม่ได้กดปุ่มใดๆ แล้วถามคำถามใหม่ ระบบจะถือว่าคุณพอใจคำตอบก่อนหน้าและกด "ถูกใจ" ให้อัตโนมัติ',
-          target: null,
-          showArrow: false
         },
         {
           icon: '✨',
@@ -5057,9 +5049,6 @@ export default {
       // Stop welcome typing once user interacts
       this.welcomeTyping = false
       
-      // 🤖 Auto-like previous bot message if user didn't give feedback and asks new question
-      this.autoLikePreviousBotMessage()
-      
       // Add user message
       this.messages.push({
         id: ++this.messageIdCounter,
@@ -6298,44 +6287,6 @@ export default {
         }
       }
       return null
-    },
-    
-    // 🤖 Auto-like previous bot message when user asks new question without giving feedback
-    // Also lock ALL previous feedbacks so user can't change them
-    // 🆕 Only auto-like if keywordMatch is true (not just text/title match)
-    autoLikePreviousBotMessage() {
-      let autoLikedOne = false
-      
-      // Loop through all messages and lock all bot messages with feedback
-      for (let i = this.messages.length - 1; i >= 0; i--) {
-        const msg = this.messages[i]
-        if (msg.type === 'bot' && msg.found === true && !msg.multipleResults && msg.keywordMatch !== false) {
-          // If no feedback yet and we haven't auto-liked one, auto-like this one
-          if (!msg.feedback && !autoLikedOne) {
-            msg.feedback = 'like'
-            msg.feedbackLocked = true
-            autoLikedOne = true
-            console.log('🤖 Auto-liked previous bot message:', msg.text?.substring(0, 50))
-            
-            // Send feedback to backend silently
-            if (this.$axios && msg.chatLogId) {
-              const payload = { chatLogId: msg.chatLogId, liked: true, autoLiked: true }
-              this.$axios.post('/chat/feedback', payload).catch(err => {
-                console.warn('Failed to send auto-like feedback:', err)
-              })
-            }
-          } else if (msg.feedback && !msg.feedbackLocked) {
-            // Already has feedback, just lock it
-            msg.feedbackLocked = true
-            console.log('🔒 Locked feedback for message:', msg.text?.substring(0, 50))
-          }
-        }
-      }
-      
-      // Save updated chat history
-      if (autoLikedOne) {
-        this.saveChatHistory()
-      }
     },
     
     // 📋 Handle like button click

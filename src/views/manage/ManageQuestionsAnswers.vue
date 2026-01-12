@@ -187,6 +187,7 @@
                     <th>Keywords</th>
                     <th class="text-center">👍 Like</th>
                     <th class="text-center">👎 Unlike</th>
+                    <th class="text-center">⏳ Pending</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -243,9 +244,15 @@
                         <span>{{ item.unlikeCount || 0 }}</span>
                       </div>
                     </td>
+                    <td data-label="Pending" class="py-3 text-center" @click.stop>
+                      <div class="stat-pill pending" :class="{ 'active': item.pendingCount > 0 }" @click="goToFeedbacks(item.QuestionsAnswersID, 'pending')">
+                        <i class="bi bi-hourglass-split"></i>
+                        <span>{{ item.pendingCount || 0 }}</span>
+                      </div>
+                    </td>
                   </tr>
                   <tr v-if="paginatedQuestions.length === 0">
-                    <td colspan="8" class="text-center text-muted py-5">
+                    <td colspan="9" class="text-center text-muted py-5">
                       <div class="empty-state">
                         <i class="bi bi-search"></i>
                         <p>ไม่พบข้อมูลคำถาม-คำตอบ</p>
@@ -2221,6 +2228,7 @@ button.mobile-sidebar-toggle.mobile-inline-toggle { display: none !important; bo
 }
 .stat-pill.like.active { background: rgba(52, 199, 89, 0.1); color: #34C759; }
 .stat-pill.unlike.active { background: rgba(255, 59, 48, 0.1); color: #FF3B30; }
+.stat-pill.pending.active { background: rgba(255, 149, 0, 0.1); color: #FF9500; }
 .stat-pill:hover { transform: scale(1.05); }
 
 /* Pagination */
