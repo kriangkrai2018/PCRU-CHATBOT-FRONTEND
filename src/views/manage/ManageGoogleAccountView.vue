@@ -240,6 +240,10 @@
 
 <script setup>
 import { ref, onMounted, getCurrentInstance } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+
+const route = useRoute();
+const router = useRouter();
 
 const { appContext } = getCurrentInstance();
 const { $axios, $swal } = appContext.config.globalProperties;
@@ -251,6 +255,21 @@ const isUnlinking = ref(false);
 const googleData = ref({});
 
 onMounted(async () => {
+  // ตรวจสอบว่ามีการผูกบัญชีสำเร็จหรือไม่
+  if (route.query.linked === 'success') {
+    $swal.fire({
+      toast: true,
+      icon: 'success',
+      title: 'ผูกบัญชี Google สำเร็จ!',
+      position: 'bottom-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true
+    });
+    // ลบ query parameter ออก
+    router.replace({ query: {} });
+  }
+  
   await fetchGoogleLinkStatus();
 });
 
@@ -283,8 +302,14 @@ async function fetchGoogleLinkStatus() {
 
 function handleLinkGoogle() {
   isLinking.value = true;
-  // Redirect to Google OAuth
-  $axios.get('/auth/google/url')
+  
+  // ดึง token จาก localStorage
+  const token = localStorage.getItem('userToken');
+  
+  // Redirect to Google OAuth with token as state
+  $axios.get('/auth/google/url', {
+    params: { state: token }
+  })
     .then(response => {
       if (response.data && response.data.url) {
         window.location.href = response.data.url;
