@@ -715,7 +715,7 @@
             </div>
             </div>
 
-          <div class="panel-footer" :class="{ focused: panelFocused, 'pwa-standalone': isPwaStandalone }" :style="pwaFooterStyle" ref="panelFooter">
+          <div class="panel-footer" :class="{ focused: panelFocused, 'pwa-standalone': isPwaStandalone, 'menu-open': showLineMenu }" :style="pwaFooterStyle" ref="panelFooter">
             
             <!-- Particles canvas for power mode effect -->
             <canvas ref="particleCanvas" class="particle-canvas"></canvas>
@@ -743,8 +743,83 @@
               </div>
             </div>
 
-            <div class="input-row">
-              <div class="input-container">
+            <!-- 📱 LINE-style Menu Categories (shown when menu is open) -->
+            <transition name="line-menu-slide">
+              <div v-if="showLineMenu" class="line-menu-container" :key="selectedParentCategory ? selectedParentCategory.id : 'main'">
+                <!-- Back button when viewing subcategories -->
+                <div v-if="selectedParentCategory" class="line-menu-header">
+                  <button class="line-menu-back" @click="selectedParentCategory = null">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>{{ selectedParentCategory.title }}</span>
+                  </button>
+                </div>
+                
+                <!-- Subcategories view -->
+                <div v-if="selectedParentCategory" class="line-menu-grid">
+                  <button 
+                    v-for="sub in getSubcategories(selectedParentCategory.id)" 
+                    :key="sub.id" 
+                    class="line-menu-item"
+                    @click="selectLineMenuCategory(sub)"
+                  >
+                    <div class="line-menu-icon" v-html="getCategoryIcon(sub.title)"></div>
+                    <span class="line-menu-label">{{ sub.title }}</span>
+                  </button>
+                </div>
+                
+                <!-- Main categories view -->
+                <div v-else class="line-menu-grid">
+                  <button 
+                    v-for="cat in lineMenuCategories" 
+                    :key="cat.id" 
+                    class="line-menu-item"
+                    :class="{ 'has-children': hasSubcategories(cat.id) }"
+                    @click="onMenuCategoryClick(cat)"
+                  >
+                    <div class="line-menu-icon" v-html="getCategoryIcon(cat.title)"></div>
+                    <span class="line-menu-label">{{ cat.title }}</span>
+                    <span v-if="hasSubcategories(cat.id)" class="line-menu-badge">›</span>
+                  </button>
+                </div>
+              </div>
+            </transition>
+
+            <!-- Input Row with keyboard/menu toggle -->
+            <div class="input-row" :class="{ 'menu-mode': showLineMenu }">
+              
+              <!-- 📱 Single Toggle Button (LEFT): Menu icon when keyboard mode, Keyboard icon when menu mode -->
+              <button 
+                class="line-toggle-btn" 
+                :class="{ active: showLineMenu }"
+                @click="toggleLineMenu(!showLineMenu)"
+                :aria-label="showLineMenu ? 'แป้นพิมพ์' : 'เมนู'"
+                :title="showLineMenu ? 'แป้นพิมพ์' : 'เมนู'"
+              >
+                <!-- Keyboard icon (shown when menu is open) -->
+                <svg v-if="showLineMenu" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
+                  <rect x="5" y="8" width="2" height="2" rx="0.5" fill="currentColor"/>
+                  <rect x="9" y="8" width="2" height="2" rx="0.5" fill="currentColor"/>
+                  <rect x="13" y="8" width="2" height="2" rx="0.5" fill="currentColor"/>
+                  <rect x="17" y="8" width="2" height="2" rx="0.5" fill="currentColor"/>
+                  <rect x="5" y="12" width="2" height="2" rx="0.5" fill="currentColor"/>
+                  <rect x="9" y="12" width="2" height="2" rx="0.5" fill="currentColor"/>
+                  <rect x="13" y="12" width="2" height="2" rx="0.5" fill="currentColor"/>
+                  <rect x="17" y="12" width="2" height="2" rx="0.5" fill="currentColor"/>
+                  <rect x="7" y="16" width="10" height="2" rx="0.5" fill="currentColor"/>
+                </svg>
+                <!-- Menu icon (shown when keyboard mode) -->
+                <svg v-else width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="3" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                  <rect x="14" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                  <rect x="3" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                  <rect x="14" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </button>
+              
+              <div class="input-container" v-show="!showLineMenu">
                 <!-- Typing tooltip is rendered on the bot avatar (avatar-anchored). Removed input-anchored tooltip so pointer correctly targets the avatar -->
 
                 <!-- 👻 Ghost overlay showing only the suggested suffix -->
@@ -771,7 +846,14 @@
                   autocomplete="off"
                 />
               </div>
-              <button class="btn-send" @click="onSend" aria-label="send" ref="sendBtn" :style="sendBtnFixedStyle"
+              
+              <!-- Menu Label (shown when menu is open) -->
+              <div class="line-menu-label-center" v-show="showLineMenu" @click="toggleLineMenu(!showLineMenu)">
+                <span class="menu-arrow" :class="{ 'arrow-up': showLineMenu }">▼</span>
+                <span>เมนู</span>
+              </div>
+              
+              <button class="btn-send" v-show="!showLineMenu" @click="onSend" aria-label="send" ref="sendBtn" :style="sendBtnFixedStyle"
                 @mouseenter="onSendBtnMouseEnter" @mouseleave="onSendBtnMouseLeave" @focus="onSendBtnMouseEnter" @blur="onSendBtnMouseLeave">
                 <!-- Animated chat bubble icon -->
                 <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="send-icon" aria-hidden="true" focusable="false">
@@ -1248,6 +1330,10 @@ export default {
       longPressStartTimer: null, // Timer to detect long press vs normal click
       isLongPressing: false, // Track if we're in long press mode
       fabPointerActive: false, // Track if pointer is actively pressed on FAB
+      // 📱 LINE-style bottom menu toggle
+      showLineMenu: false, // false = keyboard mode, true = menu mode
+      lineMenuCategories: [], // Categories to show in LINE menu
+      selectedParentCategory: null, // Currently selected parent category for subcategories
       // 🎬 First-time intro animation (Genshin-style)
       showIntroAnimation: false,
       introPhase: 0, // 0: not started, 1: logo, 2: particles, 3: reveal
@@ -2162,6 +2248,105 @@ export default {
     }
   },
   methods: {
+    // 📱 LINE-style Menu Methods
+    toggleLineMenu(showMenu) {
+      this.showLineMenu = showMenu
+      this.selectedParentCategory = null // Reset subcategory view
+      if (showMenu) {
+        // Populate menu categories from loaded categories (top-level only)
+        this.lineMenuCategories = this.categories.filter(cat => !cat.parent).slice(0, 8)
+      } else {
+        // Focus input when switching to keyboard mode
+        this.$nextTick(() => {
+          this.$refs.inputBox?.focus()
+        })
+      }
+    },
+    
+    selectLineMenuCategory(cat) {
+      // Send the category as a query
+      this.query = cat.title
+      this.showLineMenu = false
+      this.selectedParentCategory = null
+      this.$nextTick(() => {
+        this.onSend()
+      })
+    },
+    
+    getCategoryIcon(title) {
+      // Import icon matching from categoryIcons.js
+      const iconKeywords = {
+        news: ['ข่าว', 'news', 'ประกาศ', 'announcement'],
+        money: ['ทุน', 'scholarship', 'เงิน', 'money', 'ค่าใช้จ่าย', 'อุดหนุน'],
+        user: ['บริการ', 'นักศึกษา', 'service', 'student', 'สมาชิก'],
+        building: ['หอพัก', 'ที่พัก', 'บ้าน', 'ห้อง', 'room', 'dorm', 'house', 'residence', 'พัก'],
+        book: ['การศึกษา', 'หลักสูตร', 'วิชา', 'education', 'course', 'curriculum', 'สอน', 'เรียน', 'สมัคร'],
+        phone: ['ติดต่อ', 'สอบถาม', 'contact', 'call', 'โทร'],
+        clipboard: ['รับสมัคร', 'สมัคร', 'application', 'register', 'ลงทะเบียน'],
+        calendar: ['อบรม', 'กิจกรรม', 'event', 'training', 'activity', 'ปฏิทิน', 'กำหนดการ']
+      }
+      
+      const titleLower = (title || '').toLowerCase()
+      
+      // Find matching icon
+      for (const [iconType, keywords] of Object.entries(iconKeywords)) {
+        if (keywords.some(kw => titleLower.includes(kw.toLowerCase()))) {
+          return this.getMenuIconSvg(iconType)
+        }
+      }
+      
+      // Default icon
+      return this.getMenuIconSvg('default')
+    },
+    
+    getMenuIconSvg(type) {
+      const icons = {
+        news: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.5"/><line x1="7" y1="9" x2="17" y2="9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="13" x2="13" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="16" x2="17" y2="16" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>`,
+        money: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M12 7v10M9 9.5c0 0 0-1 3-1s3 1 3 2.25-1.5 2.25-3 2.25-3 1-3 2.25 0 1 3 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+        user: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M5 20c0-3.87 3.13-7 7-7s7 3.13 7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+        building: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M3 21h18M4 21V7l8-4 8 4v14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="8" y="11" width="2" height="2" fill="currentColor"/><rect x="14" y="11" width="2" height="2" fill="currentColor"/><rect x="8" y="15" width="2" height="2" fill="currentColor"/><rect x="14" y="15" width="2" height="2" fill="currentColor"/></svg>`,
+        book: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        phone: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.12.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0122 16.92z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        clipboard: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="8" y="2" width="8" height="4" rx="1" stroke="currentColor" stroke-width="1.5"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="18" x2="12" y2="18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+        calendar: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/><line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="1.5"/></svg>`,
+        default: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M12 8v4l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+      }
+      return icons[type] || icons.default
+    },
+    
+    // Check if a category has subcategories
+    hasSubcategories(parentId) {
+      const pid = String(parentId)
+      const result = this.categories.some(cat => String(cat.parent) === pid)
+      console.log('📱 hasSubcategories:', parentId, '-> pid:', pid, '-> result:', result)
+      return result
+    },
+    
+    // Get subcategories of a parent category
+    getSubcategories(parentId) {
+      const pid = String(parentId)
+      const subs = this.categories.filter(cat => String(cat.parent) === pid)
+      console.log('📱 getSubcategories:', parentId, '-> pid:', pid, '-> found:', subs.length, subs.map(s => s.title))
+      return subs
+    },
+    
+    // Handle menu category click - show subcategories if exists, otherwise send
+    onMenuCategoryClick(cat) {
+      console.log('📱 Menu category clicked:', cat.title, 'id:', cat.id)
+      console.log('📱 All categories:', this.categories.map(c => ({ id: c.id, title: c.title, parent: c.parent })))
+      console.log('📱 Has subcategories:', this.hasSubcategories(cat.id))
+      
+      if (this.hasSubcategories(cat.id)) {
+        // Has children - show subcategories
+        console.log('📱 Showing subcategories for:', cat.title)
+        this.selectedParentCategory = cat
+      } else {
+        // No children - send as query
+        console.log('📱 No subcategories, sending query:', cat.title)
+        this.selectLineMenuCategory(cat)
+      }
+    },
+    
     // 🎓 Tutorial Methods
     startFeedbackTutorial() {
       // Check if user has seen tutorial before
@@ -7028,7 +7213,264 @@ export default {
 </script>
 
 <style scoped>
-/* 🔐 Long Press Countdown Overlay */
+/* � LINE-style Bottom Menu */
+.line-menu-container {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px 16px 0 0;
+  padding: 16px 12px;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.line-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+/* Menu Header with back button */
+.line-menu-header {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(139, 76, 184, 0.15);
+}
+
+.line-menu-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: none;
+  background: rgba(139, 76, 184, 0.08);
+  border-radius: 20px;
+  color: #6B2C91;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.line-menu-back:hover {
+  background: rgba(139, 76, 184, 0.15);
+}
+
+.line-menu-back:active {
+  transform: scale(0.98);
+}
+
+.line-menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 6px;
+  border: none;
+  background: rgba(139, 76, 184, 0.06);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  gap: 6px;
+  position: relative;
+}
+
+.line-menu-item.has-children::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  background: #8B4CB8;
+  border-radius: 50%;
+}
+
+.line-menu-badge {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  font-size: 16px;
+  font-weight: bold;
+  color: rgba(139, 76, 184, 0.5);
+}
+
+.line-menu-item:hover {
+  background: rgba(139, 76, 184, 0.12);
+  transform: translateY(-2px);
+}
+
+.line-menu-item:active {
+  transform: scale(0.96);
+}
+
+.line-menu-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 12px rgba(139, 76, 184, 0.3);
+}
+
+.line-menu-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #1d1d1f;
+  text-align: center;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+/* Toggle buttons */
+.line-toggle-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(139, 76, 184, 0.08);
+  color: #6B2C91;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.line-toggle-btn:hover {
+  background: rgba(139, 76, 184, 0.15);
+}
+
+.line-toggle-btn.active {
+  background: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(139, 76, 184, 0.3);
+}
+
+/* Input row with LINE-style layout */
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.input-row .input-container {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Menu Label Center */
+.line-menu-label-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #6B2C91;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 20px;
+  transition: background 0.2s ease;
+}
+
+.line-menu-label-center:hover {
+  background: rgba(139, 76, 184, 0.1);
+}
+
+.line-menu-label-center:active {
+  background: rgba(139, 76, 184, 0.2);
+}
+
+.menu-arrow {
+  font-size: 10px;
+  transition: transform 0.3s ease;
+}
+
+.menu-arrow.arrow-up {
+  transform: rotate(180deg);
+}
+
+/* Input row adjustments */
+.input-row.menu-mode {
+  justify-content: space-between;
+}
+
+/* Panel footer when menu is open */
+.panel-footer.menu-open {
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Menu slide animation */
+.line-menu-slide-enter-active {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.line-menu-slide-leave-active {
+  transition: all 0.2s ease-out;
+}
+
+.line-menu-slide-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.line-menu-slide-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* Dark mode support */
+:deep(.dark) .line-menu-container,
+.chat-root[data-theme="dark"] .line-menu-container {
+  background: rgba(30, 30, 30, 0.98);
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+:deep(.dark) .line-menu-item,
+.chat-root[data-theme="dark"] .line-menu-item {
+  background: rgba(139, 76, 184, 0.15);
+}
+
+:deep(.dark) .line-menu-item:hover,
+.chat-root[data-theme="dark"] .line-menu-item:hover {
+  background: rgba(139, 76, 184, 0.25);
+}
+
+:deep(.dark) .line-menu-label,
+.chat-root[data-theme="dark"] .line-menu-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:deep(.dark) .line-toggle-btn,
+.chat-root[data-theme="dark"] .line-toggle-btn {
+  background: rgba(139, 76, 184, 0.2);
+  color: #b794d4;
+}
+
+:deep(.dark) .line-menu-label-center,
+.chat-root[data-theme="dark"] .line-menu-label-center {
+  color: #b794d4;
+}
+
+/* �🔐 Long Press Countdown Overlay */
 .long-press-overlay {
   position: fixed;
   top: 0;

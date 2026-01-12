@@ -641,3 +641,53 @@ html.theme-transitioning [data-theme="light"] * {
     -webkit-backdrop-filter: none !important;
   }
 }
+
+/* 📱 LINE-style Menu Dark Mode */
+[data-theme="dark"] .line-menu-container {
+  background: rgba(16, 7, 22, 0.98);
+  border-top-color: rgba(139, 76, 184, 0.2);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .line-menu-item {
+  background: rgba(139, 76, 184, 0.12);
+}
+
+[data-theme="dark"] .line-menu-item:hover {
+  background: rgba(139, 76, 184, 0.2);
+}
+
+[data-theme="dark"] .line-menu-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] .line-toggle-btn {
+  background: rgba(139, 76, 184, 0.15);
+  color: #b794d4;
+}
+
+[data-theme="dark"] .line-toggle-btn:hover {
+  background: rgba(139, 76, 184, 0.25);
+}
+
+[data-theme="dark"] .line-toggle-btn.active {
+  background: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%);
+  color: white;
+}
+
+[data-theme="dark"] .line-menu-label-center {
+  color: #b794d4;
+}
+
+[data-theme="dark"] .line-menu-header {
+  border-bottom-color: rgba(139, 76, 184, 0.25);
+}
+
+[data-theme="dark"] .line-menu-back {
+  background: rgba(139, 76, 184, 0.2);
+  color: #b794d4;
+}
+
+[data-theme="dark"] .line-menu-back:hover {
+  background: rgba(139, 76, 184, 0.3);
+}
