@@ -769,14 +769,21 @@ const unlikeCount = computed(() => {
     return acc;
   }, 0);
 });
+const pendingCount = computed(() => {
+  return filteredFeedbacks.value.reduce((acc, fb) => {
+    const v = (fb?.FeedbackValue ?? '').toString().toLowerCase().trim();
+    if (v === '2' || v === 'pending') return acc + 1;
+    return acc;
+  }, 0);
+});
 
-// Added: Pie chart data (green for like, red for unlike)
+// Added: Pie chart data (green for like, red for unlike, orange for pending)
 const pieData = computed(() => ({
-  labels: ['Unlike', 'Like'],
+  labels: ['Unlike', 'Like', 'Pending'],
   datasets: [{
-    data: [unlikeCount.value, likeCount.value],
-    backgroundColor: ['#dc3545', '#28a745'],
-    borderWidth: 1
+    data: [unlikeCount.value, likeCount.value, pendingCount.value],
+    backgroundColor: ['#FF3B30', '#34C759', '#FF9500'],
+    borderWidth: 0
   }]
 }));
 const pieOptions = { 
@@ -805,7 +812,7 @@ const lineLabels = computed(() => {
   return uniq.length ? uniq : ['All'];
 });
 
-// Added: line chart data (counts per date for like/unlike)
+// Added: line chart data (counts per date for like/unlike/pending)
 const lineData = computed(() => {
   const labels = lineLabels.value;
   const likeSeries = labels.map(lbl =>
@@ -824,11 +831,20 @@ const lineData = computed(() => {
       return d === lbl && (v === '0' || v === 'unlike' || v === 'false');
     }).length
   );
+  const pendingSeries = labels.map(lbl =>
+    filteredFeedbacks.value.filter(fb => {
+      const ts = fb?.Timestamp;
+      const d = ts ? (isNaN(new Date(ts).getTime()) ? String(ts).split('T')[0] : new Date(ts).toISOString().slice(0,10)) : 'Unknown';
+      const v = (fb?.FeedbackValue ?? '').toString().toLowerCase().trim();
+      return d === lbl && (v === '2' || v === 'pending');
+    }).length
+  );
   return {
     labels,
     datasets: [
-      { label: 'Unlike', data: unlikeSeries, borderColor: '#dc3545', backgroundColor: 'rgba(220,53,69,0.15)', fill: true, tension: 0.35 },
-      { label: 'Like', data: likeSeries, borderColor: '#28a745', backgroundColor: 'rgba(40,167,69,0.15)', fill: true, tension: 0.35 }
+      { label: 'Unlike', data: unlikeSeries, borderColor: '#FF3B30', backgroundColor: 'rgba(255,59,48,0.15)', fill: true, tension: 0.35 },
+      { label: 'Like', data: likeSeries, borderColor: '#34C759', backgroundColor: 'rgba(52,199,89,0.15)', fill: true, tension: 0.35 },
+      { label: 'Pending', data: pendingSeries, borderColor: '#FF9500', backgroundColor: 'rgba(255,149,0,0.15)', fill: true, tension: 0.35 }
     ]
   };
 });
