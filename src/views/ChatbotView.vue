@@ -1117,10 +1117,11 @@
                 <span>เมนู</span>
               </div>
               
-              <button class="btn-send" v-show="!showLineMenu" @click="onSend" aria-label="send" ref="sendBtn" :style="sendBtnFixedStyle"
-                @mouseenter="onSendBtnMouseEnter" @mouseleave="onSendBtnMouseLeave" @focus="onSendBtnMouseEnter" @blur="onSendBtnMouseLeave">
-                <!-- Animated chat bubble icon -->
-                <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="send-icon" aria-hidden="true" focusable="false">
+              <transition name="send-btn-fade" mode="out-in">
+                <button v-if="query && query.trim()" class="btn-send" v-show="!showLineMenu" @click="onSend" aria-label="send" ref="sendBtn" :style="sendBtnFixedStyle"
+                  @mouseenter="onSendBtnMouseEnter" @mouseleave="onSendBtnMouseLeave" @focus="onSendBtnMouseEnter" @blur="onSendBtnMouseLeave">
+                  <!-- Animated chat bubble icon -->
+                  <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="send-icon" aria-hidden="true" focusable="false">
                   <path class="send-bubble" fill="white" d="M21 6a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h2v3l4-3h6a3 3 0 0 0 3-3V6z">
                     <animate attributeName="opacity" values="0;1" dur="0.4s" fill="freeze"/>
                   </path>
@@ -1128,7 +1129,8 @@
                     <animate attributeName="r" values="0;2;0" dur="1.5s" repeatCount="indefinite"/>
                   </circle>
                 </svg>
-              </button>
+                </button>
+              </transition>
             </div>
           </div>
           </transition>
@@ -9449,6 +9451,28 @@ export default {
 </script>
 
 <style scoped>
+/* Send button transition animations */
+.send-btn-fade-enter-active,
+.send-btn-fade-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.send-btn-fade-enter-from {
+  opacity: 0;
+  transform: scale(0.5) rotate(-90deg);
+}
+
+.send-btn-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.5) rotate(90deg);
+}
+
+.send-btn-fade-enter-to,
+.send-btn-fade-leave-from {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
 /* 🎯 Tutorial Spotlight */
 .tutorial-spotlight {
   position: fixed;
