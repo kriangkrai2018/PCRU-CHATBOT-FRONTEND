@@ -1876,7 +1876,28 @@ export default {
       }
     },
     menuTutorialCardStyle() {
-      // Show card in center vertically and horizontally
+      // Position based on current step
+      // Step 0 (เมนูลัด): กลาง
+      // Step 1 (เลือกหมวดหมู่): ล่างสุด
+      // Step 2 (ลากขยาย/ย่อ): ล่างสุด
+      // Step 3 (ย้อนกลับ): ล่างสุด
+      // Step 4 (สลับโหมด): กลาง
+      // Step 5 (พร้อมใช้งาน!): กลาง
+      
+      const bottomSteps = [1, 2, 3] // Steps that should be at bottom
+      
+      if (bottomSteps.includes(this.menuTutorialStep)) {
+        // Position at bottom of screen
+        return {
+          bottom: '20px',
+          left: '50%',
+          top: 'auto',
+          transform: 'translateX(-50%)',
+          maxWidth: 'calc(100vw - 40px)'
+        }
+      }
+      
+      // Default: center of screen
       return {
         top: '50%',
         left: '50%',
@@ -3079,39 +3100,56 @@ export default {
       this.menuTutorialStep = 0
       this.menuTutorialTargetRect = null
       this.showMenuTutorial = true
-      this.updateMenuTutorialTarget()
+      
+      // Wait for DOM to be ready before finding target
+      this.$nextTick(() => {
+        setTimeout(() => {
+          this.updateMenuTutorialTarget()
+        }, 100)
+      })
     },
     
     updateMenuTutorialTarget() {
       const step = this.menuTutorialSteps[this.menuTutorialStep]
       if (!step || !step.target) {
         this.menuTutorialTargetRect = null
+        console.log('❌ No step or target')
         return
       }
       
+      console.log('🎯 Looking for target:', step.target)
+      
       this.$nextTick(() => {
-        let targetEl = null
-        
-        if (step.target === 'menu-toggle') {
-          // Find the menu toggle button
-          targetEl = document.querySelector('.line-toggle-btn:not(.active)')
-        } else if (step.target === 'keyboard-toggle') {
-          // Find the keyboard toggle button (when menu is open)
-          targetEl = document.querySelector('.line-toggle-btn.active')
-        } else if (step.target === 'menu-grid') {
-          // Find the menu grid
-          targetEl = document.querySelector('.line-menu-grid')
-        } else if (step.target === 'menu-handle') {
-          // Find the handle bar
-          targetEl = document.querySelector('.line-menu-handle')
-        } else if (step.target === 'menu-back') {
-          // Find the back button
-          targetEl = document.querySelector('.line-menu-back')
-        }
-        
-        if (targetEl) {
-          const rect = targetEl.getBoundingClientRect()
-          this.menuTutorialTargetRect = {
+        setTimeout(() => {
+          let targetEl = null
+          
+          if (step.target === 'menu-toggle') {
+            // Find the menu toggle button
+            targetEl = document.querySelector('.line-toggle-btn:not(.active)')
+            if (!targetEl) {
+              // Fallback: try any line-toggle-btn
+              targetEl = document.querySelector('.line-toggle-btn')
+            }
+          } else if (step.target === 'keyboard-toggle') {
+            // Find the keyboard toggle button (when menu is open)
+            targetEl = document.querySelector('.line-toggle-btn.active')
+          } else if (step.target === 'menu-grid') {
+            // Find the menu grid
+            targetEl = document.querySelector('.line-menu-grid')
+          } else if (step.target === 'menu-handle') {
+            // Find the handle bar
+            targetEl = document.querySelector('.line-menu-handle')
+          } else if (step.target === 'menu-back') {
+            // Find the back button
+            targetEl = document.querySelector('.line-menu-back')
+          }
+          
+          console.log('🔍 Found element:', targetEl)
+          
+          if (targetEl) {
+            const rect = targetEl.getBoundingClientRect()
+            console.log('📏 Element rect:', rect)
+            this.menuTutorialTargetRect = {
             top: rect.top,
             left: rect.left,
             width: rect.width,
@@ -3119,9 +3157,12 @@ export default {
             bottom: rect.bottom,
             right: rect.right
           }
+          console.log('✅ Target rect set:', this.menuTutorialTargetRect)
         } else {
+          console.log('❌ Target element not found')
           this.menuTutorialTargetRect = null
         }
+        }, 200) // Increased timeout to 200ms
       })
     },
     
@@ -8111,6 +8152,53 @@ export default {
 </script>
 
 <style scoped>
+/* 🎯 Tutorial Spotlight */
+.tutorial-spotlight {
+  position: fixed;
+  z-index: 999999;
+  pointer-events: none;
+  border-radius: 16px;
+  background: rgba(139, 76, 184, 0.15);
+  border: 3px solid #8B4CB8;
+  box-shadow: 
+    0 0 0 4px rgba(139, 76, 184, 0.3),
+    0 0 20px rgba(139, 76, 184, 0.5),
+    inset 0 0 20px rgba(139, 76, 184, 0.2);
+  animation: spotlight-pulse 2s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes spotlight-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 0 4px rgba(139, 76, 184, 0.3),
+      0 0 20px rgba(139, 76, 184, 0.5),
+      inset 0 0 20px rgba(139, 76, 184, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 0 0 6px rgba(139, 76, 184, 0.5),
+      0 0 30px rgba(139, 76, 184, 0.7),
+      inset 0 0 30px rgba(139, 76, 184, 0.3);
+  }
+}
+
+.spotlight-btn-clone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  animation: spotlight-icon-float 3s ease-in-out infinite;
+}
+
+@keyframes spotlight-icon-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
 /* 📱 LINE-style Bottom Menu */
 .line-menu-wrapper {
   position: absolute;
