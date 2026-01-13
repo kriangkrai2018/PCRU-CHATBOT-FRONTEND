@@ -240,10 +240,13 @@
                   <div class="bot-avatar-wrapper">
                     <div class="bot-avatar" role="button" tabindex="0" @click="openAiIntro" title="เปิด AI เต็มจอ">
                       <!-- 🎬 Stacked videos for smooth transitions -->
-                      <video v-if="graphicsQuality === 'high' && botVideo" :src="botVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-main" :class="{ 'video-hidden': isBotSleeping || isBotWakingUp || isPlayingReverse }" autoplay muted playsinline @ended="onMainVideoEnded"></video>
-                      <video v-if="graphicsQuality === 'high' && botReverseVideo" :src="botReverseVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-reverse" :class="{ 'video-visible': isPlayingReverse }" muted playsinline @ended="onReverseVideoEnded"></video>
-                      <video v-if="graphicsQuality === 'high' && botSleepVideo" :src="botSleepVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-sleep" :class="{ 'video-visible': isBotSleeping }" autoplay muted playsinline></video>
-                      <video v-if="graphicsQuality === 'high' && botWakeVideo" :src="botWakeVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-wake" :class="{ 'video-visible': isBotWakingUp }" muted playsinline @ended="onWakeVideoEnded" ref="wakeVideoWelcome"></video>
+                      <!-- 🖼️ Background for High Quality (Smooth Transition) -->
+                      <img v-if="graphicsQuality === 'high'" :src="botFallbackImg" class="bot-avatar-img" style="z-index: 1;" alt="" />
+
+                      <video v-if="graphicsQuality === 'high' && botVideo" :src="botVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-main" :class="{ 'video-hidden': isBotSleeping || isBotWakingUp || isPlayingReverse }" autoplay muted playsinline preload="auto" @ended="onMainVideoEnded"></video>
+                      <video v-if="graphicsQuality === 'high' && botReverseVideo" :src="botReverseVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-reverse" :class="{ 'video-visible': isPlayingReverse }" muted playsinline preload="auto" @ended="onReverseVideoEnded"></video>
+                      <video v-if="graphicsQuality === 'high' && botSleepVideo" :src="botSleepVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-sleep" :class="{ 'video-visible': isBotSleeping }" autoplay muted playsinline preload="auto"></video>
+                      <video v-if="graphicsQuality === 'high' && botWakeVideo" :src="botWakeVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-wake" :class="{ 'video-visible': isBotWakingUp }" muted playsinline preload="auto" @ended="onWakeVideoEnded" ref="wakeVideoWelcome"></video>
                       <!-- 🖼️ Normal image for non-high modes -->
                       <img v-if="graphicsQuality !== 'high'" :src="botAvatar" alt="Bot" class="bot-avatar-img" />
                       <!-- 🔴 Offline Badge on Bot Avatar -->
