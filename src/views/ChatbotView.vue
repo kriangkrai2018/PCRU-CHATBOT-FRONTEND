@@ -2084,22 +2084,27 @@ export default {
       // 🍎 Apple-style Alert for Low FPS
       showAppleAlert: false,
       appleAlertShown: false, // Track if already shown to avoid repeating
+      // 🗑️ Clear button visibility state
+      clearBtnHidden: false, // Track if clear button was recently clicked
     }
   },
   computed: {
     // 🎠 Carousel track transform style
     carouselTrackStyle() {
-      const pageWidth = 50 // percentage
+      const pageCount = Array.isArray(this.carouselPages) && this.carouselPages.length ? this.carouselPages.length : 1
+      // Use container-based paging: each page is 100% of the carousel viewport.
+      const pageWidth = 100
       let translateX = -(this.carouselCurrentPage * pageWidth)
       
       // Add drag offset during swipe
       if (this.carouselIsDragging) {
-        const containerWidth = this.$refs.menuCarousel?.offsetWidth
-        const dragPercent = (this.carouselDragOffset / containerWidth) * 50
+        const carouselEl = this.$refs.menuCarouselFullscreen || this.$refs.menuCarousel
+        const containerWidth = carouselEl?.offsetWidth || 300
+        const dragPercent = (this.carouselDragOffset / containerWidth) * 100
         translateX += dragPercent
         
         // Allow 20% overscroll for visual feedback
-        const minTranslate = -(this.carouselPages.length - 1) * 100 - 20
+        const minTranslate = -((pageCount - 1) * 100) - 20
         const maxTranslate = 20
         translateX = Math.max(minTranslate, Math.min(maxTranslate, translateX))
       }
@@ -2425,6 +2430,7 @@ export default {
     },
     // Show clear (trash) button only if there are messages or the user has previously interacted
     showClearBtn() {
+      if (this.clearBtnHidden) return false
       return (Array.isArray(this.messages) && this.messages.length > 0) || !!this.hasAskedBot
     },
     themeDisplayOnly() {
@@ -3410,6 +3416,10 @@ export default {
       // Only handle swipe if it was horizontal
       if (this.carouselSwipeIsHorizontal) {
         this.handleCarouselSwipeEnd()
+      } else {
+        // Ensure we always cleanup drag state (important for low mode + vertical scroll gestures)
+        this.carouselIsDragging = false
+        this.carouselDragOffset = 0
       }
       this.carouselSwipeIsHorizontal = null
     },
@@ -3463,6 +3473,9 @@ export default {
       if (!this.carouselIsDragging) return
       if (this.carouselSwipeIsHorizontal) {
         this.handleCarouselSwipeEnd()
+      } else {
+        this.carouselIsDragging = false
+        this.carouselDragOffset = 0
       }
       this.carouselSwipeIsHorizontal = null
       
@@ -3472,7 +3485,8 @@ export default {
     },
     
     handleCarouselSwipeEnd() {
-      const containerWidth = this.$refs.menuCarousel?.offsetWidth || 300
+      const carouselEl = this.$refs.menuCarouselFullscreen || this.$refs.menuCarousel
+      const containerWidth = carouselEl?.offsetWidth || 300
       const threshold = containerWidth * 0.10 // 10% of container width
       const oldPage = this.carouselCurrentPage
       
@@ -4209,10 +4223,18 @@ export default {
       }
     },
     requestUserLocation() {
+      // Check if user has already answered (granted or denied)
+      const locationPermission = localStorage.getItem('locationPermissionStatus');
+      if (locationPermission === 'granted' || locationPermission === 'denied') {
+        console.log('📍 Location permission already answered:', locationPermission);
+        return;
+      }
+      
       // This function is no longer called automatically
       // Location is only requested when user clicks navigate button
       if (!navigator.geolocation) {
         console.log('📍 Geolocation not supported');
+        localStorage.setItem('locationPermissionStatus', 'denied');
         return;
       }
       
@@ -4222,10 +4244,14 @@ export default {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           };
+          // Save permission granted status
+          localStorage.setItem('locationPermissionStatus', 'granted');
           console.log('📍 User location obtained:', this.userLocation);
         },
         (error) => {
-          console.log('📍 Could not get user location:', error.message);
+          console.log('📍 User denied or error getting location:', error.message);
+          // Save permission denied status
+          localStorage.setItem('locationPermissionStatus', 'denied');
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
       );
@@ -4589,6 +4615,7 @@ export default {
     
     clearChatFromMenu() {
       this.closeMoreMenu();
+      this.clearBtnHidden = true;
       setTimeout(() => {
         this.clearChatHistory();
       }, 150);
@@ -5064,20 +5091,27 @@ export default {
     createMapWidget(mapUrl, lat, lng, label = 'ดูแผนที่') {
       const zoom = 15;
       
+      // Check if user has already answered (granted or denied)
+      const locationPermission = localStorage.getItem('locationPermissionStatus');
+      const hasAnswered = locationPermission === 'granted' || locationPermission === 'denied';
+      
       // Request user location to show both current position and destination (non-blocking)
-      if (navigator.geolocation && !this.userLocation) {
+      if (navigator.geolocation && !this.userLocation && !hasAnswered) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             this.userLocation = {
               lat: position.coords.latitude,
               lng: position.coords.longitude
             };
+            // Save permission granted status
+            localStorage.setItem('locationPermissionStatus', 'granted');
             console.log('📍 User location obtained for map:', this.userLocation);
             // Note: Map is already rendered, this location will be used for next map widget
           },
           (error) => {
-            console.log('📍 Could not get user location:', error.message);
-            // Continue without user location
+            console.log('📍 User denied or error getting location:', error.message);
+            // Save permission denied status
+            localStorage.setItem('locationPermissionStatus', 'denied');
           },
           { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
         );
@@ -9363,13 +9397,13 @@ export default {
 
 .line-menu-carousel-track {
   display: flex;
-  width: 200%; /* 2 pages */
+  width: 100%; /* pages overflow; each page is 100% viewport width */
   will-change: transform;
 }
 
 .line-menu-carousel-page {
-  width: 50%; /* Each page takes 50% of track (which is 200% of container = 100% viewport) */
-  flex-shrink: 0;
+  width: 100%;
+  flex: 0 0 100%;
   padding: 0 4px;
   box-sizing: border-box;
 }
@@ -9530,8 +9564,9 @@ html[data-theme="dark"] .page-label-toast {
 .carousel-indicators {
   position: fixed !important;
   bottom: 63px !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: none !important;
   background: transparent !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -9544,8 +9579,13 @@ html[data-theme="dark"] .page-label-toast {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: auto !important;
+  width: 100% !important;
   gap: 6px;
+  pointer-events: none !important;
+}
+
+.carousel-indicators > * {
+  pointer-events: auto !important;
 }
 
 /* Fullscreen indicators - no background */
