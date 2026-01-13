@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { apiRanking } from '@/plugins/apiRanking'
 import { useChatbotScroll } from './useChatbotScroll'
+import axios from 'axios'
 
 // Helper function to strictly deduplicate contacts
 const deduplicateContacts = (contacts) => {
@@ -98,8 +99,9 @@ export function useChatbotMessages() {
 
       const responseData = await apiRanking.getChatbotResponse(payload)
       
-      if (responseData.session_id) {
-        sessionId.value = responseData.session_id
+      // รับ sessionId จาก Backend (สำหรับโหมด AI)
+      if (responseData.sessionId) {
+        sessionId.value = responseData.sessionId
       }
 
       // 1. Filter Contacts (Categories Filter)
@@ -148,7 +150,20 @@ export function useChatbotMessages() {
     }
   }
 
-  const clearMessages = () => {
+  const clearMessages = async () => {
+    // 🔥 ลบ Gemini conversation history ถ้ามี sessionId
+    if (sessionId.value) {
+      try {
+        console.log(`🗑️ Clearing Gemini conversation for session: ${sessionId.value}`)
+        await axios.delete(`/api/gemini/conversation/${sessionId.value}`)
+        console.log('✅ Gemini conversation cleared')
+      } catch (error) {
+        console.warn('⚠️ Failed to clear Gemini conversation:', error.message)
+        // ไม่ throw error เพราะต้องการให้ clear local messages ต่อไปได้
+      }
+    }
+    
+    // ล้าง messages และ session ใน frontend
     messages.value = []
     sessionId.value = null
     currentCategory.value = null

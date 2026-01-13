@@ -297,11 +297,12 @@ html.theme-transitioning div {
 /* Header */
 .panel-top {
   position: relative;
-  z-index: 10;
+  z-index: 15;
   border-bottom: 1px solid rgba(229, 231, 235, 0.3);
   background-color: rgba(243, 244, 246, 0.15);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  min-height: 60px;
 }
 .panel-title {
   color: #1f2937;
@@ -2232,7 +2233,7 @@ html[data-theme="dark"].gfx-low .apple-help-overlay .apple-panel {
 
 /* Clear chat button - now in more menu, hide standalone version */
 .clear-chat-btn { 
-  display: none !important; /* Hidden - moved to more menu */
+  display: inline-flex !important; /* Show button */
   position:absolute; 
   right: max(12px, calc(12px + env(safe-area-inset-right, 0px)));
   top: max(12px, calc(12px + env(safe-area-inset-top, 0px)));
@@ -2633,6 +2634,8 @@ html.keyboard-open .clear-chat-btn {
   width: 100%;
   flex-shrink: 0;
   overflow: visible;
+  z-index: 20;
+  min-height: 52px;
 }
 
 /* Bottom-anchored typing bubble shown near the input */
