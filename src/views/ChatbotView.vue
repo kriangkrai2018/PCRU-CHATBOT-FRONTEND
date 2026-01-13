@@ -215,11 +215,11 @@
             <div class="overlay-backdrop-2"></div>
           </div>
 
-          <!-- Scroll to Top Button - outside panel-body so it floats above content -->
+          <!-- Scroll to Bottom Button - outside panel-body so it floats above content -->
           <transition name="fade-scale">
-            <button v-if="showScrollTop" class="scroll-to-top-btn" @click="scrollToTop" aria-label="scroll to top">
+            <button v-if="showScrollTop" class="scroll-to-top-btn" @click="scrollToBottom" aria-label="scroll to bottom">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="scroll-icon">
-                <path class="scroll-arrow" d="M12 19V5M5 12l7-7 7 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="40" stroke-dashoffset="40">
+                <path class="scroll-arrow" d="M12 5V19M5 12l7 7 7-7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="40" stroke-dashoffset="40">
                   <animate attributeName="stroke-dashoffset" to="0" dur="0.5s" fill="freeze"/>
                 </path>
               </svg>
@@ -816,7 +816,7 @@
                   <div class="line-menu-handle-bar"></div>
                 </div>
                 
-                <!-- Scrollable content area -->
+                <!-- Carousel content area with swipe -->
                 <div class="line-menu-container">
                   <!-- Back button when viewing subcategories (always visible) -->
                   <div v-if="selectedParentCategory" class="line-menu-header">
@@ -841,19 +841,99 @@
                     </button>
                   </div>
                   
-                  <!-- Main categories view -->
-                  <div v-else class="line-menu-grid">
-                    <button 
-                      v-for="cat in lineMenuCategories" 
-                      :key="cat.id" 
-                      class="line-menu-item"
-                      :class="{ 'has-children': hasSubcategories(cat.id) }"
-                      @click="onMenuCategoryClick(cat)"
+                  <!-- 🎠 Main Carousel view (Categories + Locations) -->
+                  <div 
+                    v-else 
+                    class="line-menu-carousel"
+                    ref="menuCarousel"
+                    @touchstart.passive="onCarouselTouchStart"
+                    @touchmove.passive="onCarouselTouchMove"
+                    @touchend="onCarouselTouchEnd"
+                    @mousedown="onCarouselMouseDown"
+                  >
+                    <!-- Swipe Hint (TOP - shows once) -->
+                    <transition name="swipe-hint-fade">
+                      <div v-if="showCarouselSwipeHint" class="carousel-swipe-hint top-hint">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                          <path d="M17 12H7M10 16l-4-4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M14 8l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
+                        </svg>
+                        <span>ปัดซ้าย-ขวาเพื่อเปลี่ยนหน้า</span>
+                      </div>
+                    </transition>
+                    
+                    <div 
+                      class="line-menu-carousel-track"
+                      :style="carouselTrackStyle"
                     >
-                      <div class="line-menu-icon" v-html="getCategoryIcon(cat.title)"></div>
-                      <span class="line-menu-label">{{ cat.title }}</span>
-                      <span v-if="hasSubcategories(cat.id)" class="line-menu-badge">›</span>
-                    </button>
+                      <!-- Page 1: Categories -->
+                      <div class="line-menu-carousel-page">
+                        <div class="line-menu-grid">
+                          <button 
+                            v-for="cat in lineMenuCategories" 
+                            :key="cat.id" 
+                            class="line-menu-item"
+                            :class="{ 'has-children': hasSubcategories(cat.id) }"
+                            @click="onMenuCategoryClick(cat)"
+                          >
+                            <div class="line-menu-icon" v-html="getCategoryIcon(cat.title)"></div>
+                            <span class="line-menu-label">{{ cat.title }}</span>
+                            <span v-if="hasSubcategories(cat.id)" class="line-menu-badge">›</span>
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <!-- Page 2: Locations / Navigation -->
+                      <div class="line-menu-carousel-page" data-page="locations">
+                        <div class="line-menu-grid locations-grid">
+                          <button 
+                            v-for="loc in locationQuickLinks" 
+                            :key="loc.id" 
+                            class="line-menu-item location-item"
+                            @click="sendLocationQuery(loc.query)"
+                          >
+                            <div class="line-menu-icon location-icon">
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path class="nav-arrow" d="M12 2L19 21L12 17L5 21L12 2Z" stroke="white" stroke-width="2" stroke-linejoin="round" fill="none">
+                                  <animate attributeName="stroke-dashoffset" from="50" to="0" dur="0.6s" fill="freeze"/>
+                                  <animateTransform attributeName="transform" type="rotate" values="0 12 12;5 12 12;-5 12 12;0 12 12" dur="2s" repeatCount="indefinite"/>
+                                </path>
+                              </svg>
+                            </div>
+                            <span class="line-menu-label">{{ loc.label }}</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- 🔵 Carousel Dot Indicators (always fixed) -->
+                  <div 
+                    v-if="!selectedParentCategory" 
+                    class="carousel-indicators"
+                  >
+                    <!-- Page Label Toast (shows above dots) -->
+                    <transition name="page-toast">
+                      <div v-if="showPageLabelToast" class="page-label-toast">
+                        {{ pageLabelToastText }}
+                      </div>
+                    </transition>
+                    
+                    <!-- Dots Only -->
+                    <transition name="dots-fade">
+                      <div v-if="showCarouselDots" class="carousel-dots">
+                        <button 
+                        v-for="(page, index) in carouselPages" 
+                        :key="index"
+                        class="carousel-dot"
+                        :class="{ active: carouselCurrentPage === index }"
+                        @click="goToCarouselPage(index)"
+                        :aria-label="`ไปหน้า ${index + 1}`"
+                      >
+                        <span class="dot-inner"></span>
+                      </button>
+                      </div>
+                    </transition>
                   </div>
                 </div>
               </div>
@@ -985,19 +1065,84 @@
                   </button>
                 </div>
                 
-                <!-- Main categories view -->
-                <div v-else class="line-menu-grid">
-                  <button 
-                    v-for="cat in lineMenuCategories" 
-                    :key="cat.id" 
-                    class="line-menu-item"
-                    :class="{ 'has-children': hasSubcategories(cat.id) }"
-                    @click="onMenuCategoryClick(cat)"
+                <!-- 🎠 Fullscreen Carousel view -->
+                <div 
+                  v-else 
+                  class="line-menu-carousel fullscreen-carousel"
+                  ref="menuCarouselFullscreen"
+                  @touchstart.passive="onCarouselTouchStart"
+                  @touchmove.passive="onCarouselTouchMove"
+                  @touchend="onCarouselTouchEnd"
+                  @mousedown="onCarouselMouseDown"
+                >
+                  <!-- Swipe Hint (TOP - shows once) -->
+                  <transition name="swipe-hint-fade">
+                    <div v-if="showCarouselSwipeHint" class="carousel-swipe-hint top-hint">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M17 12H7M10 16l-4-4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M14 8l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
+                      </svg>
+                      <span>ปัดซ้าย-ขวาเพื่อเปลี่ยนหน้า</span>
+                    </div>
+                  </transition>
+                  
+                  <div 
+                    class="line-menu-carousel-track"
+                    :style="carouselTrackStyle"
                   >
-                    <div class="line-menu-icon" v-html="getCategoryIcon(cat.title)"></div>
-                    <span class="line-menu-label">{{ cat.title }}</span>
-                    <span v-if="hasSubcategories(cat.id)" class="line-menu-badge">›</span>
-                  </button>
+                    <!-- Page 1: Categories -->
+                    <div class="line-menu-carousel-page">
+                      <div class="line-menu-grid">
+                        <button 
+                          v-for="cat in lineMenuCategories" 
+                          :key="cat.id" 
+                          class="line-menu-item"
+                          :class="{ 'has-children': hasSubcategories(cat.id) }"
+                          @click="onMenuCategoryClick(cat)"
+                        >
+                          <div class="line-menu-icon" v-html="getCategoryIcon(cat.title)"></div>
+                          <span class="line-menu-label">{{ cat.title }}</span>
+                          <span v-if="hasSubcategories(cat.id)" class="line-menu-badge">›</span>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <!-- Page 2: Locations -->
+                    <div class="line-menu-carousel-page">
+                      <div class="line-menu-grid locations-grid">
+                        <button 
+                          v-for="loc in locationQuickLinks" 
+                          :key="loc.id" 
+                          class="line-menu-item location-item"
+                          @click="sendLocationQuery(loc.query)"
+                        >
+                          <div class="line-menu-icon location-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                              <path class="nav-arrow" d="M12 2L19 21L12 17L5 21L12 2Z" stroke="white" stroke-width="2" stroke-linejoin="round" fill="none">
+                                <animateTransform attributeName="transform" type="rotate" values="0 12 12;5 12 12;-5 12 12;0 12 12" dur="2s" repeatCount="indefinite"/>
+                              </path>
+                            </svg>
+                          </div>
+                          <span class="line-menu-label">{{ loc.label }}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- 🔵 Fullscreen Carousel Indicators (no background, dots only) -->
+                <div v-if="!selectedParentCategory" class="carousel-indicators fullscreen-indicators">
+                  <div class="carousel-dots">
+                    <button 
+                      v-for="(page, index) in carouselPages" 
+                      :key="index"
+                      class="carousel-dot"
+                      :class="{ active: carouselCurrentPage === index }"
+                      @click="goToCarouselPage(index)"
+                    >
+                      <span class="dot-inner"></span>
+                    </button>
+                  </div>
                 </div>
               </div>
               
@@ -1319,7 +1464,7 @@
       </div>
     </transition>
 
-    <!-- 🎯 Scroll to Top Tutorial Overlay (Spotlight-style like feedback) -->
+    <!-- 🎯 Scroll to Bottom Tutorial Overlay (Spotlight-style like feedback) -->
     <transition name="tutorial-fade">
       <div 
         v-if="showScrollTutorial" 
@@ -1337,7 +1482,7 @@
           <!-- Clone of scroll button inside spotlight -->
           <div class="spotlight-scroll-btn-clone">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M12 19V5M5 12l7-7 7 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 5V19M5 12l7 7 7-7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
         </div>
@@ -1345,9 +1490,9 @@
         <!-- Tutorial card -->
         <div class="scroll-tutorial-card" :style="scrollTutorialCardStyle">
           <div class="tutorial-content">
-            <div class="tutorial-icon">⬆️</div>
-            <h3 class="tutorial-title">เลื่อนขึ้นด้านบน</h3>
-            <p class="tutorial-description">กดปุ่มนี้เพื่อกลับไปดูหมวดหมู่และข้อความก่อนหน้าได้เลยค่ะ</p>
+            <div class="tutorial-icon">⬇️</div>
+            <h3 class="tutorial-title">เลื่อนลงด้านล่าง</h3>
+            <p class="tutorial-description">กดปุ่มนี้เพื่อกลับไปดูข้อความล่าสุดและคำตอบจากบอทได้เลยค่ะ</p>
           </div>
           
           <div class="tutorial-actions">
@@ -1364,7 +1509,7 @@
         >
           <svg width="30" height="50" viewBox="0 0 30 50">
             <path 
-              d="M15 50 L15 10 M5 20 L15 10 L25 20" 
+              d="M15 0 L15 40 M5 30 L15 40 L25 30" 
               stroke="white" 
               stroke-width="3" 
               fill="none"
@@ -1645,6 +1790,32 @@ export default {
       lineMenuCategories: [], // Categories to show in LINE menu
       selectedParentCategory: null, // Currently selected parent category for subcategories
       lineMenuExpanded: false, // Fullscreen expanded mode
+      // 🎠 Carousel state
+      carouselCurrentPage: 0,
+      carouselPages: ['categories', 'locations'],
+      carouselDragStartX: 0,
+      carouselDragCurrentX: 0,
+      carouselDragStartY: 0, // Track Y position for angle detection
+      carouselIsDragging: false,
+      carouselDragOffset: 0,
+      carouselSwipeIsHorizontal: null, // null = not determined, true = horizontal, false = vertical
+      showCarouselSwipeHint: false, // Show swipe hint tooltip
+      carouselSwipeHintShown: localStorage.getItem('carouselSwipeHintShown') === 'true', // Track if hint was already shown (persistent)
+      carouselSwipeHintTimer: null,
+      showPageLabelToast: false, // Show page label toast on page change
+      pageLabelToastText: '', // Current page label text
+      pageLabelToastTimer: null, // Timer for toast auto-hide
+      showCarouselDots: false, // Show dots after 1 second delay when menu opens
+      carouselDotsTimer: null, // Timer for dots delay
+      // 📍 Quick location links for navigation page
+      locationQuickLinks: [
+        { id: 1, label: 'สำนักวิทยบริการฯ', query: 'พิกัด สำนักวิทยบริการ และเทคโนโลยีสารสนเทศ' },
+        { id: 2, label: 'ห้องสมุด', query: 'พิกัด ห้องสมุด' },
+        { id: 3, label: 'อาคารเรียนรวม', query: 'พิกัด อาคารเรียนรวม' },
+        { id: 4, label: 'กองพัฒนานักศึกษา', query: 'พิกัด กองพัฒนานักศึกษา' },
+        { id: 5, label: 'สำนักส่งเสริมวิชาการ', query: 'พิกัด สำนักส่งเสริมวิชาการและงานทะเบียน' },
+        { id: 6, label: 'หอพักนักศึกษา', query: 'พิกัด หอพักนักศึกษา' }
+      ],
       // Welcome screen categories toggle
       showWelcomeCategories: false, // true = show categories, false = hide categories (default)
       // Drag to expand
@@ -1759,6 +1930,29 @@ export default {
     }
   },
   computed: {
+    // 🎠 Carousel track transform style
+    carouselTrackStyle() {
+      const pageWidth = 50 // percentage
+      let translateX = -(this.carouselCurrentPage * pageWidth)
+      
+      // Add drag offset during swipe
+      if (this.carouselIsDragging) {
+        const containerWidth = this.$refs.menuCarousel?.offsetWidth
+        const dragPercent = (this.carouselDragOffset / containerWidth) * 50
+        translateX += dragPercent
+        
+        // Allow 20% overscroll for visual feedback
+        const minTranslate = -(this.carouselPages.length - 1) * 100 - 20
+        const maxTranslate = 20
+        translateX = Math.max(minTranslate, Math.min(maxTranslate, translateX))
+      }
+      
+      return {
+        transform: `translateX(${translateX}%)`,
+        transition: this.carouselIsDragging ? 'none' : 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+      }
+    },
+    
     // 📱 Menu drag style for real-time resize
     menuDragStyle() {
       if (!this.isDragging) return {}
@@ -2108,6 +2302,9 @@ export default {
   },
   
   async mounted() {
+    // Debug locations data
+    console.log('📍 locationQuickLinks:', this.locationQuickLinks)
+    
     // Detect PWA standalone mode (Add to Home Screen)
     this.detectStandaloneMode()
     
@@ -2805,6 +3002,12 @@ export default {
         this.lineMenuCollapsed = false
         this.selectedParentCategory = null
         this.lineMenuExpanded = false
+        // Clear dots timer and hide dots
+        if (this.carouselDotsTimer) {
+          clearTimeout(this.carouselDotsTimer)
+          this.carouselDotsTimer = null
+        }
+        this.showCarouselDots = false
         this.$nextTick(() => {
           if (this.$refs.inputBox) {
             this.$refs.inputBox.focus()
@@ -2813,6 +3016,10 @@ export default {
       } else {
         // Currently showing keyboard - switch to menu
         this.toggleLineMenu(true)
+        // Start 1 second timer to show dots
+        this.carouselDotsTimer = setTimeout(() => {
+          this.showCarouselDots = true
+        }, 500)
       }
     },
     
@@ -2829,6 +3036,24 @@ export default {
       if (showMenu) {
         // Populate menu categories from loaded categories (top-level only)
         this.lineMenuCategories = this.categories.filter(cat => !cat.parent).slice(0, 8)
+        
+        // Show page label toast on first open
+        this.$nextTick(() => {
+          this.showPageLabelToastTemporarily()
+        })
+        
+        // Show swipe hint once (first time opening menu) - persistent via localStorage
+        if (!this.carouselSwipeHintShown) {
+          this.carouselSwipeHintShown = true
+          localStorage.setItem('carouselSwipeHintShown', 'true')
+          this.$nextTick(() => {
+            this.showCarouselSwipeHint = true
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+              this.showCarouselSwipeHint = false
+            }, 3000)
+          })
+        }
         
         // Check if first time using menu - show tutorial
         const tutorialSeen = localStorage.getItem('pcru_menu_tutorial_seen')
@@ -2959,6 +3184,196 @@ export default {
       document.removeEventListener('touchcancel', this._dragEndHandler)
       document.removeEventListener('mousemove', this._dragMoveHandler)
       document.removeEventListener('mouseup', this._dragEndHandler)
+    },
+    
+    // 🎠 Carousel Touch/Mouse Handlers
+    onCarouselTouchStart(e) {
+      if (e.touches.length !== 1) return
+      this.carouselDragStartX = e.touches[0].clientX
+      this.carouselDragStartY = e.touches[0].clientY
+      this.carouselIsDragging = true
+      this.carouselDragOffset = 0
+      this.carouselSwipeIsHorizontal = null // Reset swipe direction
+    },
+    
+    onCarouselTouchMove(e) {
+      if (!this.carouselIsDragging || e.touches.length !== 1) return
+      const currentX = e.touches[0].clientX
+      const currentY = e.touches[0].clientY
+      const deltaX = Math.abs(currentX - this.carouselDragStartX)
+      const deltaY = Math.abs(currentY - this.carouselDragStartY)
+      
+      // Determine swipe direction on first significant move
+      if (this.carouselSwipeIsHorizontal === null && (deltaX > 10 || deltaY > 10)) {
+        // If horizontal movement is greater, it's a horizontal swipe
+        this.carouselSwipeIsHorizontal = deltaX > deltaY
+      }
+      
+      // Only allow horizontal swipes
+      if (this.carouselSwipeIsHorizontal) {
+        const rawOffset = currentX - this.carouselDragStartX
+        const containerWidth = this.$refs.menuCarousel?.offsetWidth || 300
+        
+        // Clamp offset to prevent overscroll
+        const maxOffset = containerWidth * 0.3 // 30% max drag
+        if (this.carouselCurrentPage === 0 && rawOffset > 0) {
+          // On first page, don't allow right swipe
+          this.carouselDragOffset = 0
+        } else if (this.carouselCurrentPage === this.carouselPages.length - 1 && rawOffset < 0) {
+          // On last page, don't allow left swipe
+          this.carouselDragOffset = 0
+        } else {
+          // Normal swipe with clamping
+          this.carouselDragOffset = Math.max(-maxOffset, Math.min(maxOffset, rawOffset))
+        }
+      } else if (this.carouselSwipeIsHorizontal === false) {
+        // Vertical swipe detected - don't move carousel
+        this.carouselDragOffset = 0
+      }
+    },
+    
+    onCarouselTouchEnd() {
+      if (!this.carouselIsDragging) return
+      // Only handle swipe if it was horizontal
+      if (this.carouselSwipeIsHorizontal) {
+        this.handleCarouselSwipeEnd()
+      }
+      this.carouselSwipeIsHorizontal = null
+    },
+    
+    onCarouselMouseDown(e) {
+      // Only handle left mouse button
+      if (e.button !== 0) return
+      this.carouselDragStartX = e.clientX
+      this.carouselDragStartY = e.clientY
+      this.carouselIsDragging = true
+      this.carouselDragOffset = 0
+      this.carouselSwipeIsHorizontal = null
+      
+      // Add mouse event listeners
+      document.addEventListener('mousemove', this.onCarouselMouseMove)
+      document.addEventListener('mouseup', this.onCarouselMouseUp)
+    },
+    
+    onCarouselMouseMove(e) {
+      if (!this.carouselIsDragging) return
+      e.preventDefault()
+      const currentX = e.clientX
+      const currentY = e.clientY
+      const deltaX = Math.abs(currentX - this.carouselDragStartX)
+      const deltaY = Math.abs(currentY - this.carouselDragStartY)
+      
+      // Determine swipe direction
+      if (this.carouselSwipeIsHorizontal === null && (deltaX > 10 || deltaY > 10)) {
+        this.carouselSwipeIsHorizontal = deltaX > deltaY
+      }
+      
+      // Only allow horizontal swipes
+      if (this.carouselSwipeIsHorizontal) {
+        const rawOffset = currentX - this.carouselDragStartX
+        const containerWidth = this.$refs.menuCarousel?.offsetWidth || 300
+        const maxOffset = containerWidth * 0.3
+        
+        if (this.carouselCurrentPage === 0 && rawOffset > 0) {
+          this.carouselDragOffset = 0
+        } else if (this.carouselCurrentPage === this.carouselPages.length - 1 && rawOffset < 0) {
+          this.carouselDragOffset = 0
+        } else {
+          this.carouselDragOffset = Math.max(-maxOffset, Math.min(maxOffset, rawOffset))
+        }
+      } else if (this.carouselSwipeIsHorizontal === false) {
+        this.carouselDragOffset = 0
+      }
+    },
+    
+    onCarouselMouseUp() {
+      if (!this.carouselIsDragging) return
+      if (this.carouselSwipeIsHorizontal) {
+        this.handleCarouselSwipeEnd()
+      }
+      this.carouselSwipeIsHorizontal = null
+      
+      // Remove mouse event listeners
+      document.removeEventListener('mousemove', this.onCarouselMouseMove)
+      document.removeEventListener('mouseup', this.onCarouselMouseUp)
+    },
+    
+    handleCarouselSwipeEnd() {
+      const containerWidth = this.$refs.menuCarousel?.offsetWidth || 300
+      const threshold = containerWidth * 0.10 // 10% of container width
+      const oldPage = this.carouselCurrentPage
+      
+      if (Math.abs(this.carouselDragOffset) > threshold) {
+        if (this.carouselDragOffset > 0 && this.carouselCurrentPage > 0) {
+          // Swipe right - go to previous page
+          this.carouselCurrentPage--
+        } else if (this.carouselDragOffset < 0 && this.carouselCurrentPage < this.carouselPages.length - 1) {
+          // Swipe left - go to next page
+          this.carouselCurrentPage++
+        }
+      }
+      
+      // Show page label toast if page changed
+      if (oldPage !== this.carouselCurrentPage) {
+        this.showPageLabelToastTemporarily()
+      }
+      
+      // Reset drag state
+      this.carouselIsDragging = false
+      this.carouselDragOffset = 0
+    },
+    
+    goToCarouselPage(index) {
+      if (index >= 0 && index < this.carouselPages.length) {
+        const oldPage = this.carouselCurrentPage
+        this.carouselCurrentPage = index
+        // Show toast if page changed
+        if (oldPage !== index) {
+          this.showPageLabelToastTemporarily()
+        }
+      }
+    },
+    
+    // 🏷️ Show page label toast temporarily
+    showPageLabelToastTemporarily() {
+      // Clear existing timer
+      if (this.pageLabelToastTimer) {
+        clearTimeout(this.pageLabelToastTimer)
+      }
+      
+      // Set toast text based on current page from carouselPages array
+      const currentPageData = this.carouselPages[this.carouselCurrentPage]
+      // Map page name to Thai label
+      const pageLabels = {
+        'categories': 'หมวดหมู่',
+        'locations': 'นำทาง'
+      }
+      this.pageLabelToastText = pageLabels[currentPageData] || currentPageData || ''
+      
+      // Delay 0.5s before showing toast (fade in after swipe animation starts)
+      this.pageLabelToastTimer = setTimeout(() => {
+        this.$nextTick(() => {
+          this.showPageLabelToast = true
+        })
+        
+        // Auto-hide after 1.5 seconds
+        setTimeout(() => {
+          this.showPageLabelToast = false
+        }, 1500)
+      }, 500)
+    },
+    
+    
+    // 📍 Send location query
+    sendLocationQuery(query) {
+      console.log('📍 sendLocationQuery called with:', query)
+      this.query = query
+      this.showLineMenu = false
+      this.selectedParentCategory = null
+      this.carouselCurrentPage = 0
+      this.$nextTick(() => {
+        this.onSend()
+      })
     },
     
     selectLineMenuCategory(cat) {
@@ -7972,7 +8387,7 @@ export default {
         const scrollHeight = this.$refs.panelBody.scrollHeight
         const clientHeight = this.$refs.panelBody.clientHeight
         
-        // Hide immediately if at the very top (scrollTop is 0 or very close)
+        // Hide if at the very top
         if (currentScrollTop <= 10) {
           this.showScrollTop = false
           this.showScrollTutorial = false
@@ -7988,9 +8403,9 @@ export default {
           return
         }
         
-        // Show button only when user intentionally scrolls UP (not down)
+        // Show button only when user intentionally scrolls DOWN (not up)
         // and is not at the very top or bottom
-        if (currentScrollTop < this.lastScrollTop && currentScrollTop > 100) {
+        if (currentScrollTop > this.lastScrollTop && currentScrollTop > 100) {
           this.showScrollTop = true
           // Show tutorial the first time scroll button appears (after user has asked a question)
           // Only show after feedback tutorial has been completed
@@ -8006,10 +8421,6 @@ export default {
               this.dismissScrollTutorial()
             }, 8000)
           }
-        } else if (currentScrollTop > this.lastScrollTop) {
-          // Hide when scrolling down
-          this.showScrollTop = false
-          this.showScrollTutorial = false
         }
         
         this.lastScrollTop = currentScrollTop
@@ -8595,6 +9006,363 @@ export default {
 .line-menu-item:nth-child(7) .line-menu-icon { animation-delay: 1.2s; }
 .line-menu-item:nth-child(8) .line-menu-icon { animation-delay: 1.4s; }
 
+/* 🎠 Carousel Styles */
+.line-menu-carousel {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  touch-action: pan-y pinch-zoom;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.line-menu-carousel:active {
+  cursor: grabbing;
+}
+
+.line-menu-carousel-track {
+  display: flex;
+  width: 200%; /* 2 pages */
+  will-change: transform;
+}
+
+.line-menu-carousel-page {
+  width: 50%; /* Each page takes 50% of track (which is 200% of container = 100% viewport) */
+  flex-shrink: 0;
+  padding: 0 4px;
+  box-sizing: border-box;
+}
+
+/* 📍 Location Page Styles */
+.line-menu-page-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 0 8px;
+}
+
+.page-header-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #34C759 0%, #30D158 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+  animation: location-pulse 2s ease-in-out infinite;
+}
+
+/* Categories page header icon - purple */
+.page-header-icon.categories-icon {
+  background: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%);
+  box-shadow: 0 4px 12px rgba(139, 76, 184, 0.3);
+  animation: categories-pulse 2s ease-in-out infinite;
+}
+
+@keyframes categories-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(139, 76, 184, 0.3);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 6px 20px rgba(139, 76, 184, 0.5);
+  }
+}
+
+@keyframes location-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 6px 20px rgba(52, 199, 89, 0.5);
+  }
+}
+
+.page-header-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.locations-grid .line-menu-item {
+  background: rgba(52, 199, 89, 0.08);
+}
+
+.locations-grid .line-menu-item:hover {
+  background: rgba(52, 199, 89, 0.15);
+}
+
+.location-icon {
+  background: linear-gradient(135deg, #34C759 0%, #30D158 100%) !important;
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3) !important;
+}
+
+.location-item .line-menu-label {
+  font-size: 12px;
+  white-space: normal;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 🏷️ Page Label Toast - shows on page change */
+.page-label-toast {
+  font-size: 14px;
+  font-weight: 500;
+  pointer-events: none;
+  text-align: center;
+  transition: opacity 0.3s ease;
+  padding: 4px 16px;
+  border-radius: 20px;
+}
+
+/* Light mode page toast */
+html[data-theme="light"] .page-label-toast {
+  color: rgba(0, 0, 0, 0.9);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: rgb(38, 57, 77) 0px 20px 30px -10px;
+}
+
+html[data-theme="dark"] .page-label-toast {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(139, 76, 184, 0.95);
+  box-shadow: 0 0 30px rgba(139, 76, 184, 0.8), 0 0 60px rgba(139, 76, 184, 0.4);
+}
+
+/* Page toast fade transition */
+.page-toast-enter-active,
+.page-toast-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.page-toast-enter-from,
+.page-toast-leave-to {
+  opacity: 0;
+}
+
+.page-label-toast.fullscreen-toast {
+  position: fixed;
+  top: 50%;
+}
+
+/* Page toast transition */
+.page-toast-enter-active,
+.page-toast-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.page-toast-enter-from,
+.page-toast-leave-to {
+  opacity: 0;
+}
+
+/* Dots fade transition */
+.dots-fade-enter-active {
+  transition: opacity 0.5s ease;
+}
+
+.dots-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.dots-fade-enter-from {
+  opacity: 0;
+}
+
+.dots-fade-enter-to {
+  opacity: 1;
+}
+
+.dots-fade-leave-to {
+  opacity: 0;
+}
+
+/* 🔵 Carousel Indicators Container - Always Fixed */
+.carousel-indicators {
+  position: fixed !important;
+  bottom: 60px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 1rem 0rem !important;
+  border-radius: 0 !important;
+  z-index: 50 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: auto !important;
+  gap: 6px;
+}
+
+/* Fullscreen indicators - no background */
+.fullscreen-indicators {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* 📝 Page Labels */
+.carousel-page-labels {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.page-label {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.page-label.active {
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(139, 76, 184, 0.2);
+}
+
+.page-label:hover:not(.active) {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.page-label-divider {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 8px;
+}
+
+/* 🔵 Carousel Dots */
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+}
+
+.carousel-dot {
+  height: 44px; /* iOS standard tap target */
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.carousel-dot:focus {
+  outline: none;
+}
+
+.carousel-dot:focus-visible {
+  outline: 2px solid rgba(139, 76, 184, 0.5);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.dot-inner {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.carousel-dot.active .dot-inner {
+  width: 24px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%);
+  box-shadow: 0 2px 8px rgba(139, 76, 184, 0.4);
+}
+
+.carousel-dot:hover:not(.active) .dot-inner {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.15);
+}
+
+/* 🎨 Location page dot indicator - green when on page 2 */
+.carousel-dots .carousel-dot:nth-child(2).active .dot-inner {
+  background: linear-gradient(135deg, #34C759 0%, #30D158 100%);
+  box-shadow: 0 2px 8px rgba(52, 199, 89, 0.4);
+}
+
+/* 💡 Swipe Hint - Top position (shows once) */
+.carousel-swipe-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(139, 76, 184, 0.25), rgba(107, 44, 145, 0.25));
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(139, 76, 184, 0.3);
+}
+
+.carousel-swipe-hint.top-hint {
+  animation: swipe-hint-glow 2s ease-in-out infinite;
+}
+
+@keyframes swipe-hint-glow {
+  0%, 100% {
+    box-shadow: 0 2px 12px rgba(139, 76, 184, 0.2);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(139, 76, 184, 0.4);
+  }
+}
+
+.carousel-swipe-hint svg {
+  animation: swipe-arrow-both 1.5s ease-in-out infinite;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+@keyframes swipe-arrow-both {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+/* Swipe hint fade transition */
+.swipe-hint-fade-enter-active,
+.swipe-hint-fade-leave-active {
+  transition: all 0.4s ease;
+}
+
+.swipe-hint-fade-enter-from,
+.swipe-hint-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
 .line-menu-label {
   font-size: 13px;
   font-weight: 500;
@@ -8961,6 +9729,36 @@ html[data-theme="light"] .line-toggle-btn {
 
 html[data-theme="light"] .line-menu-label-center {
   color: #6B2C91;
+}
+
+/* Light mode carousel dots */
+html[data-theme="light"] .dot-inner {
+  background: rgba(139, 76, 184, 0.2);
+}
+
+html[data-theme="light"] .carousel-dot:hover:not(.active) .dot-inner {
+  background: rgba(139, 76, 184, 0.35);
+}
+
+html[data-theme="light"] .page-header-title {
+  color: #1d1d1f;
+}
+
+
+/* Light mode swipe hint */
+html[data-theme="light"] .carousel-swipe-hint {
+  color: #1d1d1f;
+  background: linear-gradient(135deg, rgba(139, 76, 184, 0.15), rgba(107, 44, 145, 0.15));
+  border-color: rgba(139, 76, 184, 0.2);
+}
+
+/* Light mode location items */
+html[data-theme="light"] .locations-grid .line-menu-item {
+  background: rgba(52, 199, 89, 0.08);
+}
+
+html[data-theme="light"] .locations-grid .line-menu-item:hover {
+  background: rgba(52, 199, 89, 0.15);
 }
 
 /* Light mode fullscreen support */
@@ -9403,6 +10201,136 @@ html[data-theme="light"] .line-menu-fullscreen-wrapper .input-row.fullscreen-inp
     text-align: center;
   }
 }
+
+/* 📱 Force 2 columns on ALL devices */
+.line-menu-grid {
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 10px;
+  padding: 0 8px;
+  max-width: 100%;
+}
+
+.locations-grid {
+  grid-template-columns: repeat(2, 1fr) !important;
+  display: grid !important;
+  gap: 10px !important;
+}
+
+/* Small screens */
+@media (max-width: 380px) {
+  .line-menu-grid {
+    gap: 8px;
+    padding: 0 4px;
+  }
+  
+  .line-menu-icon {
+    width: 38px;
+    height: 38px;
+  }
+  
+  .line-menu-label {
+    font-size: 11px;
+  }
+  
+  .carousel-indicators {
+    gap: 4px;
+  }
+  
+  .carousel-page-labels {
+    font-size: 11px;
+  }
+  
+  .carousel-dots {
+    gap: 6px;
+  }
+  
+  .carousel-dot {
+    width: 24px;
+    height: 6px;
+  }
+  
+  .dot-inner {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .carousel-dot.active .dot-inner {
+    width: 20px;
+  }
+  
+  .page-header-icon {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .page-header-title {
+    font-size: 13px;
+  }
+  
+  .carousel-swipe-hint {
+    font-size: 11px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+  }
+}
+
+/* Tablet and larger screens - still 2 columns */
+@media (min-width: 768px) {
+  .line-menu-grid {
+    gap: 14px;
+    padding: 0 12px;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  
+  .line-menu-icon {
+    width: 52px;
+    height: 52px;
+  }
+  
+  .line-menu-label {
+    font-size: 14px;
+  }
+  
+  .carousel-indicators {
+    gap: 8px;
+  }
+  
+  .carousel-page-labels {
+    font-size: 13px;
+  }
+  
+  .carousel-dots {
+    gap: 12px;
+  }
+  
+  .carousel-dot {
+    width: 32px;
+    height: 10px;
+  }
+  
+  .dot-inner {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .carousel-dot.active .dot-inner {
+    width: 28px;
+  }
+  
+  .page-header-icon {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .page-header-title {
+    font-size: 16px;
+  }
+  
+  .location-item .line-menu-label {
+    font-size: 13px;
+  }
+}
 </style>
 
 <!-- Global styles for fullscreen menu inside chat-panel -->
@@ -9580,6 +10508,30 @@ html[data-theme="light"] .line-menu-fullscreen-wrapper .input-row.fullscreen-inp
   right: 8px;
   font-size: 18px;
   color: rgba(255, 255, 255, 0.5);
+}
+
+/* Fullscreen Carousel Styles */
+.fullscreen-carousel {
+  max-height: calc(100vh - 180px);
+  max-height: calc(100dvh - 180px);
+}
+
+.fullscreen-carousel .line-menu-grid {
+  max-height: none;
+  overflow-y: visible;
+}
+
+/* Fullscreen location page styles */
+.line-menu-fullscreen-wrapper .page-header-title {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.line-menu-fullscreen-wrapper .locations-grid .line-menu-item {
+  background: rgba(52, 199, 89, 0.15);
+}
+
+.line-menu-fullscreen-wrapper .locations-grid .line-menu-item:hover {
+  background: rgba(52, 199, 89, 0.25);
 }
 
 /* Input row at bottom of fullscreen menu */
