@@ -2949,14 +2949,6 @@ export default {
     // Load category open/close state
     this.loadCategoryState()
     
-    // 🤖 Show Gemini tutorial after a delay (if user hasn't seen it)
-    setTimeout(() => {
-      const tutorialSeen = localStorage.getItem('pcru_gemini_tutorial_seen')
-      if (!tutorialSeen) {
-        this.startGeminiTutorial()
-      }
-    }, 2000) // Show after 2 seconds
-    
     // Load welcome categories toggle state
     try {
       const savedState = localStorage.getItem('chatbot_welcome_categories_visible')
