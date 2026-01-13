@@ -27,3 +27,24 @@ export const universityContacts = [
     url: 'https://miscenter.pcru.ac.th/dormitory/regis'
   }
 ];
+
+// Carousel quick contacts - specific contact info for quick access
+export const carouselQuickContacts = [
+  {
+    id: 1,
+    name: 'กองพัฒนานักศึกษา',
+    phone: '056-717144'
+  },
+  {
+    id: 2,
+    name: 'สำนักวิทยบริการ บริการ IT',
+    phone: '056-717100',
+    extension: '3999'
+  },
+  {
+    id: 3,
+    name: 'สำนักส่งเสริมวิชาการและงานทะเบียน',
+    phone: '0-5671-7119',
+    extension: '1121'
+  }
+];

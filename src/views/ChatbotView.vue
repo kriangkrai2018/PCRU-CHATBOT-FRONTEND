@@ -823,18 +823,34 @@
                 
                 <!-- Carousel content area with swipe -->
                 <div class="line-menu-container">
-                  <!-- Back button when viewing subcategories (always visible) -->
-                  <div v-if="selectedParentCategory" class="line-menu-header">
-                    <button class="line-menu-back" @click="selectedParentCategory = null">
+                  <!-- Back button when viewing subcategories or contact detail -->
+                  <div v-if="selectedParentCategory || selectedContact" class="line-menu-header">
+                    <button class="line-menu-back" @click="selectedParentCategory = null; selectedContact = null">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                         <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                       </svg>
-                      <span>{{ selectedParentCategory.title }}</span>
+                      <span v-if="selectedParentCategory">{{ selectedParentCategory.title }}</span>
+                      <span v-else-if="selectedContact">ติดต่อ</span>
                     </button>
                   </div>
                   
+                  <!-- Contact Detail View -->
+                  <div v-if="selectedContact" class="contact-detail-view">
+                    <div class="org-card">
+                      <div class="org-card-inner">
+                        <div class="org-card-title">{{ selectedContact.name }}</div>
+                        <div class="org-card-phone contact-detail">
+                          <div>
+                            <span>ติดต่อ: </span>
+                            <span><a :href="`tel:${selectedContact.phone}`" class="message-link">{{ selectedContact.phoneDisplay }}</a></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <!-- Subcategories view -->
-                  <div v-if="selectedParentCategory" class="line-menu-grid">
+                  <div v-else-if="selectedParentCategory" class="line-menu-grid">
                     <button 
                       v-for="sub in getSubcategories(selectedParentCategory.id)" 
                       :key="sub.id" 
@@ -846,7 +862,7 @@
                     </button>
                   </div>
                   
-                  <!-- 🎠 Main Carousel view (Categories + Locations) -->
+                  <!-- 🎠 Main Carousel view (Categories + Locations + Contacts) -->
                   <div 
                     v-else 
                     class="line-menu-carousel"
@@ -907,6 +923,42 @@
                             </div>
                             <span class="line-menu-label">{{ loc.label }}</span>
                           </button>
+                        </div>
+                      </div>
+                      
+                      <!-- Page 3: Contacts -->
+                      <div class="line-menu-carousel-page" data-page="contacts">
+                        <div class="line-menu-grid contacts-grid">
+                          <!-- Loading state -->
+                          <div v-if="carouselContactsLoading" class="contacts-loading">
+                            <div class="loading-spinner"></div>
+                            <span>กำลังโหลด...</span>
+                          </div>
+                          <!-- Empty state -->
+                          <div v-else-if="carouselContacts.length === 0" class="contacts-empty">
+                            <span>ไม่มีข้อมูลติดต่อ</span>
+                          </div>
+                          <!-- Contact items -->
+                          <template v-else>
+                            <button 
+                              v-for="contact in carouselContacts" 
+                              :key="contact.id" 
+                              class="line-menu-item contact-item"
+                              @click="sendContactQuery(contact)"
+                            >
+                              <div class="line-menu-icon contact-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                  <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.12.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0122 16.92z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <animate attributeName="stroke-dashoffset" from="100" to="0" dur="0.8s" fill="freeze"/>
+                                  </path>
+                                </svg>
+                              </div>
+                              <div class="contact-info">
+                                <span class="line-menu-label contact-name">{{ contact.name }}</span>
+                                <span class="contact-phone" v-if="contact.phoneDisplay">ติดต่อ: {{ contact.phoneDisplay }}</span>
+                              </div>
+                            </button>
+                          </template>
                         </div>
                       </div>
                     </div>
@@ -1048,18 +1100,34 @@
               
               <!-- Scrollable content area -->
               <div class="line-menu-container-fullscreen">
-                <!-- Back button when viewing subcategories -->
-                <div v-if="selectedParentCategory" class="line-menu-header">
-                  <button class="line-menu-back" @click="selectedParentCategory = null">
+                <!-- Back button when viewing subcategories or contact detail -->
+                <div v-if="selectedParentCategory || selectedContact" class="line-menu-header">
+                  <button class="line-menu-back" @click="selectedParentCategory = null; selectedContact = null">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                       <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    <span>{{ selectedParentCategory.title }}</span>
+                    <span v-if="selectedParentCategory">{{ selectedParentCategory.title }}</span>
+                    <span v-else-if="selectedContact">ติดต่อ</span>
                   </button>
                 </div>
                 
+                <!-- Contact Detail View -->
+                <div v-if="selectedContact" class="contact-detail-view">
+                  <div class="org-card">
+                    <div class="org-card-inner">
+                      <div class="org-card-title">{{ selectedContact.name }}</div>
+                      <div class="org-card-phone contact-detail">
+                        <div>
+                          <span>ติดต่อ: </span>
+                          <span><a :href="`tel:${selectedContact.phone}`" class="message-link">{{ selectedContact.phoneDisplay }}</a></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
                 <!-- Subcategories view -->
-                <div v-if="selectedParentCategory" class="line-menu-grid">
+                <div v-else-if="selectedParentCategory" class="line-menu-grid">
                   <button 
                     v-for="sub in getSubcategories(selectedParentCategory.id)" 
                     :key="sub.id" 
@@ -1131,6 +1199,42 @@
                           </div>
                           <span class="line-menu-label">{{ loc.label }}</span>
                         </button>
+                      </div>
+                    </div>
+                    
+                    <!-- Page 3: Contacts -->
+                    <div class="line-menu-carousel-page" data-page="contacts">
+                      <div class="line-menu-grid contacts-grid">
+                        <!-- Loading state -->
+                        <div v-if="carouselContactsLoading" class="contacts-loading">
+                          <div class="loading-spinner"></div>
+                          <span>กำลังโหลด...</span>
+                        </div>
+                        <!-- Empty state -->
+                        <div v-else-if="carouselContacts.length === 0" class="contacts-empty">
+                          <span>ไม่มีข้อมูลติดต่อ</span>
+                        </div>
+                        <!-- Contact items -->
+                        <template v-else>
+                          <button 
+                            v-for="contact in carouselContacts" 
+                            :key="contact.id" 
+                            class="line-menu-item contact-item"
+                            @click="sendContactQuery(contact)"
+                          >
+                            <div class="line-menu-icon contact-icon">
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.12.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0122 16.92z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <animate attributeName="stroke-dashoffset" from="100" to="0" dur="0.8s" fill="freeze"/>
+                                </path>
+                              </svg>
+                            </div>
+                            <div class="contact-info">
+                              <span class="line-menu-label contact-name">{{ contact.name }}</span>
+                              <span class="contact-phone" v-if="contact.phoneDisplay">ติดต่อ: {{ contact.phoneDisplay }}</span>
+                            </div>
+                          </button>
+                        </template>
                       </div>
                     </div>
                   </div>
@@ -1562,7 +1666,7 @@ import botFallbackImg from '@/assets/bots/bot2.jpg'
 import botSleepFallbackImg from '@/assets/bots/bot2sleep.jpg'
 import { getRandomMutterByHour, replacePronoun } from '@/config/botMutterQuotes'
 import ChatbotHelpView from './ChatbotHelpView.vue'
-import { universityContacts } from '@/config/contacts.js';
+import { universityContacts, carouselQuickContacts } from '@/config/contacts.js';
 
 export default {
   name: 'ChatbotView',
@@ -1804,7 +1908,11 @@ export default {
       lineMenuExpanded: false, // Fullscreen expanded mode
       // 🎠 Carousel state
       carouselCurrentPage: 0,
-      carouselPages: ['categories', 'locations'],
+      carouselPages: ['categories', 'locations', 'contacts'],
+      // 📞 Quick contacts for carousel page
+      carouselContacts: [],
+      carouselContactsLoading: false,
+      selectedContact: null, // Currently selected contact to show details
       carouselDragStartX: 0,
       carouselDragCurrentX: 0,
       carouselDragStartY: 0, // Track Y position for angle detection
@@ -2316,6 +2424,9 @@ export default {
   async mounted() {
     // Debug locations data
     console.log('📍 locationQuickLinks:', this.locationQuickLinks)
+    
+    // 📞 Fetch contacts for carousel
+    this.fetchCarouselContacts()
     
     // Force scroll to bottom on page load
     this.$nextTick(() => {
@@ -3017,7 +3128,8 @@ export default {
         // Currently showing menu - switch to keyboard and focus input
         this.showLineMenu = false
         this.lineMenuCollapsed = false
-        this.selectedParentCategory = null
+        // Don't reset selectedParentCategory and selectedContact - keep them for next time
+        // Don't reset carouselCurrentPage - keep current page
         this.lineMenuExpanded = false
         // Clear dots timer and hide dots
         if (this.carouselDotsTimer) {
@@ -3363,7 +3475,8 @@ export default {
       // Map page name to Thai label
       const pageLabels = {
         'categories': 'หมวดหมู่',
-        'locations': 'นำทาง'
+        'locations': 'นำทาง',
+        'contacts': 'ติดต่อ'
       }
       this.pageLabelToastText = pageLabels[currentPageData] || currentPageData || ''
       
@@ -3391,6 +3504,52 @@ export default {
       this.$nextTick(() => {
         this.onSend()
       })
+    },
+    
+    // 📞 Send contact query
+    sendContactQuery(contact) {
+      console.log('📞 sendContactQuery called with:', contact)
+      
+      // Set selected contact to show detail view
+      this.selectedContact = contact
+      
+      // Don't close menu, don't send message
+      // Menu stays open showing contact details
+    },
+    
+    // 📞 Fetch contacts from backend for carousel
+    async fetchCarouselContacts() {
+      if (this.carouselContactsLoading) return
+      this.carouselContactsLoading = true
+      try {
+        // Use carouselQuickContacts from config
+        if (carouselQuickContacts && carouselQuickContacts.length > 0) {
+          this.carouselContacts = carouselQuickContacts.map(contact => {
+            // Format phone display
+            let phoneDisplay = contact.phone
+            if (contact.extension) {
+              phoneDisplay = `${contact.phone} ต่อ ${contact.extension}`
+            }
+            
+            return {
+              id: contact.id,
+              name: contact.name,
+              phone: contact.phone,
+              extension: contact.extension,
+              phoneDisplay: phoneDisplay
+            }
+          })
+          
+          console.log('📞 carouselContacts loaded from carouselQuickContacts:', this.carouselContacts.length)
+        } else {
+          this.carouselContacts = []
+        }
+      } catch (err) {
+        console.error('Failed to fetch carousel contacts:', err)
+        this.carouselContacts = []
+      } finally {
+        this.carouselContactsLoading = false
+      }
     },
     
     selectLineMenuCategory(cat) {
@@ -8961,6 +9120,42 @@ export default {
   width: fit-content;
 }
 
+/* Contact Detail View in Menu */
+.contact-detail-view {
+  padding: 16px;
+  animation: fadeIn 0.3s ease;
+}
+
+.contact-detail-view .org-card {
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.08));
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.contact-detail-view .org-card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 12px;
+}
+
+.contact-detail-view .org-card-phone {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.contact-detail-view .message-link {
+  color: #10b981;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.contact-detail-view .message-link:hover {
+  text-decoration: underline;
+}
+
 .line-menu-back:hover {
   background: rgba(139, 76, 184, 0.15);
 }
@@ -9949,6 +10144,53 @@ html[data-theme="light"] .locations-grid .line-menu-item:hover {
   background: rgba(52, 199, 89, 0.15);
 }
 
+/* Light mode contact items */
+html[data-theme="light"] .contacts-grid .line-menu-item {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+html[data-theme="light"] .contacts-grid .line-menu-item:hover {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+html[data-theme="light"] .contact-name {
+  color: rgba(107, 44, 145, 0.95);
+}
+
+html[data-theme="light"] .contact-phone {
+  color: rgba(107, 44, 145, 0.7);
+}
+
+html[data-theme="light"] .contacts-loading,
+html[data-theme="light"] .contacts-empty {
+  color: rgba(107, 44, 145, 0.6);
+}
+
+html[data-theme="light"] .contacts-loading .loading-spinner {
+  border-color: rgba(107, 44, 145, 0.2);
+  border-top-color: #10b981;
+}
+
+/* Light mode contact detail view */
+html[data-theme="light"] .contact-detail-view .org-card {
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+html[data-theme="light"] .contact-detail-view .org-card-title {
+  color: rgba(107, 44, 145, 0.95);
+}
+
+html[data-theme="light"] .contact-detail-view .org-card-phone {
+  color: rgba(107, 44, 145, 0.85);
+}
+
+html[data-theme="light"] .contact-detail-view .message-link {
+  color: #059669;
+}
+
 /* Light mode fullscreen support */
 html[data-theme="light"] .line-menu-fullscreen-wrapper {
   background: rgba(255, 255, 255, 0.75) !important;
@@ -10404,6 +10646,89 @@ html[data-theme="light"] .line-menu-fullscreen-wrapper .input-row.fullscreen-inp
   gap: 10px !important;
 }
 
+/* 📞 Contacts Grid Styles */
+.contacts-grid {
+  grid-template-columns: repeat(2, 1fr) !important;
+  display: grid !important;
+  gap: 10px !important;
+}
+
+.contacts-grid .line-menu-item {
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.08));
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.contacts-grid .line-menu-item:hover {
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.15));
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.contact-icon {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  flex-shrink: 0;
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.contact-name {
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.95);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.contact-phone {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.contacts-loading,
+.contacts-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  gap: 8px;
+}
+
+.contacts-loading .loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Small screens */
 @media (max-width: 380px) {
   .line-menu-grid {
@@ -10418,6 +10743,19 @@ html[data-theme="light"] .line-menu-fullscreen-wrapper .input-row.fullscreen-inp
   
   .line-menu-label {
     font-size: 11px;
+  }
+  
+  .contact-name {
+    font-size: 11px;
+  }
+  
+  .contact-phone {
+    font-size: 9px;
+  }
+  
+  .contacts-grid .line-menu-item {
+    padding: 8px 10px;
+    gap: 8px;
   }
   
   .carousel-indicators {
@@ -10714,6 +11052,17 @@ html[data-theme="light"] .line-menu-fullscreen-wrapper .input-row.fullscreen-inp
 
 .line-menu-fullscreen-wrapper .locations-grid .line-menu-item:hover {
   background: rgba(52, 199, 89, 0.25);
+}
+
+/* Fullscreen contact page styles */
+.line-menu-fullscreen-wrapper .contacts-grid .line-menu-item {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.line-menu-fullscreen-wrapper .contacts-grid .line-menu-item:hover {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: rgba(16, 185, 129, 0.5);
 }
 
 /* Input row at bottom of fullscreen menu */
