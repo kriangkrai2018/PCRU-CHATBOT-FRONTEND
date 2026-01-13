@@ -7052,6 +7052,8 @@ export default {
           const res = await this.$axios.post('/api/gemini/autocomplete', {
             text: currentInput.trim(),
             limit: 1
+          }, {
+            timeout: 5000 // 5 second timeout
           })
 
           // Ignore stale results
@@ -7067,7 +7069,7 @@ export default {
           // Network/backend failure: clear suggestion
           this.suggestionText = ''
         }
-      }, 300) // Debounce 300ms for Gemini API
+      }, 80) // Fast debounce for quick response
     },
     createParticles() {
       const inputBox = this.$refs.inputBox
