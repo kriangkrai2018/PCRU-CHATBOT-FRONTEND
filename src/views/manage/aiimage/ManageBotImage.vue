@@ -1550,7 +1550,7 @@ function formatDate(dateStr) {
 /* Fade Transition */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.4s ease;
 }
 
 .fade-enter-from,

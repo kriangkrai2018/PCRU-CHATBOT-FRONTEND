@@ -97,7 +97,8 @@
           </div>
 
           <div class="panel-top">
-            <button class="close-circle" @click="visible = false" aria-label="close">
+            <transition name="fade">
+              <button v-show="showHeaderButtons" class="close-circle" @click="visible = false" aria-label="close">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="close-icon">
                 <!-- Line 1 with gentle animations -->
                 <path class="close-line-1" d="M6 6L18 18" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="20" stroke-dashoffset="20">
@@ -113,6 +114,7 @@
                 </path>
               </svg>
             </button>
+            </transition>
             
             <!-- 🔴 Offline Status Indicator -->
             <transition name="fade">
@@ -123,7 +125,8 @@
             </transition>
             
             <!-- 🎯 More Options Menu (3-dot button) -->
-            <div class="more-options-wrapper">
+            <transition name="fade">
+              <div v-show="showHeaderButtons" class="more-options-wrapper">
               <button 
                 v-show="!showMoreMenu"
                 class="more-options-btn" 
@@ -211,6 +214,7 @@
                 </button>
               </div>
             </div>
+            </transition>
 
             <div class="overlay-backdrop-2"></div>
           </div>
@@ -276,7 +280,7 @@
                   <div class="message-bubble bot bot-with-categories backdrop-card" style="margin-top: 3rem !important;">
                     <div class="ai-greeting">
                       <div class="ai-greet-img-wrapper" role="button" tabindex="0" @click.stop="openAiIntro" @keydown.enter.stop="openAiIntro" @keydown.space.prevent.stop="openAiIntro" title="เปิด AI: ดูรายละเอียดและวิธีใช้งาน" aria-label="เปิด AI">
-                        <video v-if="graphicsQuality === 'high' && botVideo" :src="botVideo" class="ai-greet-img ai-greet-video" autoplay loop muted playsinline></video>
+                        <video v-if="graphicsQuality === 'high' && botVideo" :src="botVideo" class="ai-greet-img ai-greet-video" autoplay loop muted playsinline ref="aiGreetVideo"></video>
                         <img v-else :src="botAvatar" alt="PCRU AI" class="ai-greet-img" />
                         <!-- Floating speech bubble on avatar -->
                         <transition name="bubble-fade">
@@ -766,7 +770,8 @@
             </div>
             </div>
 
-          <div class="panel-footer" :class="{ focused: panelFocused, 'pwa-standalone': isPwaStandalone, 'menu-open': showLineMenu }" :style="pwaFooterStyle" ref="panelFooter">
+          <transition name="fade">
+          <div v-show="showFooter" class="panel-footer" :class="{ focused: panelFocused, 'pwa-standalone': isPwaStandalone, 'menu-open': showLineMenu }" :style="pwaFooterStyle" ref="panelFooter">
             
             <!-- Particles canvas for power mode effect -->
             <canvas ref="particleCanvas" class="particle-canvas"></canvas>
@@ -940,7 +945,7 @@
             </transition>
 
             <!-- Input Row with keyboard/menu toggle -->
-            <div class="input-row" :class="{ 'menu-mode': showLineMenu }">
+            <div v-show="showFooter" class="input-row" :class="{ 'menu-mode': showLineMenu }">
               
               <!-- 📱 Single Toggle Button (LEFT): Menu icon when keyboard mode, Keyboard icon when menu mode -->
               <button 
@@ -1020,6 +1025,7 @@
               </button>
             </div>
           </div>
+          </transition>
           
           <!-- Feedback Dropdown moved inline with unlike button above -->
           
@@ -1591,6 +1597,12 @@ export default {
       isWinterSeason: false,
       showScrollTop: false,
       lastScrollTop: 0,
+      scrollThreshold: 30, // Minimum scroll distance before state changes
+      scrollTicking: false, // Throttle flag for scroll events
+      showHeaderButtons: true, // Show/hide header buttons on scroll
+      showFooter: true, // Show/hide footer (input row) on scroll
+      showFooterTimer: null, // Timer for footer delay
+      isScrollingUp: false, // Track if user is scrolling up
       // Scroll to top tutorial
       showScrollTutorial: false,
       scrollTutorialShown: false,
@@ -2304,6 +2316,11 @@ export default {
   async mounted() {
     // Debug locations data
     console.log('📍 locationQuickLinks:', this.locationQuickLinks)
+    
+    // Force scroll to bottom on page load
+    this.$nextTick(() => {
+      this.scrollToBottomInstant()
+    })
     
     // Detect PWA standalone mode (Add to Home Screen)
     this.detectStandaloneMode()
@@ -5704,6 +5721,11 @@ export default {
             video.currentTime = 0
             video.play().catch(() => {})
           })
+          // Sync ai-greet-video to play from start
+          if (this.$refs.aiGreetVideo) {
+            this.$refs.aiGreetVideo.currentTime = 0
+            this.$refs.aiGreetVideo.play().catch(() => {})
+          }
         })
         return
       }
@@ -5756,6 +5778,11 @@ export default {
         video.currentTime = 0
         video.play().catch(() => {})
       })
+      // Sync ai-greet-video to play from start
+      if (this.$refs.aiGreetVideo) {
+        this.$refs.aiGreetVideo.currentTime = 0
+        this.$refs.aiGreetVideo.play().catch(() => {})
+      }
       // แสดง sparkle สักครู่แล้วซ่อน
       setTimeout(() => {
         this.showWakeSparkle = false
@@ -7402,6 +7429,10 @@ export default {
           top: this.$refs.panelBody.scrollHeight,
           behavior: 'smooth'
         })
+        // Show footer after scrolling to bottom
+        setTimeout(() => {
+          this.showFooter = true
+        }, 300)  // Wait for scroll animation to complete
       }
     },
     // Instant scroll without animation - for use during streaming/typing
@@ -8382,31 +8413,79 @@ export default {
     },
     
     handleScroll() {
+      if (!this.scrollTicking) {
+        window.requestAnimationFrame(() => {
+          this.processScroll()
+          this.scrollTicking = false
+        })
+        this.scrollTicking = true
+      }
+    },
+    
+    processScroll() {
       if (this.$refs.panelBody) {
         const currentScrollTop = this.$refs.panelBody.scrollTop
         const scrollHeight = this.$refs.panelBody.scrollHeight
         const clientHeight = this.$refs.panelBody.clientHeight
+        const isAtBottom = currentScrollTop + clientHeight >= scrollHeight - 30
+        const scrollDelta = Math.abs(currentScrollTop - this.lastScrollTop)
+        const isScrollingUp = currentScrollTop < this.lastScrollTop
+        const isScrollingDown = currentScrollTop > this.lastScrollTop
         
-        // Hide if at the very top
+        // Only process if scrolled more than threshold (prevent jitter)
+        if (scrollDelta < this.scrollThreshold && !isAtBottom && currentScrollTop > 10) {
+          return
+        }
+        
+        // Hide everything when at the very top
         if (currentScrollTop <= 10) {
-          this.showScrollTop = false
-          this.showScrollTutorial = false
+          if (this.showHeaderButtons !== false) this.showHeaderButtons = false
+          if (this.showFooter !== false) this.showFooter = false
+          if (this.showScrollTop !== false) this.showScrollTop = false
+          if (this.showScrollTutorial !== false) this.showScrollTutorial = false
           this.lastScrollTop = currentScrollTop
           return
         }
         
-        // Hide if at the bottom (user scrolled all the way down)
-        if (currentScrollTop + clientHeight >= scrollHeight - 10) {
-          this.showScrollTop = false
-          this.showScrollTutorial = false
+        // Show footer and header buttons when at the very bottom (hide only scroll button)
+        if (isAtBottom) {
+          if (this.showHeaderButtons !== true) this.showHeaderButtons = true
+          if (this.showFooter !== true) this.showFooter = true
+          if (this.showScrollTop !== false) this.showScrollTop = false
+          if (this.showScrollTutorial !== false) this.showScrollTutorial = false
+          if (this.showFooterTimer) {
+            clearTimeout(this.showFooterTimer)
+            this.showFooterTimer = null
+          }
           this.lastScrollTop = currentScrollTop
           return
         }
         
-        // Show button only when user intentionally scrolls DOWN (not up)
-        // and is not at the very top or bottom
-        if (currentScrollTop > this.lastScrollTop && currentScrollTop > 100) {
-          this.showScrollTop = true
+        // Hide everything when scrolling UP
+        if (isScrollingUp) {
+          if (this.showHeaderButtons !== false) this.showHeaderButtons = false
+          if (this.showFooter !== false) this.showFooter = false
+          if (this.showScrollTop !== false) this.showScrollTop = false
+          if (this.showScrollTutorial !== false) this.showScrollTutorial = false
+          if (this.showFooterTimer) {
+            clearTimeout(this.showFooterTimer)
+            this.showFooterTimer = null
+          }
+        }
+        
+        // Show everything when scrolling DOWN (and not at bottom or top)
+        if (isScrollingDown && currentScrollTop > 50) {
+          if (this.showHeaderButtons !== true) this.showHeaderButtons = true
+          if (this.showFooter !== true) this.showFooter = true
+          if (this.showFooterTimer) {
+            clearTimeout(this.showFooterTimer)
+            this.showFooterTimer = null
+          }
+        }
+        
+        // Show scroll button when scrolling DOWN and not at bottom
+        if (!isAtBottom && currentScrollTop > this.lastScrollTop && currentScrollTop > 100) {
+          if (this.showScrollTop !== true) this.showScrollTop = true
           // Show tutorial the first time scroll button appears (after user has asked a question)
           // Only show after feedback tutorial has been completed
           if (!this.scrollTutorialShown && this.messages.length > 0 && !localStorage.getItem('pcru_scroll_tutorial_seen') && localStorage.getItem('pcru_feedback_tutorial_seen')) {
@@ -8768,7 +8847,7 @@ export default {
   z-index: 10000; /* Above snow (1500) and other elements */
   display: flex;
   flex-direction: column;
-  height: 380px;
+  height: 390px;
   max-height: none;
   transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
   overflow: visible;
@@ -8827,7 +8906,7 @@ export default {
 }
 
 .line-menu-container {
-  padding: 12px 12px 16px 12px;
+  padding: 12px 12px 26px 12px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -9189,7 +9268,7 @@ html[data-theme="dark"] .page-label-toast {
 /* 🔵 Carousel Indicators Container - Always Fixed */
 .carousel-indicators {
   position: fixed !important;
-  bottom: 60px !important;
+  bottom: 63px !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
   background: transparent !important;
@@ -9402,11 +9481,17 @@ html[data-theme="dark"] .page-label-toast {
 }
 
 /* Input row with LINE-style layout */
+.close-circle,
+.more-options-btn {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
 .input-row {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .input-row .input-container {
@@ -9447,12 +9532,115 @@ html[data-theme="dark"] .page-label-toast {
   transform: rotate(180deg);
 }
 
+/* Fade transition for header buttons and footer */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.fade-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Like/Unlike Tooltip - positioned near bot avatar */
+.bot-avatar-wrapper {
+  position: relative;
+}
+
+.unlike-tooltip,
+.like-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: -60px;
+  transform: translateX(-50%);
+  background: rgba(139, 76, 184, 0.95);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  white-space: nowrap;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}
+
+.unlike-tooltip-content,
+.like-tooltip-content {
+  position: relative;
+  z-index: 1;
+}
+
+.unlike-tooltip-tail,
+.like-tooltip-tail {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid rgba(139, 76, 184, 0.95);
+}
+
+/* Fade animations for tooltips */
+.unlike-tooltip-fade-enter-active,
+.unlike-tooltip-fade-leave-active,
+.like-tooltip-fade-enter-active,
+.like-tooltip-fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.unlike-tooltip-fade-enter-from,
+.like-tooltip-fade-enter-from {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-10px);
+}
+
+.unlike-tooltip-fade-enter-to,
+.like-tooltip-fade-enter-to {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.unlike-tooltip-fade-leave-from,
+.like-tooltip-fade-leave-from {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.unlike-tooltip-fade-leave-to,
+.like-tooltip-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-10px);
+}
+
+.fade-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
 /* Input row adjustments */
 .input-row.menu-mode {
   justify-content: space-between;
 }
 
 /* Panel footer when menu is open */
+.panel-footer {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
 .panel-footer.menu-open {
   flex-direction: column;
   gap: 0;
@@ -10245,7 +10433,6 @@ html[data-theme="light"] .line-menu-fullscreen-wrapper .input-row.fullscreen-inp
   }
   
   .carousel-dot {
-    width: 24px;
     height: 6px;
   }
   
@@ -10300,12 +10487,7 @@ html[data-theme="light"] .line-menu-fullscreen-wrapper .input-row.fullscreen-inp
     font-size: 13px;
   }
   
-  .carousel-dots {
-    gap: 12px;
-  }
-  
   .carousel-dot {
-    width: 32px;
     height: 10px;
   }
   
