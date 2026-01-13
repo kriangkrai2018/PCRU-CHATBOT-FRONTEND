@@ -10165,8 +10165,8 @@ html[data-theme="dark"] .page-label-toast {
 
 /* 🤖 Gemini AI Mode Toggle Button */
 .gemini-toggle-btn {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: none;
   background: rgba(66, 133, 244, 0.1);
