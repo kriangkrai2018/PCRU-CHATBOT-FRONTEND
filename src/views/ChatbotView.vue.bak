@@ -193,32 +193,20 @@
                       <circle cx="50" cy="50" r="35" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8"/>
                       
                       <!-- Green section (0-120deg) -->
-                      <path d="M 50 85 A 35 35 0 0 1 80.62 64.15" fill="none" 
-                        :stroke="graphicsQuality === 'low' ? '#34C759' : 'rgba(52, 199, 89, 0.3)'" 
-                        stroke-width="8" stroke-linecap="round"
-                        :style="{ transition: 'stroke 0.3s ease' }"/>
+                      <path d="M 50 85 A 35 35 0 0 1 80.62 64.15" fill="none" stroke="#34C759" stroke-width="8" stroke-linecap="round"/>
                       
                       <!-- Yellow section (120-240deg) -->
-                      <path d="M 80.62 64.15 A 35 35 0 0 1 19.38 64.15" fill="none" 
-                        :stroke="graphicsQuality === 'medium' ? '#FBBC05' : 'rgba(251, 188, 5, 0.3)'" 
-                        stroke-width="8" stroke-linecap="round"
-                        :style="{ transition: 'stroke 0.3s ease' }"/>
+                      <path d="M 80.62 64.15 A 35 35 0 0 1 19.38 64.15" fill="none" stroke="#FBBC05" stroke-width="8" stroke-linecap="round"/>
                       
                       <!-- Red section (240-360deg) -->
-                      <path d="M 19.38 64.15 A 35 35 0 0 1 50 85" fill="none" 
-                        :stroke="graphicsQuality === 'high' ? '#FF3B30' : 'rgba(255, 59, 48, 0.3)'" 
-                        stroke-width="8" stroke-linecap="round"
-                        :style="{ transition: 'stroke 0.3s ease' }"/>
+                      <path d="M 19.38 64.15 A 35 35 0 0 1 50 85" fill="none" stroke="#FF3B30" stroke-width="8" stroke-linecap="round"/>
                       
                       <!-- Needle that rotates based on graphics quality -->
                       <g :style="{ transform: `rotate(${gaugeNeedleRotation}deg)`, transformOrigin: '50px 50px', transition: 'transform 0.5s ease' }">
-                        <!-- Needle line with dynamic color -->
-                        <line x1="50" y1="50" x2="50" y2="18" 
-                          :stroke="gaugeNeedleColor" stroke-width="3" stroke-linecap="round"
-                          :style="{ transition: 'stroke 0.3s ease' }"/>
+                        <!-- Needle line -->
+                        <line x1="50" y1="50" x2="50" y2="18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
                         <!-- Center circle -->
-                        <circle cx="50" cy="50" r="4" :fill="gaugeNeedleColor"
-                          :style="{ transition: 'fill 0.3s ease' }"/>
+                        <circle cx="50" cy="50" r="4" fill="currentColor"/>
                       </g>
                     </svg>
                   </div>
@@ -1628,83 +1616,6 @@
       </div>
     </transition>
 
-    <!-- 🤖 Gemini Mode Tutorial Overlay -->
-    <transition name="tutorial-fade">
-      <div 
-        v-if="showGeminiTutorial" 
-        class="tutorial-overlay gemini-tutorial"
-        @click.self="skipGeminiTutorial"
-      >
-        <div class="tutorial-backdrop"></div>
-        
-        <!-- Spotlight highlight for Gemini toggle button -->
-        <div 
-          class="tutorial-spotlight"
-          :style="geminiTutorialSpotlightStyle"
-        >
-          <!-- Clone of Gemini toggle button -->
-          <div v-if="currentGeminiTutorialData.target === 'gemini-toggle'" class="spotlight-btn-clone gemini-btn">
-            <!-- Search icon for keyword mode -->
-            <svg v-if="!useGeminiMode" width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <circle cx="11" cy="11" r="7" stroke="#4285F4" stroke-width="2"/>
-              <path d="M16 16L20 20" stroke="#4285F4" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <!-- AI icon for Gemini mode -->
-            <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" class="gemini-icon">
-              <path d="M12 2L13.5 7.5L19 9L13.5 10.5L12 16L10.5 10.5L5 9L10.5 7.5L12 2Z" fill="#4285F4"/>
-              <path d="M18 14L19 17L22 18L19 19L18 22L17 19L14 18L17 17L18 14Z" fill="#4285F4" opacity="0.7"/>
-            </svg>
-          </div>
-        </div>
-        
-        <!-- Tutorial card -->
-        <div class="tutorial-card" :style="geminiTutorialCardStyle">
-          <div class="tutorial-step-indicator">
-            <span 
-              v-for="n in geminiTutorialSteps.length" 
-              :key="n"
-              class="step-dot"
-              :class="{ active: n - 1 === geminiTutorialStep, completed: n - 1 < geminiTutorialStep }"
-            ></span>
-          </div>
-          
-          <div class="tutorial-content">
-            <div class="tutorial-icon">{{ currentGeminiTutorialData.icon }}</div>
-            <h3 class="tutorial-title">{{ currentGeminiTutorialData.title }}</h3>
-            <p class="tutorial-description">{{ currentGeminiTutorialData.description }}</p>
-          </div>
-          
-          <div class="tutorial-actions">
-            <button 
-              v-if="geminiTutorialStep > 0" 
-              class="tutorial-btn secondary"
-              @click="prevGeminiTutorialStep"
-            >
-              ย้อนกลับ
-            </button>
-            <button 
-              v-if="geminiTutorialStep < geminiTutorialSteps.length - 1"
-              class="tutorial-btn primary"
-              @click="nextGeminiTutorialStep"
-            >
-              ถัดไป
-            </button>
-            <button 
-              v-else
-              class="tutorial-btn primary"
-              @click="completeGeminiTutorial"
-            >
-              เข้าใจแล้ว! ✨
-            </button>
-          </div>
-          
-          <button class="tutorial-skip" @click="skipGeminiTutorial">
-            ข้าม
-          </button>
-        </div>
-      </div>
-    </transition>
-
     <!-- 🎯 Scroll to Bottom Tutorial Overlay (Spotlight-style like feedback) -->
     <transition name="tutorial-fade">
       <div 
@@ -2164,41 +2075,6 @@ export default {
       introPhase: 0, // 0: not started, 1: logo, 2: particles, 3: reveal
       isFirstTimeUser: false,
       hasShownIntroEver: false, // ใช้ localStorage เพื่อให้ intro แสดงเฉพาะครั้งแรกที่มาใช้ระบบ
-      // 🤖 Gemini Mode Tutorial
-      showGeminiTutorial: false,
-      geminiTutorialStep: 0,
-      geminiTutorialTargetRect: null,
-      geminiTutorialSteps: [
-        {
-          icon: '🤖',
-          title: 'โหมดใหม่! AI Chatbot',
-          description: 'ตอนนี้คุณสามารถสลับระหว่างโหมดค้นหาและโหมด AI ได้แล้ว',
-          target: null,
-          showArrow: false
-        },
-        {
-          icon: '🔍',
-          title: 'โหมดค้นหา',
-          description: 'ค้นหาจากคลังข้อมูลที่มีอยู่ ได้คำตอบรวดเร็วและแม่นยำ',
-          target: 'gemini-toggle',
-          showArrow: true
-        },
-        {
-          icon: '✨',
-          title: 'โหมด AI',
-          description: 'คุยกับ Gemini AI ได้แบบต่อเนื่อง ตอบคำถามได้หลากหลายขึ้น',
-          target: 'gemini-toggle',
-          showArrow: true
-        },
-        {
-          icon: '🚀',
-          title: 'พร้อมใช้งาน!',
-          description: 'ลองสลับโหมดดูตามความต้องการของคุณได้เลย',
-          target: null,
-          showArrow: false
-        }
-      ],
-      
       // 🎓 Feedback Tutorial (Heyday-style onboarding)
       showFeedbackTutorial: false,
       tutorialStep: 0,
@@ -2329,49 +2205,6 @@ export default {
         top: 'auto',
         bottom: '0',
         transition: 'none'
-      }
-    },
-    
-    // 🤖 Gemini Tutorial computed properties
-    currentGeminiTutorialData() {
-      return this.geminiTutorialSteps[this.geminiTutorialStep] || this.geminiTutorialSteps[0]
-    },
-    geminiTutorialSpotlightStyle() {
-      if (!this.geminiTutorialTargetRect) {
-        return { display: 'none' }
-      }
-      const padding = 8
-      return {
-        top: `${this.geminiTutorialTargetRect.top - padding}px`,
-        left: `${this.geminiTutorialTargetRect.left - padding}px`,
-        width: `${this.geminiTutorialTargetRect.width + padding * 2}px`,
-        height: `${this.geminiTutorialTargetRect.height + padding * 2}px`
-      }
-    },
-    geminiTutorialCardStyle() {
-      if (!this.geminiTutorialTargetRect) {
-        return {
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)'
-        }
-      }
-      const cardHeight = 220
-      const viewportHeight = window.innerHeight
-      const targetTop = this.geminiTutorialTargetRect.top
-      
-      if (targetTop > viewportHeight / 2) {
-        return {
-          bottom: `${viewportHeight - targetTop + 20}px`,
-          left: '50%',
-          transform: 'translateX(-50%)'
-        }
-      } else {
-        return {
-          top: `${this.geminiTutorialTargetRect.bottom + 20}px`,
-          left: '50%',
-          transform: 'translateX(-50%)'
-        }
       }
     },
     
@@ -2666,16 +2499,7 @@ export default {
     currentGraphicsOption() {
       return this.graphicsOptions.find(opt => opt.value === this.graphicsQuality) || this.graphicsOptions[2];
     },
-    gaugeNeedleRotation() {
-      if (this.graphicsQuality === 'low') return -120;
-      if (this.graphicsQuality === 'medium') return 0;
-      return 120;
-    },
-    gaugeNeedleColor() {
-      if (this.graphicsQuality === 'low') return '#34C759';
-      if (this.graphicsQuality === 'medium') return '#FBBC05';
-      return '#FF3B30';
-    },
+    // � FPS color based on performance
     fpsColor() {
       if (this.currentFps >= 60) return '#00ff00'; // เขียว (Green)
       if (this.currentFps >= 45) return '#ffff00'; // เหลือง (Yellow)
@@ -2948,14 +2772,6 @@ export default {
     
     // Load category open/close state
     this.loadCategoryState()
-    
-    // 🤖 Show Gemini tutorial after a delay (if user hasn't seen it)
-    setTimeout(() => {
-      const tutorialSeen = localStorage.getItem('pcru_gemini_tutorial_seen')
-      if (!tutorialSeen) {
-        this.startGeminiTutorial()
-      }
-    }, 2000) // Show after 2 seconds
     
     // Load welcome categories toggle state
     try {
@@ -3468,13 +3284,6 @@ export default {
       // Generate new session ID when switching on
       if (this.useGeminiMode && !this.geminiSessionId) {
         this.geminiSessionId = 'web-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9)
-      }
-      
-      // Trigger tutorial when user clicks the toggle button
-      if (!this.showGeminiTutorial) {
-        this.$nextTick(() => {
-          this.startGeminiTutorial()
-        })
       }
     },
     
@@ -4031,78 +3840,6 @@ export default {
           this.tutorialTargetRect = null
         }
       })
-    },
-    
-    // 🤖 Gemini Tutorial Methods
-    startGeminiTutorial() {
-      const tutorialSeen = localStorage.getItem('pcru_gemini_tutorial_seen')
-      if (tutorialSeen) return
-      
-      this.geminiTutorialStep = 0
-      this.geminiTutorialTargetRect = null
-      this.showGeminiTutorial = true
-      
-      this.$nextTick(() => {
-        setTimeout(() => {
-          this.updateGeminiTutorialTarget()
-        }, 100)
-      })
-    },
-    
-    updateGeminiTutorialTarget() {
-      const step = this.geminiTutorialSteps[this.geminiTutorialStep]
-      if (!step || !step.target) {
-        this.geminiTutorialTargetRect = null
-        return
-      }
-      
-      this.$nextTick(() => {
-        setTimeout(() => {
-          let targetEl = null
-          
-          if (step.target === 'gemini-toggle') {
-            targetEl = document.querySelector('.gemini-toggle-btn')
-          }
-          
-          if (targetEl) {
-            const rect = targetEl.getBoundingClientRect()
-            this.geminiTutorialTargetRect = {
-              top: rect.top,
-              left: rect.left,
-              width: rect.width,
-              height: rect.height,
-              bottom: rect.bottom
-            }
-          } else {
-            this.geminiTutorialTargetRect = null
-          }
-        }, 50)
-      })
-    },
-    
-    nextGeminiTutorialStep() {
-      if (this.geminiTutorialStep < this.geminiTutorialSteps.length - 1) {
-        this.geminiTutorialStep++
-        this.updateGeminiTutorialTarget()
-      }
-    },
-    
-    prevGeminiTutorialStep() {
-      if (this.geminiTutorialStep > 0) {
-        this.geminiTutorialStep--
-        this.updateGeminiTutorialTarget()
-      }
-    },
-    
-    completeGeminiTutorial() {
-      this.showGeminiTutorial = false
-      localStorage.setItem('pcru_gemini_tutorial_seen', 'true')
-      if (navigator.vibrate) navigator.vibrate(50)
-    },
-    
-    skipGeminiTutorial() {
-      this.showGeminiTutorial = false
-      localStorage.setItem('pcru_gemini_tutorial_seen', 'true')
     },
     
     nextTutorialStep() {
@@ -9499,18 +9236,6 @@ export default {
   animation: spotlight-icon-float 3s ease-in-out infinite;
 }
 
-.spotlight-btn-clone.gemini-btn {
-  background: rgba(66, 133, 244, 0.2);
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  color: #4285F4;
-}
-
-.spotlight-btn-clone.gemini-btn svg {
-  filter: drop-shadow(0 0 4px rgba(66, 133, 244, 0.6));
-}
-
 @keyframes spotlight-icon-float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-5px); }
@@ -11761,30 +11486,3 @@ html.gfx-low[data-theme="dark"] .panel-body {
 <style src="../assets/backdrop.css"></style>
 <style src="../assets/dark-mode.css"></style>
 <style src="../assets/light-mode.css"></style>
-
-/* 🎯 Graphics Quality Gauge CSS */
-.graphics-gauge {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-}
-
-.graphics-gauge svg {
-  filter: drop-shadow(0 0 4px rgba(139, 76, 184, 0.3));
-}
-
-.graphics-gauge svg line {
-  animation: needle-glow 2s ease-in-out infinite;
-}
-
-@keyframes needle-glow {
-  0%, 100% { filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8)); }
-  50% { filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8)); }
-}
-
-/* Low graphics: disable needle animation */
-.gfx-low .graphics-gauge svg line {
-  animation: none;
-}
