@@ -192,7 +192,10 @@
                       <path d="M7 10h2v4H7zM11 9h2v5h-2zM15 11h2v3h-2z" fill="currentColor"/>
                     </svg>
                   </div>
-                  <span class="menu-item-label">{{ currentGraphicsOption.icon }} {{ currentGraphicsOption.label }}</span>
+                  <span class="menu-item-label">
+                    {{ currentGraphicsOption.icon }} {{ currentGraphicsOption.label }}
+                    <span class="fps-display" :style="{ color: fpsColor }">{{ currentFps }} fps</span>
+                  </span>
                 </button>
                 
                 <!-- Item 3: Clear Chat -->
@@ -1650,6 +1653,37 @@
       </div>
     </transition>
 
+    <!-- 🍎 Apple-style Alert for Low FPS -->
+    <transition name="apple-alert-fade">
+      <div v-if="showAppleAlert" class="apple-alert-overlay" @click.self="closeAppleAlert">
+        <div class="apple-alert-container">
+          <div class="apple-alert-content">
+            <div class="apple-alert-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="#FF9500" stroke-width="2" fill="none"/>
+                <path d="M12 7v6M12 16v.5" stroke="#FF9500" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h3 class="apple-alert-title">ประสิทธิภาพของระบบลดลง</h3>
+            <p class="apple-alert-message">
+              ระบบตรวจพบว่าอัตราเฟรม (FPS) อยู่ที่ <strong>{{ currentFps }} fps</strong> 
+              ซึ่งต่ำกว่ามาตรฐาน<br>
+              อาจส่งผลให้เครื่องทำงานช้า ร้อน หรือกระตุก<br><br>
+              <strong>แนะนำ:</strong> ลดคุณภาพกราฟิกลง 1 ระดับเพื่อปรับปรุงประสิทธิภาพ
+            </p>
+          </div>
+          <div class="apple-alert-actions">
+            <button class="apple-alert-btn apple-alert-btn-secondary" @click="closeAppleAlert">
+              ไม่เป็นไร
+            </button>
+            <button class="apple-alert-btn apple-alert-btn-primary" @click="reduceGraphicsFromAlert">
+              ลดคุณภาพกราฟิก
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <!-- ChatbotHelpView Component -->
     <ChatbotHelpView :visible="showHelpModal" @close="closeHelpModal" />
   </div>
@@ -2047,6 +2081,9 @@ export default {
       perfWarningMessage: '',
       perfWarningReason: '',
       perfWarningTimer: null,
+      // 🍎 Apple-style Alert for Low FPS
+      showAppleAlert: false,
+      appleAlertShown: false, // Track if already shown to avoid repeating
     }
   },
   computed: {
@@ -2405,7 +2442,14 @@ export default {
     currentGraphicsOption() {
       return this.graphicsOptions.find(opt => opt.value === this.graphicsQuality) || this.graphicsOptions[2];
     },
-    // 🎓 PCRU Watermark transform style
+    // � FPS color based on performance
+    fpsColor() {
+      if (this.currentFps >= 60) return '#00ff00'; // เขียว (Green)
+      if (this.currentFps >= 45) return '#ffff00'; // เหลือง (Yellow)
+      if (this.currentFps >= 30) return '#ff8800'; // ส้ม (Orange)
+      return '#ff0000'; // แดง (Red)
+    },
+    // �🎓 PCRU Watermark transform style
     pcruWatermarkStyle() {
       if (this.graphicsQuality === 'low') return {};
       return {
@@ -4726,8 +4770,8 @@ export default {
           this.lastFrameTime = timestamp;
         }
         
-        // Continue monitoring only if panel is open and not already at lowest setting
-        if (this.panelOpen && this.fpsMonitorEnabled) {
+        // Continue monitoring if chat is visible and monitoring is enabled
+        if (this.visible && this.fpsMonitorEnabled) {
           this.fpsAnimationFrame = requestAnimationFrame(measureFps);
         }
       };
@@ -4757,10 +4801,16 @@ export default {
       if (this.currentFps < 30) {
         this.lowFpsCount++;
         
-        // Require 3 consecutive low readings to avoid false positives
-        if (this.lowFpsCount >= 3) {
-          this.autoDowngradeGraphics('fps');
-          this.lowFpsCount = 0;
+        // Show Apple alert immediately on first detection (if not shown yet)
+        if (!this.appleAlertShown) {
+          this.showAppleAlert = true;
+          this.appleAlertShown = true;
+        }
+        
+        // Require 3 consecutive low readings to avoid false positives for auto-downgrade
+        if (this.lowFpsCount >= 3 && !this.autoGraphicsAdjusted) {
+          // Don't auto-downgrade, let user decide via alert
+          this.autoGraphicsAdjusted = true;
         }
       } else {
         // Reset counter if FPS recovers
@@ -4847,6 +4897,22 @@ export default {
         clearTimeout(this.perfWarningTimer);
         this.perfWarningTimer = null;
       }
+    },
+    
+    // 🍎 Apple Alert Methods
+    closeAppleAlert() {
+      this.showAppleAlert = false;
+      this.appleAlertShown = true; // Don't show again until page reload
+    },
+    
+    reduceGraphicsFromAlert() {
+      // Downgrade graphics by one level
+      if (this.graphicsQuality === 'high') {
+        this.setGraphicsQuality('medium');
+      } else if (this.graphicsQuality === 'medium') {
+        this.setGraphicsQuality('low');
+      }
+      this.closeAppleAlert();
     },
 
     // Resolve 'auto' to an actual theme based on local time (day -> light, night -> dark)

@@ -1265,6 +1265,19 @@ html.keyboard-open .close-circle {
 
 .menu-item-label {
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fps-display {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.1);
+  margin-left: auto;
+  letter-spacing: 0.3px;
 }
 
 .menu-item-arrow {
@@ -8470,4 +8483,178 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
 
 [data-theme="dark"] .spotlight-btn-clone.back-clone svg path {
   stroke: #b794d4;
+}
+
+/* ========================================
+   🍎 Apple-style Alert
+   ======================================== */
+
+.apple-alert-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+.apple-alert-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 340px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    0 0 0 0.5px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: appleAlertScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes appleAlertScale {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.apple-alert-content {
+  padding: 32px 24px 24px;
+  text-align: center;
+}
+
+.apple-alert-icon {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.apple-alert-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.3px;
+}
+
+.apple-alert-message {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #6e6e73;
+  margin: 0;
+  font-weight: 400;
+}
+
+.apple-alert-message strong {
+  color: #1d1d1f;
+  font-weight: 600;
+}
+
+.apple-alert-actions {
+  display: flex;
+  border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+}
+
+.apple-alert-btn {
+  flex: 1;
+  padding: 16px;
+  font-size: 17px;
+  font-weight: 400;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.apple-alert-btn:not(:last-child) {
+  border-right: 0.5px solid rgba(0, 0, 0, 0.1);
+}
+
+.apple-alert-btn:active {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.apple-alert-btn-secondary {
+  color: #007aff;
+}
+
+.apple-alert-btn-primary {
+  color: #007aff;
+  font-weight: 600;
+}
+
+/* Fade transition for alert */
+.apple-alert-fade-enter-active,
+.apple-alert-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.apple-alert-fade-enter-active .apple-alert-container,
+.apple-alert-fade-leave-active .apple-alert-container {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+}
+
+.apple-alert-fade-enter-from,
+.apple-alert-fade-leave-to {
+  opacity: 0;
+}
+
+.apple-alert-fade-enter-from .apple-alert-container,
+.apple-alert-fade-leave-to .apple-alert-container {
+  transform: scale(0.9);
+  opacity: 0;
+}
+
+/* Dark mode for Apple alert */
+[data-theme="dark"] .apple-alert-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .apple-alert-container {
+  background: rgba(44, 44, 46, 0.95);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    0 0 0 0.5px rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .apple-alert-title {
+  color: #f5f5f7;
+}
+
+[data-theme="dark"] .apple-alert-message {
+  color: #a1a1a6;
+}
+
+[data-theme="dark"] .apple-alert-message strong {
+  color: #f5f5f7;
+}
+
+[data-theme="dark"] .apple-alert-actions {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .apple-alert-btn:not(:last-child) {
+  border-right-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .apple-alert-btn:active {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .apple-alert-btn-secondary,
+[data-theme="dark"] .apple-alert-btn-primary {
+  color: #0a84ff;
 }
