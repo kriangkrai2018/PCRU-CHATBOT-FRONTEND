@@ -4640,14 +4640,9 @@ export default {
       // Ignore enter while IME composition is active
       if (this.isComposing) return
 
-      // If a ghost suggestion exists, Enter should first accept it (fill input)
-      // Press Enter again to actually send.
-      const input = (this.query || '').toString().trim()
-      const suggestion = (this.suggestionText || '').toString().trim()
-      if (input && suggestion && suggestion.toLowerCase() !== input.toLowerCase()) {
-        this.acceptSuggestion()
-        return
-      }
+      // 🔥 REMOVED: Auto-accept suggestion on Enter
+      // Now only Tab will accept suggestion
+      // Enter will directly send the message
 
       this.onSend()
     },
