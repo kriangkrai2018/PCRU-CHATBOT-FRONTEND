@@ -6,7 +6,6 @@
 .snowflake,
 .intro-particle,
 .wave-hand,
-.bot-sleeping-zzz,
 .sparkle,
 .glow-effect,
 .chat-panel::before,
@@ -15,8 +14,28 @@
   visibility: hidden !important;
 }
 
+/* 💤 Keep zzz animation visible but simplified */
+.bot-sleeping-zzz {
+  display: flex !important;
+  visibility: visible !important;
+}
+
+.bot-sleeping-zzz .zzz-bubble {
+  animation: zzz-float-simple 2s ease-in-out infinite !important;
+  opacity: 1 !important;
+}
+
+.bot-sleeping-zzz .zzz-bubble.zzz-1 { animation-delay: 0s !important; }
+.bot-sleeping-zzz .zzz-bubble.zzz-2 { animation-delay: 0.3s !important; }
+.bot-sleeping-zzz .zzz-bubble.zzz-3 { animation-delay: 0.6s !important; }
+
+@keyframes zzz-float-simple {
+  0%, 100% { transform: translateY(0); opacity: 0.3; }
+  50% { transform: translateY(-10px); opacity: 1; }
+}
+
 /* Disable ALL animations, transitions, and filters */
-*:not(.fab-open):not([class*="fab-"]):not(.apple-help-overlay) {
+*:not(.fab-open):not([class*="fab-"]):not(.apple-help-overlay):not(.apple-help-overlay *) {
   animation: none !important;
   animation-duration: 0s !important;
   animation-delay: 0s !important;
@@ -29,8 +48,8 @@
   will-change: auto !important;
 }
 
-*:not(.fab-open):not(.apple-help-overlay)::before,
-*:not(.fab-open):not(.apple-help-overlay)::after {
+*:not(.fab-open):not(.apple-help-overlay):not(.apple-help-overlay *)::before,
+*:not(.fab-open):not(.apple-help-overlay):not(.apple-help-overlay *)::after {
   animation: none !important;
   transition: none !important;
   backdrop-filter: none !important;

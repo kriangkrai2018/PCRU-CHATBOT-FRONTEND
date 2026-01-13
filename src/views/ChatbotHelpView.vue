@@ -604,6 +604,7 @@ export default {
   padding: 32px 32px 24px;
   background: rgba(255,255,255,0.5);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  position: relative;
 }
 .header-content {
   display: flex;
@@ -616,8 +617,12 @@ export default {
   margin: 0;
   color: var(--text-primary);
   letter-spacing: -0.02em;
+  padding-right: 50px;
 }
 .close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
   width: 36px;
   height: 36px;
   border-radius: 50%;

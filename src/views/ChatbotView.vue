@@ -239,35 +239,41 @@
                 <div v-if="showTopCategories" class="message-wrapper bot">
                   <div class="bot-avatar-wrapper">
                     <div class="bot-avatar" role="button" tabindex="0" @click="openAiIntro" title="เปิด AI เต็มจอ">
-                      <img :src="botAvatar" alt="Bot" class="bot-avatar-img" />
-                      <!-- � Offline Badge on Bot Avatar -->
+                      <!-- 🎬 Stacked videos for smooth transitions -->
+                      <video v-if="graphicsQuality === 'high' && botVideo" :src="botVideo" class="bot-avatar-img bot-avatar-video" :class="{ 'video-hidden': isBotSleeping || isBotWakingUp }" autoplay loop muted playsinline></video>
+                      <video v-if="graphicsQuality === 'high' && botSleepVideo" :src="botSleepVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-sleep" :class="{ 'video-visible': isBotSleeping }" autoplay muted playsinline></video>
+                      <video v-if="graphicsQuality === 'high' && botWakeVideo" :src="botWakeVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-wake" :class="{ 'video-visible': isBotWakingUp }" muted playsinline @ended="onWakeVideoEnded" ref="wakeVideoWelcome"></video>
+                      <!-- 🖼️ Normal image for non-high modes -->
+                      <img v-if="graphicsQuality !== 'high'" :src="botAvatar" alt="Bot" class="bot-avatar-img" />
+                      <!-- 🔴 Offline Badge on Bot Avatar -->
                       <transition name="fade">
                         <div v-if="isOffline" class="bot-avatar-offline-badge" title="ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้">
                           <span class="offline-badge-dot"></span>
                         </div>
                       </transition>
-                      <!-- �💤 Sleeping zzz - show only if no messages (last avatar) -->
-                      <transition name="zzz-fade">
-                        <div v-if="isBotSleeping && messages.length === 0" class="bot-sleeping-zzz">
-                          <span class="zzz-bubble zzz-1">z</span>
-                          <span class="zzz-bubble zzz-2">z</span>
-                          <span class="zzz-bubble zzz-3">z</span>
-                        </div>
-                      </transition>
-                      <!-- ✨ Wake up animation - show only if no messages (last avatar) -->
-                      <transition name="wake-up-fade">
-                        <div v-if="isBotWakingUp && messages.length === 0" class="bot-wake-up">
-                          <span class="sparkle sparkle-1">✨</span>
-                          <span class="sparkle sparkle-2">✨</span>
-                          <span class="sparkle sparkle-3">✨</span>
-                        </div>
-                      </transition>
                     </div>
+                    <!-- 💤 Sleeping zzz - OUTSIDE bot-avatar for proper z-index -->
+                    <transition name="zzz-fade">
+                      <div v-if="isBotSleeping && !hasBotMessages" class="bot-sleeping-zzz">
+                        <span class="zzz-bubble zzz-1">z</span>
+                        <span class="zzz-bubble zzz-2">z</span>
+                        <span class="zzz-bubble zzz-3">z</span>
+                      </div>
+                    </transition>
+                    <!-- ✨ Wake up sparkle - shows AFTER wake video ends -->
+                    <transition name="wake-up-fade">
+                      <div v-if="showWakeSparkle && !hasBotMessages" class="bot-wake-up">
+                        <span class="sparkle sparkle-1">✨</span>
+                        <span class="sparkle sparkle-2">✨</span>
+                        <span class="sparkle sparkle-3">✨</span>
+                      </div>
+                    </transition>
                   </div>
                   <div class="message-bubble bot bot-with-categories backdrop-card" style="margin-top: 3rem !important;">
                     <div class="ai-greeting">
                       <div class="ai-greet-img-wrapper" role="button" tabindex="0" @click.stop="openAiIntro" @keydown.enter.stop="openAiIntro" @keydown.space.prevent.stop="openAiIntro" title="เปิด AI: ดูรายละเอียดและวิธีใช้งาน" aria-label="เปิด AI">
-                        <img :src="botAvatar" alt="PCRU AI" class="ai-greet-img" />
+                        <video v-if="graphicsQuality === 'high' && botVideo" :src="botVideo" class="ai-greet-img ai-greet-video" autoplay loop muted playsinline></video>
+                        <img v-else :src="botAvatar" alt="PCRU AI" class="ai-greet-img" />
                         <!-- Floating speech bubble on avatar -->
                         <transition name="bubble-fade">
                           <div v-if="showThaiNotice" class="ai-speech-bubble">
@@ -427,30 +433,35 @@
                 <div v-for="(msg, idx) in messages" :key="msg.id || idx" class="message-wrapper" :class="[msg.type, { typing: !!msg.typing }]">
                 <div v-if="msg.type === 'bot'" class="bot-avatar-wrapper">
                   <div class="bot-avatar" role="button" tabindex="0" @click="openAiIntro" title="เปิด AI เต็มจอ">
-                    <img :src="botAvatar" alt="Bot" class="bot-avatar-img" />
-                    <!-- � Offline Badge on Bot Avatar -->
+                    <!-- 🎬 Stacked videos for smooth transitions -->
+                    <video v-if="graphicsQuality === 'high' && botVideo" :src="botVideo" class="bot-avatar-img bot-avatar-video" :class="{ 'video-hidden': isBotSleeping || isBotWakingUp }" autoplay loop muted playsinline></video>
+                    <video v-if="graphicsQuality === 'high' && botSleepVideo" :src="botSleepVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-sleep" :class="{ 'video-visible': isBotSleeping }" autoplay muted playsinline></video>
+                    <video v-if="graphicsQuality === 'high' && botWakeVideo" :src="botWakeVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-wake" :class="{ 'video-visible': isBotWakingUp }" muted playsinline @ended="onWakeVideoEnded"></video>
+                    <!-- 🖼️ Normal image for non-high modes -->
+                    <img v-if="graphicsQuality !== 'high'" :src="botAvatar" alt="Bot" class="bot-avatar-img" />
+                    <!-- 🔴 Offline Badge on Bot Avatar -->
                     <transition name="fade">
                       <div v-if="isOffline" class="bot-avatar-offline-badge" title="ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้">
                         <span class="offline-badge-dot"></span>
                       </div>
                     </transition>
-                    <!-- �💤 Sleeping zzz animation -->
-                    <transition name="zzz-fade">
-                      <div v-if="isBotSleeping && idx === lastBotMessageIndex" class="bot-sleeping-zzz">
-                        <span class="zzz-bubble zzz-1">z</span>
-                        <span class="zzz-bubble zzz-2">z</span>
-                        <span class="zzz-bubble zzz-3">z</span>
-                      </div>
-                    </transition>
-                    <!-- ✨ Wake up animation -->
-                    <transition name="wake-up-fade">
-                      <div v-if="isBotWakingUp && idx === lastBotMessageIndex" class="bot-wake-up">
-                        <span class="sparkle sparkle-1">✨</span>
-                        <span class="sparkle sparkle-2">✨</span>
-                        <span class="sparkle sparkle-3">✨</span>
-                      </div>
-                    </transition>
                   </div>
+                  <!-- 💤 Sleeping zzz animation - ALL bots show zzz when sleeping -->
+                  <transition name="zzz-fade">
+                    <div v-if="isBotSleeping" class="bot-sleeping-zzz">
+                      <span class="zzz-bubble zzz-1">z</span>
+                      <span class="zzz-bubble zzz-2">z</span>
+                      <span class="zzz-bubble zzz-3">z</span>
+                    </div>
+                  </transition>
+                  <!-- ✨ Wake up sparkle - shows AFTER wake video ends -->
+                  <transition name="wake-up-fade">
+                    <div v-if="showWakeSparkle" class="bot-wake-up">
+                      <span class="sparkle sparkle-1">✨</span>
+                      <span class="sparkle sparkle-2">✨</span>
+                      <span class="sparkle sparkle-3">✨</span>
+                    </div>
+                  </transition>
                   <!-- 💬 Unlike Tooltip - แสดงเมื่อผู้ใช้กด unlike -->
                   <transition name="unlike-tooltip-fade">
                     <div v-if="showUnlikeTooltip && idx === lastBotMessageIndex" class="unlike-tooltip">
@@ -764,7 +775,8 @@
             <div v-if="tempTyping" class="bottom-typing message-wrapper bot">
               <div class="bot-avatar-wrapper">
                 <div class="bot-avatar" role="button" tabindex="0" @click="openAiIntro" title="เปิด AI เต็มจอ">
-                  <img :src="botAvatar" alt="Bot" class="bot-avatar-img" />
+                  <video v-if="graphicsQuality === 'high' && botVideo" :src="botVideo" class="bot-avatar-img bot-avatar-video" autoplay loop muted playsinline key="awake"></video>
+                  <img v-else :src="botAvatar" alt="Bot" class="bot-avatar-img" />
                   <!-- 🔴 Offline Badge on Bot Avatar -->
                   <transition name="fade">
                     <div v-if="isOffline" class="bot-avatar-offline-badge" title="ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้">
@@ -1386,6 +1398,11 @@
 <script>
 import { getBotAvatar } from '@/config/botConfig'
 import { getCategoryIcon as getIconSvg } from '@/config/categoryIcons'
+import botVideoSrc from '@/assets/bots/bot2.mp4'
+import botSleepVideoSrc from '@/assets/bots/bot2sleep.mp4'
+import botWakeVideoSrc from '@/assets/bots/bot2wake.mp4'
+import botFallbackImg from '@/assets/bots/bot2.jpg'
+import botSleepFallbackImg from '@/assets/bots/bot2sleep.jpg'
 import { getRandomMutterByHour, replacePronoun } from '@/config/botMutterQuotes'
 import ChatbotHelpView from './ChatbotHelpView.vue'
 import { universityContacts } from '@/config/contacts.js';
@@ -1429,6 +1446,11 @@ export default {
       scrollButtonRect: null, // Position of scroll-to-top button for spotlight
       anchorBottom: true,
       botAvatar: null,
+      botVideo: botVideoSrc,
+      botSleepVideo: botSleepVideoSrc,
+      botWakeVideo: botWakeVideoSrc,
+      botFallbackImg: botFallbackImg,
+      botSleepFallbackImg: botSleepFallbackImg,
       userType: '',
       botName: 'ปลายฟ้า',
       botPronoun: import.meta.env.VITE_BOT_PRONOUN || 'หนู',
@@ -1517,6 +1539,7 @@ export default {
       // 💤 Sleeping bot when idle
       isBotSleeping: false,
       isBotWakingUp: false,
+      showWakeSparkle: false,
       idleTimer: null,
       idleCheckInterval: null,
       idleLastActivity: Date.now(),
@@ -1589,6 +1612,7 @@ export default {
       // 🎮 Graphics quality setting for user (low, medium, high)
       graphicsQuality: 'high', // 'low' | 'medium' | 'high'
       showGraphicsMenu: false,
+      videoObserver: null, // Intersection Observer for video playback
       // 🎯 More Options Menu (3-dot menu)
       showMoreMenu: false,
       isMoreMenuClosing: false,
@@ -2068,6 +2092,13 @@ export default {
     }
   },
   
+  updated() {
+    // 📹 Re-observe videos after DOM updates (when new messages are added)
+    this.$nextTick(() => {
+      this.observeBotVideos();
+    });
+  },
+  
   async mounted() {
     // Detect PWA standalone mode (Add to Home Screen)
     this.detectStandaloneMode()
@@ -2082,6 +2113,9 @@ export default {
 
     // 🎮 Load user's graphics quality preference
     this.loadGraphicsQuality();
+
+    // 📹 Initialize video observer for performance
+    this.initVideoObserver();
 
     // Check if it's winter season FIRST (November - February in Thailand)
     this.checkWinterSeason()
@@ -2592,6 +2626,12 @@ export default {
       inputBox.removeEventListener('blur', this.onInputBlur)
     }
     
+    // 📹 Cleanup video observer
+    if (this.videoObserver) {
+      this.videoObserver.disconnect()
+      this.videoObserver = null
+    }
+    
     // clear any pending bot typing timers
     if (Array.isArray(this.botTypingTimers) && this.botTypingTimers.length) {
       this.botTypingTimers.forEach(id => clearTimeout(id))
@@ -2654,6 +2694,12 @@ export default {
     if (this.perfWarningTimer) {
       clearTimeout(this.perfWarningTimer);
       this.perfWarningTimer = null;
+    }
+    
+    // 🔄 Cleanup reverse animation
+    if (this.reverseInterval) {
+      cancelAnimationFrame(this.reverseInterval)
+      this.reverseInterval = null
     }
     
     // Clean up FAB long press watcher (no longer needed)
@@ -3996,19 +4042,10 @@ export default {
     loadGraphicsQuality() {
       try {
         const saved = localStorage.getItem('chatbot_graphics_quality');
-        const isMobile = window.innerWidth <= 768;
         
         if (saved && ['low', 'medium', 'high'].includes(saved)) {
-          // 📱 If low mode is saved but on desktop, switch to medium
-          if (saved === 'low' && !isMobile) {
-            console.log('⚠️ Low graphics mode is only available on mobile. Switching to medium.');
-            this.graphicsQuality = 'medium';
-            localStorage.setItem('chatbot_graphics_quality', 'medium');
-            this.applyGraphicsQuality('medium');
-          } else {
-            this.graphicsQuality = saved;
-            this.applyGraphicsQuality(saved);
-          }
+          this.graphicsQuality = saved;
+          this.applyGraphicsQuality(saved);
         } else {
           // Default to high if not set
           this.applyGraphicsQuality('high');
@@ -4019,7 +4056,44 @@ export default {
       }
     },
     
-    // 📊 Performance Monitoring Methods
+    // � Video Performance Optimization
+    initVideoObserver() {
+      if (!('IntersectionObserver' in window)) return;
+      
+      this.videoObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          const video = entry.target;
+          if (entry.isIntersecting) {
+            // Video is visible - play it
+            video.play().catch(e => console.log('Video play prevented:', e));
+          } else {
+            // Video is not visible - pause it to save resources
+            video.pause();
+          }
+        });
+      }, {
+        root: null,
+        rootMargin: '50px', // Start playing a bit before it's fully visible
+        threshold: 0.1 // At least 10% visible
+      });
+      
+      // Observe existing videos
+      this.$nextTick(() => {
+        this.observeBotVideos();
+      });
+    },
+    
+    observeBotVideos() {
+      if (!this.videoObserver) return;
+      
+      // Find all bot video elements
+      const videos = document.querySelectorAll('.bot-avatar-video');
+      videos.forEach(video => {
+        this.videoObserver.observe(video);
+      });
+    },
+    
+    // �📊 Performance Monitoring Methods
     startFpsMonitoring() {
       if (!this.fpsMonitorEnabled) return;
       
@@ -5155,6 +5229,7 @@ export default {
     },
     // 💤 Idle tracking for sleeping bot animation
     startIdleTracking() {
+      console.log('🎬 startIdleTracking called, idleTimeout:', this.idleTimeout)
       // รีเซ็ต timer และตื่น
       this.resetIdleTimer()
       this.idleLastActivity = Date.now()
@@ -5193,15 +5268,24 @@ export default {
     },
     resetIdleTimer() {
       this.idleLastActivity = Date.now()
-      // ถ้าบอทหลับอยู่ ให้ตื่นขึ้น
+      // ถ้าบอทหลับอยู่ ให้ตื่นขึ้นโดยเล่น wake video
       if (this.isBotSleeping) {
         this.isBotSleeping = false
-        // แสดง animation การตื่น
         this.isBotWakingUp = true
-        setTimeout(() => {
-          this.isBotWakingUp = false
-        }, 1000) // แสดง 1 วินาที
+        this.showWakeSparkle = false
+        console.log('👁️ Bot is waking up with wake video!')
+        // Play all wake videos
+        this.$nextTick(() => {
+          const wakeVideos = document.querySelectorAll('.bot-avatar-video-wake')
+          wakeVideos.forEach(video => {
+            video.currentTime = 0
+            video.play().catch(() => {})
+          })
+        })
+        return
       }
+      // ถ้ากำลัง waking up อยู่ ไม่ต้องทำอะไร
+      if (this.isBotWakingUp) return
       // เคลียร์ timer เก่า
       if (this.idleTimer) {
         clearTimeout(this.idleTimer)
@@ -5210,6 +5294,26 @@ export default {
       this.idleTimer = setTimeout(() => {
         this.triggerBotSleep()
       }, this.idleTimeout)
+    },
+    onWakeVideoEnded() {
+      // เมื่อ wake video เล่นจบ
+      if (!this.isBotWakingUp) return
+      console.log('✨ Wake video ended! Showing sparkles...')
+      this.isBotWakingUp = false
+      this.showWakeSparkle = true
+      // Reset bot2.mp4 videos to start from beginning
+      const mainVideos = document.querySelectorAll('.bot-avatar-video:not(.bot-avatar-video-sleep):not(.bot-avatar-video-wake)')
+      mainVideos.forEach(video => {
+        video.currentTime = 0
+        video.play().catch(() => {})
+      })
+      // แสดง sparkle สักครู่แล้วซ่อน
+      setTimeout(() => {
+        this.showWakeSparkle = false
+        console.log('🌟 Bot is fully awake!')
+        // เริ่ม idle timer ใหม่
+        this.resetIdleTimer()
+      }, 800)
     },
     triggerBotSleep() {
       // หลีกเลี่ยงซ้อนทับ animation
@@ -5220,6 +5324,15 @@ export default {
       }
       this.isBotWakingUp = false
       this.isBotSleeping = true
+      console.log('💤 Bot is now sleeping after', this.idleTimeout, 'ms of inactivity')
+      // Play all sleep videos
+      this.$nextTick(() => {
+        const sleepVideos = document.querySelectorAll('.bot-avatar-video-sleep')
+        sleepVideos.forEach(video => {
+          video.currentTime = 0
+          video.play().catch(() => {})
+        })
+      })
     },
     // Simulate a keyboard open/close cycle on initial load (mobile only)
     simulateKeyboardCycle() {

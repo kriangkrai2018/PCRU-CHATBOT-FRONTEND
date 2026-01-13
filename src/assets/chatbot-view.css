@@ -2016,7 +2016,7 @@ html.gfx-low body > .apple-help-overlay,
   right: 0 !important;
   bottom: 0 !important;
   left: auto !important;
-  width: min(460px, 100vw) !important;
+  width: min(400px, 100vw) !important;
   height: 100vh !important;
   height: 100dvh !important;
   display: flex !important;
@@ -3657,6 +3657,7 @@ html.keyboard-open .message-wrapper {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(.2,.9,.2,1);
   position: relative;
+  overflow: visible;
 }
 
 .bot-avatar::before {
@@ -3687,8 +3688,41 @@ html.keyboard-open .message-wrapper {
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   z-index: 1;
+}
+
+/* 🎬 Stacked videos for smooth transitions */
+.bot-avatar-video {
+  z-index: 2;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.bot-avatar-video.video-hidden {
+  opacity: 0;
+}
+
+.bot-avatar-video-sleep {
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.bot-avatar-video-sleep.video-visible {
+  opacity: 1;
+}
+
+.bot-avatar-video-wake {
+  z-index: 4;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.bot-avatar-video-wake.video-visible {
+  opacity: 1;
 }
 
 /* 🔴 Offline Badge on Bot Avatar */
@@ -3736,10 +3770,10 @@ html.keyboard-open .message-wrapper {
   margin-bottom: 12px;
 }
 
-/* 💤 Sleeping bot zzz animation */
+/* 💤 Sleeping bot zzz animation - positioned relative to bot-avatar-wrapper */
 .bot-sleeping-zzz {
   position: absolute;
-  top: -25px;
+  top: -10px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -4010,6 +4044,26 @@ html.keyboard-open .message-wrapper {
   position: relative;
   z-index: 1;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Video avatar styling */
+.ai-greet-video {
+  background: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%);
+}
+
+/* Loading spinner for video transition */
+.bot-avatar-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0e6f5 0%, #e8daf0 100%);
+  border-radius: 50%;
+}
+
+.bot-avatar-loading .loading-spinner {
+  width: 60%;
+  height: 60%;
+  color: #8B4CB8;
 }
 
 .ai-greet-img:hover {

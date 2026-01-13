@@ -34,10 +34,14 @@
 
 /* All decorative elements */
 .wave-hand,
-.bot-sleeping-zzz,
 .sparkle,
 .glow-effect {
   display: block;
+}
+
+/* zzz needs flex display for proper layout */
+.bot-sleeping-zzz {
+  display: flex !important;
 }
 
 /* ==========================================================================
