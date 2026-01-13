@@ -1002,6 +1002,27 @@
             <!-- Input Row with keyboard/menu toggle -->
             <div v-show="showFooter" class="input-row" :class="{ 'menu-mode': showLineMenu }">
               
+              <!-- 🤖 Gemini AI Mode Toggle Button -->
+              <button 
+                class="gemini-toggle-btn" 
+                :class="{ active: useGeminiMode }"
+                @click="toggleGeminiMode"
+                :aria-label="useGeminiMode ? 'เปลี่ยนเป็นโหมดค้นหา' : 'เปลี่ยนเป็นโหมด AI'"
+                :title="useGeminiMode ? 'โหมด AI ✨ (คลิกเพื่อเปลี่ยนเป็นค้นหา)' : 'โหมดค้นหา 🔍 (คลิกเพื่อเปลี่ยนเป็น AI)'"
+              >
+                <!-- Search icon (shown when keyword mode) -->
+                <svg v-if="!useGeminiMode" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+                  <path d="M16 16L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <!-- AI/Sparkle icon (shown when Gemini mode) -->
+                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="gemini-icon">
+                  <path d="M12 2L13.5 7.5L19 9L13.5 10.5L12 16L10.5 10.5L5 9L10.5 7.5L12 2Z" fill="currentColor"/>
+                  <path d="M18 14L19 17L22 18L19 19L18 22L17 19L14 18L17 17L18 14Z" fill="currentColor" opacity="0.7"/>
+                  <path d="M6 14L6.5 16L4 16.5L6.5 17L6 19L6.5 17L9 16.5L6.5 16L6 14Z" fill="currentColor" opacity="0.5"/>
+                </svg>
+              </button>
+              
               <!-- 📱 Single Toggle Button (LEFT): Menu icon when keyboard mode, Keyboard icon when menu mode -->
               <button 
                 class="line-toggle-btn" 
@@ -1046,7 +1067,7 @@
                   class="input-pill real-input"
                   :class="{ 'shake': isTyping }"
                   :style="typingStyle"
-                  :placeholder="placeholderText"
+                  :placeholder="dynamicPlaceholder"
                   @keydown.enter.prevent="onEnterKey"
                   @keydown.tab.prevent="acceptSuggestion"
                   @keydown.arrow-right.prevent="checkAcceptSuggestion"
@@ -1934,6 +1955,10 @@ export default {
       longPressStartTimer: null, // Timer to detect long press vs normal click
       isLongPressing: false, // Track if we're in long press mode
       fabPointerActive: false, // Track if pointer is actively pressed on FAB
+      // 🤖 Gemini AI mode toggle
+      useGeminiMode: false, // false = keyword matching, true = Gemini AI direct
+      geminiSessionId: null, // Session ID for conversation continuity
+      
       // 📱 LINE-style bottom menu toggle
       showLineMenu: false, // false = keyboard mode, true = menu mode
       lineMenuCollapsed: false, // true = hide grid items, false = show grid items
@@ -2089,6 +2114,14 @@ export default {
     }
   },
   computed: {
+    // 🤖 Dynamic placeholder based on mode
+    dynamicPlaceholder() {
+      if (this.useGeminiMode) {
+        return '✨ ถามอะไรก็ได้กับ AI...'
+      }
+      return this.placeholderText || 'ขอทุน, ปฏิทินวิชาการ, สวัสดิการ'
+    },
+    
     // 🎠 Carousel track transform style
     carouselTrackStyle() {
       const pageCount = Array.isArray(this.carouselPages) && this.carouselPages.length ? this.carouselPages.length : 1
@@ -3205,6 +3238,35 @@ export default {
     toggleLineMenuCollapse() {
       // Toggle collapse state (hide/show grid items)
       this.lineMenuCollapsed = !this.lineMenuCollapsed
+    },
+    
+    // 🤖 Gemini AI Mode Toggle
+    toggleGeminiMode() {
+      this.useGeminiMode = !this.useGeminiMode
+      console.log('🤖 Toggle Gemini Mode:', this.useGeminiMode ? 'AI Mode ✨' : 'Search Mode 🔍')
+      
+      // Show toast notification
+      if (this.$toast) {
+        if (this.useGeminiMode) {
+          this.$toast.success('เปิดโหมด AI ✨ บอทจะตอบด้วย Gemini AI', { duration: 2000 })
+        } else {
+          this.$toast.info('เปิดโหมดค้นหา 🔍 บอทจะค้นหาจากคลังข้อมูล', { duration: 2000 })
+        }
+      }
+      
+      // Clear Gemini session when switching off
+      if (!this.useGeminiMode && this.geminiSessionId) {
+        // Clear session on backend
+        if (this.$axios && typeof this.$axios.delete === 'function') {
+          this.$axios.delete(`/api/gemini/conversation/${this.geminiSessionId}`).catch(() => {})
+        }
+        this.geminiSessionId = null
+      }
+      
+      // Generate new session ID when switching on
+      if (this.useGeminiMode && !this.geminiSessionId) {
+        this.geminiSessionId = 'web-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9)
+      }
     },
     
     toggleLineMenu(showMenu) {
@@ -7100,6 +7162,72 @@ export default {
 
         // Send to backend API if available, otherwise show polite backend-only error
         if (this.$axios && typeof this.$axios.post === 'function') {
+          console.log('📤 onSend mode:', this.useGeminiMode ? 'Gemini AI' : 'Keyword Search')
+          
+          // 🤖 Gemini AI Mode - Direct AI conversation
+          if (this.useGeminiMode) {
+            // Generate session ID if not exists
+            if (!this.geminiSessionId) {
+              this.geminiSessionId = 'web-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9)
+            }
+            
+            // Add bot typing indicator
+            const geminiIndex = this.messages.length
+            this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: '', typing: true })
+            this.saveChatHistory()
+            this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
+            
+            try {
+              console.log('🤖 Sending to Gemini API:', { sessionId: this.geminiSessionId, message: originalUserMessage })
+              const geminiRes = await this.$axios.post('/api/gemini/conversation', {
+                sessionId: this.geminiSessionId,
+                message: originalUserMessage
+              })
+              console.log('✅ Gemini response:', geminiRes.data)
+              
+              let geminiText = ''
+              if (geminiRes && geminiRes.data) {
+                geminiText = geminiRes.data.response || geminiRes.data.text || geminiRes.data.message || ''
+              }
+              
+              if (!geminiText) {
+                geminiText = 'ขออภัยค่ะ AI ไม่สามารถตอบคำถามนี้ได้ในขณะนี้ 😅'
+              }
+              
+              // Update the typing message with AI response
+              await new Promise(resolve => setTimeout(resolve, 500))
+              
+              if (this.messages[geminiIndex] && this.messages[geminiIndex].type === 'bot') {
+                this.messages[geminiIndex].typing = false
+                this.messages[geminiIndex].text = geminiText
+                this.messages[geminiIndex].isGemini = true // Mark as Gemini response
+                this.messages[geminiIndex].timestamp = new Date().toISOString()
+              }
+              
+              this.saveChatHistory()
+              this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
+              return // Exit after Gemini response
+              
+            } catch (geminiError) {
+              console.error('❌ Gemini API error:', geminiError)
+              console.error('Error details:', {
+                message: geminiError.message,
+                response: geminiError.response?.data,
+                status: geminiError.response?.status
+              })
+              
+              if (this.messages[geminiIndex] && this.messages[geminiIndex].type === 'bot') {
+                this.messages[geminiIndex].typing = false
+                this.messages[geminiIndex].text = 'ขออภัยค่ะ ไม่สามารถเชื่อมต่อ AI ได้ในขณะนี้ 😅 กรุณาลองใหม่อีกครั้งหรือเปลี่ยนเป็นโหมดค้นหา'
+                this.messages[geminiIndex].timestamp = new Date().toISOString()
+              }
+              
+              this.saveChatHistory()
+              this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
+              return
+            }
+          }
+          
           // Determine typingDelay and indicator duration for this session
           const envDelayForSend = import.meta.env.VITE_BOT_TYPING_DELAY_MS ?? import.meta.env.VITE_BOT_TYPING_SPEED
           let typingDelayForSend = parseInt(envDelayForSend || '12', 10)
@@ -9755,6 +9883,73 @@ html[data-theme="dark"] .page-label-toast {
   max-width: 100%;
 }
 
+/* 🤖 Gemini AI Mode Toggle Button */
+.gemini-toggle-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(66, 133, 244, 0.1);
+  color: #4285F4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.gemini-toggle-btn:hover {
+  background: rgba(66, 133, 244, 0.2);
+  transform: scale(1.05);
+}
+
+.gemini-toggle-btn.active {
+  background: linear-gradient(135deg, #4285F4 0%, #34A853 50%, #FBBC05 75%, #EA4335 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(66, 133, 244, 0.6);
+  animation: gemini-glow 3s ease-in-out infinite, gemini-pulse 1.5s ease-in-out infinite;
+  transform: scale(1.08);
+}
+
+.gemini-toggle-btn.active .gemini-icon {
+  animation: sparkle-rotate 4s linear infinite, sparkle-pulse 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
+}
+
+@keyframes gemini-glow {
+  0%, 100% { 
+    box-shadow: 0 4px 20px rgba(66, 133, 244, 0.7), 0 0 30px rgba(66, 133, 244, 0.3); 
+  }
+  25% { 
+    box-shadow: 0 4px 20px rgba(52, 168, 83, 0.7), 0 0 30px rgba(52, 168, 83, 0.3); 
+  }
+  50% { 
+    box-shadow: 0 4px 20px rgba(251, 188, 5, 0.7), 0 0 30px rgba(251, 188, 5, 0.3); 
+  }
+  75% { 
+    box-shadow: 0 4px 20px rgba(234, 67, 53, 0.7), 0 0 30px rgba(234, 67, 53, 0.3); 
+  }
+}
+
+@keyframes gemini-pulse {
+  0%, 100% { transform: scale(1.08); }
+  50% { transform: scale(1.12); }
+}
+
+@keyframes sparkle-rotate {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes sparkle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
 /* Toggle buttons */
 .line-toggle-btn {
   width: 44px;
@@ -10115,6 +10310,18 @@ html[data-theme="dark"] .line-menu-label {
 html[data-theme="dark"] .line-toggle-btn {
   background: rgba(139, 76, 184, 0.2);
   color: #b794d4;
+}
+
+:deep(.dark) .gemini-toggle-btn,
+html[data-theme="dark"] .gemini-toggle-btn {
+  background: rgba(66, 133, 244, 0.2);
+  color: #89b4f8;
+}
+
+:deep(.dark) .gemini-toggle-btn.active,
+html[data-theme="dark"] .gemini-toggle-btn.active {
+  background: linear-gradient(135deg, #4285F4 0%, #34A853 50%, #FBBC05 75%, #EA4335 100%);
+  color: white;
 }
 
 :deep(.dark) .line-menu-back,
