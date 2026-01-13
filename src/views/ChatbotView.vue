@@ -3127,18 +3127,23 @@ export default {
     // 🎠 Load synonyms for placeholder carousel
     this.loadSynonymsCarousel()
 
-    // 📜 Scroll to bottom to show latest messages
-    setTimeout(() => {
-      if (this.$refs.panelBody) {
-        this.$refs.panelBody.scrollTop = this.$refs.panelBody.scrollHeight
+    // 📜 Scroll to bottom to show latest messages - multiple attempts with increasing delays
+    const doScroll = () => {
+      const panel = this.$refs.panelBody;
+      const chatPanel = document.querySelector('.chat-panel');
+      if (panel) {
+        panel.scrollTop = panel.scrollHeight;
       }
-      // Try again with more delay to ensure content is fully loaded
-      setTimeout(() => {
-        if (this.$refs.panelBody) {
-          this.$refs.panelBody.scrollTop = this.$refs.panelBody.scrollHeight
-        }
-      }, 0)
-    }, 0)
+      if (chatPanel) {
+        chatPanel.scrollTop = chatPanel.scrollHeight;
+      }
+    };
+    
+    doScroll();
+    setTimeout(doScroll, 100);
+    setTimeout(doScroll, 300);
+    setTimeout(doScroll, 600);
+    setTimeout(doScroll, 700);
 
     // embedding removed; no persisted embed settings
 
@@ -3151,6 +3156,11 @@ export default {
       }
       // Otherwise, intro animation will set visible = true when it completes
     }
+
+    // Ensure scroll to bottom on page load/refresh
+    this.$nextTick(() => {
+      this.scrollToBottomInstant()
+    })
   },
 
   beforeDestroy() {
@@ -5161,24 +5171,36 @@ export default {
         return;
       }
       
-      // Check for low FPS (< 30)
+      // Close alert immediately if FPS has recovered to >= 30
+      if (this.currentFps >= 30 && this.showAppleAlert) {
+        console.log('✅ FPS recovered to', this.currentFps, 'fps - closing alert');
+        this.showAppleAlert = false;
+        this.lowFpsCount = 0; // Reset counter when FPS recovers
+        return;
+      }
+      
+      // Check for low FPS (< 30) - require consistent readings to avoid false positives
       if (this.currentFps < 30) {
         this.lowFpsCount++;
+        console.log('⚠️ Low FPS detected:', this.currentFps, 'fps (count:', this.lowFpsCount, ')');
         
-        // Show Apple alert immediately on first detection (if not shown yet)
-        if (!this.appleAlertShown) {
+        // Require 3 consecutive low readings before showing alert (validation)
+        if (this.lowFpsCount >= 3 && !this.appleAlertShown) {
+          console.log('🔴 Confirmed low FPS after', this.lowFpsCount, 'readings - showing alert');
           this.showAppleAlert = true;
           this.appleAlertShown = true;
         }
         
-        // Require 3 consecutive low readings to avoid false positives for auto-downgrade
+        // Mark as adjusted after 3 readings
         if (this.lowFpsCount >= 3 && !this.autoGraphicsAdjusted) {
-          // Don't auto-downgrade, let user decide via alert
           this.autoGraphicsAdjusted = true;
         }
       } else {
-        // Reset counter if FPS recovers
-        this.lowFpsCount = 0;
+        // FPS is >= 30 - reset counter
+        if (this.lowFpsCount > 0) {
+          console.log('✅ FPS improved to', this.currentFps, 'fps - resetting counter');
+          this.lowFpsCount = 0;
+        }
       }
       
       // Check for device heating (Battery API if available)
@@ -6861,86 +6883,9 @@ export default {
         }
       }
 
-      // --- ตรวจสอบความเร็วในการพิมพ์ (30 คำ/วินาที) ---
-      try {
-        const now = Date.now()
-        const currentLength = (this.query || '').length
-        
-        // Initialize tracking
-        if (!this.typingSpeedTimestamps) this.typingSpeedTimestamps = []
-        if (!this.typingSpeedLengths) this.typingSpeedLengths = []
-        
-        // บันทึก timestamp และความยาวข้อความ
-        this.typingSpeedTimestamps.push(now)
-        this.typingSpeedLengths.push(currentLength)
-        
-        // เก็บข้อมูลแค่ 1 วินาทีล่าสุด
-        const oneSecondAgo = now - 1000
-        while (this.typingSpeedTimestamps.length > 0 && this.typingSpeedTimestamps[0] < oneSecondAgo) {
-          this.typingSpeedTimestamps.shift()
-          this.typingSpeedLengths.shift()
-        }
-        
-        // คำนวณจำนวนตัวอักษรที่พิมพ์ภายใน 1 วินาที
-        if (this.typingSpeedTimestamps.length >= 2) {
-          const firstLength = this.typingSpeedLengths[0] || 0
-          const charsPerSecond = currentLength - firstLength
-          
-          // ถ้าพิมพ์เร็วกว่า 3.dw ตัวอักษร/วินาที แสดง tooltip
-          if (charsPerSecond > 4) {
-            const allowByTime = now >= (this.inputTooltipCooldownUntil || 0)
-            if (allowByTime) {
-              this.hideAllTooltips()
-              this.unlikeTooltipText = 'พิมพ์ช้าๆ นะคะ 😊'
-              this.showUnlikeTooltip = true
-              
-              if (this.unlikeTooltipTimer) { clearTimeout(this.unlikeTooltipTimer); this.unlikeTooltipTimer = null }
-              this.unlikeTooltipTimer = setTimeout(() => {
-                this.showUnlikeTooltip = false
-                this.unlikeTooltipTimer = null
-              }, 3000)
-              
-              // ตั้งคูลดาวน์ 5 วินาที
-              this.inputTooltipCooldownUntil = now + 5000
-            }
-          }
-        }
-      } catch (e) { /* ignore */ }
+      // Typing guides and hints have been removed per user request
 
-      // --- 1) Typing hint for 'เมนู' (show fixed instructional message) ---
-      try {
-        const raw = (this.query || '').toString()
-        const normalized = raw.replace(/\s+/g, '') // remove spaces (handles 'เ ม น ู')
-        const target = 'เมนู'
-        if (normalized && target.startsWith(normalized)) {
-          const now = Date.now()
-          const allowByTime = now >= (this.inputTooltipCooldownUntil || 0)
-          const allowByChance = Math.random() <= (this.inputTooltipShowProbability || 0.5)
-          if (allowByTime && allowByChance) {
-            this.hideAllTooltips()
-            // Show fixed instruction using the unlike tooltip component
-            this.unlikeTooltipText = 'พิมพ์ เมนู คำเดียว แล้วกดส่ง เพื่อเปิด เมนูได้นะคะ'
-            this.showUnlikeTooltip = true
-
-            if (this.unlikeTooltipTimer) { clearTimeout(this.unlikeTooltipTimer); this.unlikeTooltipTimer = null }
-            this.unlikeTooltipTimer = setTimeout(() => {
-              this.showUnlikeTooltip = false
-              this.unlikeTooltipTimer = null
-            }, 5000)
-
-            // Set cooldown so it won't appear too frequently
-            this.inputTooltipCooldownUntil = now + (this.inputTooltipMinIntervalMs || 3000)
-          }
-        } else {
-          // If user stops matching 'เมนู', hide the tooltip (but not if it's the typing speed tooltip)
-          if (this.showUnlikeTooltip && this.unlikeTooltipText !== 'พิมพ์ช้าๆ นะคะ 😊') {
-            this.showUnlikeTooltip = false
-            if (this.unlikeTooltipTimer) { clearTimeout(this.unlikeTooltipTimer); this.unlikeTooltipTimer = null }
-          }
-        }
-      } catch (e) { /* ignore detection errors */ }
-
-      // --- 2) Autocomplete / Ghost Suggestion ---
+      // --- Autocomplete / Ghost Suggestion ---
       try {
         const input = (this.query || '').toString()
         if (!input || input.trim().length < 2) {
@@ -8097,11 +8042,32 @@ export default {
         }, 300)  // Wait for scroll animation to complete
       }
     },
-    // Instant scroll without animation - for use during streaming/typing
     scrollToBottomInstant() {
       if (this.$refs.panelBody) {
         this.$refs.panelBody.scrollTop = this.$refs.panelBody.scrollHeight;
       }
+      // Also try to scroll the panel element itself if it exists
+      const panel = document.querySelector('.chat-panel');
+      if (panel) {
+        panel.scrollTop = panel.scrollHeight;
+      }
+      // Force scroll with multiple attempts
+      setTimeout(() => {
+        if (this.$refs.panelBody) {
+          this.$refs.panelBody.scrollTop = this.$refs.panelBody.scrollHeight;
+        }
+        if (panel) {
+          panel.scrollTop = panel.scrollHeight;
+        }
+      }, 50);
+      setTimeout(() => {
+        if (this.$refs.panelBody) {
+          this.$refs.panelBody.scrollTop = this.$refs.panelBody.scrollHeight;
+        }
+        if (panel) {
+          panel.scrollTop = panel.scrollHeight;
+        }
+      }, 200);
     },
     selectSuggestion(msg, item, idx) {
       if (!item) return
