@@ -2265,10 +2265,10 @@ export default {
       if (!this.suggestionText || !this.query) return ''
       const suffix = this.suggestionText.slice((this.query || '').length)
       if (!suffix) return ''
-      // Limit to ~30 characters to prevent overflow
-      const maxLen = 30
+      // Limit to ~12 characters to prevent overflow (fit in one line)
+      const maxLen = 12
       if (suffix.length > maxLen) {
-        return suffix.slice(0, maxLen) + '...'
+        return suffix.slice(0, maxLen)
       }
       return suffix
     },

@@ -7273,9 +7273,10 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
   pointer-events: none;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 50%; /* limit suffix width to prevent overflow */
+  max-width: 80px; /* limit width to fit on same line */
   display: inline-block;
   vertical-align: baseline;
+  color: rgba(29, 29, 31, 0.45); /* lighter color for ghost text */
 }
 
 /* Hide ghost overlay entirely while typing tooltip is visible so guide text is never occluded */
