@@ -4606,7 +4606,7 @@ body.no-effects .apple-help-button::after { display: none !important; }
 
 .map-preview {
   width: 100%;
-  height: 150px;
+  height: 220px;
   overflow: hidden;
   position: relative;
   cursor: default;
@@ -4614,14 +4614,14 @@ body.no-effects .apple-help-button::after { display: none !important; }
 }
 
 .map-preview iframe {
-  width: calc(100% + 600px); /* Extend width more to completely hide directions card */
-  height: calc(100% + 150px); /* Extend iframe to hide top and side UI */
+  width: calc(100% + 800px); /* Extend width more to completely hide place card and directions card */
+  height: calc(100% + 250px); /* Extend iframe to hide top UI including place card */
   border: none;
   border-radius: 0;
   pointer-events: auto; /* Allow drag and pan */
-  margin-top: -50px; /* Pull up to hide top part */
+  margin-top: -100px; /* Pull up more to hide place card at top */
   margin-bottom: -50px; /* Reduced to not overlap footer */
-  margin-left: -300px; /* Push far left to hide directions card completely */
+  margin-left: -400px; /* Push far left to hide place card and directions card completely */
   touch-action: auto; /* Allow browser default touch handling */
   -webkit-touch-callout: none; /* Disable iOS callout menu */
   -webkit-user-select: none; /* Disable text selection on iOS */

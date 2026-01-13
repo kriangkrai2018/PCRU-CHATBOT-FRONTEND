@@ -78,7 +78,7 @@
           </div>
         </template>
         
-        <aside class="chat-panel" :style="{ width: drawerWidth, height: viewportHeight }" @click="onPanelClick" @mousemove="onPanelMouseMove" @touchstart.once="requestGyroscopePermission">
+        <aside class="chat-panel" :style="{ width: drawerWidth, height: viewportHeight }" @click="onPanelClick" @mousemove="onPanelMouseMove">
           <!-- � PCRU Watermark Logo -->
           <div class="pcru-watermark">
             <img src="@/assets/logo.png" alt="PCRU Logo" :style="pcruWatermarkStyle" />
@@ -1887,13 +1887,13 @@ export default {
           transform: 'translate(-50%, -50%)'
         }
       }
-      // Always show card above the target (menu is at bottom of screen)
+      // Show card below the target at the bottom of screen
       const viewportHeight = window.innerHeight
-      const targetTop = this.menuTutorialTargetRect.top
+      const targetBottom = this.menuTutorialTargetRect.bottom
       
-      // Card appears above the menu/target
+      // Card appears below the menu/target (closer to bottom)
       return {
-        bottom: `${viewportHeight - targetTop + 30}px`,
+        bottom: `${viewportHeight - targetBottom - 180}px`, // Reduced offset to position card lower
         left: '50%',
         transform: 'translateX(-50%)',
         maxWidth: 'calc(100vw - 40px)'
@@ -2095,11 +2095,8 @@ export default {
     // Generate particle styles once to prevent jank on re-render
     this.generateParticleStyles()
 
-    // 📱 Add gyroscope support for mobile devices
+    // 📱 Add gyroscope support for mobile devices (auto-enable without permission request)
     this.initGyroscope();
-    
-    // 📍 Request user location for map navigation
-    this.requestUserLocation();
     
     // 🎯 PERFORMANCE: Pause animations when tab is not visible
     this._handleVisibilityChange = () => {
@@ -2116,40 +2113,10 @@ export default {
     
     // 🗺️ Global function for map navigation (used by inline onclick)
     window.pcruNavigateTo = (destLat, destLng) => {
-      // Check if we already have user location from previous request
-      if (this.userLocation && this.userLocation.lat && this.userLocation.lng) {
-        const userLat = this.userLocation.lat;
-        const userLng = this.userLocation.lng;
-        // Open Google Maps with directions immediately using cached location
-        const directionsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${destLat},${destLng}&travelmode=driving`;
-        window.open(directionsUrl, '_blank');
-        return;
-      }
-      
-      if (!navigator.geolocation) {
-        // No geolocation support, open Google Maps directly (will ask for location)
-        window.open(`https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=driving`, '_blank');
-        return;
-      }
-      
-      // Request geolocation and open Google Maps immediately
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const userLat = position.coords.latitude;
-          const userLng = position.coords.longitude;
-          // Store user location in Vue instance for future use
-          this.userLocation = { lat: userLat, lng: userLng };
-          // Open Google Maps with directions from current location
-          const directionsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${destLat},${destLng}&travelmode=driving`;
-          window.open(directionsUrl, '_blank');
-        },
-        (error) => {
-          console.error('Geolocation error:', error);
-          // Fallback: open directions without origin (Google Maps will ask for location)
-          window.open(`https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=driving`, '_blank');
-        },
-        { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
-      );
+      // Open Google Maps directly without requesting location permission
+      // Google Maps will handle location request on its own
+      const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=driving`;
+      window.open(directionsUrl, '_blank');
     };
     
     // 🗺️ Global function for opening map in fullscreen modal
@@ -2176,26 +2143,6 @@ export default {
       modal.addEventListener('DOMNodeRemoved', () => {
         document.body.style.overflow = '';
       });
-    };
-    
-    // 🗺️ Request geolocation permission when map widget is displayed
-    window.requestLocationForMap = () => {
-      if (navigator.geolocation && !this.locationPermissionRequested) {
-        this.locationPermissionRequested = true;
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            this.userLocation = {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude
-            };
-            console.log('Location permission granted:', this.userLocation);
-          },
-          (error) => {
-            console.log('Location permission denied or error:', error.message);
-          },
-          { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
-        );
-      }
     };
     
     // 🎬 Auto-open with intro animation on first visit
@@ -3534,25 +3481,25 @@ export default {
     async initGyroscope() {
       if (!window.DeviceOrientationEvent) return;
       
-      // Check if iOS 13+ (requires permission)
-      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-        // iOS 13+ - need user gesture to request permission
-        this.gyroscopeEnabled = false;
-        console.log('📱 iOS detected - gyroscope permission will be requested on first interaction');
-      } else {
-        // Android and other devices - just add listener
+      // Try to add listener directly without permission request
+      // On iOS 13+, this may not work without user gesture, but we don't want to ask
+      try {
         window.addEventListener('deviceorientation', this.handleDeviceOrientation, true);
         this.gyroscopeEnabled = true;
-        console.log('📱 Gyroscope enabled (non-iOS)');
+        console.log('📱 Gyroscope enabled');
+      } catch (e) {
+        console.log('📱 Gyroscope not available:', e.message);
+        this.gyroscopeEnabled = false;
       }
     },
     requestUserLocation() {
+      // This function is no longer called automatically
+      // Location is only requested when user clicks navigate button
       if (!navigator.geolocation) {
         console.log('📍 Geolocation not supported');
         return;
       }
       
-      // Silently request user location for map navigation
       navigator.geolocation.getCurrentPosition(
         (position) => {
           this.userLocation = {
@@ -3563,43 +3510,11 @@ export default {
         },
         (error) => {
           console.log('📍 Could not get user location:', error.message);
-          // Don't show error to user - maps will work without location
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
       );
     },
-    requestGyroscopePermission() {
-      console.log('📱 requestGyroscopePermission called, enabled:', this.gyroscopeEnabled);
-      if (this.gyroscopeEnabled) return;
-      if (typeof DeviceOrientationEvent === 'undefined') {
-        console.log('📱 DeviceOrientationEvent not available');
-        return;
-      }
-      if (typeof DeviceOrientationEvent.requestPermission !== 'function') {
-        console.log('📱 requestPermission not a function (not iOS 13+)');
-        // Try to add listener anyway for older iOS or other browsers
-        window.addEventListener('deviceorientation', this.handleDeviceOrientation, true);
-        this.gyroscopeEnabled = true;
-        return;
-      }
-      
-      console.log('📱 Requesting iOS gyroscope permission...');
-      // MUST be called synchronously from user gesture!
-      DeviceOrientationEvent.requestPermission()
-        .then(permission => {
-          console.log('📱 Permission result:', permission);
-          if (permission === 'granted') {
-            window.addEventListener('deviceorientation', this.handleDeviceOrientation, true);
-            this.gyroscopeEnabled = true;
-            console.log('📱 iOS gyroscope permission granted!');
-          } else {
-            console.warn('📱 iOS gyroscope permission denied');
-          }
-        })
-        .catch(err => {
-          console.error('📱 Error requesting gyroscope permission:', err);
-        });
-    },
+    // Gyroscope permission request removed - no longer needed
     handleDeviceOrientation(e) {
       if (this.graphicsQuality === 'low') return;
       
@@ -3925,11 +3840,6 @@ export default {
     
     // 🎯 Click handler บน panel เพื่อปิดเมนู 3 จุด
     onPanelClick(e) {
-      // 📱 Request gyroscope permission on first interaction (iOS)
-      if (!this.gyroscopeEnabled) {
-        this.requestGyroscopePermission();
-      }
-      
       if (!this.showMoreMenu) return;
       
       // ไม่ปิดถ้ากดที่ตัวเมนูหรือปุ่ม 3 จุด
