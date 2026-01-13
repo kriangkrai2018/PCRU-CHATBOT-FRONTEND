@@ -1089,16 +1089,17 @@
                 <!-- 👻 Ghost overlay showing only the suggested suffix -->
                 <div class="ghost-input" aria-hidden="true">
                   <span class="ghost-typed">{{ query }}</span>
-                  <span class="ghost-suffix" v-if="suggestionText && suggestionText.length > (query || '').length">{{ suggestionText.slice((query || '').length) }}</span>
+                  <span class="ghost-suffix" v-if="suggestionText && suggestionText.length > (query || '').length">{{ truncatedSuggestionSuffix }}</span>
                 </div>
-                <!-- ⌨️ Real Input -->
-                <input
+                <!-- ⌨️ Real Input (Multiline Textarea) -->
+                <textarea
                   v-model="query"
                   class="input-pill real-input"
                   :class="{ 'shake': isTyping }"
                   :style="typingStyle"
                   :placeholder="dynamicPlaceholder"
-                  @keydown.enter.prevent="onEnterKey"
+                  @keydown.enter.exact.prevent="onEnterKey"
+                  @keydown.shift.enter.stop
                   @keydown.tab.prevent="acceptSuggestion"
                   @keydown.arrow-right.prevent="checkAcceptSuggestion"
                   @compositionstart="onCompositionStart"
@@ -1108,7 +1109,8 @@
                   @blur="onInputBlur"
                   ref="inputBox"
                   autocomplete="off"
-                />
+                  rows="1"
+                ></textarea>
               </div>
               
               <!-- Menu Label (shown when menu is open) -->
@@ -1849,7 +1851,7 @@ export default {
       loadError: '',
       isOffline: false, // 🔴 Backend connection status
       query: '',
-      placeholderText: 'ขอทุน, ปฏิทินวิชาการ, สวัสดิการ',
+      placeholderText: 'ขอทุน, ปฏิทินวิชาการ, สวัสดิฯ',
       placeholderExamples: [], // Array of synonym examples from database
       placeholderIndex: 0,
       placeholderInterval: null,
@@ -2052,9 +2054,9 @@ export default {
       moreMenuItemsVisible: [false, false, false],
       moreMenuItemsHiding: [false, false, false],
       graphicsOptions: [
-        { value: 'low', label: 'ต่ำ', icon: '🔋' },
-        { value: 'medium', label: 'กลาง', icon: '⚖️' },
-        { value: 'high', label: 'สูง', icon: '✨' }
+          { value: 'low', label: 'ต่ำ', icon: '' }, // สีเขียว = ปลอดภัย/น้อย
+          { value: 'medium', label: 'กลาง', icon: '' }, // สีเหลือง = ปานกลาง/เตือน
+          { value: 'high', label: 'สูง', icon: '' }  // สีแดง = สูง/วิกฤต
       ],
       // 🔐 Long press to admin login
       longPressTimer: null,
@@ -2258,12 +2260,25 @@ export default {
     }
   },
   computed: {
+    // 🔤 Truncated suggestion suffix to prevent overflow
+    truncatedSuggestionSuffix() {
+      if (!this.suggestionText || !this.query) return ''
+      const suffix = this.suggestionText.slice((this.query || '').length)
+      if (!suffix) return ''
+      // Limit to ~30 characters to prevent overflow
+      const maxLen = 30
+      if (suffix.length > maxLen) {
+        return suffix.slice(0, maxLen) + '...'
+      }
+      return suffix
+    },
+    
     // 🤖 Dynamic placeholder based on mode
     dynamicPlaceholder() {
       if (this.useGeminiMode) {
         return '✨ ถามอะไรก็ได้กับ AI...'
       }
-      return this.placeholderText || 'ขอทุน, ปฏิทินวิชาการ, สวัสดิการ'
+      return this.placeholderText || 'ขอทุน, ปฏิทินวิชาการ, สวัสดิฯ'
     },
     
     // 🎠 Carousel track transform style
@@ -7012,19 +7027,17 @@ export default {
     queueAutocompleteSuggestion(fullText) {
       const inputStr = (fullText || '').toString()
 
-      // Instant local suggestion for responsiveness (fallback)
-      this.applyLocalAutocomplete(inputStr)
+      // Clear any pending suggestion
+      this.suggestionText = ''
 
-      // Debounce remote requests
+      // Debounce remote requests to Gemini
       if (this.autocompleteSuggestTimer) {
         clearTimeout(this.autocompleteSuggestTimer)
         this.autocompleteSuggestTimer = null
       }
 
-      const ctx = this.getAutocompleteContext(inputStr)
-      if (!ctx) return
-
-      const { token } = ctx
+      // Need at least 3 characters for Gemini autocomplete
+      if (!inputStr || inputStr.trim().length < 3) return
 
       const seq = ++this.autocompleteSuggestSeq
       this.autocompleteSuggestTimer = setTimeout(async () => {
@@ -7034,30 +7047,27 @@ export default {
         const currentInput = (this.query || '').toString()
         if (!currentInput || currentInput !== inputStr) return
 
-        // Recompute token at request time (in case whitespace changed)
-        const liveCtx = this.getAutocompleteContext(currentInput)
-        if (!liveCtx) return
-
         try {
-          const res = await this.$axios.get('/autocomplete/suggest', {
-            params: { q: liveCtx.token, limit: 20 }
+          // 🔥 Use Gemini AI for autocomplete
+          const res = await this.$axios.post('/api/gemini/autocomplete', {
+            text: currentInput.trim(),
+            limit: 1
           })
 
           // Ignore stale results
           if (seq !== this.autocompleteSuggestSeq) return
 
-          const payload = res && res.data ? res.data : null
-          const suggestions = payload?.data?.suggestions || payload?.suggestions || []
-          const picked = this.pickAutocompleteSuggestionText(currentInput, suggestions)
+          const suggestion = res?.data?.suggestion || ''
 
           // Only apply if input hasn't changed since request was queued
-          if ((this.query || '').toString() === inputStr) {
-            this.suggestionText = picked
+          if ((this.query || '').toString() === inputStr && suggestion) {
+            this.suggestionText = suggestion
           }
         } catch (e) {
-          // Network/backend failure: keep local suggestion
+          // Network/backend failure: clear suggestion
+          this.suggestionText = ''
         }
-      }, 120)
+      }, 300) // Debounce 300ms for Gemini API
     },
     createParticles() {
       const inputBox = this.$refs.inputBox
@@ -9378,7 +9388,7 @@ export default {
         
         // ถ้าไม่มีข้อมูลจาก database ใช้ default
         if (this.placeholderExamples.length === 0) {
-          this.placeholderExamples = ['ขอทุน, ปฏิทินวิชาการ, สวัสดิการ']
+          this.placeholderExamples = ['ขอทุน, ปฏิทินวิชาการ, สวัสดิฯ']
         }
         
         // เริ่ม carousel
@@ -9386,7 +9396,7 @@ export default {
       } catch (err) {
         console.error('Failed to load synonyms for carousel:', err)
         // Fallback to default
-        this.placeholderExamples = ['ขอทุน, ปฏิทินวิชาการ, สวัสดิการ']
+        this.placeholderExamples = ['ขอทุน, ปฏิทินวิชาการ, สวัสดิฯ']
         this.startPlaceholderCarousel()
       }
     },
@@ -9504,7 +9514,7 @@ export default {
   z-index: 10000; /* Above snow (1500) and other elements */
   display: flex;
   flex-direction: column;
-  height: 390px;
+  height: 410px;
   max-height: none;
   transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
   overflow: visible;
@@ -10032,7 +10042,7 @@ html[data-theme="dark"] .page-label-toast {
   justify-content: center;
   align-items: center;
   gap: 10px;
-  padding: 0;
+  padding: 1rem;
 }
 
 .carousel-dot {

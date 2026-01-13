@@ -2669,10 +2669,11 @@ html.keyboard-open .panel-footer {
 }
 .input-pill { 
   flex:1; 
-  height:52px; 
+  min-height:52px; 
+  max-height: 150px;
   width: 100% !important;
   border-radius:26px; 
-  padding:12px 20px; 
+  padding:14px 20px; 
   border:none;
   font-size:16px;
   color: #1d1d1f;
@@ -2680,6 +2681,10 @@ html.keyboard-open .panel-footer {
   transition: all 0.3s cubic-bezier(.2,.9,.2,1), color 0.15s ease-out, text-shadow 0.15s ease-out;
   position: relative;
   z-index: 5;
+  resize: none;
+  overflow-y: auto;
+  line-height: 1.4;
+  font-family: inherit;
 }
 
 /* Power Mode shake effect */
@@ -7247,22 +7252,30 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
   user-select: none;
   box-shadow: none !important;
   display: flex;
-  align-items: center;
-  padding-left: 16px; /* align with input padding */
+  align-items: flex-start;
+  padding: 14px 20px; /* match textarea padding */
   font-size: 16px; /* match .input-pill */
   line-height: 1.4;
   font-family: inherit;
+  overflow: hidden; /* prevent overflow */
 }
 .ghost-input .ghost-typed {
   color: transparent !important; /* reserve space so suffix aligns */
-  white-space: pre; /* preserve spaces */
+  white-space: pre-wrap; /* allow wrapping */
+  word-break: break-word;
   min-width: 0; /* allow shrinking */
-  display: inline-block;
+  display: inline;
+  max-width: 100%;
 }
 .ghost-input .ghost-suffix {
   font-weight: 500;
-  white-space: pre;
+  white-space: nowrap;
   pointer-events: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 50%; /* limit suffix width to prevent overflow */
+  display: inline-block;
+  vertical-align: baseline;
 }
 
 /* Hide ghost overlay entirely while typing tooltip is visible so guide text is never occluded */
