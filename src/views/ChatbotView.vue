@@ -1838,18 +1838,15 @@ export default {
       }
     },
     scrollTutorialCardStyle() {
-      if (!this.scrollButtonRect) {
-        return {
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)'
-        }
-      }
-      // Card appears above the button (button is usually at bottom-left)
+      // Show card in center of screen
       return {
-        bottom: `${window.innerHeight - this.scrollButtonRect.top + 20}px`,
-        left: `${this.scrollButtonRect.left + this.scrollButtonRect.width / 2}px`,
-        transform: 'translateX(-50%)'
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        bottom: 'auto',
+        right: 'auto',
+        transform: 'translate(-50%, -50%)',
+        maxWidth: 'calc(100vw - 40px)'
       }
     },
     scrollTutorialArrowStyle() {
@@ -1879,23 +1876,12 @@ export default {
       }
     },
     menuTutorialCardStyle() {
-      if (!this.menuTutorialTargetRect) {
-        // Center the card when no target
-        return {
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)'
-        }
-      }
-      // Show card below the target at the bottom of screen
-      const viewportHeight = window.innerHeight
-      const targetBottom = this.menuTutorialTargetRect.bottom
-      
-      // Card appears below the menu/target (closer to bottom)
+      // Show card in center vertically and horizontally
       return {
-        bottom: `${viewportHeight - targetBottom - 180}px`, // Reduced offset to position card lower
+        top: '50%',
         left: '50%',
-        transform: 'translateX(-50%)',
+        bottom: 'auto',
+        transform: 'translate(-50%, -50%)',
         maxWidth: 'calc(100vw - 40px)'
       }
     },
@@ -4297,15 +4283,37 @@ export default {
     // 🗺️ Create Apple-style embedded Google Map widget
     createMapWidget(mapUrl, lat, lng, label = 'ดูแผนที่') {
       const zoom = 15;
+      
+      // Request user location to show both current position and destination (non-blocking)
+      if (navigator.geolocation && !this.userLocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            this.userLocation = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            console.log('📍 User location obtained for map:', this.userLocation);
+            // Note: Map is already rendered, this location will be used for next map widget
+          },
+          (error) => {
+            console.log('📍 Could not get user location:', error.message);
+            // Continue without user location
+          },
+          { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
+        );
+      }
+      
+      // Generate and return map HTML immediately (will use cached location if available)
+      return this.generateMapWithLocation(mapUrl, lat, lng, label, zoom);
+    },
+    
+    generateMapWithLocation(mapUrl, lat, lng, label, zoom) {
       let embedUrl;
       
       // If user location is available, show directions
       if (this.userLocation) {
         const userLat = this.userLocation.lat;
         const userLng = this.userLocation.lng;
-        // Calculate center point between user and destination
-        const centerLat = (userLat + lat) / 2;
-        const centerLng = (userLng + lng) / 2;
         // Google Maps directions embed URL
         embedUrl = `https://www.google.com/maps/embed/v1/directions?key=&origin=${userLat},${userLng}&destination=${lat},${lng}&mode=driving`;
         // Fallback if no API key: use regular directions URL
