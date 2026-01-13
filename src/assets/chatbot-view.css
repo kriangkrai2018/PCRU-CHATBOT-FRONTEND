@@ -298,10 +298,6 @@ html.theme-transitioning div {
 .panel-top {
   position: relative;
   z-index: 15;
-  border-bottom: 1px solid rgba(229, 231, 235, 0.3);
-  background-color: rgba(243, 244, 246, 0.15);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   min-height: 60px;
 }
 .panel-title {
@@ -475,12 +471,7 @@ html.theme-transitioning div {
     filter: blur(80px);
     animation-duration: 45s;
   }
-  
-  /* Reduce blur for better mobile performance */
-  .panel-top {
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-  }
+
 }
 
 /* Theme Toggle Button consolidated (moved/merged) */
@@ -7313,7 +7304,6 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
 .chat-panel *,
 .chat-overlay,
 .message-bubble,
-.panel-top,
 .panel-footer,
 .input-pill,
 .fab-open {

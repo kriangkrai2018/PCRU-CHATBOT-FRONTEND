@@ -190,13 +190,7 @@
   color: var(--cb-text-inverse) !important;
 } 
 
-/* Dark Mode Panel Top - Semi-transparent to show orbs */
-[data-theme="dark"] .panel-top {
-  background-color: rgba(26, 26, 46, 0.3) !important;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(148, 163, 197, 0.2);
-}
+
 
 /* Dark Mode Theme Toggle Button - Light Gray (icon color becomes purple) */
 [data-theme="dark"] .theme-toggle-btn {
@@ -611,11 +605,7 @@ html.theme-transitioning [data-theme="light"] * {
     box-shadow: 0 0 25px rgba(139, 76, 184, 0.15) !important;
   }
   
-  /* Reduce blur on mobile for better performance */
-  [data-theme="dark"] .panel-top {
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-  }
+ 
   
   [data-theme="dark"] .theme-toggle-btn {
     backdrop-filter: blur(4px) !important;
@@ -634,7 +624,6 @@ html.theme-transitioning [data-theme="light"] * {
     display: none !important;
   }
   
-  [data-theme="dark"] .panel-top,
   [data-theme="dark"] .theme-toggle-btn,
   [data-theme="dark"] .bot-with-categories {
     backdrop-filter: none !important;
