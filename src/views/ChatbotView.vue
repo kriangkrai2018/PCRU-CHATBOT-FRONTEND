@@ -318,11 +318,11 @@
                     <!-- Categories Toggle Button -->
                     <div class="categories-toggle-wrapper">
                       <button class="categories-toggle-btn" @click="showWelcomeCategories = !showWelcomeCategories">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <rect x="3" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
-                          <rect x="14" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
-                          <rect x="3" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
-                          <rect x="14" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                        <svg class="grid-icon-animated" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect class="grid-rect-1" x="3" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                          <rect class="grid-rect-2" x="14" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                          <rect class="grid-rect-3" x="3" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                          <rect class="grid-rect-4" x="14" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
                         </svg>
                         <span>{{ showWelcomeCategories ? 'ซ่อนหมวดหมู่' : 'แสดงหมวดหมู่' }}</span>
                         <svg class="toggle-arrow" :class="{ 'arrow-up': showWelcomeCategories }" width="14" height="14" viewBox="0 0 24 24">
@@ -881,11 +881,11 @@
                   <rect x="7" y="16" width="10" height="2" rx="0.5" fill="currentColor"/>
                 </svg>
                 <!-- Menu icon (shown when keyboard mode) -->
-                <svg v-else width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="3" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
-                  <rect x="14" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
-                  <rect x="3" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
-                  <rect x="14" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                <svg v-else class="grid-icon-animated" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect class="grid-rect-1" x="3" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                  <rect class="grid-rect-2" x="14" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                  <rect class="grid-rect-3" x="3" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                  <rect class="grid-rect-4" x="14" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
                 </svg>
               </button>
               
@@ -8433,6 +8433,11 @@ export default {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
+  max-width: 100%;
+  padding: 0 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 70vh;
 }
 
 /* Menu Header with back button - sticky and always visible */
@@ -8476,7 +8481,7 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 12px 6px;
+  padding: 10px 6px;
   border: none;
   background: rgba(139, 76, 184, 0.06);
   border-radius: 12px;
@@ -8484,6 +8489,8 @@ export default {
   transition: all 0.2s ease;
   gap: 6px;
   position: relative;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .line-menu-item.has-children::after {
@@ -8586,15 +8593,14 @@ export default {
 .line-menu-item:nth-child(8) .line-menu-icon { animation-delay: 1.4s; }
 
 .line-menu-label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   color: #1d1d1f;
   text-align: center;
   line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
   max-width: 100%;
 }
 
@@ -8758,6 +8764,40 @@ export default {
 
 .categories-toggle-btn .toggle-arrow.arrow-up {
   transform: rotate(180deg);
+}
+
+/* 🎨 Grid icon animation */
+.grid-icon-animated {
+  animation: grid-icon-pulse 2s ease-in-out infinite;
+}
+
+@keyframes grid-icon-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.grid-icon-animated .grid-rect-1,
+.grid-icon-animated .grid-rect-2,
+.grid-icon-animated .grid-rect-3,
+.grid-icon-animated .grid-rect-4 {
+  animation: grid-rect-wave 2s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.grid-icon-animated .grid-rect-1 { animation-delay: 0s; }
+.grid-icon-animated .grid-rect-2 { animation-delay: 0.15s; }
+.grid-icon-animated .grid-rect-3 { animation-delay: 0.3s; }
+.grid-icon-animated .grid-rect-4 { animation-delay: 0.45s; }
+
+@keyframes grid-rect-wave {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: scale(0.85);
+    opacity: 0.7;
+  }
 }
 
 /* Categories expand animation */
@@ -9434,6 +9474,11 @@ html[data-theme="light"] .line-menu-fullscreen-wrapper .input-row.fullscreen-inp
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
+  max-width: 100%;
+  padding: 0 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 70vh;
 }
 
 .line-menu-fullscreen-wrapper .line-menu-header {
