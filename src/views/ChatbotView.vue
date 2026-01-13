@@ -2116,42 +2116,86 @@ export default {
     
     // 🗺️ Global function for map navigation (used by inline onclick)
     window.pcruNavigateTo = (destLat, destLng) => {
+      // Check if we already have user location from previous request
+      if (this.userLocation && this.userLocation.lat && this.userLocation.lng) {
+        const userLat = this.userLocation.lat;
+        const userLng = this.userLocation.lng;
+        // Open Google Maps with directions immediately using cached location
+        const directionsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${destLat},${destLng}&travelmode=driving`;
+        window.open(directionsUrl, '_blank');
+        return;
+      }
+      
       if (!navigator.geolocation) {
-        alert('เบราว์เซอร์ของคุณไม่รองรับการระบุตำแหน่ง');
-        // Fallback: open directions without origin
+        // No geolocation support, open Google Maps directly (will ask for location)
         window.open(`https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=driving`, '_blank');
         return;
       }
       
-      // Show loading state
-      const btn = event.currentTarget;
-      const originalContent = btn.innerHTML;
-      btn.innerHTML = '<span class="loading-spinner-small"></span>';
-      btn.disabled = true;
-      
+      // Request geolocation and open Google Maps immediately
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const userLat = position.coords.latitude;
           const userLng = position.coords.longitude;
-          // Store user location in Vue instance for map widget updates
+          // Store user location in Vue instance for future use
           this.userLocation = { lat: userLat, lng: userLng };
           // Open Google Maps with directions from current location
           const directionsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${destLat},${destLng}&travelmode=driving`;
           window.open(directionsUrl, '_blank');
-          // Restore button
-          btn.innerHTML = originalContent;
-          btn.disabled = false;
         },
         (error) => {
           console.error('Geolocation error:', error);
-          // Fallback: open directions without origin (Google will ask for location)
+          // Fallback: open directions without origin (Google Maps will ask for location)
           window.open(`https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=driving`, '_blank');
-          // Restore button
-          btn.innerHTML = originalContent;
-          btn.disabled = false;
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+        { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
       );
+    };
+    
+    // 🗺️ Global function for opening map in fullscreen modal
+    window.openMapFullscreen = (embedUrl) => {
+      // Create fullscreen modal
+      const modal = document.createElement('div');
+      modal.className = 'map-fullscreen-modal';
+      modal.innerHTML = `
+        <div class="map-fullscreen-overlay" onclick="this.parentElement.remove()"></div>
+        <div class="map-fullscreen-content">
+          <button class="map-fullscreen-close" onclick="this.closest('.map-fullscreen-modal').remove()" title="ปิด">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+          <iframe src="${embedUrl}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+      // Restore body scroll when modal is closed
+      modal.addEventListener('DOMNodeRemoved', () => {
+        document.body.style.overflow = '';
+      });
+    };
+    
+    // 🗺️ Request geolocation permission when map widget is displayed
+    window.requestLocationForMap = () => {
+      if (navigator.geolocation && !this.locationPermissionRequested) {
+        this.locationPermissionRequested = true;
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            this.userLocation = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            console.log('Location permission granted:', this.userLocation);
+          },
+          (error) => {
+            console.log('Location permission denied or error:', error.message);
+          },
+          { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
+        );
+      }
     };
     
     // 🎬 Auto-open with intro animation on first visit
@@ -4365,6 +4409,11 @@ export default {
       return `<div class="map-widget-container">
 <div class="map-widget">
 <div class="map-preview">
+<button class="map-fullscreen-btn" onclick="window.openMapFullscreen('${embedUrl}')" title="เปิดแบบเต็มจอ">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+</svg>
+</button>
 <iframe src="${embedUrl}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
 </div>
 <div class="map-widget-footer">
