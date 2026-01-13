@@ -7040,6 +7040,9 @@ export default {
       if (!inputStr || inputStr.trim().length < 3) return
 
       const seq = ++this.autocompleteSuggestSeq
+      const debounceMs = parseInt(import.meta.env.VITE_AUTOCOMPLETE_DEBOUNCE_MS) || 80
+      const apiTimeoutMs = parseInt(import.meta.env.VITE_AUTOCOMPLETE_API_TIMEOUT_MS) || 5000
+      
       this.autocompleteSuggestTimer = setTimeout(async () => {
         // Ignore autocomplete while IME composition active
         if (this.isComposing) return
@@ -7053,7 +7056,7 @@ export default {
             text: currentInput.trim(),
             limit: 1
           }, {
-            timeout: 5000 // 5 second timeout
+            timeout: apiTimeoutMs // Use env variable
           })
 
           // Ignore stale results
@@ -7069,7 +7072,7 @@ export default {
           // Network/backend failure: clear suggestion
           this.suggestionText = ''
         }
-      }, 80) // Fast debounce for quick response
+      }, debounceMs) // Use env variable for debounce delay
     },
     createParticles() {
       const inputBox = this.$refs.inputBox
