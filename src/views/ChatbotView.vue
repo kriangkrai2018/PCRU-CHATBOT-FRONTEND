@@ -240,7 +240,8 @@
                   <div class="bot-avatar-wrapper">
                     <div class="bot-avatar" role="button" tabindex="0" @click="openAiIntro" title="เปิด AI เต็มจอ">
                       <!-- 🎬 Stacked videos for smooth transitions -->
-                      <video v-if="graphicsQuality === 'high' && botVideo" :src="botVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-main" :class="{ 'video-hidden': isBotSleeping || isBotWakingUp }" autoplay muted playsinline @ended="onMainVideoEnded"></video>
+                      <video v-if="graphicsQuality === 'high' && botVideo" :src="botVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-main" :class="{ 'video-hidden': isBotSleeping || isBotWakingUp || isPlayingReverse }" autoplay muted playsinline @ended="onMainVideoEnded"></video>
+                      <video v-if="graphicsQuality === 'high' && botReverseVideo" :src="botReverseVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-reverse" :class="{ 'video-visible': isPlayingReverse }" muted playsinline @ended="onReverseVideoEnded"></video>
                       <video v-if="graphicsQuality === 'high' && botSleepVideo" :src="botSleepVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-sleep" :class="{ 'video-visible': isBotSleeping }" autoplay muted playsinline></video>
                       <video v-if="graphicsQuality === 'high' && botWakeVideo" :src="botWakeVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-wake" :class="{ 'video-visible': isBotWakingUp }" muted playsinline @ended="onWakeVideoEnded" ref="wakeVideoWelcome"></video>
                       <!-- 🖼️ Normal image for non-high modes -->
@@ -434,7 +435,8 @@
                 <div v-if="msg.type === 'bot'" class="bot-avatar-wrapper">
                   <div class="bot-avatar" role="button" tabindex="0" @click="openAiIntro" title="เปิด AI เต็มจอ">
                     <!-- 🎬 Stacked videos for smooth transitions -->
-                    <video v-if="graphicsQuality === 'high' && botVideo" :src="botVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-main" :class="{ 'video-hidden': isBotSleeping || isBotWakingUp }" autoplay muted playsinline @ended="onMainVideoEnded"></video>
+                    <video v-if="graphicsQuality === 'high' && botVideo" :src="botVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-main" :class="{ 'video-hidden': isBotSleeping || isBotWakingUp || isPlayingReverse }" autoplay muted playsinline @ended="onMainVideoEnded"></video>
+                    <video v-if="graphicsQuality === 'high' && botReverseVideo" :src="botReverseVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-reverse" :class="{ 'video-visible': isPlayingReverse }" muted playsinline @ended="onReverseVideoEnded"></video>
                     <video v-if="graphicsQuality === 'high' && botSleepVideo" :src="botSleepVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-sleep" :class="{ 'video-visible': isBotSleeping }" autoplay muted playsinline></video>
                     <video v-if="graphicsQuality === 'high' && botWakeVideo" :src="botWakeVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-wake" :class="{ 'video-visible': isBotWakingUp }" muted playsinline @ended="onWakeVideoEnded"></video>
                     <!-- 🖼️ Normal image for non-high modes -->
@@ -1401,6 +1403,7 @@ import { getCategoryIcon as getIconSvg } from '@/config/categoryIcons'
 import botVideoSrc from '@/assets/bots/bot2.mp4'
 import botSleepVideoSrc from '@/assets/bots/bot2sleep.mp4'
 import botWakeVideoSrc from '@/assets/bots/bot2wake.mp4'
+import botReverseVideoSrc from '@/assets/bots/bot2reverse.mp4'
 import botFallbackImg from '@/assets/bots/bot2.jpg'
 import botSleepFallbackImg from '@/assets/bots/bot2sleep.jpg'
 import { getRandomMutterByHour, replacePronoun } from '@/config/botMutterQuotes'
@@ -1449,10 +1452,10 @@ export default {
       botVideo: botVideoSrc,
       botSleepVideo: botSleepVideoSrc,
       botWakeVideo: botWakeVideoSrc,
+      botReverseVideo: botReverseVideoSrc,
       botFallbackImg: botFallbackImg,
       botSleepFallbackImg: botSleepFallbackImg,
-      isMainVideoPlayingForward: true, // Track ping-pong direction
-      mainVideoReverseRafId: null, // requestAnimationFrame ID for reverse playback
+      isPlayingReverse: false, // Track if reverse video is playing
       userType: '',
       botName: 'ปลายฟ้า',
       botPronoun: import.meta.env.VITE_BOT_PRONOUN || 'หนู',
@@ -2702,12 +2705,6 @@ export default {
     if (this.reverseInterval) {
       cancelAnimationFrame(this.reverseInterval)
       this.reverseInterval = null
-    }
-    
-    // 🏓 Cleanup ping-pong reverse animation
-    if (this.mainVideoReverseRafId) {
-      cancelAnimationFrame(this.mainVideoReverseRafId)
-      this.mainVideoReverseRafId = null
     }
     
     // Clean up FAB long press watcher (no longer needed)
@@ -5304,46 +5301,30 @@ export default {
       }, this.idleTimeout)
     },
     onMainVideoEnded() {
-      // 🏓 Ping-pong effect: play forward → backward → forward...
-      const mainVideos = document.querySelectorAll('.bot-avatar-video-main')
-      mainVideos.forEach(video => {
-        if (this.isMainVideoPlayingForward) {
-          // Just finished playing forward → now play backward
-          console.log('🔙 Main video forward ended, reversing...')
-          this.isMainVideoPlayingForward = false
-          this.playVideoReverse(video)
-        } else {
-          // Just finished playing backward → now play forward again
-          console.log('▶️ Main video reverse ended, playing forward...')
-          this.isMainVideoPlayingForward = true
+      // 🏓 Ping-pong effect: เล่นจบแล้ว → แสดง reverse video
+      console.log('🔙 Main video ended, playing reverse video...')
+      this.isPlayingReverse = true
+      // เล่น reverse videos ทั้งหมด
+      this.$nextTick(() => {
+        const reverseVideos = document.querySelectorAll('.bot-avatar-video-reverse')
+        reverseVideos.forEach(video => {
           video.currentTime = 0
           video.play().catch(() => {})
-        }
+        })
       })
     },
-    playVideoReverse(video) {
-      // ใช้ requestAnimationFrame เล่นวีดีโอย้อนกลับ
-      if (this.mainVideoReverseRafId) {
-        cancelAnimationFrame(this.mainVideoReverseRafId)
-      }
-      const fps = 30
-      const interval = 1000 / fps
-      let lastTime = performance.now()
-      const reverseFrame = (currentTime) => {
-        const delta = currentTime - lastTime
-        if (delta >= interval) {
-          lastTime = currentTime
-          video.currentTime -= delta / 1000
-          if (video.currentTime <= 0) {
-            video.currentTime = 0
-            // Reverse จบแล้ว → trigger ended event manually
-            this.onMainVideoEnded()
-            return
-          }
-        }
-        this.mainVideoReverseRafId = requestAnimationFrame(reverseFrame)
-      }
-      this.mainVideoReverseRafId = requestAnimationFrame(reverseFrame)
+    onReverseVideoEnded() {
+      // ▶️ Reverse video เล่นจบแล้ว → กลับไปเล่น main video
+      console.log('▶️ Reverse video ended, playing main video...')
+      this.isPlayingReverse = false
+      // เล่น main videos ทั้งหมดจากต้น
+      this.$nextTick(() => {
+        const mainVideos = document.querySelectorAll('.bot-avatar-video-main')
+        mainVideos.forEach(video => {
+          video.currentTime = 0
+          video.play().catch(() => {})
+        })
+      })
     },
     onWakeVideoEnded() {
       // เมื่อ wake video เล่นจบ

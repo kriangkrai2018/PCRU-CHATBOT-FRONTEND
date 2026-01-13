@@ -3705,8 +3705,18 @@ html.keyboard-open .message-wrapper {
   opacity: 0;
 }
 
-.bot-avatar-video-sleep {
+.bot-avatar-video-reverse {
   z-index: 3;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.bot-avatar-video-reverse.video-visible {
+  opacity: 1;
+}
+
+.bot-avatar-video-sleep {
+  z-index: 4;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -3716,7 +3726,7 @@ html.keyboard-open .message-wrapper {
 }
 
 .bot-avatar-video-wake {
-  z-index: 4;
+  z-index: 5;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
