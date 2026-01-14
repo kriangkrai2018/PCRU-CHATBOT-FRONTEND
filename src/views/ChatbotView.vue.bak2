@@ -3439,7 +3439,7 @@ export default {
       const currentHeight = panelHeight + dragDistance
       
       // Determine collapse or close based on current drag height
-      if (currentHeight < panelHeight * 0.4) {
+      if (currentHeight < panelHeight * 0.7) {
         // Dragged down past 40% - collapse to normal
         this.lineMenuExpanded = false
       }
