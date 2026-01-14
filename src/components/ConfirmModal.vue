@@ -173,8 +173,9 @@ const handleCancel = () => {
 }
 
 .confirm-modal-icon.warning {
-  background: #FFF3E0;
-  color: #FF9500;
+  /* Purple warning (align with brand purple) */
+  background: #F3E8FF; /* very light purple */
+  color: #5856D6; /* brand purple */
 }
 
 .confirm-modal-icon.success {
@@ -273,7 +274,8 @@ const handleCancel = () => {
 }
 
 .btn-modal-primary.warning {
-  background: #FF9500;
+  /* Use brand purple for warning actions */
+  background: #5856D6;
 }
 
 .btn-modal-primary.success {
@@ -323,4 +325,68 @@ const handleCancel = () => {
   transform: scale(0.9);
   opacity: 0;
 }
+
+/* Dark mode overrides */
+html[data-theme="dark"] .confirm-modal-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+html[data-theme="dark"] .confirm-modal-content {
+  background: #1c1c1e; /* surface */
+  color: #f2f2f7; /* text */
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+}
+
+html[data-theme="dark"] .confirm-modal-title {
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .confirm-modal-text {
+  color: #d1d1d6;
+}
+
+html[data-theme="dark"] .confirm-modal-icon.danger {
+  background: rgba(255, 69, 58, 0.12);
+  color: #ff6b6b;
+}
+
+html[data-theme="dark"] .confirm-modal-icon.warning {
+  background: rgba(88, 86, 214, 0.08); /* subtle purple tint */
+  color: #cfc6ff; /* light purple text/icon */
+}
+
+html[data-theme="dark"] .btn-modal-primary.warning {
+  background: #6a5afc; /* slightly brighter purple for contrast */
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .confirm-modal-icon.info {
+  background: rgba(0, 122, 255, 0.08);
+  color: #9ad1ff;
+}
+
+html[data-theme="dark"] .confirm-modal-icon.success {
+  background: rgba(52, 199, 89, 0.08);
+  color: #7ee38f;
+}
+
+html[data-theme="dark"] .btn-modal-secondary {
+  background: #2c2c2e;
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .btn-modal-secondary:hover:not(:disabled) {
+  background: #353537;
+}
+
+html[data-theme="dark"] .btn-modal-primary {
+  /* keep primary variants but ensure text contrast */
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .loading-spinner {
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #ffffff;
+}
+
 </style>

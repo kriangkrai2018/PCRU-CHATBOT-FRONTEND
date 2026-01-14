@@ -1809,6 +1809,9 @@
 
     <!-- ChatbotHelpView Component -->
     <ChatbotHelpView :visible="showHelpModal" @close="closeHelpModal" />
+
+    <!-- Confirm Modal Component -->
+    <ConfirmModalComponent />
   </div>
 </template>
 
@@ -1816,7 +1819,6 @@
 import { getBotAvatar } from '@/config/botConfig'
 import { getCategoryIcon as getIconSvg } from '@/config/categoryIcons'
 import { useBotTooltip } from '@/composables/useBotTooltip'
-import { useConfirm } from '@/composables/useConfirm'
 import botVideoSrc from '@/assets/bots/bot2.mp4'
 import botSleepVideoSrc from '@/assets/bots/bot2sleep.mp4'
 import botWakeVideoSrc from '@/assets/bots/bot2wake.mp4'
@@ -1826,13 +1828,16 @@ import botSleepFallbackImg from '@/assets/bots/bot2sleep.jpg'
 import { getRandomMutterByHour, replacePronoun } from '@/config/botMutterQuotes'
 import ChatbotHelpView from './ChatbotHelpView.vue'
 import BotTooltip from '@/components/BotTooltip.vue'
+import { useConfirm } from '@/composables/useConfirm'
+const confirmComposable = useConfirm()
 import { universityContacts, carouselQuickContacts } from '@/config/contacts.js';
 
 export default {
   name: 'ChatbotView',
   components: {
     ChatbotHelpView,
-    BotTooltip
+    BotTooltip,
+    ConfirmModalComponent: confirmComposable.ConfirmModalComponent
   },
   data() {
     return {
@@ -3490,13 +3495,51 @@ export default {
     },
     
     // 🤖 Gemini AI Mode Toggle
-    toggleGeminiMode() {
-      // Clear chat history every time the toggle is pressed
+    async toggleGeminiMode() {
+      // If there's no chat history (in-memory or persisted), skip confirmation and toggle immediately
+      let persisted = []
+      try { persisted = JSON.parse(localStorage.getItem('chatbot_messages') || '[]') } catch (e) { persisted = [] }
+      if ((!this.messages || this.messages.length === 0) && (!persisted || persisted.length === 0)) {
+        this._doToggleGeminiMode()
+        return
+      }
+
+      // If user already chose to not be asked, proceed immediately
+      if (localStorage.getItem('gemini_toggle_no_confirm') === 'true') {
+        this._doToggleGeminiMode()
+        return
+      }
+
+      // Show confirm dialog using existing confirm composable
+      const confirmed = await confirmComposable.confirm({
+        title: 'เริ่มแชทใหม่ใช่ไหม',
+        message: 'การเลือกเครื่องมือนี้จะเริ่มแชทใหม่<br>คุณกลับมาที่การสนทนานี้ได้ทุกเมื่อ<br><label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.75rem"><input id="geminiNoAskCheckbox" type="checkbox" /> อย่าถามฉันอีก</label>',
+        variant: 'warning',
+        confirmText: 'เริ่มแชทใหม่',
+        cancelText: 'ยกเลิก'
+      })
+
+      if (confirmed) {
+        const checkbox = document.getElementById('geminiNoAskCheckbox')
+        if (checkbox && checkbox.checked) {
+          try { localStorage.setItem('gemini_toggle_no_confirm', 'true') } catch (e) {}
+        }
+        this._doToggleGeminiMode()
+      } else {
+        // user cancelled – do nothing
+      }
+    },
+
+
+    // Internal helper that performs the actual toggle and clears chat
+    _doToggleGeminiMode() {
+      // Clear chat history first
       this.clearChatHistory()
-      
+
+      // Now toggle the mode
       this.useGeminiMode = !this.useGeminiMode
       console.log('🤖 Toggle Gemini Mode:', this.useGeminiMode ? 'AI Mode ✨' : 'Search Mode 🔍')
-      
+
       // Show toast notification
       if (this.$toast) {
         if (this.useGeminiMode) {
@@ -3505,7 +3548,7 @@ export default {
           this.$toast.info('เปิดโหมดค้นหา 🔍 บอทจะค้นหาจากคลังข้อมูล', { duration: 2000 })
         }
       }
-      
+
       // Clear Gemini session when switching off
       if (!this.useGeminiMode && this.geminiSessionId) {
         // Clear session on backend
@@ -3514,12 +3557,12 @@ export default {
         }
         this.geminiSessionId = null
       }
-      
+
       // Generate new session ID when switching on
       if (this.useGeminiMode && !this.geminiSessionId) {
         this.geminiSessionId = 'web-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9)
       }
-      
+
       // Trigger tutorial when user clicks the toggle button
       if (!this.showGeminiTutorial) {
         this.$nextTick(() => {
@@ -3527,6 +3570,7 @@ export default {
         })
       }
     },
+
     
     toggleVoiceMode() {
       this.isVoiceMode = !this.isVoiceMode
