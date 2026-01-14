@@ -398,17 +398,21 @@ html.theme-transitioning div {
   z-index: 1600; /* Above snowflakes (z-index: 1500) */
   border-top: 1px solid transparent;
   background: inherit; /* Ensure solid background to cover snow */
+  margin: 0rem 1rem 1rem 1rem !important;
+  border-radius: 34px;
+  padding: 1rem !important;
 }
 
 .input-pill {
-  border: 1px solid transparent !important; /* Flat style in dark */
+  border: 1px solid rgba(139, 76, 184, 0.3) !important; /* Subtle purple border */
   height: 40px; /* Chrome standard height */
 }
 .input-pill::placeholder {
   color: inherit;
 }
 .input-pill:focus {
-  box-shadow: 0 0 0 2px transparent; /* Focus ring using accent */
+  border: 1px solid rgba(139, 76, 184, 0.6) !important; /* Stronger border when focused */
+  box-shadow: 0 0 0 2px rgba(139, 76, 184, 0.1); /* Focus ring using accent */
 }
 
 /* Welcome Screen Categories */
@@ -802,45 +806,6 @@ html.keyboard-open .close-circle {
   }
   66% {
     transform: translate3d(-30px, -25px, 0) scale(0.92);
-  }
-}
-
-/* ✨ Colorful Particles - Small colorful orbs floating up */
-.particle-container {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-  transform: translate3d(0, 0, 0);
-  will-change: auto;
-  isolation: isolate;
-}
-
-.particle {
-  position: absolute;
-  bottom: -20px;
-  border-radius: 50%;
-  /* opacity controlled by inline style from getParticleStyle() */
-  filter: blur(1px);
-  box-shadow: 0 0 8px currentColor;
-  animation: particleFloat linear infinite;
-}
-
-@keyframes particleFloat {
-  0% {
-    transform: translateY(0) translateX(0) scale(1);
-    opacity: 0;
-  }
-  10% {
-    opacity: 0.7;
-  }
-  90% {
-    opacity: 0.7;
-  }
-  100% {
-    transform: translateY(-100vh) translateX(30px) scale(0.5);
-    opacity: 0;
   }
 }
 
@@ -2202,7 +2167,6 @@ html[data-theme="dark"].gfx-low .apple-help-overlay .apple-panel {
 }
 
 /* Show intro particles and effects even in low mode */
-.gfx-low .intro-overlay .intro-particle,
 .gfx-low .intro-overlay .intro-glow,
 .gfx-low .intro-overlay .intro-ring,
 .gfx-low .intro-overlay .sparkle,
@@ -2225,8 +2189,7 @@ html[data-theme="dark"].gfx-low .apple-help-overlay .apple-panel {
 }
 
 /* Medium quality - reduced effects */
-.gfx-medium .snowflake,
-.gfx-medium .intro-particle {
+.gfx-medium .snowflake {
   display: none !important;
 }
 
@@ -2243,8 +2206,7 @@ html[data-theme="dark"].gfx-low .apple-help-overlay .apple-panel {
 }
 
 /* High quality - all effects enabled (default) */
-.gfx-high .snowflake,
-.gfx-high .intro-particle {
+.gfx-high .snowflake {
   display: block;
 }
 
@@ -2636,23 +2598,7 @@ html.keyboard-open .clear-chat-btn {
 }
 
 .panel-footer { 
-  display:flex; 
-  align-items:center; 
-  gap:8px; 
-  padding: 12px;
-  padding-left: 12px;
-  padding-right: 12px;
-  border-top:1px solid rgba(0,0,0,0.04);
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  position: relative;
-  box-sizing: border-box;
-  width: 100%;
-  flex-shrink: 0;
-  overflow: visible;
-  z-index: 20;
-  min-height: 52px;
+  padding: 12px 0px;
 }
 
 /* Bottom-anchored typing bubble shown near the input */
@@ -2676,17 +2622,6 @@ html.keyboard-open .panel-footer {
   /* Reduce keyboard-open right padding so the send button sits closer to the edge */
   padding-right: max(0px, env(safe-area-inset-right, 0px));
 }
-
-/* Particle canvas for power mode */
-.particle-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 10;
-}
 .input-pill { 
   flex:1; 
   min-height:52px; 
@@ -2694,7 +2629,7 @@ html.keyboard-open .panel-footer {
   width: 100% !important;
   border-radius:26px; 
   padding:14px 20px; 
-  border:none;
+  border: 1px solid rgba(139, 76, 184, 0.3) !important; /* Subtle purple border */
   font-size:16px;
   color: #1d1d1f;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.3) inset;
@@ -2718,6 +2653,7 @@ html.keyboard-open .panel-footer {
 
 .input-pill:focus {
   outline: none;
+  border: 1px solid rgba(139, 76, 184, 0.6) !important; /* Stronger border when focused */
   box-shadow: 0 4px 20px rgba(107, 44, 145, 0.18), 0 0 0 3px rgba(107, 44, 145, 0.12);
   background: rgba(255, 255, 255, 1);
 }
@@ -2732,12 +2668,7 @@ html.keyboard-open .panel-footer {
 }
 
 /* Footer layout: use flex so input and button sizes are predictable */
-.panel-footer {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+
 
 /* Input should shrink properly inside flex while reserving space on the right for the send button */
 .panel-footer .input-pill {
@@ -3689,7 +3620,7 @@ html.keyboard-open .message-wrapper {
   justify-content: flex-start;
   gap: 10px;
   /* remove top padding so content sits lower; keep bottom padding for spacing */
-  padding: 12px 0 12px;
+  padding: 12px 12px 12px;
   /* Align avatar and bot bubble to the bottom of the row instead of the top */
   align-items: flex-end;
 }
@@ -4502,24 +4433,6 @@ body.no-effects .apple-help-button::after { display: none !important; }
 .ai-action-icon { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
 .ai-svg-icon { width: 26px; height: 26px; }
 .ai-action-title { font-size: 12px; font-weight: 600; text-align: center; }
-
-/* Flying text animation - Fantasy style */
-.flying-text {
-  position: fixed;
-  background: linear-gradient(135deg, rgba(139,76,184,0.95) 0%, rgba(107,44,145,0.95) 100%);
-  color: white;
-  padding: 14px 20px;
-  border-radius: 20px;
-  font-size: 15px;
-  font-weight: 500;
-  z-index: 2000;
-  pointer-events: none;
-  box-shadow: 0 8px 32px rgba(107,44,145,0.4), 0 0 0 1px rgba(255,255,255,0.1);
-  backdrop-filter: blur(20px);
-  max-width: 70%;
-  word-wrap: break-word;
-  will-change: transform, opacity, left, top;
-}
 
 /* Overlay transition - Apple spring effect */
 .ai-fade-enter-active { 
@@ -6617,7 +6530,7 @@ body.no-effects .apple-help-button::after { display: none !important; }
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  bottom: 100px;
+  bottom: 160px !important;
   width: 48px;
   height: 48px;
   border-radius: 28px;
@@ -6840,8 +6753,8 @@ body.no-effects .apple-help-button::after { display: none !important; }
   }
   
   .fab-open {
-    width: 56px;
-    height: 56px;
+    width: 44px;
+    height: 44px;
     bottom: 20px;
     right: 20px;
   }
@@ -7270,7 +7183,6 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
 .chat-panel,
 .overlay-backdrop,
 .snowflake,
-.flying-text,
 .ai-intro-content {
   will-change: transform, opacity;
   transform: translate3d(0, 0, 0);
@@ -7310,12 +7222,7 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
   box-sizing: border-box;
 }
 
-.real-input {
-  position: relative;
-  z-index: 2;
-  background-color: transparent !important;
-  color: #111;
-}
+
 
 
 .ghost-input {
@@ -7375,8 +7282,6 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
 }
-
-.particle-canvas { pointer-events: none; }
 
 .message-list { -webkit-overflow-scrolling: touch; }
 
@@ -7716,27 +7621,6 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
   }
 }
 
-/* iOS Safari standalone - remove safe area padding since no URL bar */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  @media screen and (max-width: 600px) {
-    html.standalone .panel-footer,
-    html[data-pwa="true"] .panel-footer {
-      padding-bottom: 12px !important;
-      margin-bottom: 0 !important;
-    }
-    
-    html.standalone .chat-panel,
-    html[data-pwa="true"] .chat-panel {
-      padding-bottom: 0 !important;
-    }
-  }
-}
-
-/* Vue-controlled PWA Standalone class - most reliable */
-.panel-footer.pwa-standalone {
-  padding-bottom: 12px !important;
-  margin-bottom: 0 !important;
-}
 
 /* ========================================
    🎓 Feedback Tutorial (Heyday-style)

@@ -1758,7 +1758,7 @@ export default {
       loadError: '',
       isOffline: false, // 🔴 Backend connection status
       query: '',
-      placeholderText: 'ขอทุน, ปฏิทินวิชาการ, สวัสดิฯ',
+      placeholderText: 'ขอความช่วยเหลืองจาก ปลายฟ้า',
       placeholderExamples: [], // Array of synonym examples from database
       placeholderIndex: 0,
       placeholderInterval: null,
@@ -2019,7 +2019,7 @@ export default {
       isDragging: false,
       dragStartY: 0,
       dragCurrentY: 0,
-      menuBaseHeight: 380, // Base height of menu
+      menuBaseHeight: 390, // Base height of menu
       panelHeight: 0, // Chat panel height for fullscreen calculation
       fullscreenDragHeight: 0, // Track drag height when in fullscreen mode
       // 📱 Menu Tutorial (LINE-style guide)
@@ -2137,7 +2137,7 @@ export default {
       if (this.useGeminiMode) {
         return '✨ ถามอะไรก็ได้กับ AI...'
       }
-      return this.placeholderText || 'ขอทุน, ปฏิทินวิชาการ, สวัสดิฯ'
+      return this.placeholderText || 'ขอความช่วยเหลืองจาก ปลายฟ้า'
     },
     
     // 🎠 Carousel track transform style
@@ -9160,7 +9160,7 @@ export default {
         
         // ถ้าไม่มีข้อมูลจาก database ใช้ default
         if (this.placeholderExamples.length === 0) {
-          this.placeholderExamples = ['ขอทุน, ปฏิทินวิชาการ, สวัสดิฯ']
+          this.placeholderExamples = ['ขอความช่วยเหลืองจาก ปลายฟ้า']
         }
         
         // เริ่ม carousel
@@ -9168,7 +9168,7 @@ export default {
       } catch (err) {
         console.error('Failed to load synonyms for carousel:', err)
         // Fallback to default
-        this.placeholderExamples = ['ขอทุน, ปฏิทินวิชาการ, สวัสดิฯ']
+        this.placeholderExamples = ['ขอความช่วยเหลืองจาก ปลายฟ้า']
         this.startPlaceholderCarousel()
       }
     },

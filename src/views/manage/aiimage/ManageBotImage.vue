@@ -43,10 +43,6 @@
               </div>
               <span>ยังไม่มีรูปภาพ</span>
             </div>
-            <!-- Floating particles around image -->
-            <div class="image-particles">
-              <span v-for="i in 6" :key="i" class="particle" :style="{ '--delay': `${i * 0.5}s`, '--angle': `${i * 60}deg` }"></span>
-            </div>
           </div>
           <div v-if="currentImage" class="image-info">
             <div class="info-row">
@@ -102,9 +98,6 @@
           <!-- Background animation -->
           <div class="drop-zone-bg">
             <div class="bg-gradient"></div>
-            <div class="bg-particles">
-              <span v-for="i in 12" :key="i"></span>
-            </div>
           </div>
 
           <input 
@@ -154,9 +147,6 @@
                 <rect x="12" y="6" width="40" height="52" rx="4" stroke="url(#successGrad)" stroke-width="2"/>
                 <path class="check-path" d="M24 32L30 38L42 26" stroke="url(#successGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              <div class="success-particles">
-                <span v-for="i in 8" :key="i"></span>
-              </div>
             </div>
             
             <!-- Uploading Spinner -->
@@ -681,37 +671,6 @@ function formatDate(dateStr) {
   }
 }
 
-/* Floating Particles */
-.image-particles {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.particle {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #A855F7, #7C3AED);
-  opacity: 0;
-  top: 50%;
-  left: 50%;
-  animation: particleFloat 3s ease-in-out infinite;
-  animation-delay: var(--delay);
-}
-
-@keyframes particleFloat {
-  0%, 100% {
-    transform: translate(-50%, -50%) rotate(var(--angle)) translateX(80px) scale(0);
-    opacity: 0;
-  }
-  50% {
-    transform: translate(-50%, -50%) rotate(var(--angle)) translateX(120px) scale(1);
-    opacity: 0.6;
-  }
-}
-
 /* Placeholder */
 .no-image-placeholder {
   display: flex;
@@ -808,45 +767,6 @@ function formatDate(dateStr) {
 .upload-drop-zone:hover .bg-gradient,
 .upload-drop-zone.is-dragging .bg-gradient {
   opacity: 1;
-}
-
-.bg-particles span {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: rgba(168, 85, 247, 0.3);
-  animation: bgParticle 20s linear infinite;
-}
-
-.bg-particles span:nth-child(1) { left: 10%; animation-delay: 0s; }
-.bg-particles span:nth-child(2) { left: 20%; animation-delay: -2s; }
-.bg-particles span:nth-child(3) { left: 30%; animation-delay: -4s; }
-.bg-particles span:nth-child(4) { left: 40%; animation-delay: -6s; }
-.bg-particles span:nth-child(5) { left: 50%; animation-delay: -8s; }
-.bg-particles span:nth-child(6) { left: 60%; animation-delay: -10s; }
-.bg-particles span:nth-child(7) { left: 70%; animation-delay: -12s; }
-.bg-particles span:nth-child(8) { left: 80%; animation-delay: -14s; }
-.bg-particles span:nth-child(9) { left: 90%; animation-delay: -16s; }
-.bg-particles span:nth-child(10) { left: 15%; animation-delay: -18s; }
-.bg-particles span:nth-child(11) { left: 45%; animation-delay: -3s; }
-.bg-particles span:nth-child(12) { left: 75%; animation-delay: -7s; }
-
-@keyframes bgParticle {
-  0% {
-    transform: translateY(100%) scale(0);
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-100vh) scale(1);
-    opacity: 0;
-  }
 }
 
 .hidden-input {
@@ -960,48 +880,6 @@ function formatDate(dateStr) {
 
 @keyframes drawCheck {
   to { stroke-dashoffset: 0; }
-}
-
-/* Success Particles */
-.success-particles {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100px;
-  height: 100px;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-
-.success-particles span {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #34D399, #10B981);
-  top: 50%;
-  left: 50%;
-  animation: successParticle 0.6s ease-out forwards;
-}
-
-.success-particles span:nth-child(1) { --angle: 0deg; }
-.success-particles span:nth-child(2) { --angle: 45deg; }
-.success-particles span:nth-child(3) { --angle: 90deg; }
-.success-particles span:nth-child(4) { --angle: 135deg; }
-.success-particles span:nth-child(5) { --angle: 180deg; }
-.success-particles span:nth-child(6) { --angle: 225deg; }
-.success-particles span:nth-child(7) { --angle: 270deg; }
-.success-particles span:nth-child(8) { --angle: 315deg; }
-
-@keyframes successParticle {
-  0% {
-    transform: translate(-50%, -50%) rotate(var(--angle)) translateX(0) scale(0);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) rotate(var(--angle)) translateX(50px) scale(1);
-    opacity: 0;
-  }
 }
 
 /* Spinner */

@@ -156,43 +156,6 @@
           </div>
         </div>
 
-        <!-- Particle Effect Toggle -->
-        <div class="effect-item">
-          <div class="effect-info">
-            <div class="effect-icon particle-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="3" fill="currentColor"/>
-                <circle cx="6" cy="6" r="2" fill="currentColor" opacity="0.6"/>
-                <circle cx="18" cy="6" r="2" fill="currentColor" opacity="0.6"/>
-                <circle cx="6" cy="18" r="2" fill="currentColor" opacity="0.6"/>
-                <circle cx="18" cy="18" r="2" fill="currentColor" opacity="0.6"/>
-                <line x1="12" y1="12" x2="6" y2="6" stroke="currentColor" stroke-width="1" opacity="0.4"/>
-                <line x1="12" y1="12" x2="18" y2="6" stroke="currentColor" stroke-width="1" opacity="0.4"/>
-                <line x1="12" y1="12" x2="6" y2="18" stroke="currentColor" stroke-width="1" opacity="0.4"/>
-                <line x1="12" y1="12" x2="18" y2="18" stroke="currentColor" stroke-width="1" opacity="0.4"/>
-              </svg>
-            </div>
-            <div class="effect-text">
-              <h4 class="effect-title">เอฟเฟกต์อนุภาค (Particle)</h4>
-              <p class="effect-desc">แสดงอนุภาคเคลื่อนไหวเมื่อพิมพ์ข้อความในช่อง Input</p>
-            </div>
-          </div>
-          <div class="effect-toggle">
-            <label class="toggle-switch">
-              <input
-                type="checkbox"
-                :checked="particleEnabled"
-                @change="toggleParticle"
-                :disabled="isSaving || !masterEnabled"
-              />
-              <span class="toggle-slider"></span>
-            </label>
-            <span class="toggle-status" :class="{ active: particleEnabled }">
-              {{ particleEnabled ? 'เปิด' : 'ปิด' }}
-            </span>
-          </div>
-        </div>
-
         <!-- Box Shadow Toggle -->
         <div class="effect-item">
           <div class="effect-info">
@@ -235,7 +198,7 @@
             </div>
             <div class="effect-text">
               <h4 class="effect-title">แอนิเมชันทั้งหมด</h4>
-              <p class="effect-desc">เปิด/ปิดแอนิเมชันทั้งหมด รวมถึง Flying Text และเอฟเฟกต์อื่นๆ</p>
+              <p class="effect-desc">เปิด/ปิดแอนิเมชันทั้งหมด รวมถึงเอฟเฟกต์ต่างๆ</p>
             </div>
           </div>
           <div class="effect-toggle">
@@ -437,10 +400,6 @@
                 <div class="preview-input-area">
                   <div class="preview-input" :class="{ 'no-shadow': !shadowEnabled || !masterEnabled }">
                     <span class="preview-placeholder">พิมพ์ข้อความ...</span>
-                    <!-- Particle Effect Preview -->
-                    <div v-if="particleEnabled && masterEnabled" class="preview-particles">
-                      <span v-for="i in 5" :key="'particle-' + i" class="preview-particle" :style="getParticleStyle(i)">✨</span>
-                    </div>
                   </div>
                   <div class="preview-send-btn" :class="{ 'no-shadow': !shadowEnabled || !masterEnabled, 'no-animation': !animationEnabled || !masterEnabled }">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -502,10 +461,6 @@
               <span class="status-dot rain"></span>
               <span class="status-label">🌧️ Rain</span>
             </div>
-            <div class="status-item" :class="{ active: particleEnabled && masterEnabled }">
-              <span class="status-dot"></span>
-              <span class="status-label">Particle</span>
-            </div>
             <div class="status-item" :class="{ active: shadowEnabled && masterEnabled }">
               <span class="status-dot"></span>
               <span class="status-label">Shadow</span>
@@ -545,13 +500,10 @@
             <strong>เอฟเฟกต์ฤดูฝน (Rain):</strong> แสดงเสียงฝนและการเคลื่อนไหวของหยดน้ำในหน้า Chatbot โดยปกติจะแสดงเฉพาะช่วงฤดูฝนในประเทศไทย (เดือนมิถุนายน - ตุลาคม) ช่วยสร้างบรรยากาศที่เย็นสบายและเป็นธรรมชาติในช่วงหน้าฝนของปี สร้างความสุขสันต์และเพิ่มความสมจริงในการแชท
           </li>
           <li>
-            <strong>เอฟเฟกต์อนุภาค (Particle):</strong> แสดงอนุภาคประกายไฟสีสันสดใสเมื่อผู้ใช้พิมพ์ข้อความในช่องแชท (Power Mode Effect) ช่วยเพิ่มความสนุกและมีชีวิตชีวาในการสนทนา เหมาะสำหรับผู้ที่ชอบความสดใสและการตอบสนองทางภาพ
-          </li>
-          <li>
             <strong>เงา (Box Shadow):</strong> เปิด-ปิดเงาของปุ่ม การ์ด และองค์ประกอบต่างๆ ในหน้า Chatbot การปิดเงาจะช่วยลดภาระการประมวลผลกราฟิกและทำให้หน้าจอดูแบนราบ เหมาะสำหรับผู้ที่ชอบ Flat Design หรือต้องการเพิ่มความเร็วในการแสดงผล
           </li>
           <li>
-            <strong>แอนิเมชันทั้งหมด:</strong> ควบคุมการเคลื่อนไหวพิเศษต่างๆ รวมถึง Flying Text (ข้อความลอยขึ้น), Fade Effect, Slide Animation และเอฟเฟกต์การเปลี่ยนหน้าต่างๆ การปิดจะช่วยเพิ่มประสิทธิภาพการทำงานบนอุปกรณ์ที่มีสเปคต่ำ ลดการใช้แบตเตอรี่ และทำให้การตอบสนองเร็วขึ้น เหมาะสำหรับผู้ใช้ที่ต้องการประสิทธิภาพสูงสุด
+            <strong>แอนิเมชันทั้งหมด:</strong> ควบคุมการเคลื่อนไหวพิเศษต่างๆ รวมถึง Fade Effect, Slide Animation และเอฟเฟกต์การเปลี่ยนหน้าต่างๆ การปิดจะช่วยเพิ่มประสิทธิภาพการทำงานบนอุปกรณ์ที่มีสเปคต่ำ ลดการใช้แบตเตอรี่ และทำให้การตอบสนองเร็วขึ้น เหมาะสำหรับผู้ใช้ที่ต้องการประสิทธิภาพสูงสุด
           </li>
         </ul>
         <p class="info-note">
@@ -616,7 +568,6 @@ const previewSeason = ref('winter')
 
 // Active season override ('auto' means use natural season based on date)
 const activeSeason = ref('auto')
-const particleEnabled = ref(true)
 const shadowEnabled = ref(true)
 const animationEnabled = ref(true)
 
@@ -625,7 +576,6 @@ const originalMaster = ref(true)
 const originalSnow = ref(false)
 const originalSummer = ref(true)
 const originalRain = ref(true)
-const originalParticle = ref(true)
 const originalShadow = ref(true)
 const originalAnimation = ref(true)
 
@@ -636,7 +586,6 @@ const hasChanges = computed(() => {
     snowEnabled.value !== originalSnow.value ||
     summerEnabled.value !== originalSummer.value ||
     rainEnabled.value !== originalRain.value ||
-    particleEnabled.value !== originalParticle.value ||
     shadowEnabled.value !== originalShadow.value ||
     animationEnabled.value !== originalAnimation.value
   )
@@ -731,15 +680,6 @@ const getRaindropStyle = (index) => {
   }
 }
 
-const getParticleStyle = (index) => {
-  const left = 10 + (index * 18)
-  const delay = index * 0.2
-  return {
-    left: `${left}%`,
-    animationDelay: `${delay}s`
-  }
-}
-
 // Load settings from localStorage or API
 const loadSettings = () => {
   try {
@@ -748,7 +688,6 @@ const loadSettings = () => {
     const savedSnow = localStorage.getItem('chatbot_snow_enabled')
     const savedSummer = localStorage.getItem('chatbot_summer_enabled')
     const savedRain = localStorage.getItem('chatbot_rain_enabled')
-    const savedParticle = localStorage.getItem('chatbot_particle_enabled')
     const savedShadow = localStorage.getItem('chatbot_shadow_enabled')
     const savedAnimation = localStorage.getItem('chatbot_animation_enabled')
     const savedActiveSeason = localStorage.getItem('chatbot_active_season')
@@ -771,11 +710,6 @@ const loadSettings = () => {
     if (savedRain !== null) {
       rainEnabled.value = savedRain === 'true'
       originalRain.value = savedRain === 'true'
-    }
-
-    if (savedParticle !== null) {
-      particleEnabled.value = savedParticle === 'true'
-      originalParticle.value = savedParticle === 'true'
     }
 
     if (savedShadow !== null) {
@@ -827,7 +761,6 @@ const toggleMaster = (event) => {
     snowEnabled.value = false
     summerEnabled.value = false
     rainEnabled.value = false
-    particleEnabled.value = false
     shadowEnabled.value = false
     animationEnabled.value = false
   }
@@ -843,10 +776,6 @@ const toggleSummer = (event) => {
 
 const toggleRain = (event) => {
   rainEnabled.value = event.target.checked
-}
-
-const toggleParticle = (event) => {
-  particleEnabled.value = event.target.checked
 }
 
 const toggleShadow = (event) => {
@@ -867,7 +796,6 @@ const saveSettings = async () => {
     localStorage.setItem('chatbot_snow_enabled', snowEnabled.value.toString())
     localStorage.setItem('chatbot_summer_enabled', summerEnabled.value.toString())
     localStorage.setItem('chatbot_rain_enabled', rainEnabled.value.toString())
-    localStorage.setItem('chatbot_particle_enabled', particleEnabled.value.toString())
     localStorage.setItem('chatbot_shadow_enabled', shadowEnabled.value.toString())
     localStorage.setItem('chatbot_animation_enabled', animationEnabled.value.toString())
 
@@ -876,7 +804,6 @@ const saveSettings = async () => {
     originalSnow.value = snowEnabled.value
     originalSummer.value = summerEnabled.value
     originalRain.value = rainEnabled.value
-    originalParticle.value = particleEnabled.value
     originalShadow.value = shadowEnabled.value
     originalAnimation.value = animationEnabled.value
 
@@ -898,7 +825,6 @@ const saveSettings = async () => {
     try {
       await $axios.post('/api/chatbot-settings', {
         snow_enabled: snowEnabled.value,
-        particle_enabled: particleEnabled.value,
         animation_enabled: animationEnabled.value
       })
     } catch (apiError) {
@@ -911,7 +837,6 @@ const saveSettings = async () => {
         detail: {
           masterEnabled: masterEnabled.value,
           snowEnabled: snowEnabled.value,
-          particleEnabled: particleEnabled.value,
           shadowEnabled: shadowEnabled.value,
           animationEnabled: animationEnabled.value
         }
@@ -932,7 +857,6 @@ const saveSettings = async () => {
 // Reset settings to original
 const resetSettings = () => {
   snowEnabled.value = originalSnow.value
-  particleEnabled.value = originalParticle.value
   animationEnabled.value = originalAnimation.value
 }
 
@@ -1106,11 +1030,6 @@ onMounted(() => {
 
 .rain-icon {
   background: linear-gradient(135deg, #6EE7B7 0%, #10B981 100%);
-  color: white;
-}
-
-.particle-icon {
-  background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%);
   color: white;
 }
 
@@ -2084,32 +2003,6 @@ onMounted(() => {
 .preview-placeholder {
   color: #9ca3af;
   font-size: 12px;
-}
-
-/* Particle Effect */
-.preview-particles {
-  position: absolute;
-  top: -20px;
-  left: 0;
-  right: 0;
-  pointer-events: none;
-}
-
-.preview-particle {
-  position: absolute;
-  font-size: 10px;
-  animation: particle-float 1.5s ease-out infinite;
-}
-
-@keyframes particle-float {
-  0% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-30px) scale(0.5);
-  }
 }
 
 .preview-send-btn {

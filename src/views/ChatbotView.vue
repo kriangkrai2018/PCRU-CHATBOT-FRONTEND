@@ -5,10 +5,6 @@
       <div v-if="showIntroAnimation" class="intro-overlay">
         <!-- Phase 1: Logo Reveal -->
         <div class="intro-content" :class="{ 'phase-1': introPhase >= 1, 'phase-2': introPhase >= 2, 'phase-3': introPhase >= 3 }">
-          <!-- Particle burst effect -->
-          <div class="intro-particles">
-            <div v-for="n in 50" :key="n" class="intro-particle" :style="getIntroParticleStyle(n)"></div>
-          </div>
           
           <!-- Central logo/bot image -->
           <div class="intro-logo-container">
@@ -89,11 +85,6 @@
             <div class="orb orb-1"></div>
             <div class="orb orb-2"></div>
             <div class="orb orb-3"></div>
-          </div>
-
-          <!-- ✨ Colorful Particles (floating up like bubbles) -->
-          <div v-if="graphicsQuality !== 'low'" class="particle-container">
-            <div v-for="n in particleCount" :key="'particle-' + n" class="particle" :style="getParticleStyle(n)"></div>
           </div>
 
           <div class="panel-top" v-show="showHeaderButtons">
@@ -793,13 +784,31 @@
           <transition name="fade">
           <div v-show="showFooter" class="panel-footer" :class="{ focused: panelFocused, 'pwa-standalone': isPwaStandalone, 'menu-open': showLineMenu }" :style="pwaFooterStyle" ref="panelFooter">
             
-            <!-- Particles canvas for power mode effect -->
-            <canvas ref="particleCanvas" class="particle-canvas"></canvas>
-            
-            <!-- Flying text animation -->
-            <transition name="fly-to-message" @before-enter="beforeFlyEnter" @enter="flyEnter">
-              <div v-if="showFlyingText" class="flying-text" :style="flyingTextStyle" ref="flyingText">{{ flyingText }}</div>
-            </transition>
+                
+                <div>
+                  <textarea
+                    v-model="query"
+                    class="input-pill real-input"
+                    :class="{ 'shake': isTyping }"
+                    :style="typingStyle"
+                    :placeholder="dynamicPlaceholder"
+                    @keydown.enter.exact.prevent="onEnterKey"
+                    @keydown.shift.enter.stop
+                    @keydown.tab.prevent="acceptSuggestion"
+                    @keydown.arrow-right.prevent="checkAcceptSuggestion"
+                    @compositionstart="onCompositionStart"
+                    @compositionend="onCompositionEnd"
+                    @input="onTyping"
+                    @focus="onInputFocus"
+                    @blur="onInputBlur"
+                    ref="inputBox"
+                    autocomplete="off"
+                    rows="1"
+                  ></textarea>
+                </div>
+
+
+
             
             <!-- Bottom-anchored typing indicator (shown when clearing chat) -->
             <div v-if="tempTyping" class="bottom-typing message-wrapper bot">
@@ -1019,28 +1028,7 @@
             </transition>
 
             <!-- Input Row with keyboard/menu toggle -->
-            <div v-show="showFooter" class="input-row" :class="{ 'menu-mode': showLineMenu }">
-              
-              <!-- 🤖 Gemini AI Mode Toggle Button -->
-              <button 
-                class="gemini-toggle-btn" 
-                :class="{ active: useGeminiMode }"
-                @click="toggleGeminiMode"
-                :aria-label="useGeminiMode ? 'เปลี่ยนเป็นโหมดค้นหา' : 'เปลี่ยนเป็นโหมด AI'"
-                :title="useGeminiMode ? 'โหมด AI ✨ (คลิกเพื่อเปลี่ยนเป็นค้นหา)' : 'โหมดค้นหา 🔍 (คลิกเพื่อเปลี่ยนเป็น AI)'"
-              >
-                <!-- Search icon (shown when keyword mode) -->
-                <svg v-if="!useGeminiMode" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
-                  <path d="M16 16L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-                <!-- AI/Sparkle icon (shown when Gemini mode) -->
-                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="gemini-icon">
-                  <path d="M12 2L13.5 7.5L19 9L13.5 10.5L12 16L10.5 10.5L5 9L10.5 7.5L12 2Z" fill="currentColor"/>
-                  <path d="M18 14L19 17L22 18L19 19L18 22L17 19L14 18L17 17L18 14Z" fill="currentColor" opacity="0.7"/>
-                  <path d="M6 14L6.5 16L4 16.5L6.5 17L6 19L6.5 17L9 16.5L6.5 16L6 14Z" fill="currentColor" opacity="0.5"/>
-                </svg>
-              </button>
+            <div v-show="showFooter" class="input-row">
               
               <!-- 📱 Single Toggle Button (LEFT): Menu icon when keyboard mode, Keyboard icon when menu mode -->
               <button 
@@ -1071,6 +1059,31 @@
                   <rect class="grid-rect-4" x="14" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
                 </svg>
               </button>
+
+              <!-- 🤖 Gemini AI Mode Toggle Button -->
+              <button 
+                class="gemini-toggle-btn" 
+                :class="{ active: useGeminiMode }"
+                @click="toggleGeminiMode"
+                :aria-label="useGeminiMode ? 'เปลี่ยนเป็นโหมดค้นหา' : 'เปลี่ยนเป็นโหมด AI'"
+                :title="useGeminiMode ? 'โหมด AI ✨ (คลิกเพื่อเปลี่ยนเป็นค้นหา)' : 'โหมดค้นหา 🔍 (คลิกเพื่อเปลี่ยนเป็น AI)'"
+              >
+                <!-- Search icon (shown when keyword mode) -->
+                <svg v-if="!useGeminiMode" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+                  <path d="M16 16L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <!-- AI/Sparkle icon (shown when Gemini mode) -->
+                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="gemini-icon">
+                  <path d="M12 2L13.5 7.5L19 9L13.5 10.5L12 16L10.5 10.5L5 9L10.5 7.5L12 2Z" fill="currentColor"/>
+                  <path d="M18 14L19 17L22 18L19 19L18 22L17 19L14 18L17 17L18 14Z" fill="currentColor" opacity="0.7"/>
+                  <path d="M6 14L6.5 16L4 16.5L6.5 17L6 19L6.5 17L9 16.5L6.5 16L6 14Z" fill="currentColor" opacity="0.5"/>
+                </svg>
+              </button>
+
+
+              
+
               
               <!-- 🎤 Microphone Button for Voice Input -->
               <button 
@@ -1091,41 +1104,7 @@
                 </svg>
               </button>
               
-              <div class="input-container" v-show="!showLineMenu">
-                <!-- Typing tooltip is rendered on the bot avatar (avatar-anchored). Removed input-anchored tooltip so pointer correctly targets the avatar -->
 
-                <!-- 👻 Ghost overlay showing only the suggested suffix -->
-                <div class="ghost-input" aria-hidden="true">
-                  <span class="ghost-typed">{{ query }}</span>
-                  <span class="ghost-suffix" v-if="suggestionText && suggestionText.length > (query || '').length">{{ truncatedSuggestionSuffix }}</span>
-                </div>
-                <!-- ⌨️ Real Input (Multiline Textarea) -->
-                <textarea
-                  v-model="query"
-                  class="input-pill real-input"
-                  :class="{ 'shake': isTyping }"
-                  :style="typingStyle"
-                  :placeholder="dynamicPlaceholder"
-                  @keydown.enter.exact.prevent="onEnterKey"
-                  @keydown.shift.enter.stop
-                  @keydown.tab.prevent="acceptSuggestion"
-                  @keydown.arrow-right.prevent="checkAcceptSuggestion"
-                  @compositionstart="onCompositionStart"
-                  @compositionend="onCompositionEnd"
-                  @input="onTyping"
-                  @focus="onInputFocus"
-                  @blur="onInputBlur"
-                  ref="inputBox"
-                  autocomplete="off"
-                  rows="1"
-                ></textarea>
-              </div>
-              
-              <!-- Menu Label (shown when menu is open) -->
-              <div class="line-menu-label-center" v-show="showLineMenu" @click="toggleLineMenuCollapse">
-                <span class="menu-arrow" :class="{ 'arrow-up': !lineMenuCollapsed }">▼</span>
-                <span>เมนู</span>
-              </div>
               
               <transition name="send-btn-fade" mode="out-in">
                 <button v-if="query && query.trim()" class="btn-send" v-show="!showLineMenu" @click="onSend" aria-label="send" ref="sendBtn" :style="sendBtnFixedStyle"
@@ -1326,6 +1305,9 @@
               
               <!-- Input Row at bottom of fullscreen menu -->
               <div class="input-row menu-mode fullscreen-input">
+            
+
+
                 <!-- Keyboard Toggle Button -->
                 <button 
                   class="line-toggle-btn active" 
@@ -1348,11 +1330,7 @@
                   </svg>
                 </button>
                 
-                <!-- Menu Label -->
-                <div class="line-menu-label-center" @click="lineMenuExpanded = false">
-                  <span class="menu-arrow arrow-up">▼</span>
-                  <span>เมนู</span>
-                </div>
+
               </div>
             </div>
           </transition>
@@ -1867,7 +1845,7 @@ export default {
       loadError: '',
       isOffline: false, // 🔴 Backend connection status
       query: '',
-      placeholderText: 'ขอทุน, ปฏิทินวิชาการ, สวัสดิฯ',
+      placeholderText: 'ขอความช่วยเหลืองจาก ปลายฟ้า',
       placeholderExamples: [], // Array of synonym examples from database
       placeholderIndex: 0,
       placeholderInterval: null,
@@ -1909,14 +1887,6 @@ export default {
       userType: '',
       botName: 'ปลายฟ้า',
       botPronoun: import.meta.env.VITE_BOT_PRONOUN || 'หนู',
-      // ✨ Particle configuration from .env
-      particleCount: parseInt(import.meta.env.VITE_PARTICLE_COUNT) || 20,
-      particleMinSize: parseFloat(import.meta.env.VITE_PARTICLE_MIN_SIZE) || 4,
-      particleMaxSize: parseFloat(import.meta.env.VITE_PARTICLE_MAX_SIZE) || 12,
-      particleMinDuration: parseFloat(import.meta.env.VITE_PARTICLE_MIN_DURATION) || 8,
-      particleMaxDuration: parseFloat(import.meta.env.VITE_PARTICLE_MAX_DURATION) || 20,
-      particleOpacity: parseFloat(import.meta.env.VITE_PARTICLE_OPACITY) || 0.7,
-      particleStyles: [], // Pre-generated particle styles (frozen)
       // 🎓 PCRU Watermark gyroscope tilt
       pcruTilt: { x: 0, y: 0 },
       gyroscopeEnabled: false, // iOS requires permission
@@ -1953,10 +1923,6 @@ export default {
       feedbackButtonsDisabled: false,
       feedbackCooldownTime: 5,
       feedbackCooldownTimer: null,
-      // Flying text animation
-      flyingText: '',
-      showFlyingText: false,
-      flyingTextStyle: {},
       // Typing animation
       isTyping: false,
       typingTimeout: null,
@@ -1975,9 +1941,6 @@ export default {
       // Debounced remote autocomplete (keywords + synonyms + stopwords)
       autocompleteSuggestTimer: null,
       autocompleteSuggestSeq: 0,
-      // Power mode particles
-      particles: [],
-      particleAnimationFrame: null,
       // Thai notice bubble (auto-hide after 10s)
       // Theme transition circle animation
       showThemeTransition: false,
@@ -2132,7 +2095,7 @@ export default {
       isDragging: false,
       dragStartY: 0,
       dragCurrentY: 0,
-      menuBaseHeight: 380, // Base height of menu
+      menuBaseHeight: 350, // Base height of menu
       panelHeight: 0, // Chat panel height for fullscreen calculation
       fullscreenDragHeight: 0, // Track drag height when in fullscreen mode
       // 📱 Menu Tutorial (LINE-style guide)
@@ -2299,10 +2262,13 @@ export default {
     
     // 🤖 Dynamic placeholder based on mode
     dynamicPlaceholder() {
+      if (this.isVoiceMode) {
+        return 'กำลังฟัง'
+      }
       if (this.useGeminiMode) {
         return '✨ ถามอะไรก็ได้กับ AI...'
       }
-      return this.placeholderText || 'ขอทุน, ปฏิทินวิชาการ, สวัสดิฯ'
+      return this.placeholderText || 'ขอความช่วยเหลืองจาก ปลายฟ้า'
     },
     
     // 🎠 Carousel track transform style
@@ -2786,9 +2752,6 @@ export default {
 
     // Generate snowflake styles once to prevent jank on re-render
     this.generateSnowflakeStyles()
-
-    // Generate particle styles once to prevent jank on re-render
-    this.generateParticleStyles()
 
     // 📱 Add gyroscope support for mobile devices (auto-enable without permission request)
     this.initGyroscope();
@@ -3285,7 +3248,6 @@ export default {
     }
     // Cancel any outstanding animation frames
     try {
-      if (this.particleAnimationFrame) { cancelAnimationFrame(this.particleAnimationFrame); this.particleAnimationFrame = null }
       if (this.aiTiltRafId) { cancelAnimationFrame(this.aiTiltRafId); this.aiTiltRafId = null }
     } catch (e) { /* ignore */ }
 
@@ -4719,58 +4681,6 @@ export default {
       this.$nextTick(() => {
         this.visible = true;
       });
-    },
-    getIntroParticleStyle(n) {
-      const angle = (n / 50) * 360;
-      const distance = 100 + Math.random() * 200;
-      const size = 2 + Math.random() * 6;
-      const duration = 1 + Math.random() * 2;
-      const delay = Math.random() * 0.5;
-      const hue = 260 + Math.random() * 60; // Purple-pink range
-      
-      return {
-        '--angle': angle + 'deg',
-        '--distance': distance + 'px',
-        '--size': size + 'px',
-        '--duration': duration + 's',
-        '--delay': delay + 's',
-        '--hue': hue,
-      };
-    },
-    generateParticleStyles() {
-      const colors = [
-        'rgba(139, 76, 184, 0.6)',  // Purple
-        'rgba(107, 44, 145, 0.6)',  // Dark purple
-        'rgba(179, 123, 209, 0.6)', // Light purple
-        'rgba(59, 130, 246, 0.6)',  // Blue
-        'rgba(236, 72, 153, 0.6)',  // Pink
-        'rgba(168, 85, 247, 0.6)',  // Violet
-      ];
-      
-      const styles = [];
-      for (let i = 0; i < this.particleCount; i++) {
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        const left = Math.random() * 100;
-        const size = this.particleMinSize + Math.random() * (this.particleMaxSize - this.particleMinSize);
-        const duration = this.particleMinDuration + Math.random() * (this.particleMaxDuration - this.particleMinDuration);
-        const delay = Math.random() * 10;
-        
-        styles.push({
-          left: left + '%',
-          width: size + 'px',
-          height: size + 'px',
-          background: color,
-          opacity: this.particleOpacity,
-          animationDuration: duration + 's',
-          animationDelay: delay + 's',
-        });
-      }
-      // Freeze styles to avoid Vue creating reactive proxies (perf win)
-      this.particleStyles = Object.freeze(styles);
-    },
-    getParticleStyle(n) {
-      // Return pre-generated style (n is 1-indexed from v-for)
-      return this.particleStyles[n - 1] || {};
     },
     async initGyroscope() {
       if (!window.DeviceOrientationEvent) return;
@@ -7086,9 +6996,6 @@ export default {
       }
       if (this.animationEnabled) {
         this.isTyping = true
-        if (this.particleEnabled) {
-          this.createParticles()
-        }
       }
 
       // Typing guides and hints have been removed per user request
@@ -7272,51 +7179,6 @@ export default {
         }
       }, debounceMs) // Use env variable for debounce delay
     },
-    createParticles() {
-      const inputBox = this.$refs.inputBox
-      const canvas = this.$refs.particleCanvas
-      if (!inputBox || !canvas) return
-      
-      const rect = inputBox.getBoundingClientRect()
-      const canvasRect = canvas.getBoundingClientRect()
-      
-      // Get approximate text width using a more accurate method
-      const fontSize = 14 // from CSS
-      const charWidth = fontSize * 0.45 // average character width
-      const textWidth = this.query.length * charWidth
-      
-      // Position at the end of text (where cursor is)
-      const x = rect.left - canvasRect.left + 3 + textWidth
-      const y = rect.top - canvasRect.top + rect.height / 0.9
-      
-      // Firework colors - purple gradient
-      const colors = ['#8B4CB8', '#6B2C91', '#9C5EC9', '#B87FD9', '#C99FE5']
-      const particleCount = 1 // more particles for firework effect
-      
-      // Create particles in circular pattern (falling petals)
-      for (let i = 0; i < particleCount; i++) {
-        const angle = (Math.PI * 2 * i) / particleCount
-        // Much slower horizontal movement for floating effect
-        const speed = 0.05 + Math.random() * 0.5
-        
-        this.particles.push({
-          x: x,
-          y: y,
-          vx: Math.cos(angle) * speed,
-          vy: 0.5 + Math.random() * 0.3, // slight downward movement
-          rotation: Math.random() * Math.PI * 2,
-          rotationSpeed: (Math.random() - 0.5) * 0.2, // slow rotation
-          life: 1,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          size: 2 + Math.random() * 1 // 2-3px petal size
-        })
-      }
-      
-      // Start animation if not already running
-      if (!this.particleAnimationFrame) {
-        this.animateParticles()
-      }
-    },
 
     acceptSuggestion() {
       if (!this.suggestionText) return
@@ -7346,96 +7208,6 @@ export default {
     },
     onCompositionStart() { this.isComposing = true },
     onCompositionEnd() { this.isComposing = false; this.$nextTick(() => this.onTyping()) },
-    animateParticles() {
-      const canvas = this.$refs.particleCanvas
-      if (!canvas) return
-      
-      const ctx = canvas.getContext('2d')
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      
-      // Reverse loop to avoid creating new arrays (better GC behavior)
-      for (let i = this.particles.length - 1; i >= 0; i--) {
-        const p = this.particles[i]
-        p.x += p.vx
-        p.y += p.vy
-        p.rotation += p.rotationSpeed
-        p.vx *= 0.99
-        p.vy += 0.05
-        p.life -= 0.015
-
-        if (p.life > 0) {
-          ctx.save()
-          ctx.globalAlpha = p.life * 0.8
-          ctx.fillStyle = p.color
-          // Use integer coords to reduce subpixel rendering cost
-          ctx.translate(Math.floor(p.x), Math.floor(p.y))
-          ctx.rotate(p.rotation)
-
-          ctx.beginPath()
-          ctx.ellipse(0, 0, p.size * 1.2, p.size * 0.8, 0, 0, Math.PI * 2)
-          ctx.fill()
-
-          // Avoid expensive shadows on mobile (commented out)
-          // ctx.shadowBlur = 0
-
-          ctx.restore()
-        } else {
-          // remove dead particle in-place
-          this.particles.splice(i, 1)
-        }
-      }
-      
-      if (this.particles.length > 0) {
-        this.particleAnimationFrame = requestAnimationFrame(() => this.animateParticles())
-      } else {
-        this.particleAnimationFrame = null
-      }
-    },
-    beforeFlyEnter(el) {
-      // Get input box position as starting point
-      const inputBox = this.$refs.inputBox
-      if (!inputBox) return
-      
-      const inputRect = inputBox.getBoundingClientRect()
-      
-      // Set initial position at input box
-      el.style.position = 'fixed'
-      el.style.left = inputRect.left + 'px'
-      el.style.top = inputRect.top + 'px'
-      el.style.width = inputRect.width - 80 + 'px' // minus send button width
-      el.style.opacity = '0'
-      el.style.transform = 'scale(0.8)'
-    },
-    flyEnter(el, done) {
-      // Calculate target position (top right where user messages appear)
-      const panelBody = this.$refs.panelBody
-      if (!panelBody) {
-        done()
-        return
-      }
-      
-      const panelRect = panelBody.getBoundingClientRect()
-      
-      // Target position: top-right of panel (where user messages go)
-      const targetX = panelRect.right - 60 // right side with some padding
-      const targetY = panelRect.top + 100 // near top with some padding
-      
-      // Force reflow
-      el.offsetHeight
-      
-      // Apply transition
-      el.style.transition = 'all 0.8s cubic-bezier(.2,.9,.2,1)'
-      el.style.left = targetX + 'px'
-      el.style.top = targetY + 'px'
-      el.style.opacity = '1'
-      el.style.transform = 'scale(0.6) rotate(5deg)'
-      
-      setTimeout(() => {
-        el.style.opacity = '0'
-        el.style.transform = 'scale(0.3) rotate(10deg)'
-        setTimeout(done, 200)
-      }, 600)
-    },
     async onSend(options = {}) {
       // Clear autocomplete suggestion on send
       this.suggestionText = ''
@@ -7524,17 +7296,6 @@ export default {
           console.error('Error during frontend word segmentation:', e);
           processedUserMessage = originalUserMessage; // Fallback to original on error
         }
-      }
-      
-      // Trigger flying text animation (only if animations enabled)
-      if (this.animationEnabled) {
-        this.flyingText = originalUserMessage
-        this.showFlyingText = true
-        
-        // Hide flying text after animation completes
-        setTimeout(() => {
-          this.showFlyingText = false
-        }, 1000)
       }
       
       // ⌨️ ซ่อน typing tooltip เมื่อส่งข้อความ
@@ -9622,7 +9383,7 @@ export default {
         
         // ถ้าไม่มีข้อมูลจาก database ใช้ default
         if (this.placeholderExamples.length === 0) {
-          this.placeholderExamples = ['ขอทุน, ปฏิทินวิชาการ, สวัสดิฯ']
+          this.placeholderExamples = ['ขอความช่วยเหลืองจาก ปลายฟ้า']
         }
         
         // เริ่ม carousel
@@ -9630,7 +9391,7 @@ export default {
       } catch (err) {
         console.error('Failed to load synonyms for carousel:', err)
         // Fallback to default
-        this.placeholderExamples = ['ขอทุน, ปฏิทินวิชาการ, สวัสดิฯ']
+        this.placeholderExamples = ['ขอความช่วยเหลืองจาก ปลายฟ้า']
         this.startPlaceholderCarousel()
       }
     },
@@ -9740,15 +9501,15 @@ export default {
 /* 📱 LINE-style Bottom Menu */
 .line-menu-wrapper {
   position: absolute;
-  bottom: 100%;
+  bottom: 110%;
   left: 0;
   right: 0;
-  border-radius: 16px 16px 0 0;
+  border-radius: 34px;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
   z-index: 10000; /* Above snow (1500) and other elements */
   display: flex;
   flex-direction: column;
-  height: 410px;
+  height: 350px;
   max-height: none;
   transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
   overflow: visible;
@@ -9807,7 +9568,7 @@ export default {
 }
 
 .line-menu-container {
-  padding: 12px 12px 26px 12px;
+  padding: 12px 12px 12px 12px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -10026,7 +9787,6 @@ export default {
 .line-menu-carousel {
   position: relative;
   width: 100%;
-  overflow: hidden;
   touch-action: pan-y pinch-zoom;
   cursor: grab;
   user-select: none;
@@ -10046,7 +9806,7 @@ export default {
 .line-menu-carousel-page {
   width: 100%;
   flex: 0 0 100%;
-  padding: 0 4px;
+  padding: 0 8px;
   box-sizing: border-box;
 }
 
@@ -10136,9 +9896,9 @@ export default {
   font-weight: 500;
   pointer-events: none;
   text-align: center;
-  transition: opacity 0.3s ease;
   padding: 4px 16px;
   border-radius: 20px;
+  margin-bottom: 16px;
 }
 
 /* Light mode page toast */
@@ -10150,7 +9910,9 @@ html[data-theme="light"] .page-label-toast {
 
 html[data-theme="dark"] .page-label-toast {
   color: rgba(255, 255, 255, 0.9);
-  background: rgba(139, 76, 184, 0.95);
+  background: rgba(0, 0, 0, 0.68);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 0 30px rgba(139, 76, 184, 0.8), 0 0 60px rgba(139, 76, 184, 0.4);
 }
 
@@ -10204,8 +9966,8 @@ html[data-theme="dark"] .page-label-toast {
 
 /* 🔵 Carousel Indicators Container - Always Fixed */
 .carousel-indicators {
-  position: fixed !important;
-  bottom: 63px !important;
+  position: sticky !important;
+  bottom: 0;
   left: 0 !important;
   right: 0 !important;
   transform: none !important;
@@ -10224,6 +9986,10 @@ html[data-theme="dark"] .page-label-toast {
   width: 100% !important;
   gap: 6px;
   pointer-events: none !important;
+}
+.carousel-indicators.fullscreen-indicators {
+  margin-top: 1rem !important;
+  bottom: 0px !important;
 }
 
 .carousel-indicators > * {
@@ -10276,7 +10042,6 @@ html[data-theme="dark"] .page-label-toast {
   justify-content: center;
   align-items: center;
   gap: 10px;
-  padding: 1rem;
 }
 
 .carousel-dot {
@@ -10323,9 +10088,13 @@ html[data-theme="dark"] .page-label-toast {
 }
 
 .carousel-dot.dragging .dot-inner {
-  transform: scale(1.3);
-  background: rgba(255, 255, 255, 0.6);
+  background: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%);
+  box-shadow: 0 2px 8px rgba(139, 76, 184, 0.4);
+  transform: scale(1.6);
+  margin: 0 .2rem;
 }
+
+
 
 /* 🎨 Location page dot indicator - green when on page 2 */
 .carousel-dots .carousel-dot:nth-child(2).active .dot-inner {
@@ -10511,6 +10280,7 @@ html[data-theme="dark"] .page-label-toast {
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
+  margin-left: auto;
 }
 
 .mic-toggle-btn:hover {
@@ -10850,7 +10620,7 @@ html[data-theme="dark"] .line-menu-fullscreen-wrapper {
 
 :deep(.dark) .line-menu-fullscreen-wrapper .line-menu-handle-bar,
 html[data-theme="dark"] .line-menu-fullscreen-wrapper .line-menu-handle-bar {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(86, 86, 86, 0.533) !important;
 }
 
 :deep(.dark) .line-menu-fullscreen-wrapper .line-menu-back,

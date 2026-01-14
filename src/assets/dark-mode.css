@@ -282,9 +282,13 @@
 
 /* Dark Mode Input Pill */
 [data-theme="dark"] .input-pill {
-  background-color: var(--cb-bg-input) !important;
-  color: var(--cb-text-primary) !important;
-  border: 1px solid transparent !important;
+  border: 1px solid rgba(139, 76, 184, 0.4) !important; /* Subtle purple border in dark mode */
+  box-shadow: transparent !important;
+  background-color: transparent !important;
+  color: rgb(191, 191, 191) !important;
+}
+[data-theme="dark"] .input-pill:focus {
+  border: 1px solid rgba(255, 255, 255, 0) !important; /* Stronger border when focused in dark mode */
 }
 [data-theme="dark"] .input-pill::placeholder {
   color: var(--cb-icon-primary);
@@ -665,6 +669,10 @@ html.theme-transitioning [data-theme="light"] * {
   border-bottom-color: rgba(139, 76, 184, 0.25);
 }
 
+[data-theme="dark"] .line-menu-handle-bar {
+  background: rgba(24, 24, 24, 0.533) !important;
+}
+
 [data-theme="dark"] .line-menu-back {
   background: rgba(139, 76, 184, 0.2);
   color: #b794d4;
@@ -676,7 +684,10 @@ html.theme-transitioning [data-theme="light"] * {
 
 
 [data-theme="dark"] .line-menu-wrapper {
-  background-color: rgba(20, 20, 35, 0.983) !important;
+  background-color: rgba(255, 255, 255, 0.038) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(139, 76, 184, 0.2);
 }
 
 /* 🎬 Dark Mode - LINE Menu Icon Animations */

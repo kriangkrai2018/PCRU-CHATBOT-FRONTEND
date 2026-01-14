@@ -21,7 +21,7 @@ export default {
   name: 'ChatbotInput',
   props: {
     modelValue: { type: String, default: '' },
-    placeholderText: { type: String, default: 'ขอทุน, ปฏิทินวิชาการ, สวัสดิฯ' },
+    placeholderText: { type: String, default: 'ขอความช่วยเหลืองจาก ปลายฟ้า' },
     isTyping: { type: Boolean, default: false },
     showFlyingText: { type: Boolean, default: false },
     flyingText: { type: String, default: '' },

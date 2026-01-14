@@ -360,10 +360,6 @@ html.theme-transitioning [data-theme="light"] * {
   -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
 }
 
-[data-theme="light"] .line-menu-container {
-  background: transparent !important;
-  border-top-color: rgba(139, 76, 184, 0.1);
-}
 
 [data-theme="light"] .line-menu-handle {
   background: transparent !important;
