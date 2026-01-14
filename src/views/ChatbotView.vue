@@ -3511,25 +3511,32 @@ export default {
       }
 
       // Show confirm dialog using existing confirm composable
-      const confirmed = await confirmComposable.confirm({
-        title: 'เริ่มแชทใหม่ใช่ไหม',
-        message: 'การเลือกเครื่องมือนี้จะเริ่มแชทใหม่<br>คุณกลับมาที่การสนทนานี้ได้ทุกเมื่อ<br><label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.75rem"><input id="geminiNoAskCheckbox" type="checkbox" /> อย่าถามฉันอีก</label>',
-        variant: 'warning',
-        confirmText: 'เริ่มแชทใหม่',
-        cancelText: 'ยกเลิก',
-        teleportTo: '.chat-panel'
-      })
+      const panel = document.querySelector('.chat-panel')
+      if (panel) panel.classList.add('modal-open')
+      try {
+        const confirmed = await confirmComposable.confirm({
+          title: 'เริ่มแชทใหม่ใช่ไหม',
+          message: 'การเลือกเครื่องมือนี้จะเริ่มแชทใหม่<br>คุณกลับมาที่การสนทนานี้ได้ทุกเมื่อ<br><label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.75rem"><input id="geminiNoAskCheckbox" type="checkbox" /> อย่าถามฉันอีก</label>',
+          variant: 'warning',
+          confirmText: 'เริ่มแชทใหม่',
+          cancelText: 'ยกเลิก',
+          teleportTo: '.chat-panel'
+        })
 
-      if (confirmed) {
-        const checkbox = document.getElementById('geminiNoAskCheckbox')
-        if (checkbox && checkbox.checked) {
-          try { localStorage.setItem('gemini_toggle_no_confirm', 'true') } catch (e) {}
+        if (confirmed) {
+          const checkbox = document.getElementById('geminiNoAskCheckbox')
+          if (checkbox && checkbox.checked) {
+            try { localStorage.setItem('gemini_toggle_no_confirm', 'true') } catch (e) {}
+          }
+          this._doToggleGeminiMode()
+        } else {
+          // user cancelled – do nothing
         }
-        this._doToggleGeminiMode()
-      } else {
-        // user cancelled – do nothing
+      } finally {
+        if (panel) panel.classList.remove('modal-open')
       }
     },
+
 
 
     // Internal helper that performs the actual toggle and clears chat
@@ -11532,6 +11539,23 @@ html[data-theme="light"] .line-menu-fullscreen-wrapper .input-row.fullscreen-inp
 .chat-panel {
   position: relative;
 }
+
+/* When modal is shown inside the panel, blur the main content and footer */
+.chat-panel.modal-open .panel-footer,
+.chat-panel.modal-open .chat-messages,
+.chat-panel.modal-open .panel-body {
+  filter: blur(6px) saturate(0.95);
+  transition: filter 0.18s ease;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Slight dim on footer to emphasize modal */
+.chat-panel.modal-open .panel-footer {
+  opacity: 0.9;
+}
+
 
 /* Disable transition while dragging */
 .line-menu-fullscreen-wrapper.is-dragging {

@@ -822,3 +822,14 @@ html.gfx-low[data-theme="dark"] .panel-body,
 body.gfx-low[data-theme="dark"] .panel-body {
   background: #000 !important;
 }
+
+
+
+[data-theme="dark"] textarea.input-pill,
+[data-theme="dark"] textarea.input-pill:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  resize: none !important;        /* ไม่ให้ลากขยาย */
+  background: transparent !important; /* ถ้าต้องการพื้นหลังใส */
+}
