@@ -4091,7 +4091,10 @@ html.keyboard-open .message-wrapper {
   background-size: 200% 200%;
   -webkit-background-clip: text; 
   background-clip: text; 
-  color: transparent; 
+  /* Fallback color for browsers without background-clip support */
+  color: #ffffff; 
+  /* Use transparent fill where supported to reveal gradient */
+  -webkit-text-fill-color: transparent;
   letter-spacing: -0.3px; 
   position: relative;
   z-index: 1;
@@ -4105,11 +4108,12 @@ html.keyboard-open .message-wrapper {
 
 .ai-greet-sub { 
   font-size: 14px; 
-  color: #6e6e73; 
+  color: #ffffff; /* ensure visible on dark backdrop */
+  opacity: 0.95;
   line-height: 1.4;
   text-align: center;
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 @keyframes floaty { 0% { transform: translateY(0) } 50% { transform: translateY(-4px) } 100% { transform: translateY(0) } }
@@ -7108,6 +7112,19 @@ body.no-effects .scroll-icon {
   animation: waveHand 1.6s cubic-bezier(.2,.9,.2,1) infinite;
   filter: drop-shadow(0 6px 16px rgba(107,44,145,0.22));
   will-change: transform, filter;
+  color: orange !important;
+  -webkit-text-fill-color: orange !important; /* ensure emoji is filled on WebKit */
+  text-shadow: 0 1px 0 rgba(0,0,0,0.18); /* slight contrast */
+  position: relative; z-index: 3; /* keep above overlays */
+  /* override any parent blur/opacity */
+  filter: drop-shadow(0 8px 18px rgba(107,44,145,0.28)) !important;
+}
+
+/* Ensure wave-hand is visible even when ai-greet-title uses gradient clipping */
+.ai-greet-title .wave-hand {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  -webkit-text-fill-color: orange !important;
   color: orange !important;
 }
 

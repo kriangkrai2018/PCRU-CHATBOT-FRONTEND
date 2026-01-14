@@ -599,7 +599,7 @@ async function fetchImages() {
     console.error('Fetch images failed:', err)
     // Use default bot image if API not available
     currentImage.value = new URL('@/assets/bots/bot2.jpg', import.meta.url).href
-    currentImageName.value = 'bot.jpg'
+    currentImageName.value = 'bot2.jpg'
     imageHistory.value = []
   } finally {
     loading.value = false

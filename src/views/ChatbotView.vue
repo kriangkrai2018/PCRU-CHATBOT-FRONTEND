@@ -1842,7 +1842,7 @@ export default {
   data() {
     return {
       messageIdCounter: 0,
-      visible: false,
+      visible: true, // show chatbot immediately on first load
       // allow multiple sections open at once
       openIndexes: [],
       showAllCategories: false,
@@ -2840,6 +2840,20 @@ export default {
         this.thaiNoticeTimer = null
       }, 10000)
     }
+
+    // Ensure welcome title/sub/instruction are present immediately (fallback for first render)
+    if (!this.welcomeTitle) {
+      this.welcomeTitle = `สวัสดี <span class="wave-hand" aria-hidden="true">👋</span> ${this.botPronoun}ชื่อ ${this.botName} <br> ผู้ช่วย AI ของ PCRU ค่ะ`
+    }
+    if (!this.welcomeSub) {
+      this.welcomeSub = `ยินดีที่ได้ช่วยคุณ! มาหาคำตอบที่คุณต้องการกันเลยค่ะ ✨`
+    }
+    if (!this.welcomeInstruction) {
+      this.welcomeInstruction = `เลือกหมวดหมู่ด้านล่าง <br> หรือพิมพ์คำถามได้เลยค่ะ 😊`
+    }
+
+    // Prevent intro overlay from showing on first visit so chatbot content is visible immediately
+    this.hasShownIntroEver = true;
 
     // Load whether the user has ever asked the bot before (used to hide the clear button on fresh users)
     try {

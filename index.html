@@ -30,31 +30,35 @@
     <style>
       /* Prevent FOUC (Flash of Unstyled Content) */
       html { visibility: visible; opacity: 1; }
-      
-      /* Apple-style loading state */
+
+      /* Show app immediately */
+      #app { visibility: visible; min-height: 100vh; }
+
+      /* Small loading spinner while app JS loads (shows only when #app is empty) */
       #app:empty::after {
         content: '';
         position: fixed;
         top: 50%;
         left: 50%;
-        width: 40px;
-        height: 40px;
-        margin: -20px 0 0 -20px;
-        border: 3px solid rgba(139, 76, 184, 0.2);
+        width: 36px;
+        height: 36px;
+        margin: -18px 0 0 -18px;
+        border: 3px solid rgba(139,76,184,0.16);
         border-top-color: #8B4CB8;
         border-radius: 50%;
-        animation: spin 0.8s linear infinite;
+        animation: spin 0.9s linear infinite;
+        z-index: 9999;
       }
-      
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
-      
+      /* Ensure spinner hides once app renders */
+      #app:not(:empty)::after { display: none !important; }
+
+      @keyframes spin { to { transform: rotate(360deg); } }
+
       /* GPU acceleration hints */
       * {
         -webkit-tap-highlight-color: transparent;
       }
-      
+
       /* Smooth font rendering */
       body {
         -webkit-font-smoothing: antialiased;
