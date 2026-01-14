@@ -3474,9 +3474,13 @@ html.keyboard-open .bot-avatar-wrapper .typing-tooltip {
 
 /* Welcome Message */
 .welcome-message {
-  margin-top: 85px;
+  /* margin-top: 85px; */
   margin-bottom: 0px;
   animation: welcomeSlideIn 0.8s cubic-bezier(.2,.9,.2,1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
 }
 
 @keyframes welcomeSlideIn {
@@ -3617,7 +3621,8 @@ html.keyboard-open .bot-avatar-wrapper .typing-tooltip {
 
 .chat-messages {
   /* push the messages block to the bottom of the panel */
-  margin-top: auto;
+  /* margin-top: auto; */
+  flex: 1;
   display: flex;
   flex-direction: column;
   /* padding: 0 min(18px, max(15px, env(safe-area-inset-right, 0px))) 0px 0px; */

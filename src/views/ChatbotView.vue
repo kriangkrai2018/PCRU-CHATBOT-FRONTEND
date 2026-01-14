@@ -310,10 +310,10 @@
                       </div>
                     </transition>
                   </div>
-                  <div class="message-bubble bot bot-with-categories backdrop-card" style="margin-top: 3rem !important;">
+                  <div class="message-bubble bot bot-with-categories backdrop-card" style="margin-top: 0rem !important; height: 100%;">
                     <div class="ai-greeting">
-                      <div class="ai-greet-img-wrapper" role="button" tabindex="0" @click.stop="openAiIntro" @keydown.enter.stop="openAiIntro" @keydown.space.prevent.stop="openAiIntro" title="เปิด AI: ดูรายละเอียดและวิธีใช้งาน" aria-label="เปิด AI">
-                        <video v-if="graphicsQuality === 'high' && botVideo" :src="botVideo" class="ai-greet-img ai-greet-video" autoplay loop muted playsinline ref="aiGreetVideo"></video>
+                      <div class="ai-greet-img-wrapper" role="button" tabindex="0" @click.stop="showVideo ? stopVideo() : openAiIntro()" @keydown.enter.stop="showVideo ? stopVideo() : openAiIntro()" @keydown.space.prevent.stop="showVideo ? stopVideo() : openAiIntro()" :title="showVideo ? 'หยุดวิดีโอ' : 'เปิด AI: ดูรายละเอียดและวิธีใช้งาน'" :aria-label="showVideo ? 'หยุดวิดีโอ' : 'เปิด AI'">
+                        <video v-if="graphicsQuality === 'high' && botVideo && showVideo" :src="botVideo" class="ai-greet-img ai-greet-video" autoplay loop muted playsinline ref="aiGreetVideo"></video>
                         <img v-else :src="botAvatar" alt="PCRU AI" class="ai-greet-img" />
                         <!-- Floating speech bubble on avatar -->
                         <transition name="bubble-fade">
@@ -1958,6 +1958,7 @@ export default {
       themeTransitionTimer: null,
       showThaiNotice: true,
       thaiNoticeTimer: null,
+      showVideo: true,
       // 💤 Sleeping bot when idle
       isBotSleeping: false,
       isBotWakingUp: false,
@@ -4988,8 +4989,8 @@ export default {
     },
     
     cycleGraphicsQuality() {
-      // ✅ Low mode now available on all devices
-      const order = ['low', 'medium', 'high'];
+      // ✅ Low mode disabled - cycle only between medium and high
+      const order = ['medium', 'high'];
       
       const currentIndex = order.indexOf(this.graphicsQuality);
       const nextIndex = (currentIndex + 1) % order.length;
@@ -5017,8 +5018,19 @@ export default {
         localStorage.setItem('chatbot_graphics_quality', quality);
       } catch (e) { /* ignore */ }
       
+      // Stop current FPS monitoring
+      this.stopFpsMonitoring();
+      
       // Apply graphics settings
       this.applyGraphicsQuality(quality);
+      
+      // Restart FPS monitoring
+      if (quality !== 'low') {
+        this.fpsMonitorEnabled = true;
+        this.startFpsMonitoring();
+      } else {
+        this.fpsMonitorEnabled = false;
+      }
     },
     
     applyGraphicsQuality(quality) {
@@ -5099,8 +5111,10 @@ export default {
         const saved = localStorage.getItem('chatbot_graphics_quality');
         
         if (saved && ['low', 'medium', 'high'].includes(saved)) {
-          this.graphicsQuality = saved;
-          this.applyGraphicsQuality(saved);
+          // Disable low mode - force to medium if saved as low
+          const quality = saved === 'low' ? 'medium' : saved;
+          this.graphicsQuality = quality;
+          this.applyGraphicsQuality(quality);
         } else {
           // Default to high if not set
           this.applyGraphicsQuality('high');
@@ -6618,6 +6632,12 @@ export default {
     // AI intro overlay controls
     openAiIntro() { this.showAiIntro = true },
     closeAiIntro() { this.showAiIntro = false },
+    stopVideo() { 
+      this.showVideo = false;
+      // Stop all bot avatar videos
+      const videos = this.$el.querySelectorAll('.bot-avatar-video');
+      videos.forEach(video => video.pause());
+    },
     // Help modal controls
     openHelpModal() { this.showHelpModal = true },
     // Trigger mini help press animation and open modal (supports keyboard activation)
