@@ -3323,6 +3323,11 @@ html.keyboard-open .bot-avatar-wrapper .typing-tooltip {
   transition: opacity 420ms cubic-bezier(.2,.8,.2,1);
 }
 
+.fade-enter-active .panel-footer,
+.fade-leave-active .panel-footer {
+  transition: opacity 200ms cubic-bezier(.2,.8,.2,1);
+}
+
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
 }
@@ -3474,7 +3479,7 @@ html.keyboard-open .bot-avatar-wrapper .typing-tooltip {
 
 /* Welcome Message */
 .welcome-message {
-  /* margin-top: 85px; */
+  margin-top: 85px;
   margin-bottom: 0px;
   animation: welcomeSlideIn 0.8s cubic-bezier(.2,.9,.2,1);
   height: 100%;
@@ -3684,7 +3689,7 @@ html.keyboard-open .message-wrapper {
   justify-content: flex-start;
   gap: 10px;
   /* remove top padding so content sits lower; keep bottom padding for spacing */
-  /* padding: 0 12px 12px; */
+  padding: 12px 12px 12px;
   /* Align avatar and bot bubble to the bottom of the row instead of the top */
   align-items: flex-end;
 }

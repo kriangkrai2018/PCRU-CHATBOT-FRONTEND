@@ -6880,6 +6880,9 @@ export default {
       // Send immediately and scroll to bottom to show the sent message
       this.onSend()
       
+      // Close the dropdown for this category
+      this.openIndexes = this.openIndexes.filter(idx => idx !== catIdx)
+      
       // Scroll to bottom after message is added
       this.$nextTick(() => {
         if (this.$refs.panelBody) {
