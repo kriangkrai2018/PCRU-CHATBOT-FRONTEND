@@ -5004,6 +5004,10 @@ export default {
       this.clearBtnHidden = true;
       setTimeout(() => {
         this.clearChatHistory();
+        // Re-show clear button after clearing
+        setTimeout(() => {
+          this.clearBtnHidden = false;
+        }, 500);
       }, 150);
     },
     
@@ -9111,6 +9115,12 @@ export default {
         const isScrollingUp = currentScrollTop < this.lastScrollTop
         const isScrollingDown = currentScrollTop > this.lastScrollTop
         
+        // Force show header buttons if content doesn't require scrolling
+        const cannotScroll = scrollHeight <= clientHeight
+        if (cannotScroll && this.showHeaderButtons !== true) {
+          this.showHeaderButtons = true
+        }
+        
         // Only process if scrolled more than threshold (prevent jitter)
         if (scrollDelta < this.scrollThreshold && !isAtBottom && currentScrollTop > 10) {
           return
@@ -9118,8 +9128,8 @@ export default {
         
         // Hide everything when at the very top
         if (currentScrollTop <= 10) {
-          if (this.showHeaderButtons !== false) this.showHeaderButtons = false
-          if (this.showFooter !== false) this.showFooter = false
+          if (this.showHeaderButtons !== false && !cannotScroll) this.showHeaderButtons = false
+          // if (this.showFooter !== false) this.showFooter = false  // Keep footer visible
           if (this.showScrollTop !== false) this.showScrollTop = false
           if (this.showScrollTutorial !== false) this.showScrollTutorial = false
           this.lastScrollTop = currentScrollTop
@@ -9142,8 +9152,8 @@ export default {
         
         // Hide everything when scrolling UP
         if (isScrollingUp) {
-          if (this.showHeaderButtons !== false) this.showHeaderButtons = false
-          if (this.showFooter !== false) this.showFooter = false
+          if (this.showHeaderButtons !== false && !cannotScroll) this.showHeaderButtons = false
+          // if (this.showFooter !== false) this.showFooter = false  // Keep footer visible
           if (this.showScrollTop !== false) this.showScrollTop = false
           if (this.showScrollTutorial !== false) this.showScrollTutorial = false
           if (this.showFooterTimer) {
