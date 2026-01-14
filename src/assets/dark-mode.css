@@ -223,10 +223,7 @@
 }
 
 
-/* Dark Mode Input Pill */
-[data-theme="dark"] .input-pill {
-  border: 1px solid var(--cb-border-muted) !important;
-} 
+
 
 /* Dark Mode Contact Cards */
 [data-theme="dark"] .contact-card {
@@ -292,11 +289,6 @@
 [data-theme="dark"] .input-pill::placeholder {
   color: var(--cb-icon-primary);
 }
-[data-theme="dark"] .input-pill:focus {
-  border-color: var(--cb-link-blue);
-  box-shadow: 0 0 0 3px var(--cb-like-tooltip-border);
-  background-color: var(--cb-bg-input) !important;
-} 
 
 [data-theme="dark"] .feedback-comment-input {
   background-color: none !important;

@@ -1072,6 +1072,25 @@
                 </svg>
               </button>
               
+              <!-- 🎤 Microphone Button for Voice Input -->
+              <button 
+                class="mic-toggle-btn" 
+                :class="{ active: isVoiceMode || isListening }"
+                @click="toggleVoiceMode"
+                :aria-label="isVoiceMode ? 'ปิดเสียงพูด' : 'เปิดเสียงพูด'"
+                :title="isVoiceMode ? 'ปิดโหมดเสียงพูด' : 'เปิดโหมดเสียงพูด'"
+              >
+                <span class="mat-mdc-button-touch-target"></span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 1C10.3431 1 9 2.34315 9 4V12C9 13.6569 10.3431 15 12 15C13.6569 15 15 13.6569 15 12V4C15 2.34315 13.6569 1 12 1Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M19 10V12C19 16.4183 15.4183 20 11 20C6.58172 20 3 16.4183 3 12V10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M12 20V23" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle v-if="isListening" cx="12" cy="12" r="3" fill="currentColor" opacity="0.3">
+                    <animate attributeName="r" values="2;4;2" dur="1.5s" repeatCount="indefinite"/>
+                  </circle>
+                </svg>
+              </button>
+              
               <div class="input-container" v-show="!showLineMenu">
                 <!-- Typing tooltip is rendered on the bot avatar (avatar-anchored). Removed input-anchored tooltip so pointer correctly targets the avatar -->
 
@@ -2065,6 +2084,11 @@ export default {
       // 🤖 Gemini AI mode toggle
       useGeminiMode: false, // false = keyword matching, true = Gemini AI direct
       geminiSessionId: null, // Session ID for conversation continuity
+      
+      // 🎤 Voice input mode toggle
+      isVoiceMode: false, // false = text input, true = voice input
+      recognition: null, // Speech recognition instance
+      isListening: false, // true when actively listening for speech
       
       // 📱 LINE-style bottom menu toggle
       showLineMenu: false, // false = keyboard mode, true = menu mode
@@ -3376,6 +3400,9 @@ export default {
       this.reverseInterval = null
     }
     
+    // 🎤 Cleanup voice recognition
+    this.stopVoiceRecognition()
+    
     // Clean up FAB long press watcher (no longer needed)
   },
   watch: {
@@ -3532,6 +3559,106 @@ export default {
           this.startGeminiTutorial()
         })
       }
+    },
+    
+    toggleVoiceMode() {
+      this.isVoiceMode = !this.isVoiceMode
+      console.log('🎤 Toggle Voice Mode:', this.isVoiceMode ? 'Voice Input' : 'Text Input')
+      
+      if (this.isVoiceMode) {
+        this.startVoiceRecognition()
+      } else {
+        this.stopVoiceRecognition()
+      }
+    },
+    
+    startVoiceRecognition() {
+      // Check if browser supports speech recognition
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+      
+      if (!SpeechRecognition) {
+        this.$toast.error('เบราว์เซอร์นี้ไม่รองรับการรับรู้เสียงพูด', { duration: 3000 })
+        this.isVoiceMode = false
+        return
+      }
+      
+      // Create recognition instance
+      this.recognition = new SpeechRecognition()
+      this.recognition.continuous = false
+      this.recognition.interimResults = false
+      this.recognition.lang = 'th-TH' // Thai language
+      
+      // Event handlers
+      this.recognition.onstart = () => {
+        console.log('🎤 Voice recognition started')
+        this.isListening = true
+        this.$toast.info('กำลังฟัง... พูดคำถามของคุณ', { duration: 2000 })
+      }
+      
+      this.recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript
+        console.log('🎤 Recognized:', transcript)
+        this.isListening = false
+        
+        // Set the recognized text to the input field
+        this.query = transcript
+        
+        // Auto-send the message
+        this.$nextTick(() => {
+          this.onSend()
+        })
+        
+        this.$toast.success(`🎤 "${transcript}"`, { duration: 2000 })
+        this.isVoiceMode = false // Turn off voice mode after successful recognition
+      }
+      
+      this.recognition.onerror = (event) => {
+        console.error('🎤 Speech recognition error:', event.error)
+        this.isListening = false
+        let errorMessage = 'เกิดข้อผิดพลาดในการรับรู้เสียง'
+        
+        switch (event.error) {
+          case 'no-speech':
+            errorMessage = 'ไม่พบเสียงพูด'
+            break
+          case 'audio-capture':
+            errorMessage = 'ไม่พบอุปกรณ์รับเสียง'
+            break
+          case 'not-allowed':
+            errorMessage = 'ไม่อนุญาตให้เข้าถึงไมโครโฟน'
+            break
+          case 'network':
+            errorMessage = 'ปัญหาการเชื่อมต่อเครือข่าย'
+            break
+        }
+        
+        this.$toast.error(`🎤 ${errorMessage}`, { duration: 3000 })
+        this.isVoiceMode = false
+      }
+      
+      this.recognition.onend = () => {
+        console.log('🎤 Voice recognition ended')
+        this.isListening = false
+        this.isVoiceMode = false
+      }
+      
+      // Start recognition
+      try {
+        this.recognition.start()
+      } catch (error) {
+        console.error('🎤 Failed to start recognition:', error)
+        this.$toast.error('ไม่สามารถเริ่มการรับรู้เสียงได้', { duration: 3000 })
+        this.isVoiceMode = false
+      }
+    },
+    
+    stopVoiceRecognition() {
+      if (this.recognition) {
+        this.recognition.stop()
+        this.recognition = null
+      }
+      this.isListening = false
+      this.isVoiceMode = false
     },
     
     toggleLineMenu(showMenu) {
@@ -10368,6 +10495,46 @@ html[data-theme="dark"] .page-label-toast {
   box-shadow: 0 4px 12px rgba(139, 76, 184, 0.3);
 }
 
+/* 🎤 Microphone Toggle Button */
+.mic-toggle-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(52, 168, 83, 0.1);
+  color: #34A853;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.mic-toggle-btn:hover {
+  background: rgba(52, 168, 83, 0.2);
+  transform: scale(1.05);
+}
+
+.mic-toggle-btn.active {
+  background: linear-gradient(135deg, #34A853 0%, #FBBC05 50%, #EA4335 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(52, 168, 83, 0.6);
+  animation: mic-pulse 1.5s ease-in-out infinite;
+  transform: scale(1.08);
+}
+
+@keyframes mic-pulse {
+  0%, 100% { 
+    box-shadow: 0 4px 20px rgba(52, 168, 83, 0.7), 0 0 30px rgba(52, 168, 83, 0.3); 
+  }
+  50% { 
+    box-shadow: 0 4px 25px rgba(52, 168, 83, 0.9), 0 0 40px rgba(52, 168, 83, 0.5); 
+  }
+}
+
 /* Input row with LINE-style layout */
 .close-circle,
 .more-options-btn {
@@ -10647,6 +10814,18 @@ html[data-theme="dark"] .gemini-toggle-btn {
 :deep(.dark) .gemini-toggle-btn.active,
 html[data-theme="dark"] .gemini-toggle-btn.active {
   background: linear-gradient(135deg, #4285F4 0%, #34A853 50%, #FBBC05 75%, #EA4335 100%);
+  color: white;
+}
+
+:deep(.dark) .mic-toggle-btn,
+html[data-theme="dark"] .mic-toggle-btn {
+  background: rgba(52, 168, 83, 0.2);
+  color: #81c995;
+}
+
+:deep(.dark) .mic-toggle-btn.active,
+html[data-theme="dark"] .mic-toggle-btn.active {
+  background: linear-gradient(135deg, #34A853 0%, #FBBC05 50%, #EA4335 100%);
   color: white;
 }
 
