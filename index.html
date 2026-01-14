@@ -46,11 +46,13 @@
         border: 3px solid rgba(139,76,184,0.16);
         border-top-color: #8B4CB8;
         border-radius: 50%;
-        animation: spin 0.9s linear infinite;
+        animation: spin 0.48s linear infinite; /* faster, snappier */
         z-index: 9999;
       }
       /* Ensure spinner hides once app renders */
       #app:not(:empty)::after { display: none !important; }
+      /* Hide spinner after a short grace period even if app hasn't rendered (avoid long spinning) */
+      .spinner-hidden #app:empty::after { display: none !important; }
 
       @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -81,6 +83,16 @@
           document.documentElement.classList.add('reduce-motion');
         }
       }
+      // Auto-hide spinner after short grace period (600ms) so it never spins for long
+      (function(){
+        const HIDE_AFTER_MS = 600;
+        const timer = setTimeout(() => document.documentElement.classList.add('spinner-hidden'), HIDE_AFTER_MS);
+        // If the app mounts before timeout, remove the hide class
+        document.addEventListener('DOMContentLoaded', () => {
+          clearTimeout(timer);
+          document.documentElement.classList.remove('spinner-hidden');
+        });
+      })();
     </script>
   </body>
 </html>
