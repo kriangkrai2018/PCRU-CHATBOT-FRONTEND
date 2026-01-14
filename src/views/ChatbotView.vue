@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-root" data-bs-no-js="true" :class="{ 'intro-playing': showIntroAnimation }">
+  <div class="chat-root" data-bs-no-js="true" :class="{ 'intro-playing': showIntroAnimation, 'tab-hidden': isTabHidden, 'scrolling': isScrolling }">
     <!-- 🎬 First-time Intro Animation (Genshin-style) -->
     <transition name="intro-fade">
       <div v-if="showIntroAnimation" class="intro-overlay">
@@ -1972,13 +1972,13 @@ export default {
       particleEnabled: true,
       shadowEnabled: true,
       animationEnabled: true,
-      // Snow configuration from env
-      snowCount: parseInt(import.meta.env.VITE_SNOW_COUNT || '25'),
-      snowMinSize: parseFloat(import.meta.env.VITE_SNOW_MIN_SIZE || '12'),
-      snowMaxSize: parseFloat(import.meta.env.VITE_SNOW_MAX_SIZE || '22'),
-      snowMinDuration: parseInt(import.meta.env.VITE_SNOW_MIN_DURATION || '8'),
-      snowMaxDuration: parseInt(import.meta.env.VITE_SNOW_MAX_DURATION || '18'),
-      snowOpacity: parseFloat(import.meta.env.VITE_SNOW_OPACITY || '1'),
+      // Snow configuration from env (optimized defaults for performance)
+      snowCount: parseInt(import.meta.env.VITE_SNOW_COUNT || '15'), // Reduced from 25 to 15
+      snowMinSize: parseFloat(import.meta.env.VITE_SNOW_MIN_SIZE || '10'),
+      snowMaxSize: parseFloat(import.meta.env.VITE_SNOW_MAX_SIZE || '18'),
+      snowMinDuration: parseInt(import.meta.env.VITE_SNOW_MIN_DURATION || '12'), // Slower = less CPU
+      snowMaxDuration: parseInt(import.meta.env.VITE_SNOW_MAX_DURATION || '25'),
+      snowOpacity: parseFloat(import.meta.env.VITE_SNOW_OPACITY || '0.8'),
       // Pre-generated snowflake styles to prevent re-render jank
       snowflakeStyles: [],
       // Snowflake drag state
@@ -2155,6 +2155,10 @@ export default {
       introPhase: 0, // 0: not started, 1: logo, 2: particles, 3: reveal
       isFirstTimeUser: false,
       hasShownIntroEver: false, // ใช้ localStorage เพื่อให้ intro แสดงเฉพาะครั้งแรกที่มาใช้ระบบ
+      // ⚡ Performance: Tab visibility and scrolling state
+      isTabHidden: false,
+      isScrolling: false,
+      scrollTimeout: null,
       // 🤖 Gemini Mode Tutorial
       showGeminiTutorial: false,
       geminiTutorialStep: 0,
@@ -2758,7 +2762,9 @@ export default {
     
     // 🎯 PERFORMANCE: Pause animations when tab is not visible
     this._handleVisibilityChange = () => {
-      const chatRoot = this.$el?.querySelector('.chat-root')
+      this.isTabHidden = document.hidden
+      // Keep the classList method for CSS fallback
+      const chatRoot = this.$el?.querySelector?.('.chat-root') || this.$el
       if (chatRoot) {
         if (document.hidden) {
           chatRoot.classList.add('tab-hidden')
@@ -5798,35 +5804,25 @@ export default {
 
     generateSnowflakeStyles() {
       const styles = []
-      const windMax = 150;
-      const numGroups = 5;
-      const windProfiles = [];
+      const driftMax = 40; // Simplified drift (was windMax = 150)
 
-      console.log('❄️ Generating snowflake styles, count:', this.snowCount)
+      console.log('❄️ Generating optimized snowflake styles, count:', this.snowCount)
 
-      // Generate wind profiles for each group
-      for (let i = 0; i < numGroups; i++) {
-        windProfiles.push({
-          '--wind1': `${Math.random() * windMax - (windMax / 2)}px`,
-          '--wind2': `${Math.random() * windMax - (windMax / 2)}px`,
-          '--wind3': `${Math.random() * windMax - (windMax / 2)}px`,
-          '--wind4': `${Math.random() * windMax - (windMax / 2)}px`,
-        });
-      }
-
+      // Use fewer, simpler snowflakes for performance (like Google AI Studio stars)
       for (let i = 1; i <= this.snowCount; i++) {
-        // Assign snowflake to a group
-        const groupIndex = i % numGroups;
-        const windProfile = windProfiles[groupIndex];
-
+        // Simple random drift direction
+        const drift = (Math.random() - 0.5) * driftMax * 2;
+        
         styles.push({
           left: `${Math.random() * 100}%`,
+          // Longer duration = less CPU (fewer repaints)
           animationDuration: `${this.snowMinDuration + Math.random() * (this.snowMaxDuration - this.snowMinDuration)}s`,
-          animationDelay: `${Math.random() * 5}s`, // Max 5s delay so snow shows quickly
+          // Stagger delays more to reduce concurrent animations
+          animationDelay: `${Math.random() * 8}s`,
           fontSize: `${this.snowMinSize + Math.random() * (this.snowMaxSize - this.snowMinSize)}px`,
-          opacity: this.snowOpacity,
+          opacity: 0.6 + Math.random() * 0.3, // Vary opacity slightly
           symbol: '❄',
-          ...windProfile
+          '--drift': `${drift}px` // Single drift variable instead of 4 wind variables
         })
       }
       // Freeze styles to avoid Vue creating reactive proxies for this array (big perf win)
@@ -5842,10 +5838,7 @@ export default {
         animationDelay: flake.animationDelay,
         fontSize: flake.fontSize,
         opacity: flake.opacity,
-        '--wind1': flake['--wind1'],
-        '--wind2': flake['--wind2'],
-        '--wind3': flake['--wind3'],
-        '--wind4': flake['--wind4'],
+        '--drift': flake['--drift'], // Single drift variable
         cursor: 'grab'
       }
       if (offset) {
@@ -9033,6 +9026,17 @@ export default {
     },
     
     handleScroll() {
+      // ⚡ PERFORMANCE: Pause snow animation during scroll
+      if (!this.isScrolling) {
+        this.isScrolling = true
+      }
+      if (this.scrollTimeout) {
+        clearTimeout(this.scrollTimeout)
+      }
+      this.scrollTimeout = setTimeout(() => {
+        this.isScrolling = false
+      }, 150) // Resume animation 150ms after scroll stops
+      
       if (!this.scrollTicking) {
         window.requestAnimationFrame(() => {
           this.processScroll()

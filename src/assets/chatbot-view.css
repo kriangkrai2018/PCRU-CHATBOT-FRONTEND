@@ -6449,37 +6449,42 @@ body.no-effects .apple-help-button::after { display: none !important; }
   overflow: hidden; /* Keep snow inside the panel */
   pointer-events: none;
   z-index: 1500; /* Above chat-panel z-index 1401 */
+  /* Performance optimizations */
+  contain: strict;
+  content-visibility: auto;
+  transform: translateZ(0);
+  will-change: contents;
 }
 
 .snowflake {
   position: absolute;
   top: -20px;
-  color: #ffffff;
-  font-size: 18px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 16px;
   user-select: none;
-  animation-name: snowfall;
-  animation-timing-function: linear;
+  animation-name: snowfall-lite;
+  animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
-  will-change: transform;
+  /* GPU acceleration with minimal overhead */
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   pointer-events: auto;
   cursor: grab;
   z-index: 1500;
-  /* Text shadow for visibility on any background */
-  text-shadow: 
-    0 0 3px rgba(150, 180, 220, 0.9),
-    0 0 6px rgba(100, 150, 200, 0.7),
-    0 0 10px rgba(80, 120, 180, 0.5);
-  opacity: 0.95;
+  /* Lighter text shadow - single layer only */
+  text-shadow: 0 0 4px rgba(200, 220, 255, 0.6);
+  opacity: 0.8;
+  /* Contain for paint optimization */
+  contain: layout style;
 }
 
-/* Dark mode - brighter white snow */
+/* Dark mode - brighter white snow (optimized) */
 [data-theme="dark"] .snowflake {
-  color: #fff;
-  text-shadow: 
-    0 0 5px #fff,
-    0 0 10px #fff,
-    0 0 15px rgba(200, 220, 255, 0.9),
-    0 0 20px rgba(150, 200, 255, 0.6);
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 0 6px rgba(200, 220, 255, 0.7);
+  opacity: 0.85;
 }
 
 .snowflake:hover {
@@ -6511,6 +6516,7 @@ body.no-effects .apple-help-button::after { display: none !important; }
   backface-visibility: hidden;
 }
 
+/* Original snowfall - keep for compatibility but use lite version by default */
 @keyframes snowfall {
   0% {
     transform: translate3d(0, -5%, 0) rotate(0deg);
@@ -6526,6 +6532,45 @@ body.no-effects .apple-help-button::after { display: none !important; }
   }
   100% {
     transform: translate3d(var(--wind4, 0px), 105vh, 0) rotate(360deg);
+  }
+}
+
+/* Optimized snowfall - simpler, GPU-friendly, like Google AI Studio stars */
+@keyframes snowfall-lite {
+  0% {
+    transform: translateY(-5%) translateZ(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(105vh) translateX(var(--drift, 0px)) translateZ(0);
+    opacity: 0;
+  }
+}
+
+/* Performance: Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .snowflake,
+  .snowflakes-container {
+    display: none !important;
+  }
+}
+
+/* Performance: Pause snow during scroll to reduce CPU usage */
+.chat-root.scrolling .snowflake {
+  animation-play-state: paused !important;
+}
+
+/* Performance: Reduce snow in low power mode / battery saver */
+@media (prefers-reduced-motion: no-preference) {
+  .snowflakes-container {
+    /* Use passive scroll listener hint */
+    touch-action: pan-y;
   }
 }
 
@@ -6545,7 +6590,7 @@ body.no-effects .apple-help-button::after { display: none !important; }
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(107, 44, 145, 0.3), 0 2px 8px rgba(107, 44, 145, 0.2), 0 1px 0 rgba(255,255,255,0.15) inset;
-  z-index: 999;
+  z-index: 9;
   transition: all 0.3s cubic-bezier(.2,.9,.2,1);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
