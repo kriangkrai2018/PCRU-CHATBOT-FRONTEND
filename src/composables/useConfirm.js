@@ -47,6 +47,7 @@ export function useConfirm() {
     loadingText: 'กำลังดำเนินการ...',
     loading: false,
     showCancel: true,
+    teleportTo: 'body',
     resolve: null
   });
 
@@ -69,6 +70,7 @@ export function useConfirm() {
         loadingText: options.loadingText || 'กำลังดำเนินการ...',
         showCancel: options.showCancel !== false,
         loading: false,
+        teleportTo: options.teleportTo !== undefined ? options.teleportTo : 'body',
         resolve
       };
     });
@@ -111,6 +113,7 @@ export function useConfirm() {
         loadingText: confirmOptions.loadingText || 'กำลังดำเนินการ...',
         showCancel: confirmOptions.showCancel !== false,
         loading: false,
+        teleportTo: confirmOptions.teleportTo !== undefined ? confirmOptions.teleportTo : 'body',
         resolve: async (confirmed) => {
           if (confirmed && onConfirm) {
             confirmState.value.loading = true;
@@ -180,6 +183,7 @@ export function useConfirm() {
         loadingText: confirmState.value.loadingText,
         loading: confirmState.value.loading,
         showCancel: confirmState.value.showCancel,
+        teleportTo: confirmState.value.teleportTo,
         onConfirm: handleConfirm,
         onCancel: handleCancel,
         'onUpdate:isOpen': (val) => {

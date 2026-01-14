@@ -3516,7 +3516,8 @@ export default {
         message: 'การเลือกเครื่องมือนี้จะเริ่มแชทใหม่<br>คุณกลับมาที่การสนทนานี้ได้ทุกเมื่อ<br><label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.75rem"><input id="geminiNoAskCheckbox" type="checkbox" /> อย่าถามฉันอีก</label>',
         variant: 'warning',
         confirmText: 'เริ่มแชทใหม่',
-        cancelText: 'ยกเลิก'
+        cancelText: 'ยกเลิก',
+        teleportTo: '.chat-panel'
       })
 
       if (confirmed) {
@@ -11525,6 +11526,11 @@ html[data-theme="light"] .line-menu-fullscreen-wrapper .input-row.fullscreen-inp
   overflow: hidden;
   border-radius: inherit;
   transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
+}
+
+/* Ensure chat panel acts as positioning context for inline modals */
+.chat-panel {
+  position: relative;
 }
 
 /* Disable transition while dragging */

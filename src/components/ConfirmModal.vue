@@ -1,7 +1,8 @@
 <template>
-  <Teleport to="body">
+  <!-- Teleport into specified container when teleportTo is provided (e.g., '.chat-panel') -->
+  <Teleport v-if="teleportTo" :to="teleportTo">
     <Transition name="confirm-modal">
-      <div v-if="isOpen" class="confirm-modal-overlay" @click.self="handleCancel">
+      <div v-if="isOpen" class="confirm-modal-overlay" :class="{ inline: teleportTo !== 'body' }" @click.self="handleCancel">
         <div class="confirm-modal-content" :class="[variant, { 'pop-in': isOpen }]">
           <!-- Icon -->
           <div class="confirm-modal-icon" :class="variant">
@@ -38,6 +39,43 @@
       </div>
     </Transition>
   </Teleport>
+
+  <!-- Inline rendering when teleportTo is falsy (render where component is used) -->
+  <div v-else v-if="isOpen" class="confirm-modal-overlay inline" @click.self="handleCancel">
+    <div class="confirm-modal-content" :class="[variant, { 'pop-in': isOpen }]">
+      <!-- Icon -->
+      <div class="confirm-modal-icon" :class="variant">
+        <i :class="iconClass"></i>
+      </div>
+      
+      <!-- Title -->
+      <h3 class="confirm-modal-title">{{ title }}</h3>
+      
+      <!-- Message -->
+      <p class="confirm-modal-text" v-html="message"></p>
+      
+      <!-- Actions -->
+      <div class="confirm-modal-actions">
+        <button 
+          v-if="showCancel"
+          class="btn-modal-secondary" 
+          @click="handleCancel"
+          :disabled="loading"
+        >
+          {{ cancelText }}
+        </button>
+        <button 
+          class="btn-modal-primary" 
+          :class="variant"
+          @click="handleConfirm"
+          :disabled="loading"
+        >
+          <span v-if="loading" class="loading-spinner"></span>
+          {{ loading ? loadingText : confirmText }}
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -88,6 +126,10 @@ const props = defineProps({
   closeOnOverlay: {
     type: Boolean,
     default: true
+  },
+  teleportTo: {
+    type: [String, Boolean],
+    default: 'body' // set to selector (e.g., '.chat-panel') or false to render inline where used
   }
 });
 
@@ -134,6 +176,25 @@ const handleCancel = () => {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
+
+/* Inline variant used when modal is rendered inside a container (e.g., .chat-panel) */
+.confirm-modal-overlay.inline {
+  position: absolute; /* position relative to parent container */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* darker translucent background plus blur to clearly separate modal from content */
+  background: rgba(20,20,35,0.45);
+  z-index: 1001;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: backdrop-filter 0.18s ease, background 0.18s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 
 /* Modal Content */
 .confirm-modal-content {
@@ -329,6 +390,13 @@ const handleCancel = () => {
 /* Dark mode overrides */
 html[data-theme="dark"] .confirm-modal-overlay {
   background: rgba(0, 0, 0, 0.6);
+}
+
+/* Dark-mode inline overlay: stronger blur/overlay so the chat panel is visually obscured */
+html[data-theme="dark"] .confirm-modal-overlay.inline {
+  background: rgba(6,6,8,0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 html[data-theme="dark"] .confirm-modal-content {
