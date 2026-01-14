@@ -2147,7 +2147,7 @@ export default {
     // 🤖 Dynamic placeholder based on mode
     dynamicPlaceholder() {
       if (this.useGeminiMode) {
-        return '✨ ถามอะไรก็ได้กับ AI...'
+        return '✨ ถามอะไรก็ได้กับ Gemini 2.0'
       }
       return this.placeholderText || 'ขอความช่วยเหลืองจาก ปลายฟ้า'
     },

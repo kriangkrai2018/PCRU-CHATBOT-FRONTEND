@@ -1085,29 +1085,10 @@
               
 
               
-              <!-- 🎤 Microphone Button for Voice Input -->
-              <button 
-                class="mic-toggle-btn" 
-                :class="{ active: isVoiceMode || isListening }"
-                @click="toggleVoiceMode"
-                :aria-label="isVoiceMode ? 'ปิดเสียงพูด' : 'เปิดเสียงพูด'"
-                :title="isVoiceMode ? 'ปิดโหมดเสียงพูด' : 'เปิดโหมดเสียงพูด'"
-              >
-                <span class="mat-mdc-button-touch-target"></span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 1C10.3431 1 9 2.34315 9 4V12C9 13.6569 10.3431 15 12 15C13.6569 15 15 13.6569 15 12V4C15 2.34315 13.6569 1 12 1Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M19 10V12C19 16.4183 15.4183 20 11 20C6.58172 20 3 16.4183 3 12V10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M12 20V23" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <circle v-if="isListening" cx="12" cy="12" r="3" fill="currentColor" opacity="0.3">
-                    <animate attributeName="r" values="2;4;2" dur="1.5s" repeatCount="indefinite"/>
-                  </circle>
-                </svg>
-              </button>
-              
-
-              
+              <!-- Toggle between Send Button and Microphone Button based on typing -->
               <transition name="send-btn-fade" mode="out-in">
-                <button v-if="query && query.trim()" class="btn-send" v-show="!showLineMenu" @click="onSend" aria-label="send" ref="sendBtn" :style="sendBtnFixedStyle"
+                <!-- Send Button (shown when user has typed text) -->
+                <button v-if="query && query.trim() && !isVoiceMode" class="btn-send" v-show="!showLineMenu" @click="onSend" aria-label="send" ref="sendBtn" :style="sendBtnFixedStyle"
                   @mouseenter="onSendBtnMouseEnter" @mouseleave="onSendBtnMouseLeave" @focus="onSendBtnMouseEnter" @blur="onSendBtnMouseLeave">
                   <!-- Animated chat bubble icon -->
                   <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="send-icon" aria-hidden="true" focusable="false">
@@ -1118,6 +1099,25 @@
                     <animate attributeName="r" values="0;2;0" dur="1.5s" repeatCount="indefinite"/>
                   </circle>
                 </svg>
+                </button>
+
+                <!-- Microphone Button (shown when no text or in voice mode) -->
+                <button v-else
+                  class="mic-toggle-btn"
+                  :class="{ active: isVoiceMode || isListening }"
+                  @click="toggleVoiceMode"
+                  :aria-label="isVoiceMode ? 'ปิดเสียงพูด' : 'เปิดเสียงพูด'"
+                  :title="isVoiceMode ? 'ปิดโหมดเสียงพูด' : 'เปิดโหมดเสียงพูด'"
+                >
+                  <span class="mat-mdc-button-touch-target"></span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 1C10.3431 1 9 2.34315 9 4V12C9 13.6569 10.3431 15 12 15C13.6569 15 15 13.6569 15 12V4C15 2.34315 13.6569 1 12 1Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M19 10V12C19 16.4183 15.4183 20 11 20C6.58172 20 3 16.4183 3 12V10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 20V23" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle v-if="isListening" cx="12" cy="12" r="3" fill="currentColor" opacity="0.3">
+                      <animate attributeName="r" values="2;4;2" dur="1.5s" repeatCount="indefinite"/>
+                    </circle>
+                  </svg>
                 </button>
               </transition>
             </div>
@@ -2266,7 +2266,7 @@ export default {
         return 'กำลังฟัง'
       }
       if (this.useGeminiMode) {
-        return '✨ ถามอะไรก็ได้กับ AI...'
+        return '✨ ถามอะไรก็ได้กับ Gemini 2.0'
       }
       return this.placeholderText || 'ขอความช่วยเหลืองจาก ปลายฟ้า'
     },

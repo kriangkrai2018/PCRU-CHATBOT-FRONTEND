@@ -578,13 +578,7 @@ html.theme-transitioning [data-theme="light"] * {
    GPU acceleration and rendering hints for smooth 60fps
    ========================================================================== */
 
-/* GPU compositing for blur effects (expensive operations) */
-[data-theme="dark"] .panel-top,
-[data-theme="dark"] .theme-toggle-btn,
-[data-theme="dark"] .bot-with-categories {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
+
 
 /* Contain layout for message bubbles to isolate repaints */
 [data-theme="dark"] .message-bubble {
