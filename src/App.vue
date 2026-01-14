@@ -3,6 +3,7 @@ import { RouterLink, RouterView } from 'vue-router'
 import AppleToast from '@/components/AppleToast.vue'
 import { onMounted } from 'vue'
 import { isMobileSidebarOpen } from '@/stores/sidebarState'
+import CookieConsent from '@/components/CookieConsent.vue'
 
 // Reset mobile sidebar state on app load
 onMounted(() => {
@@ -15,6 +16,7 @@ onMounted(() => {
 <template>
   <RouterView />
   <AppleToast />
+  <CookieConsent />
 </template>
 
 <style scoped>

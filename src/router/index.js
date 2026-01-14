@@ -195,6 +195,12 @@ const router = createRouter({
       redirect: '/login' // Redirect to login page after successful password update
       // Or, if you prefer a dedicated page:
       // component: () => import('../views/PasswordUpdatedConfirmation.vue') 
+    },
+    // Public privacy policy page
+    {
+      path: '/privacy',
+      name: 'privacy',
+      component: () => import('../views/PrivacyPolicy.vue')
     }
   ],
 })
