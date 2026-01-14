@@ -5550,7 +5550,7 @@ export default {
     },
     // 🗺️ Create Apple-style embedded Google Map widget
     createMapWidget(mapUrl, lat, lng, label = 'ดูแผนที่') {
-      const zoom = 15;
+      const zoom = 8;
       
       // Check if user has already answered (granted or denied)
       const locationPermission = localStorage.getItem('locationPermissionStatus');
@@ -5595,11 +5595,11 @@ export default {
         embedUrl = `https://www.google.com/maps?saddr=${userLat},${userLng}&daddr=${lat},${lng}&output=embed`;
       } else {
         // Default: show single location pin
-        embedUrl = `https://www.google.com/maps?q=${lat},${lng}&z=${zoom}&output=embed`;
+        embedUrl = `https://www.google.com/maps?q=${lat},${lng}&output=embed`;
       }
       
       // Apple-style map widget HTML - clickable only on buttons
-      return `<div class="map-widget-container">
+      return `<div class="map-widget-container w-100">
 <div class="map-widget">
 <div class="map-preview">
 <button class="map-fullscreen-btn" onclick="window.openMapFullscreen('${embedUrl}')" title="เปิดแบบเต็มจอ">
@@ -5649,6 +5649,9 @@ export default {
 
       // 1. Replace <br> tags (including encoded ones) to ensure they render.
       let processedText = text.replace(/<br\s*\/?>|&lt;br\s*\/?>/gi, '<br>');
+
+      // 2. Remove standard AI greeting if present at the beginning
+      processedText = processedText.replace(/^สวัสดีค่ะ 😊 .*?ยินดีให้บริการค่ะ\s*/, '');
 
       // 2. Replace known Facebook pages from quotes
       processedText = processedText.replace(facebookQuoteRegex, (match, pageName) => {
@@ -5756,9 +5759,11 @@ export default {
       // Pattern 2: Lat/Lng coordinates (with or without "latitude longitude :" prefix)
       // - With prefix: "latitude longitude : 16.xxx,101.xxx"
       // - Plain coords: "16.xxx,101.xxx" (stored directly from GPS input)
+      // - Location prefix: "📍 พิกัด: 16.xxx,101.xxx"
       const latLngWithPrefix = /latitude\s*longitude\s*:\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/i.exec(processedText);
       const latLngPlain = /^(-?\d{1,3}\.\d{4,})\s*,\s*(-?\d{1,3}\.\d{4,})$/i.exec(text?.trim() || '');
-      const latLngMatch = latLngWithPrefix || latLngPlain;
+      const latLngLocation = /📍\s*พิกัด\s*:\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/i.exec(processedText);
+      const latLngMatch = latLngWithPrefix || latLngPlain || latLngLocation;
       
       if (googleMapMatch || latLngMatch) {
         // 🗺️ Build output with title + map widget
@@ -5792,8 +5797,8 @@ export default {
           output += this.createMapWidget(coordUrl, lat, lng, 'ตำแหน่ง GPS');
         }
         
-        // Return title + map widget, discard all other text
-        processedText = output;
+        // Append map widget to existing text instead of replacing
+        processedText += output;
       }
 
       return processedText;

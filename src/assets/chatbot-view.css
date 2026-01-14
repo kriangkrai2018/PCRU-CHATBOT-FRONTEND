@@ -348,8 +348,8 @@ html.theme-transitioning div {
   transition: all 0.3s ease;
   
   /* Fix Width Issue */
-  width: fit-content !important;
-  max-width: 85%;
+  width: 100% !important;
+  max-width: 100%;
 }
 
 .message-bubble.bot::before {
@@ -3689,7 +3689,7 @@ html.keyboard-open .message-wrapper {
   justify-content: flex-start;
   gap: 10px;
   /* remove top padding so content sits lower; keep bottom padding for spacing */
-  padding: 12px 12px 12px;
+  padding: 12px 0 12px;
   /* Align avatar and bot bubble to the bottom of the row instead of the top */
   align-items: flex-end;
 }
@@ -4700,7 +4700,11 @@ body.no-effects .apple-help-button::after { display: none !important; }
 /* 🗺️ Apple-style Google Map Widget */
 .map-widget-container {
   margin: 12px 0;
-  max-width: 300px;
+  width: 100%;
+}
+
+.w-100 {
+  width: 100% !important;
 }
 
 .map-widget-link {
