@@ -3168,7 +3168,7 @@ export default {
     this.startIdleTracking()
 
     // 🎠 Load synonyms for placeholder carousel
-    this.loadSynonymsCarousel()
+    // this.loadSynonymsCarousel()
 
     // 📜 Scroll to bottom to show latest messages - multiple attempts with increasing delays
     const doScroll = () => {
