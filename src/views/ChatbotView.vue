@@ -1003,8 +1003,10 @@
                         v-for="(page, index) in carouselPages" 
                         :key="index"
                         class="carousel-dot"
-                        :class="{ active: carouselCurrentPage === index }"
+                        :class="{ active: carouselCurrentPage === index, dragging: isDragging }"
                         @click="goToCarouselPage(index)"
+                        @mousedown="startDrag($event, index)"
+                        @touchstart="startDrag($event, index)"
                         :aria-label="`ไปหน้า ${index + 1}`"
                       >
                         <span class="dot-inner"></span>
@@ -1292,8 +1294,10 @@
                       v-for="(page, index) in carouselPages" 
                       :key="index"
                       class="carousel-dot"
-                      :class="{ active: carouselCurrentPage === index }"
+                      :class="{ active: carouselCurrentPage === index, dragging: isDragging }"
                       @click="goToCarouselPage(index)"
+                      @mousedown="startDrag($event, index)"
+                      @touchstart="startDrag($event, index)"
                     >
                       <span class="dot-inner"></span>
                     </button>
@@ -1870,6 +1874,10 @@ export default {
       showScrollTutorial: false,
       scrollTutorialShown: false,
       scrollButtonRect: null, // Position of scroll-to-top button for spotlight
+      // Carousel dragging
+      isDragging: false,
+      dragStartX: 0,
+      dragStartPage: 0,
       anchorBottom: true,
       botAvatar: null,
       botVideo: botVideoSrc,
@@ -3838,6 +3846,44 @@ export default {
           this.showPageLabelToastTemporarily()
         }
       }
+    },
+    
+    // 🖱️ Drag Methods for Carousel Dots
+    startDrag(event, startIndex) {
+      event.preventDefault()
+      this.isDragging = true
+      this.dragStartX = event.clientX || event.touches[0].clientX
+      this.dragStartPage = startIndex
+      // Add global listeners
+      document.addEventListener('mousemove', this.handleDrag)
+      document.addEventListener('touchmove', this.handleDrag)
+      document.addEventListener('mouseup', this.endDrag)
+      document.addEventListener('touchend', this.endDrag)
+    },
+    
+    handleDrag(event) {
+      if (!this.isDragging) return
+      event.preventDefault()
+      const currentX = event.clientX || event.touches[0].clientX
+      const deltaX = currentX - this.dragStartX
+      const sensitivity = 50 // pixels per page
+      const pageDelta = Math.round(deltaX / sensitivity)
+      const targetPage = Math.max(0, Math.min(this.carouselPages.length - 1, this.dragStartPage + pageDelta))
+      if (targetPage !== this.carouselCurrentPage) {
+        this.goToCarouselPage(targetPage)
+      }
+    },
+    
+    endDrag(event) {
+      if (!this.isDragging) return
+      this.isDragging = false
+      this.dragStartX = 0
+      this.dragStartPage = 0
+      // Remove global listeners
+      document.removeEventListener('mousemove', this.handleDrag)
+      document.removeEventListener('touchmove', this.handleDrag)
+      document.removeEventListener('mouseup', this.endDrag)
+      document.removeEventListener('touchend', this.endDrag)
     },
     
     // 🏷️ Show page label toast temporarily
@@ -10142,6 +10188,11 @@ html[data-theme="dark"] .page-label-toast {
 .carousel-dot:hover:not(.active) .dot-inner {
   background: rgba(255, 255, 255, 0.4);
   transform: scale(1.15);
+}
+
+.carousel-dot.dragging .dot-inner {
+  transform: scale(1.3);
+  background: rgba(255, 255, 255, 0.6);
 }
 
 /* 🎨 Location page dot indicator - green when on page 2 */
