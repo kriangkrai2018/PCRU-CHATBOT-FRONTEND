@@ -1968,7 +1968,7 @@ export default {
       idleTimeout: parseInt(import.meta.env.VITE_BOT_SLEEP_TIMEOUT || '30000'), // อ่านจาก env หรือ default 30 วินาที
       // Visual effects toggles (managed via /manageaiimage)
       masterEnabled: true,
-      snowEnabled: true,
+      snowEnabled: false,
       particleEnabled: true,
       shadowEnabled: true,
       animationEnabled: true,
@@ -2933,12 +2933,6 @@ export default {
       if (savedParticle !== null) this.particleEnabled = savedParticle === 'true'
       if (savedShadow !== null) this.shadowEnabled = savedShadow === 'true'
       if (savedAnimation !== null) this.animationEnabled = savedAnimation === 'true'
-      
-      // Auto-enable snow during winter only if the user hasn't explicitly set a preference
-      if (this.isWinterSeason) {
-        if (savedSnow === null) this.snowEnabled = true
-        if (savedMaster === null) this.masterEnabled = true
-      }
       
       // If master is off, disable all effects
       if (savedMaster === 'false') {

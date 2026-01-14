@@ -607,7 +607,7 @@ let alertTimeout = null
 
 // Effect states
 const masterEnabled = ref(true)
-const snowEnabled = ref(true)
+const snowEnabled = ref(false)
 const summerEnabled = ref(true)
 const rainEnabled = ref(true)
 
@@ -622,7 +622,7 @@ const animationEnabled = ref(true)
 
 // Original states for comparison
 const originalMaster = ref(true)
-const originalSnow = ref(true)
+const originalSnow = ref(false)
 const originalSummer = ref(true)
 const originalRain = ref(true)
 const originalParticle = ref(true)
