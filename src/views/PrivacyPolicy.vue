@@ -62,7 +62,7 @@ onMounted(() => {
 
 <style scoped>
 .privacy-page { display:flex; justify-content:center; padding:0; }
-.card { max-width:820px; width:100%; background: var(--cb-bg-card); border-radius:10px; padding:22px; box-shadow: var(--cb-shadow) }
+.card { max-width:820px; overflow-y: auto; width:100%; background: rgba(0, 0, 0, 0.239); backdrop-filter: blur(20px) saturate(120%); border-radius:10px; padding:22px; box-shadow: var(--cb-shadow) }
 h1 { margin:0 0 12px 0 }
 .lead { color: var(--cb-text-primary); margin-bottom:14px }
 ul, ol { margin-left:18px; margin-bottom:14px }

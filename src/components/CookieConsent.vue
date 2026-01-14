@@ -137,14 +137,14 @@ watch(showPrivacy, (v) => {
   align-items: center;
   justify-content: center;
   z-index: 2200;
-  /* dim & blur the background behind the modal */
-  background: rgba(0,0,0,0.28);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  /* lighter translucent overlay + stronger blur for gentle soft-focus */
+  background: rgba(0,0,0,0.14);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  backdrop-filter: blur(10px) saturate(120%);
   transition: background-color .18s ease, backdrop-filter .18s ease;
   /* ensure overlay blocks interaction with background */
   pointer-events: auto;
-}
+} 
 .cookie-card {
   width: min(720px, calc(100% - 32px));
   background: rgba(0, 0, 0, 0.748);
@@ -190,16 +190,15 @@ watch(showPrivacy, (v) => {
 .pop-leave-to { transform: translateY(6px) scale(.996); opacity:0 }
 
 /* Privacy modal styles (full-screen, no padding) */
-.privacy-modal-overlay { position: fixed; inset:0; display:flex; align-items:flex-start; justify-content:center; z-index: 2300; background: rgba(0,0,0,0.36); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); padding:0 }
-.privacy-modal { width:100%; height:100%; max-width:none; max-height:none; overflow:hidden; background: var(--cb-bg-card); border-radius:0; box-shadow:none; color: var(--cb-text-primary); display:flex; flex-direction:column }
-.privacy-modal-header { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--cb-border-color) }
-.privacy-modal-body { padding:0; flex:1; overflow:auto }
+.privacy-modal-overlay { position: fixed; inset:0; display:flex; align-items:flex-start; justify-content:center; z-index: 2300; /* lighter translucent backdrop + stronger blur for soft-focus */ background: rgba(0,0,0,0.16); -webkit-backdrop-filter: blur(12px) saturate(120%); backdrop-filter: blur(12px) saturate(120%); transition: background-color .18s ease, backdrop-filter .18s ease; padding:0 }
+.privacy-modal { width:100%; height:100vh; min-height:0; max-width:none; max-height:none; overflow:hidden; background: transparent; border-radius:0; box-shadow:none; color: var(--cb-text-primary); display:flex; flex-direction:column }
+.privacy-modal-header { display:flex; justify-content:space-between; align-items:center; padding:22px 16px; border-bottom:1px solid var(--cb-border-color) }
+.privacy-modal-body { padding:0; flex:1; overflow:auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior: contain; min-height:0 }
 .privacy-modal-body .card { box-shadow:none; padding:0; background:transparent; margin:0; color: var(--cb-text-primary) }
 .privacy-modal h4 { margin:0; font-size:16px }
 
 /* Dark mode for privacy modal */
-[data-theme="dark"] .privacy-modal-overlay { background: var(--cb-surface-dim-50) }
-[data-theme="dark"] .privacy-modal { background: var(--cb-bg-card); color: var(--cb-text-primary) }
+[data-theme="dark"] .privacy-modal-overlay { background: rgba(0,0,0,0.28); -webkit-backdrop-filter: blur(12px) saturate(120%); backdrop-filter: blur(12px) saturate(120%); }
 [data-theme="dark"] .privacy-modal-header { border-bottom-color: var(--cb-border-subtle) }
 [data-theme="dark"] .privacy-full-close { background: rgba(255,255,255,0.06); border-color: var(--cb-border-muted); color: var(--cb-text-inverse) }
 
