@@ -599,6 +599,29 @@ html.theme-transitioning div {
   overflow-y: auto;
   min-height: 0;
   -webkit-overflow-scrolling: touch;
+  /* iOS Safari scroll fixes */
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  /* Ensure scroll events fire properly on iOS */
+  will-change: scroll-position;
+}
+
+/* iOS-specific scroll fixes */
+@supports (-webkit-touch-callout: none) {
+  .panel-body {
+    /* iOS Safari momentum scrolling fixes */
+    -webkit-overflow-scrolling: touch;
+    /* Prevent rubber band scrolling */
+    overscroll-behavior-y: contain;
+    /* Ensure proper scroll event handling */
+    scroll-behavior: auto;
+  }
+
+  /* Fix for iOS Safari scroll performance */
+  .panel-body * {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
 }
 
 .input-pill {

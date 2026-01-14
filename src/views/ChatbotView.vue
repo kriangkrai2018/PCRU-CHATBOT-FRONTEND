@@ -254,7 +254,7 @@
             </button>
           </transition>
 
-          <div class="panel-body" :class="{ 'anchor-bottom': anchorBottom }" @scroll.passive="handleScroll" ref="panelBody">
+          <div class="panel-body" :class="{ 'anchor-bottom': anchorBottom }" @scroll="handleScroll" ref="panelBody">
             
 
 
@@ -1816,6 +1816,7 @@
 import { getBotAvatar } from '@/config/botConfig'
 import { getCategoryIcon as getIconSvg } from '@/config/categoryIcons'
 import { useBotTooltip } from '@/composables/useBotTooltip'
+import { useConfirm } from '@/composables/useConfirm'
 import botVideoSrc from '@/assets/bots/bot2.mp4'
 import botSleepVideoSrc from '@/assets/bots/bot2sleep.mp4'
 import botWakeVideoSrc from '@/assets/bots/bot2wake.mp4'
@@ -1890,6 +1891,7 @@ export default {
       // 🎓 PCRU Watermark gyroscope tilt
       pcruTilt: { x: 0, y: 0 },
       gyroscopeEnabled: false, // iOS requires permission
+      isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1), // iOS detection
       userLocation: null, // { lat, lng } from GPS
       showAiIntro: false,
       aiTilt: { x: 0, y: 0, s: 1 },
@@ -2266,7 +2268,7 @@ export default {
         return 'กำลังฟัง'
       }
       if (this.useGeminiMode) {
-        return '✨ ถามอะไรก็ได้กับ Gemini 2.0'
+        return '✨ ถามข้อมูลเกี่ยวกับ PCRU กับ AI'
       }
       return this.placeholderText || 'ขอความช่วยเหลืองจาก ปลายฟ้า'
     },
@@ -3489,6 +3491,9 @@ export default {
     
     // 🤖 Gemini AI Mode Toggle
     toggleGeminiMode() {
+      // Clear chat history every time the toggle is pressed
+      this.clearChatHistory()
+      
       this.useGeminiMode = !this.useGeminiMode
       console.log('🤖 Toggle Gemini Mode:', this.useGeminiMode ? 'AI Mode ✨' : 'Search Mode 🔍')
       
@@ -9024,6 +9029,13 @@ export default {
     },
     
     handleScroll() {
+      // iOS Safari fix: Force scroll position update and use different throttling
+      if (this.isIOS && this.$refs.panelBody) {
+        const scrollTop = this.$refs.panelBody.scrollTop
+        // Force reflow to ensure scroll position is updated
+        this.$refs.panelBody.offsetHeight
+      }
+
       // ⚡ PERFORMANCE: Pause snow animation during scroll
       if (!this.isScrolling) {
         this.isScrolling = true
@@ -9033,13 +9045,20 @@ export default {
       }
       this.scrollTimeout = setTimeout(() => {
         this.isScrolling = false
-      }, 150) // Resume animation 150ms after scroll stops
-      
-      if (!this.scrollTicking) {
-        window.requestAnimationFrame(() => {
+      }, this.isIOS ? 100 : 150) // Shorter timeout for iOS
+
+      // iOS needs more frequent scroll processing
+      if (!this.scrollTicking || this.isIOS) {
+        if (this.isIOS) {
+          // Immediate processing for iOS
           this.processScroll()
-          this.scrollTicking = false
-        })
+        } else {
+          // Throttled processing for other browsers
+          window.requestAnimationFrame(() => {
+            this.processScroll()
+            this.scrollTicking = false
+          })
+        }
         this.scrollTicking = true
       }
     },
@@ -9067,7 +9086,8 @@ export default {
         
         // Hide everything when at the very top
         if (currentScrollTop <= 10) {
-          if (this.showHeaderButtons !== false && !cannotScroll) this.showHeaderButtons = false
+          // Header buttons always visible - removed hiding on scroll
+          // if (this.showHeaderButtons !== false && !cannotScroll) this.showHeaderButtons = false
           // if (this.showFooter !== false) this.showFooter = false  // Keep footer visible
           if (this.showScrollTop !== false) this.showScrollTop = false
           if (this.showScrollTutorial !== false) this.showScrollTutorial = false
@@ -9091,7 +9111,7 @@ export default {
         
         // Hide everything when scrolling UP
         if (isScrollingUp) {
-          if (this.showHeaderButtons !== false && !cannotScroll) this.showHeaderButtons = false
+          // if (this.showHeaderButtons !== false && !cannotScroll) this.showHeaderButtons = false  // Keep header buttons always visible
           // if (this.showFooter !== false) this.showFooter = false  // Keep footer visible
           if (this.showScrollTop !== false) this.showScrollTop = false
           if (this.showScrollTutorial !== false) this.showScrollTutorial = false
