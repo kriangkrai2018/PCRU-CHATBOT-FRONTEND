@@ -3596,8 +3596,6 @@ html.keyboard-open .bot-avatar-wrapper .typing-tooltip {
   margin-top: auto;
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
   /* padding: 0 min(18px, max(15px, env(safe-area-inset-right, 0px))) 0px 0px; */
   /* 🍎 Contain repaints to this container */
   contain: content;
@@ -3607,6 +3605,7 @@ html.keyboard-open .bot-avatar-wrapper .typing-tooltip {
   position: relative;
   z-index: 100;
   isolation: isolate;
+  width: 100%;
 }
 
 /* When keyboard is open, increase right padding for messages */
@@ -3662,9 +3661,8 @@ html.keyboard-open .message-wrapper {
 }
 
 .bot-avatar {
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);

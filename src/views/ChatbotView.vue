@@ -96,7 +96,7 @@
             <div v-for="n in particleCount" :key="'particle-' + n" class="particle" :style="getParticleStyle(n)"></div>
           </div>
 
-          <div class="panel-top">
+          <div class="panel-top" v-show="showHeaderButtons">
             <transition name="fade">
               <button v-show="showHeaderButtons" class="close-circle" @click="visible = false" aria-label="close">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="close-icon">
@@ -504,20 +504,7 @@
                       <span class="sparkle sparkle-3">✨</span>
                     </div>
                   </transition>
-                  <!-- 💬 Unlike Tooltip - แสดงเมื่อผู้ใช้กด unlike -->
-                  <transition name="unlike-tooltip-fade">
-                    <div v-if="showUnlikeTooltip && idx === lastBotMessageIndex" class="unlike-tooltip">
-                      <div class="unlike-tooltip-content">{{ unlikeTooltipText }}</div>
-                      <div class="unlike-tooltip-tail"></div>
-                    </div>
-                  </transition>
-                  <!-- 💖 Like Tooltip - แสดงเมื่อเปลี่ยนจาก unlike เป็น like -->
-                  <transition name="like-tooltip-fade">
-                    <div v-if="showLikeTooltip && idx === lastBotMessageIndex" class="like-tooltip">
-                      <div class="like-tooltip-content">{{ likeTooltipText }}</div>
-                      <div class="like-tooltip-tail"></div>
-                    </div>
-                  </transition>
+                  <!-- 💬 Tooltips removed - using Apple Toast instead -->
 
                   <!-- ⌨️ User Typing Tooltip (hint to type "เมนู") -->
 
@@ -1346,6 +1333,9 @@
               </div>
             </div>
           </transition>
+
+          <!-- 💬 Bot Speech Bubble Tooltip (positioned in chat-panel, above footer) -->
+          <BotTooltip :show-footer="showFooter" />
         </aside>
 
         <!-- Global avatar-anchored typing tooltip (rendered once, positioned with fixed coords to avoid clipping) -->
@@ -1824,6 +1814,7 @@
 <script>
 import { getBotAvatar } from '@/config/botConfig'
 import { getCategoryIcon as getIconSvg } from '@/config/categoryIcons'
+import { useBotTooltip } from '@/composables/useBotTooltip'
 import botVideoSrc from '@/assets/bots/bot2.mp4'
 import botSleepVideoSrc from '@/assets/bots/bot2sleep.mp4'
 import botWakeVideoSrc from '@/assets/bots/bot2wake.mp4'
@@ -1832,12 +1823,14 @@ import botFallbackImg from '@/assets/bots/bot2.jpg'
 import botSleepFallbackImg from '@/assets/bots/bot2sleep.jpg'
 import { getRandomMutterByHour, replacePronoun } from '@/config/botMutterQuotes'
 import ChatbotHelpView from './ChatbotHelpView.vue'
+import BotTooltip from '@/components/BotTooltip.vue'
 import { universityContacts, carouselQuickContacts } from '@/config/contacts.js';
 
 export default {
   name: 'ChatbotView',
   components: {
-    ChatbotHelpView
+    ChatbotHelpView,
+    BotTooltip
   },
   data() {
     return {
@@ -1924,13 +1917,8 @@ export default {
       feedbackCommentText: '',
       pendingFeedbackMsg: null,
       // 💬 Unlike tooltip (แสดงเมื่อกดปุ่ม unlike)
-      showUnlikeTooltip: false,
-      unlikeTooltipText: '',
-      unlikeTooltipTimer: null,
-      // 💖 Like tooltip (แสดงเมื่อเปลี่ยนจาก unlike เป็น like)
-      showLikeTooltip: false,
-      likeTooltipText: '',
-      likeTooltipTimer: null,
+      // Bot Tooltip instance (initialized in mounted)
+      botTooltip: null,
       // 🎭 Feedback toggle warning (เมื่อสลับ like/unlike บ่อยๆ)
       feedbackToggleCount: 0,
       feedbackToggleResetTimer: null,
@@ -1938,7 +1926,6 @@ export default {
       feedbackButtonsDisabled: false,
       feedbackCooldownTime: 5,
       feedbackCooldownTimer: null,
-      feedbackCooldownInterval: null,
       // Flying text animation
       flyingText: '',
       showFlyingText: false,
@@ -2716,6 +2703,9 @@ export default {
   },
   
   async mounted() {
+    // Initialize Bot Tooltip (speech bubble style)
+    this.botTooltip = useBotTooltip()
+    
     // Debug locations data
     console.log('📍 locationQuickLinks:', this.locationQuickLinks)
     
@@ -6007,15 +5997,11 @@ export default {
       requestAnimationFrame(animateFall)
     },
 
-    // Ensure only one tooltip is visible at a time
+    // Ensure only one tooltip is visible at a time (user typing tooltip only)
     hideAllTooltips() {
       try {
-        this.showUnlikeTooltip = false
-        this.showLikeTooltip = false
         this.showUserTypingTooltip = false
         this.userTypingTooltipStyle = {}
-        if (this.unlikeTooltipTimer) { clearTimeout(this.unlikeTooltipTimer); this.unlikeTooltipTimer = null }
-        if (this.likeTooltipTimer) { clearTimeout(this.likeTooltipTimer); this.likeTooltipTimer = null }
         // remove tooltip position handlers if any
         if (this._tooltipPositionHandler) {
           window.removeEventListener('resize', this._tooltipPositionHandler)
@@ -6150,34 +6136,16 @@ export default {
         } catch (e) { /* ignore */ }
       })
     },
-    openTooltip(type) {
-      this.hideAllTooltips()
-      if (type === 'unlike') this.showUnlikeTooltip = true
-      if (type === 'like') this.showLikeTooltip = true
-      if (type === 'typing') this.showUserTypingTooltip = true
-    },
 
-    // Show tooltip when user hovers / focuses the send button
+    // Show toast when user hovers / focuses the send button (empty input)
     onSendBtnMouseEnter(ev) {
       // Avoid showing tooltip when keyboard is open on mobile
       if (document.documentElement.classList.contains('keyboard-open')) return
 
       try {
-        // If input is empty, show a single helpful message
+        // If input is empty, show a single helpful message via toast
         if (!this.query || !String(this.query).trim()) {
-          this.hideAllTooltips()
-          this.unlikeTooltipText = 'ต้องพิมพ์ก่อนส่งนะคะ'
-          this.showUnlikeTooltip = true
-
-          // Auto-hide after a short delay
-          if (this.unlikeTooltipTimer) { clearTimeout(this.unlikeTooltipTimer); this.unlikeTooltipTimer = null }
-          this.unlikeTooltipTimer = setTimeout(() => {
-            this.showUnlikeTooltip = false
-            this.unlikeTooltipTimer = null
-          }, 4000)
-        } else {
-          // If there's already text, do not show the hint tooltip
-          this.hideAllTooltips()
+          this.botTooltip.info('ต้องพิมพ์ก่อนส่งนะคะ 📝')
         }
       } catch (e) { /* ignore */ }
     },
@@ -7690,10 +7658,24 @@ export default {
 
               // Compute visibleContacts based on new contact shape (organization, category, contact)
               let visibleContacts = (contacts || []).filter(c => c.contact && String(c.contact).trim());
+              
+              // Set showContacts flag and groupedContacts immediately if we have contacts
+              if (visibleContacts && visibleContacts.length > 0) {
+                msg.showContacts = true;
+                msg.visibleContacts = visibleContacts;
+                // Group contacts by organization for display
+                const groupsMap = new Map();
+                for (const c of visibleContacts) {
+                  const org = c.organization || 'อื่นๆ';
+                  if (!groupsMap.has(org)) groupsMap.set(org, { organization: org, categories: [] });
+                  groupsMap.get(org).categories.push({ category: c.category, contact: c.contact });
+                }
+                msg.groupedContacts = Array.from(groupsMap.values());
+                console.log('✅ contacts set:', visibleContacts.length, 'groups:', msg.groupedContacts.length);
+              }
 
               // Do not auto-inject global university contacts when there's no explicit contact returned.
               // Show only contacts explicitly returned by the backend (question-specific/staff-added contacts).
-              // msg.visibleContacts = visibleContacts; // Delay showing contacts until text finishes
 
               // if (results) msg.results = results; // Delay showing results until text finishes
               // if (multipleResults) msg.multipleResults = true;
@@ -7761,6 +7743,29 @@ export default {
                   }
                 }
                 this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring(); });
+              }
+
+              // If no contacts from backend and we have suggestions OR not found, show fallback universityContacts
+              // BUT FIRST: check if contacts array already exists and use it
+              if (!visibleContacts || visibleContacts.length === 0) {
+                // Try to use contacts from backend response
+                if (contacts && contacts.length > 0) {
+                  visibleContacts = contacts;
+                  console.log('ℹ️ visibleContacts set from backend contacts:', visibleContacts.length);
+                } else if ((multipleResults || resFound === false) && universityContacts && universityContacts.length > 0) {
+                  // If no backend contacts but have suggestions OR not found, show fallback universityContacts
+                  visibleContacts = universityContacts.map(c => ({
+                    organization: c.name || c.organization || c.OrgName || c.title || '',
+                    category: null,
+                    contact: c.phone ? `เบอร์โทรศัพท์ : ${c.phone}` : (Array.isArray(c.phones) && c.phones.length ? `เบอร์โทรศัพท์ : ${c.phones.join(', ')}` : null)
+                  }));
+                  console.log('ℹ️ fallback contacts shown (multipleResults or not found):', visibleContacts.length);
+                }
+              }
+
+              // Show contacts immediately if we have them
+              if (visibleContacts && visibleContacts.length > 0) {
+                msg.showContacts = true; // Flag to show contact list
               }
 
               // Show contacts after typing finishes
@@ -7959,6 +7964,7 @@ export default {
                 const groupedContacts = normalizeAndDedupe(visibleContacts);
                 msg.groupedContacts = groupedContacts;
                 msg.visibleContacts = visibleContacts; // keep for backwards compatibility if needed
+                msg.showContacts = true; // Flag to show contact list
                 this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring(); });
               }
               
@@ -7989,10 +7995,20 @@ export default {
               }
 
               // Show contacts immediately
-              let visibleContacts = (contacts || []).filter(c => c.officer && c.phone);
-              if (!visibleContacts || visibleContacts.length === 0) visibleContacts = (contacts || []).filter(c => (c.phone && c.phone.trim()) || (Array.isArray(c.phones) && c.phones.length > 0));
-              // Do not auto-fill with global contacts — display only contacts returned by the backend for this query.
-              if (visibleContacts && visibleContacts.length > 0) msg.visibleContacts = visibleContacts
+              let visibleContacts = (contacts || []).filter(c => c.contact && String(c.contact).trim());
+              if (visibleContacts && visibleContacts.length > 0) {
+                msg.showContacts = true;
+                msg.visibleContacts = visibleContacts;
+                // Group contacts by organization for display
+                const groupsMap = new Map();
+                for (const c of visibleContacts) {
+                  const org = c.organization || 'อื่นๆ';
+                  if (!groupsMap.has(org)) groupsMap.set(org, { organization: org, categories: [] });
+                  groupsMap.get(org).categories.push({ category: c.category, contact: c.contact });
+                }
+                msg.groupedContacts = Array.from(groupsMap.values());
+                console.log('✅ instant mode contacts set:', visibleContacts.length, 'groups:', msg.groupedContacts.length);
+              }
 
               this.saveChatHistory()
               this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring(); })
@@ -8399,6 +8415,22 @@ export default {
       this.openIndexes = []
       this.saveCategoryState()
 
+      // Close welcome categories dropdown after clearing chat
+      // Remove localStorage first to ensure clean state
+      try {
+        localStorage.removeItem('chatbot_welcome_categories_visible')
+      } catch (e) {}
+      this.showWelcomeCategories = false
+      // Force save to localStorage
+      this.$nextTick(() => {
+        try {
+          localStorage.setItem('chatbot_welcome_categories_visible', 'false')
+        } catch (e) {}
+      })
+
+      // Force Vue to recompute computed properties (like showClearBtn)
+      this.$forceUpdate()
+
       // Show bot "typing" as a temporary message at the bottom (so it appears near input)
       // Use tracked timer so it can be cancelled if the chat is closed quickly
       if (this.welcomeTypingTimer) {
@@ -8439,10 +8471,15 @@ export default {
         this.welcomeTypingTimer = setTimeout(() => {
           this.tempTyping = false
           this.welcomeTypingTimer = null
-          this.$nextTick(() => this.updateAnchoring())
+          this.$nextTick(() => {
+            this.scrollToBottom()
+            this.updateAnchoring()
+          })
         }, welcomeHideMs)
       } else {
         this.welcomeTypingTimer = null
+        // Scroll to bottom immediately when no typing indicator
+        this.$nextTick(() => this.scrollToBottom())
       }
     },
     saveCategoryState() {
@@ -8563,29 +8600,21 @@ export default {
       }
     },
     
-    // 💬 แสดงข้อความ tooltip น่ารักเมื่อกดปุ่ม unlike
+    // 💬 แสดง Apple Toast เมื่อกดปุ่ม unlike
     showUnlikeTooltipMessage() {
       // 🎭 ถ้ากดถี่เกิน 3 ครั้ง แสดงข้อความเตือนแทน
       if (this.feedbackToggleCount >= 3) {
         this.showFeedbackWarning()
         return
       }
-      // ซ่อน tooltip อื่นทันที
-      this.hideAllTooltips()
       
       // สุ่มข้อความน่ารัก
       const randomIndex = Math.floor(Math.random() * this.dynamicApologyMessages.length)
-      this.unlikeTooltipText = this.dynamicApologyMessages[randomIndex]
+      const message = this.dynamicApologyMessages[randomIndex]
       
-      // ⏱️ ดีเลย์ 400ms ก่อนแสดง tooltip
+      // ⏱️ ดีเลย์ 400ms ก่อนแสดง toast
       setTimeout(() => {
-        this.openTooltip('unlike')
-        
-        // ซ่อน tooltip หลัง 5 วินาที
-        this.unlikeTooltipTimer = setTimeout(() => {
-          this.showUnlikeTooltip = false
-          this.unlikeTooltipTimer = null
-        }, 5000)
+        this.botTooltip.cute(message)
       }, 400)
     },
 
@@ -8731,46 +8760,16 @@ export default {
     
     // 🚫 Disable ปุ่ม feedback พร้อม countdown
     disableFeedbackButtons() {
-      // ซ่อน tooltip ทั้งหมด
-      if (this.unlikeTooltipTimer) {
-        clearTimeout(this.unlikeTooltipTimer)
-        this.showUnlikeTooltip = false
-      }
-      if (this.likeTooltipTimer) {
-        clearTimeout(this.likeTooltipTimer)
-        this.showLikeTooltip = false
-      }
-      
-      // เซ็ตข้อคววามเตือนและแสดง tooltip
-      this.unlikeTooltipText = 'หยุดก่อนนะคะ! รอ 5 วินาที 🚫💤'
-      this.showUnlikeTooltip = true
+      // แสดง toast เตือน
+      this.botTooltip.warn('หยุดก่อนนะคะ! รอ 5 วินาที 🚫💤')
       
       // Disable ปุ่ม
       this.feedbackButtonsDisabled = true
       this.feedbackCooldownTime = 5
       
-      // เริ่ม countdown
-      this.feedbackCooldownInterval = setInterval(() => {
-        this.feedbackCooldownTime--
-        this.unlikeTooltipText = `รออีก ${this.feedbackCooldownTime} วินาทีนะคะ 😴🕒`
-        
-        if (this.feedbackCooldownTime <= 0) {
-          clearInterval(this.feedbackCooldownInterval)
-          this.feedbackCooldownInterval = null
-          this.feedbackButtonsDisabled = false
-          this.showUnlikeTooltip = false
-          this.feedbackToggleCount = 0
-        }
-      }, 1000)
-      
       // เคลียร์ timer หลัง 5 วินาที
       this.feedbackCooldownTimer = setTimeout(() => {
-        if (this.feedbackCooldownInterval) {
-          clearInterval(this.feedbackCooldownInterval)
-          this.feedbackCooldownInterval = null
-        }
         this.feedbackButtonsDisabled = false
-        this.showUnlikeTooltip = false
         this.feedbackToggleCount = 0
         this.feedbackCooldownTimer = null
       }, 5000)
@@ -8778,48 +8777,31 @@ export default {
     
     // 🎭 แสดงข้อความเตือนเมื่อสลับบ่อยๆ
     showFeedbackWarning() {
-      // ซ่อน tooltip อื่นๆ ทั้งหมด
-      this.hideAllTooltips()
-      
       // สุ่มข้อความเตือน
       const randomIndex = Math.floor(Math.random() * this.dynamicWarningMessages.length)
-      this.unlikeTooltipText = this.dynamicWarningMessages[randomIndex]
+      const message = this.dynamicWarningMessages[randomIndex]
       
-      // ⏱️ ดีเลย์ 400ms ก่อนแสดง
+      // ⏱️ ดีเลย์ 400ms ก่อนแสดง toast
       setTimeout(() => {
-        this.openTooltip('unlike')
-        
-        // ซ่อน tooltip หลัง 5 วินาที (นานกว่าปกติ)
-        this.unlikeTooltipTimer = setTimeout(() => {
-          this.showUnlikeTooltip = false
-          this.unlikeTooltipTimer = null
-        }, 5000)
+        this.botTooltip.warn(message)
       }, 400)
     },
     
     // 💖 แสดงข้อความขอบคุณเมื่อเปลี่ยนใจเป็น like
     showLikeTooltipMessage() {
-      // 🎭 ถ้าสลับบ่อยเกิน 3 ครั้ง แสดงข้อควาวเตือนแทน
+      // 🎭 ถ้าสลับบ่อยเกิน 3 ครั้ง แสดงข้อความเตือนแทน
       if (this.feedbackToggleCount >= 3) {
         this.showFeedbackWarning()
         return
       }
-      // ซ่อน tooltip อื่นทันที
-      this.hideAllTooltips()
       
       // สุ่มข้อความขอบคุณ
       const randomIndex = Math.floor(Math.random() * this.dynamicLikeMessages.length)
-      this.likeTooltipText = this.dynamicLikeMessages[randomIndex]
+      const message = this.dynamicLikeMessages[randomIndex]
       
-      // ⏱️ ดีเลย์ 600ms ก่อนแสดง tooltip
+      // ⏱️ ดีเลย์ 600ms ก่อนแสดง toast
       setTimeout(() => {
-        this.openTooltip('like')
-        
-        // ซ่อน tooltip หลัง 4 วินาที
-        this.likeTooltipTimer = setTimeout(() => {
-          this.showLikeTooltip = false
-          this.likeTooltipTimer = null
-        }, 4000)
+        this.botTooltip.thanks(message)
       }, 600)
     },
     
@@ -10334,73 +10316,7 @@ html[data-theme="dark"] .page-label-toast {
   position: relative;
 }
 
-.unlike-tooltip,
-.like-tooltip {
-  position: absolute;
-  left: 50%;
-  bottom: -60px;
-  transform: translateX(-50%);
-  background: rgba(139, 76, 184, 0.95);
-  color: white;
-  padding: 12px 16px;
-  border-radius: 12px;
-  font-size: 14px;
-  white-space: nowrap;
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  pointer-events: none;
-}
-
-.unlike-tooltip-content,
-.like-tooltip-content {
-  position: relative;
-  z-index: 1;
-}
-
-.unlike-tooltip-tail,
-.like-tooltip-tail {
-  position: absolute;
-  top: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-bottom: 8px solid rgba(139, 76, 184, 0.95);
-}
-
-/* Fade animations for tooltips */
-.unlike-tooltip-fade-enter-active,
-.unlike-tooltip-fade-leave-active,
-.like-tooltip-fade-enter-active,
-.like-tooltip-fade-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.unlike-tooltip-fade-enter-from,
-.like-tooltip-fade-enter-from {
-  opacity: 0;
-  transform: translateX(-50%) translateY(-10px);
-}
-
-.unlike-tooltip-fade-enter-to,
-.like-tooltip-fade-enter-to {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-.unlike-tooltip-fade-leave-from,
-.like-tooltip-fade-leave-from {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-.unlike-tooltip-fade-leave-to,
-.like-tooltip-fade-leave-to {
-  opacity: 0;
-  transform: translateX(-50%) translateY(-10px);
-}
+/* Old tooltip CSS removed - using Apple Toast instead */
 
 .fade-leave-from {
   opacity: 1;
