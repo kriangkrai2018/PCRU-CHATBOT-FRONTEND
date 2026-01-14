@@ -20,6 +20,7 @@
     
     <title>PCRU-CHATBOT</title>
     
+    <!-- Redirect removed: allow users to access project.3bbddns.com:36144 directly -->
     <!-- 🎨 Preload critical CSS (render-blocking resources first) -->
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style">
     
@@ -75,7 +76,7 @@
     <script type="module" src="/src/main.js"></script>
     
     <!-- 🍎 Performance hints for browser -->
-    <script>
+    <script type="module">
       // Hint browser about navigation
       if ('connection' in navigator) {
         const conn = navigator.connection;
@@ -84,14 +85,85 @@
         }
       }
       // Auto-hide spinner after short grace period (600ms) so it never spins for long
+      // Add fallback UI after a longer timeout when the app does not bootstrap (helps iPhone / blocked module cases)
       (function(){
         const HIDE_AFTER_MS = 600;
-        const timer = setTimeout(() => document.documentElement.classList.add('spinner-hidden'), HIDE_AFTER_MS);
-        // If the app mounts before timeout, remove the hide class
-        document.addEventListener('DOMContentLoaded', () => {
-          clearTimeout(timer);
+        const FALLBACK_MS = 3000; // show actionable help after 3s if app not mounted
+        // Use Vite env VITE_PUBLIC_URL only (no hardcoded fallback). If not set, no external link will be shown.
+        const PUBLIC_URL = import.meta.env.VITE_PUBLIC_URL;
+
+        const hideTimer = setTimeout(() => document.documentElement.classList.add('spinner-hidden'), HIDE_AFTER_MS);
+
+        // If the app mounts before fallback, cancel fallback actions
+        function clearAll() {
+          clearTimeout(hideTimer);
+          clearTimeout(fallbackTimer);
           document.documentElement.classList.remove('spinner-hidden');
+        }
+
+        const fallbackTimer = setTimeout(() => {
+          try {
+            const app = document.getElementById('app');
+            const isEmpty = !app || app.children.length === 0 || (app.innerHTML || '').trim().length < 20;
+            if (isEmpty) {
+              // hide spinner and show helpful fallback UI
+              document.documentElement.classList.add('spinner-hidden');
+
+              const existing = document.getElementById('app-fallback');
+              if (!existing) {
+                const fallback = document.createElement('div');
+                fallback.id = 'app-fallback';
+                fallback.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;background:rgba(0,0,0,0.6);color:#fff;flex-direction:column;text-align:center;';
+
+                const msg = document.createElement('div');
+                msg.innerText = 'แอปไม่สามารถเริ่มต้นบนอุปกรณ์นี้ได้ ลองเปิดเวอร์ชันสาธารณะหรือรีโหลดหน้า';
+                msg.style.marginBottom = '12px';
+
+                const reload = document.createElement('button');
+                reload.innerText = 'รีโหลด';
+                reload.style.padding = '8px 12px';
+                reload.style.borderRadius = '8px';
+                reload.style.border = '1px solid rgba(255,255,255,0.2)';
+                reload.style.background = 'transparent';
+                reload.style.color = '#fff';
+                reload.onclick = function(){ location.reload() };
+
+                const controls = document.createElement('div');
+                // Only show external public link when VITE_PUBLIC_URL is set
+                if (PUBLIC_URL) {
+                  const link = document.createElement('a');
+                  link.href = PUBLIC_URL;
+                  link.target = '_blank';
+                  link.rel = 'noreferrer';
+                  link.innerText = 'เปิดเวอร์ชันสาธารณะ';
+                  link.style.marginRight = '10px';
+                  link.style.padding = '8px 12px';
+                  link.style.background = '#8B4CB8';
+                  link.style.color = '#fff';
+                  link.style.borderRadius = '8px';
+                  link.style.textDecoration = 'none';
+                  controls.appendChild(link);
+                }
+                controls.appendChild(reload);
+
+                fallback.appendChild(msg);
+                fallback.appendChild(controls);
+                document.body.appendChild(fallback);
+              }
+            }
+          } catch(e) {
+            // ignore
+          }
+        }, FALLBACK_MS);
+
+        // If the app mounts or DOMContentLoaded fires, cancel fallback
+        document.addEventListener('DOMContentLoaded', clearAll);
+        // Also watch for a known mount signal: when #app gets children
+        const observer = new MutationObserver(() => {
+          const app = document.getElementById('app');
+          if (app && app.children.length > 0) clearAll();
         });
+        observer.observe(document.documentElement, { childList: true, subtree: true });
       })();
     </script>
   </body>

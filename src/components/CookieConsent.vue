@@ -48,31 +48,64 @@ import PrivacyPolicy from '@/views/PrivacyPolicy.vue'
 // delay before showing popup (ms)
 const SHOW_DELAY_MS = 320
 
+// reactive prefs and visibility
 const visible = ref(false) // shown on first visit when consent not recorded
+const prefs = reactive({ storeChatHistory: true })
+const showManage = ref(false)
 
 const STORAGE_KEY = 'pcru_cookie_consent'
 const privacyPath = '/privacy'
 
 function loadPrefs() {
+  // Try localStorage first, fallback to cookie if localStorage unavailable (private browsing)
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return false
-    const obj = JSON.parse(raw)
-    if (typeof obj.storeChatHistory === 'boolean') prefs.storeChatHistory = obj.storeChatHistory
-    return true
+    if (raw) {
+      const obj = JSON.parse(raw)
+      if (typeof obj.storeChatHistory === 'boolean') prefs.storeChatHistory = obj.storeChatHistory
+      return true
+    }
   } catch (e) {
-    return false
+    // ignore and fallthrough to cookie
   }
+
+  try {
+    const m = document.cookie.match('(?:^|;)\\s*' + STORAGE_KEY + '=([^;]+)')
+    if (m) {
+      const obj = JSON.parse(decodeURIComponent(m[1]))
+      if (typeof obj.storeChatHistory === 'boolean') prefs.storeChatHistory = obj.storeChatHistory
+      return true
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  return false
 }
 
 const privacyUrl = (typeof window !== 'undefined' && window.location.origin) ? (window.location.origin + privacyPath) : privacyPath
+
+function setConsentInStorage(obj) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj))
+    return true
+  } catch (e) {
+    // fallback: set as cookie for environments where localStorage is disabled
+    try {
+      document.cookie = `${STORAGE_KEY}=${encodeURIComponent(JSON.stringify(obj))}; path=/; max-age=${60*60*24*365}`
+      return true
+    } catch (e2) {
+      return false
+    }
+  }
+}
 
 function save(persist = true, storeChat = true) {
   const obj = {
     storeChatHistory: !!storeChat,
     acceptedAt: Date.now()
   }
-  if (persist) localStorage.setItem(STORAGE_KEY, JSON.stringify(obj))
+  if (persist) setConsentInStorage(obj)
 }
 
 function skipToContent() {
