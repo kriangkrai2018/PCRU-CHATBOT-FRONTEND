@@ -1801,6 +1801,29 @@ html.gfx-low[data-theme="dark"] .chat-panel {
   opacity: 1 !important;
 }
 
+/* 🔧 GFX-LOW: Pin welcome content to bottom when there are no messages */
+.gfx-low .chat-panel {
+  display: flex !important;
+  flex-direction: column !important;
+}
+.gfx-low .panel-body {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important; /* allow children to scroll inside */
+}
+.gfx-low .chat-messages {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-end !important; /* push content to bottom when few items */
+  flex: 1 1 auto !important;
+  overflow-y: auto !important; /* enable scrolling when content overflows */
+}
+.gfx-low .welcome-message {
+  margin: 0 16px 12px 16px !important; /* small bottom spacing above footer */
+  align-self: stretch !important;
+}
+
 /* 🔧 FIX: Ensure chat-overlay displays properly in gfx-low */
 .gfx-low .chat-overlay,
 body.gfx-low .chat-overlay,
