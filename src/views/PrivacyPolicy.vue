@@ -27,12 +27,9 @@
       <p>ผู้ใช้มีสิทธิในการขอเข้าถึง แก้ไข หรือลบข้อมูลส่วนบุคคล ตามกฎหมายที่เกี่ยวข้อง โปรดติดต่อผู้ดูแลระบบเพื่อดำเนินการ</p>
 
       <h2>ข้อมูลติดต่อ</h2>
-      <p>ติดต่อผู้ดูแลระบบ: <a href="mailto:privacy@pcru.example">privacy@pcru.example</a></p>
+      <p>ติดต่อผู้ดูแลระบบ: <a :href="`mailto:${privacyEmail}`">{{ privacyEmail }}</a></p>
 
-      <div class="actions">
-        <router-link class="btn" to="/">กลับไปหน้าแรก</router-link>
-        <button class="btn" @click="$router.back()">ย้อนกลับ</button>
-      </div>
+
 
     </main>
   </div>
@@ -40,18 +37,47 @@
 
 <script setup>
 import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+const props = defineProps({
+  inModal: { type: Boolean, default: false }
+})
+const emit = defineEmits(['close'])
+const router = useRouter()
+// Read privacy contact from Vite env (set VITE_PRIVACY_EMAIL), fallback to provided address
+const privacyEmail = import.meta.env.VITE_PRIVACY_EMAIL || 'st651102064101@pcru.ac.th'
+function handleClose() {
+  if (props.inModal) {
+    emit('close')
+  } else {
+    router.push('/')
+  }
+}
 onMounted(() => {
-  document.title = 'นโยบายความเป็นส่วนตัว — PCRU Chatbot'
-  window.scrollTo({ top: 0 })
+  if (!props.inModal) {
+    document.title = 'นโยบายความเป็นส่วนตัว — PCRU Chatbot'
+    window.scrollTo({ top: 0 })
+  }
 })
 </script>
 
 <style scoped>
-.privacy-page { display:flex; justify-content:center; padding:28px 16px; }
-.card { max-width:820px; width:100%; background: #fff; border-radius:10px; padding:22px; box-shadow: 0 10px 30px rgba(0,0,0,0.06) }
+.privacy-page { display:flex; justify-content:center; padding:0; }
+.card { max-width:820px; width:100%; background: var(--cb-bg-card); border-radius:10px; padding:22px; box-shadow: var(--cb-shadow) }
 h1 { margin:0 0 12px 0 }
-.lead { color:#333; margin-bottom:14px }
+.lead { color: var(--cb-text-primary); margin-bottom:14px }
 ul, ol { margin-left:18px; margin-bottom:14px }
 .actions { display:flex; gap:8px; margin-top:18px }
-.btn { padding:8px 12px; border-radius:8px; border:1px solid rgba(0,0,0,0.08); background:transparent; cursor:pointer }
+.btn { padding:8px 12px; border-radius:8px; border:1px solid var(--cb-border-color); background:transparent; color: var(--cb-text-primary); cursor:pointer }
+
+/* Links inside privacy page */
+.card a { color: var(--cb-link); text-decoration: underline }
+[data-theme="dark"] .card a { color: var(--cb-link); }
+
+/* High-contrast text in dark mode for privacy content */
+[data-theme="dark"] .privacy-page .card,
+[data-theme="dark"] .privacy-page .card h1,
+[data-theme="dark"] .privacy-page .card h2,
+[data-theme="dark"] .privacy-page .card p,
+[data-theme="dark"] .privacy-page .card li { color: var(--cb-text-inverse); }
+[data-theme="dark"] .privacy-page .card .lead { color: rgba(255,255,255,0.94); }
 </style>

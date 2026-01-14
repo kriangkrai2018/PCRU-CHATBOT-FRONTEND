@@ -11323,7 +11323,7 @@ html[data-theme="light"] .line-menu-fullscreen-wrapper .input-row.fullscreen-inp
 
 /* 📞 Contacts Grid Styles */
 .contacts-grid {
-  grid-template-columns: repeat(2, 1fr) !important;
+  grid-template-columns: repeat(1, 1fr) !important;
   display: grid !important;
   gap: 10px !important;
 }
