@@ -1,7 +1,7 @@
 // 🚀 Fast redirect for specific URL
-if (window.location.href === 'http://project.3bbddns.com:36144/') {
-  window.location.replace('https://loan-farming-wrestling-pulling.trycloudflare.com');
-}
+// if (window.location.href === 'http://project.3bbddns.com:36144/') {
+//   window.location.replace('https://loan-farming-wrestling-pulling.trycloudflare.com');
+// }
 
 import { createApp } from 'vue'
 import App from './App.vue'

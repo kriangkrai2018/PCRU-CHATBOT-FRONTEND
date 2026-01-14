@@ -9439,7 +9439,8 @@ export default {
     // 🎠 Placeholder Carousel Methods
     async loadSynonymsCarousel() {
       try {
-        const res = await this.$axios.get('/synonyms')
+        // Use public endpoint to avoid 401 for unauthenticated users
+        const res = await this.$axios.get('/synonyms/public')
         const synonyms = res.data?.data || res.data || []
         
         // สุ่มเลือก 5 รายการ (หรือน้อยกว่าถ้ามีไม่พอ)
