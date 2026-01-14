@@ -905,6 +905,19 @@ const saveSettings = async () => {
       console.warn('Could not save to backend:', apiError)
     }
 
+    // Broadcast settings change for other components (so preview updates immediately)
+    try {
+      window.dispatchEvent(new CustomEvent('chatbot-settings-changed', {
+        detail: {
+          masterEnabled: masterEnabled.value,
+          snowEnabled: snowEnabled.value,
+          particleEnabled: particleEnabled.value,
+          shadowEnabled: shadowEnabled.value,
+          animationEnabled: animationEnabled.value
+        }
+      }))
+    } catch (e) { /* ignore */ }
+
     // Show success message - Apple style
     showAppleAlert('success', 'บันทึกสำเร็จ', 'การตั้งค่าเอฟเฟกต์ถูกบันทึกแล้ว', 2000)
 

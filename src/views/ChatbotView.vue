@@ -2934,10 +2934,10 @@ export default {
       if (savedShadow !== null) this.shadowEnabled = savedShadow === 'true'
       if (savedAnimation !== null) this.animationEnabled = savedAnimation === 'true'
       
-      // Force enable snow during winter season regardless of localStorage
+      // Auto-enable snow during winter only if the user hasn't explicitly set a preference
       if (this.isWinterSeason) {
-        this.snowEnabled = true
-        this.masterEnabled = true
+        if (savedSnow === null) this.snowEnabled = true
+        if (savedMaster === null) this.masterEnabled = true
       }
       
       // If master is off, disable all effects
@@ -2972,6 +2972,41 @@ export default {
     
     // Close feedback dropdown when clicking outside
     document.addEventListener('click', this.handleOutsideClick)
+
+    // Listen to settings changes to react immediately (from ManageVisualEffects save)
+    this.onChatbotSettingsChanged = (e) => {
+      const d = e?.detail || {}
+      if (typeof d.masterEnabled === 'boolean') {
+        this.masterEnabled = d.masterEnabled
+        if (!d.masterEnabled) {
+          this.snowEnabled = false
+          this.particleEnabled = false
+          this.shadowEnabled = false
+          this.animationEnabled = false
+          document.body.classList.add('no-effects')
+        } else {
+          document.body.classList.remove('no-effects')
+        }
+      }
+      if (typeof d.snowEnabled === 'boolean') {
+        this.snowEnabled = d.snowEnabled
+        if (this.snowEnabled) {
+          this.generateSnowflakeStyles()
+        } else {
+          this.snowflakeStyles = []
+          this.draggedSnowflakeIndex = null
+          this.snowflakeDragOffsets = {}
+        }
+      }
+      if (typeof d.shadowEnabled === 'boolean') {
+        if (d.shadowEnabled && this.masterEnabled) {
+          document.body.classList.remove('no-shadows')
+        } else {
+          document.body.classList.add('no-shadows')
+        }
+      }
+    }
+    window.addEventListener('chatbot-settings-changed', this.onChatbotSettingsChanged)
     
     // Detect keyboard open/close by monitoring viewport height changes
     window.addEventListener('resize', this.handleKeyboardDetection)
@@ -3258,6 +3293,9 @@ export default {
       inputBox.removeEventListener('focus', this.onInputFocus)
       inputBox.removeEventListener('blur', this.onInputBlur)
     }
+
+    // Remove chatbot settings changed listener
+    window.removeEventListener('chatbot-settings-changed', this.onChatbotSettingsChanged)
     
     // 📹 Cleanup video observer
     if (this.videoObserver) {
