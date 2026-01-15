@@ -261,10 +261,10 @@
             <!-- Chat Messages Area (always rendered so welcome content can show on first open) -->
             <div class="chat-messages" ref="messagesContainer">
               <!-- Welcome Bot Message with Categories -->
-              <div v-if="!hasAskedBot && !(query && query.trim())" class="welcome-message" :class="{ 'gemini-center': useGeminiMode }">
+              <div v-if="!useGeminiMode || (useGeminiMode && !hasAskedBot)" class="welcome-message" :class="{ 'gemini-center': useGeminiMode }">
                 <!-- Top welcome typing placeholder removed — use a temporary bottom typing message inside `messages` instead -->
 
-                <div v-if="useGeminiMode && !hasAskedBot && !(query && query.trim())" class="welcome-gemini-text">Gemini (AI) ของ PCRU <br> พร้อมช่วยตอบคำถาม — พิมพ์คำถามของคุณได้เลย</div>
+                <div v-if="useGeminiMode && !hasAskedBot" class="welcome-gemini-text">PCRU AI Assistant <br> (Powered by Gemini)</div>
 
                 <div v-if="showTopCategories && !useGeminiMode" class="message-wrapper bot">
                   <div class="bot-avatar-wrapper">
@@ -465,7 +465,7 @@
                   </div>
                 </div>
               </div>
-              <transition-group name="message-pop" tag="div" class="message-list">
+              <transition-group name="message-pop" tag="div" class="message-list" :style="{ paddingTop: useGeminiMode ? '80px' : '0px' }">
                 <div v-for="(msg, idx) in messages" :key="msg.id || idx" class="message-wrapper" :class="[msg.type, { typing: !!msg.typing }]">
                 <div v-if="msg.type === 'bot' && !useGeminiMode" class="bot-avatar-wrapper">
                   <div class="bot-avatar" role="button" tabindex="0" @click="openAiIntro" title="เปิด AI เต็มจอ">
@@ -6568,17 +6568,12 @@ export default {
         const canNudgeByTime = now - (this.lastBotNudgeAt || 0) >= (this.botNudgeMinIntervalMs || 45000)
         const canNudgeByChance = Math.random() <= 0.5
         if (this.inputFocusTimestamps.length >= 4 && canNudgeByTime && canNudgeByChance) {
-          const playful = [
-            `${this.botPronoun}รอฟังอยู่นะคะ ลองพิมพ์มาได้เลย ✨`,
-            `ลองพิมพ์ดูสิคะ เดี๋ยว${this.botPronoun}ช่วยหาให้เอง 💜`
-          ]
-          const text = playful[Math.floor(Math.random() * playful.length)]
-          // ส่งแบบมี typing เล็กน้อยให้ดูเป็นธรรมชาติ
-          this.sendBotReply(text, 800)
-          // รีเซ็ตและตั้งคูลดาวน์
+          // Bot nudge messages disabled by request to avoid unsolicited prompts.
+          // Previously we would send playful prompts here. Keeping timestamps and cooldown behavior.
           this.inputFocusTimestamps = []
           this.inputFocusCooldownUntil = now + 20000
           this.lastBotNudgeAt = now
+          console.log('[Bot] input focus nudge suppressed')
         }
       } catch (e) { /* ignore */ }
     },

@@ -3450,7 +3450,7 @@ html.keyboard-open .bot-avatar-wrapper .typing-tooltip {
 .welcome-message.gemini-center {
   justify-content: center !important;
   align-items: center;
-  margin-top: 8rem !important;
+  margin-top: 12rem !important;
 }
 
 .welcome-gemini-text {
@@ -3458,7 +3458,7 @@ html.keyboard-open .bot-avatar-wrapper .typing-tooltip {
   max-width: 860px;
   text-align: center;
   font-weight: 600;
-  font-size: clamp(10px, 4.5vw, 20px);
+  font-size: clamp(10px, 4.5vw, 25px);
   line-height: 1.06;
   color: rgba(255,255,255,0.98);
   padding: 40px 40px;
