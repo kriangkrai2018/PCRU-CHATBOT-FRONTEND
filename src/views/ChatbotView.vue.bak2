@@ -2147,7 +2147,7 @@ export default {
     // 🤖 Dynamic placeholder based on mode
     dynamicPlaceholder() {
       if (this.useGeminiMode) {
-        return '✨ ถามข้อมูลเกี่ยวกับ PCRU กับ AI'
+        return 'ถามข้อมูลเกี่ยวกับ PCRU กับ AI'
       }
       return this.placeholderText || 'ขอความช่วยเหลืองจาก ปลายฟ้า'
     },

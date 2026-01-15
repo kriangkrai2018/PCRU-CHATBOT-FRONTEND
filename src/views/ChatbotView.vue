@@ -3503,7 +3503,7 @@ export default {
       // Control overlay-backdrop-2 visibility with JavaScript
       const backdrop = this.$el?.querySelector('.overlay-backdrop-2')
       if (backdrop) {
-        backdrop.style.display = newVal ? 'block' : 'none'
+        backdrop.style.opacity = newVal ? '1' : '0'
       }
     }
   },
@@ -11154,6 +11154,7 @@ html[data-theme="light"] .line-menu-fullscreen-wrapper .input-row.fullscreen-inp
   width: 100%;
   height: 100%;
   pointer-events: none;
+  transition: opacity 0.3s ease;
 }
 
 .intro-particle {

@@ -3012,6 +3012,8 @@ html.keyboard-open .message-wrapper {
     padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
     gap: 10px;
   }
+
+
   
   .input-pill {
     font-size: 15px;
@@ -3177,4 +3179,8 @@ body.no-effects .scroll-icon {
   animation: none !important;
   transform: none !important;
 }
+
+
+
+
 

@@ -408,6 +408,7 @@ html.theme-transitioning div {
   margin: 0rem .8rem 0.8rem .8rem !important;
   border-radius: 34px;
   padding: 1rem !important;
+  margin-top: 12px !important;
 }
 
 .input-pill {
@@ -3646,7 +3647,7 @@ html.keyboard-open .message-wrapper {
   justify-content: flex-start;
   gap: 10px;
   /* remove top padding so content sits lower; keep bottom padding for spacing */
-  padding: 12px 12px 12px;
+  padding: 12px 12px 0px;
   /* Align avatar and bot bubble to the bottom of the row instead of the top */
   align-items: flex-end;
 }
