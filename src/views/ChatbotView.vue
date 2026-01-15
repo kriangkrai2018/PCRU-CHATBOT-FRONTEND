@@ -507,10 +507,29 @@
                   <!-- ⌨️ User Typing Tooltip (hint to type "เมนู") -->
 
                 </div>
-                <!-- Gemini bot message without bubble -->
-                <div v-if="useGeminiMode && msg.type === 'bot'" class="gemini-message" v-html="linkifyText(msg.text, msg.title, msg.found, false)"></div>
-                <div v-if="! (useGeminiMode && msg.type === 'bot')" class="message-bubble" :class="[msg.type, { 'has-contacts': msg.showContacts || (msg.visibleContacts && msg.visibleContacts.length > 0) }]">
-                  <div v-if="!(msg.multipleResults && msg.text && msg.text.trim().startsWith('พบหลายคำถาม'))" class="message-text" v-html="linkifyText(msg.text, msg.title, msg.found, msg.type === 'user')"></div>
+                <!-- Gemini typing indicator -->
+                <div v-if="useGeminiMode && msg.type === 'bot' && msg.typing && !msg.text" class="typing-indicator">
+                  <span></span><span></span><span></span>
+                </div>
+                <!-- Gemini bot message without bubble (wrapped to allow expand button) -->
+                <div v-if="useGeminiMode && msg.type === 'bot'" class="gemini-wrap">
+                  <div class="gemini-message" :class="{ 'clamped': !msg._expanded, 'expanded': msg._expanded }" v-html="linkifyText((idx === messages.length - 1 && useGeminiMode && msg.type === 'bot' && isGeminiTyping) ? geminiTypingText : msg.text, msg.title, msg.found, false)"></div>
+
+                  <!-- Expand / Collapse button (show for all messages) -->
+                  <button v-if="msg.text" type="button" class="expand-button" @click.stop.prevent="toggleExpand(msg)" :aria-label="msg._expanded ? 'ย่อข้อความ' : 'ขยายข้อความ'">
+                    <svg v-if="!msg._expanded" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="expand-icon"><path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="collapse-icon"><path d="M7 14l5-5 5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                </div>
+                <div v-if="! (useGeminiMode && msg.type === 'bot')" class="message-bubble" :class="[msg.type, { 'has-contacts': msg.showContacts || (msg.visibleContacts && msg.visibleContacts.length > 0) }]" :data-message-id="msg.id">
+                  <div v-if="!(msg.multipleResults && msg.text && msg.text.trim().startsWith('พบหลายคำถาม'))" class="message-text" :class="{ 'clamped': !msg._expanded, 'expanded': msg._expanded }" v-html="linkifyText(msg.text, msg.title, msg.found, msg.type === 'user')"></div>
+
+                  <!-- Expand / Collapse button (show for all messages) -->
+                  <button v-if="msg.text" type="button" class="expand-button" @click.stop.prevent="toggleExpand(msg)" :aria-label="msg._expanded ? 'ย่อข้อความ' : 'ขยายข้อความ'">
+                    <svg v-if="!msg._expanded" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="expand-icon"><path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="collapse-icon"><path d="M7 14l5-5 5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+
                   <div v-if="msg.showCategories" class="category-section" style="margin-top: 15px;">
                     <div class="category-title no-underline">หมวดหมู่</div>
                     
@@ -1848,6 +1867,9 @@ export default {
       feedbackTutorialTriggered: false,
       // embedding removed — external site not used in this deployment
       messages: [],
+      geminiTypingText: '',
+      geminiTypingIndex: 0,
+      isGeminiTyping: false,
       welcomeTyping: false,
       welcomeTypingTimer: null,
       botTypingTimers: [],
@@ -2721,6 +2743,9 @@ export default {
   },
   
   async mounted() {
+    // Load persisted expand/collapse state map
+    this.loadExpandedStateMap()
+
     // Initialize Bot Tooltip (speech bubble style)
     this.botTooltip = useBotTooltip()
     
@@ -2729,6 +2754,9 @@ export default {
     
     // 📞 Fetch contacts for carousel
     this.fetchCarouselContacts()
+
+    // Apply persisted expand/collapse state to existing messages
+    this.applyExpandedStateToMessages()
     
     // Force scroll to bottom on page load
     this.$nextTick(() => {
@@ -3548,9 +3576,110 @@ export default {
       if (backdrop) {
         backdrop.style.opacity = newVal ? '1' : '0'
       }
+    },
+    messages: {
+      handler(newMessages) {
+        if (newMessages.length > 0) {
+          const lastMsg = newMessages[newMessages.length - 1]
+          // ensure expand state and collapsible flag computed
+          if (lastMsg && typeof lastMsg._expanded === 'undefined') {
+            const key = this.getMessageStorageKey(lastMsg)
+            lastMsg._expanded = !!(this.expandedStateMap && this.expandedStateMap[key])
+          }
+          if (lastMsg && typeof lastMsg._collapsible === 'undefined') {
+            lastMsg._collapsible = (lastMsg.text && String(lastMsg.text).replace(/\s+/g, ' ').length > 300)
+          }
+
+          if (lastMsg.type === 'user') {
+            // Clear Gemini typing when user sends message
+            this.geminiTypingText = ''
+            this.isGeminiTyping = false
+          } else if (lastMsg && lastMsg.type === 'bot' && this.useGeminiMode && !lastMsg.typing) {
+            this.startGeminiTyping(lastMsg.text)
+          }
+        }
+      },
+      deep: true
     }
   },
   methods: {
+    startGeminiTyping(text) {
+      this.geminiTypingText = ''
+      this.geminiTypingIndex = 0
+      this.isGeminiTyping = true
+      this.typeNextChar(text)
+    },
+    // Expand / collapse helpers for long messages
+    isCollapsible(msg) {
+      const THRESH = 300 // approx threshold in chars
+      if (msg._collapsible !== undefined) return msg._collapsible
+      const txt = (msg && msg.text) ? String(msg.text).replace(/\s+/g, ' ') : ''
+      msg._collapsible = txt.length > THRESH
+      // default expanded state for older messages
+      if (msg._expanded === undefined) msg._expanded = false
+      return msg._collapsible
+    },
+    toggleExpand(msg) {
+      msg._expanded = !msg._expanded
+      // persist state
+      const key = this.getMessageStorageKey(msg)
+      this.expandedStateMap[key] = !!msg._expanded
+      this.saveExpandedStateMap()
+    },
+
+    // Persistence helpers for expand/collapse state
+    loadExpandedStateMap() {
+      try {
+        const raw = localStorage.getItem('chatbot_expanded_states')
+        this.expandedStateMap = raw ? JSON.parse(raw) : {}
+      } catch (e) {
+        this.expandedStateMap = {}
+      }
+    },
+    saveExpandedStateMap() {
+      try {
+        localStorage.setItem('chatbot_expanded_states', JSON.stringify(this.expandedStateMap || {}))
+      } catch (e) { /* ignore */ }
+    },
+    applyExpandedStateToMessages() {
+      if (!Array.isArray(this.messages)) return
+      this.messages.forEach(msg => {
+        const key = this.getMessageStorageKey(msg)
+        if (this.expandedStateMap && Object.prototype.hasOwnProperty.call(this.expandedStateMap, key)) {
+          msg._expanded = !!this.expandedStateMap[key]
+        } else if (typeof msg._expanded === 'undefined') {
+          msg._expanded = false
+        }
+        // set collapsible flag based on length so small messages render fine
+        if (typeof msg._collapsible === 'undefined') {
+          msg._collapsible = (msg.text && String(msg.text).replace(/\s+/g, ' ').length > 300)
+        }
+      })
+    },
+    getMessageStorageKey(msg) {
+      if (!msg) return ''
+      if (msg.id) return `msg:${msg.id}`
+      // fallback: hash by text (stable across reloads if text same)
+      return `hash:${this.simpleHash(String(msg.text || ''))}`
+    },
+    simpleHash(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i);
+        h |= 0;
+      }
+      return Math.abs(h).toString(36)
+    },
+    typeNextChar(text) {
+      if (this.geminiTypingIndex < text.length) {
+        this.geminiTypingText += text[this.geminiTypingIndex]
+        this.geminiTypingIndex++
+        setTimeout(() => this.typeNextChar(text), 30)
+      } else {
+        this.geminiTypingText = text
+        this.isGeminiTyping = false
+      }
+    },
     // 📱 LINE-style Menu Methods
     onToggleLineMenuClick() {
       if (this.showLineMenu) {

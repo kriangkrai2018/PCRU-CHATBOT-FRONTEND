@@ -429,6 +429,63 @@ html.theme-transitioning div {
 .message-text a:hover { text-decoration: underline; }
 /* message link dark override moved to src/assets/dark-mode.css */
 
+.message-bubble .message-text.clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-right: 2rem;
+}
+
+.message-bubble .message-text.expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  -webkit-box-orient: unset;
+  overflow: visible;
+}
+
+.expand-button {
+  position: absolute;
+  right: 20px;
+  top: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--cb-text-muted, rgba(0,0,0,0.6));
+  cursor: pointer;
+  transition: background 0.12s ease, transform 0.12s ease, color 0.12s ease;
+}
+
+.expand-button:hover {
+  background: rgba(0,0,0,0.04);
+  transform: translateY(-1px);
+}
+.expand-button:focus {
+  outline: 2px solid rgba(59,130,246,0.18);
+  outline-offset: 2px;
+}
+
+/* Light / Dark mode overrides */
+[data-theme="light"] .expand-button { color: rgba(0,0,0,0.7); }
+[data-theme="light"] .expand-button:hover { background: rgba(0,0,0,0.04); }
+
+[data-theme="dark"] .expand-button { color: rgba(255,255,255,0.85); }
+[data-theme="dark"] .expand-button:hover { background: rgba(255,255,255,0.04); }
+
+.message-bubble.bot .expand-button,
+.message-bubble.user .expand-button { color: inherit; }
+
+.message-bubble .expand-button .expand-icon,
+.message-bubble .expand-button .collapse-icon { width: 18px; height: 18px; }
+
+
 /* Input Area */
 .panel-footer {
   /* Stick the footer to the bottom of its scroll container / viewport */
@@ -1026,9 +1083,7 @@ html.keyboard-open .pcru-label {
   right: max(12px, calc(12px + env(safe-area-inset-right, 0px)));
   top: max(12px, calc(12px + env(safe-area-inset-top, 0px)));
   z-index: 1001;
-  background: rgba(0, 0, 0, 0.082);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background:transparent;
   border-radius: 20px;
   color: #6B2C91;
 }
@@ -1048,7 +1103,6 @@ html.keyboard-open .pcru-label {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   color: white;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
 }
 
 .more-options-btn:hover {
@@ -1099,17 +1153,17 @@ html.keyboard-open .pcru-label {
 
 /* Light mode: dark dots for visibility */
 [data-theme="light"] .more-options-btn {
-  background: rgba(0, 0, 0, 0.08);
-  border-color: rgba(0, 0, 0, 0.12);
+  background:  transparent;
+  border-color: transparent;
 }
 
 [data-theme="light"] .more-options-btn:hover {
-  background: rgba(0, 0, 0, 0.12);
+  background:  transparent;
 }
 
 [data-theme="light"] .more-options-btn.active {
-  background: rgba(139, 76, 184, 0.15);
-  border-color: rgba(139, 76, 184, 0.3);
+  background:  transparent;
+  border-color: transparent;
 }
 
 [data-theme="light"] .dot {
@@ -4649,7 +4703,7 @@ body.no-effects .apple-help-button::after { display: none !important; }
   box-shadow: 0 4px 16px rgba(107, 44, 145, 0.25), 0 1px 0 rgba(255,255,255,0.1) inset;
   border: 0.5px solid rgba(255, 255, 255, 0.2);
   /* Push to right edge - narrower max-width */
-  max-width: 72%;
+  max-width: 42%;
   margin-left: auto;
   margin-right: 0px;
   word-break: break-word;
