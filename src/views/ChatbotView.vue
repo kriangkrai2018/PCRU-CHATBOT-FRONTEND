@@ -1834,6 +1834,7 @@ export default {
       placeholderText: 'ขอความช่วยเหลืองจาก ปลายฟ้า',
       placeholderExamples: [], // Array of synonym examples from database
       placeholderIndex: 0,
+      maxInputRows: 7,
       placeholderInterval: null,
       // embedding removed — external site not used in this deployment
       messages: [],
@@ -2714,6 +2715,27 @@ export default {
     // Force scroll to bottom on page load
     this.$nextTick(() => {
       this.scrollToBottomInstant()
+      this.adjustInputHeight()
+
+      // Create a hidden sizer textarea used to measure wrapped height precisely
+      try {
+        if (!this._inputSizer) {
+          const s = document.createElement('textarea')
+          s.setAttribute('aria-hidden', 'true')
+          s.style.position = 'absolute'
+          s.style.left = '-9999px'
+          s.style.top = '0'
+          s.style.height = '0'
+          s.style.overflow = 'hidden'
+          s.style.visibility = 'hidden'
+          s.style.whiteSpace = 'pre-wrap'
+          s.style.wordWrap = 'break-word'
+          document.body.appendChild(s)
+          this._inputSizer = s
+        }
+        // Keep height updated on window resize
+        window.addEventListener('resize', this.adjustInputHeight)
+      } catch (e) { /* ignore */ }
     })
     
     // Detect PWA standalone mode (Add to Home Screen)
@@ -3216,6 +3238,14 @@ export default {
       this.welcomeTypingTimer = null
     }
     window.removeEventListener('resize', this.updateAnchoring)
+    // Remove autosize listener + cleanup sizer
+    try {
+      window.removeEventListener('resize', this.adjustInputHeight)
+      if (this._inputSizer && this._inputSizer.parentNode) {
+        this._inputSizer.parentNode.removeChild(this._inputSizer)
+      }
+      this._inputSizer = null
+    } catch (e) { /* ignore */ }
     // Remove gyroscope listener
     if (window.DeviceOrientationEvent) {
       window.removeEventListener('deviceorientation', this.handleDeviceOrientation, true);
@@ -3279,6 +3309,14 @@ export default {
     }
     window.removeEventListener('resize', this.updateAnchoring)
     window.removeEventListener('resize', this.handleKeyboardDetection)
+    // Remove autosize listener + cleanup sizer
+    try {
+      window.removeEventListener('resize', this.adjustInputHeight)
+      if (this._inputSizer && this._inputSizer.parentNode) {
+        this._inputSizer.parentNode.removeChild(this._inputSizer)
+      }
+      this._inputSizer = null
+    } catch (e) { /* ignore */ }
     document.removeEventListener('click', this.handleOutsideClick, true)
     
     // 🍎 Remove visibility change listener
@@ -7070,10 +7108,76 @@ export default {
         }
       } catch (e) { this.suggestionText = '' }
 
+      // Auto-resize: use sizer-based helper for accurate measurement
+      try { this.adjustInputHeight() } catch (e) { /* ignore */ }
+
       // End typing animation shortly after input stops
       this.typingTimeout = setTimeout(() => {
         this.isTyping = false
       }, 300)
+    },
+
+    adjustInputHeight() {
+      try {
+        const inputBox = this.$refs.inputBox
+        if (!inputBox) return
+
+        // Use hidden sizer for accurate measurement (handles wrapping reliably)
+        let s = this._inputSizer
+        if (!s) {
+          s = document.createElement('textarea')
+          s.setAttribute('aria-hidden', 'true')
+          s.style.position = 'absolute'
+          s.style.left = '-9999px'
+          s.style.top = '0'
+          s.style.height = '0'
+          s.style.overflow = 'hidden'
+          s.style.visibility = 'hidden'
+          s.style.whiteSpace = 'pre-wrap'
+          s.style.wordWrap = 'break-word'
+          document.body.appendChild(s)
+          this._inputSizer = s
+        }
+
+        const cs = window.getComputedStyle(inputBox)
+        // Copy important font/box properties to the sizer so measurement is accurate
+        s.style.font = cs.font
+        s.style.lineHeight = cs.lineHeight
+        s.style.letterSpacing = cs.letterSpacing
+        s.style.padding = cs.padding
+        s.style.boxSizing = cs.boxSizing
+        s.style.width = (inputBox.clientWidth) + 'px'
+
+        // Put the same content into sizer (preserve trailing newline behavior)
+        s.value = inputBox.value || inputBox.placeholder || ''
+        // Ensure browser has updated sizes
+        const sHeight = s.scrollHeight
+
+        // Count explicit newline lines
+        const explicitLines = Math.max(1, (inputBox.value || '').split('\n').length)
+
+        // Determine line-height in pixels
+        const lineHeight = parseFloat(cs.lineHeight) || Math.max(parseFloat(cs.fontSize) * 1.2, 18)
+
+        // Compute rows needed by wrapped content
+        let wrappedRows = Math.max(1, Math.ceil(sHeight / lineHeight))
+
+        // Use the greater of explicit newline count and wrapped rows
+        let rows = Math.max(explicitLines, wrappedRows)
+        if (this.maxInputRows && Number.isFinite(this.maxInputRows)) {
+          rows = Math.min(rows, this.maxInputRows)
+        }
+
+        // Cap height at maxInputRows * lineHeight and enable scroll when exceeded
+        const maxHeight = (this.maxInputRows && Number.isFinite(this.maxInputRows)) ? (this.maxInputRows * lineHeight) : Infinity
+        const finalHeight = Math.min(sHeight, maxHeight)
+
+        inputBox.style.overflowY = (sHeight > maxHeight) ? 'auto' : 'hidden'
+        inputBox.style.resize = 'none'
+        inputBox.style.height = (finalHeight + 2) + 'px'
+        inputBox.rows = rows
+        inputBox.scrollTop = inputBox.scrollHeight
+      } catch (e) { /* ignore measurement errors */ }
     },
 
     // --- Autocomplete helpers ---
@@ -7283,6 +7387,7 @@ export default {
         this.hasAskedBot = true
         
         this.query = ''; // เคลียร์ช่องพิมพ์
+        this.adjustInputHeight()
         this.welcomeTyping = false;
 
         // 2. เตรียมข้อความตอบกลับ (ไม่ต้องแสดงข้อความยาวๆ)
@@ -7363,6 +7468,7 @@ export default {
       this.userTypingTooltipText = this.dynamicUnlikeMessages[this.currentTypingMessageIndex]
       
       this.query = ''
+      this.adjustInputHeight()
       // Stop welcome typing once user interacts
       this.welcomeTyping = false
       
