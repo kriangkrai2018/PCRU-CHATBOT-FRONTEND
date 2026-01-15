@@ -261,10 +261,12 @@
             <!-- Chat Messages Area (always rendered so welcome content can show on first open) -->
             <div class="chat-messages" ref="messagesContainer">
               <!-- Welcome Bot Message with Categories -->
-              <div class="welcome-message">
+              <div v-if="!hasAskedBot && !(query && query.trim())" class="welcome-message" :class="{ 'gemini-center': useGeminiMode }">
                 <!-- Top welcome typing placeholder removed — use a temporary bottom typing message inside `messages` instead -->
-                
-                <div v-if="showTopCategories" class="message-wrapper bot">
+
+                <div v-if="useGeminiMode && !hasAskedBot && !(query && query.trim())" class="welcome-gemini-text">Gemini (AI) ของ PCRU <br> พร้อมช่วยตอบคำถาม — พิมพ์คำถามของคุณได้เลย</div>
+
+                <div v-if="showTopCategories && !useGeminiMode" class="message-wrapper bot">
                   <div class="bot-avatar-wrapper">
                     <div class="bot-avatar" role="button" tabindex="0" @click="openAiIntro" title="เปิด AI เต็มจอ">
                       <!-- 🎬 Stacked videos for smooth transitions -->
@@ -301,7 +303,7 @@
                       </div>
                     </transition>
                   </div>
-                  <div class="message-bubble bot bot-with-categories backdrop-card" style="margin-top: 0rem !important; height: 100%;">
+                  <div v-if="!useGeminiMode" class="message-bubble bot bot-with-categories backdrop-card" style="margin-top: 0rem !important; height: 100%;">
                     <div class="ai-greeting">
                       <div class="ai-greet-img-wrapper" role="button" tabindex="0" @click.stop="showVideo ? stopVideo() : openAiIntro()" @keydown.enter.stop="showVideo ? stopVideo() : openAiIntro()" @keydown.space.prevent.stop="showVideo ? stopVideo() : openAiIntro()" :title="showVideo ? 'หยุดวิดีโอ' : 'เปิด AI: ดูรายละเอียดและวิธีใช้งาน'" :aria-label="showVideo ? 'หยุดวิดีโอ' : 'เปิด AI'">
                         <video v-if="graphicsQuality === 'high' && botVideo && showVideo" :src="botVideo" class="ai-greet-img ai-greet-video" autoplay loop muted playsinline ref="aiGreetVideo"></video>
@@ -318,6 +320,8 @@
                       </div>
                       <div class="ai-greet-title text-center" v-html="welcomeTitle"></div>
                       <div class="ai-greet-sub" v-html="welcomeSub"></div>
+
+                      <!-- Direct help button: opens help modal without opening AI Intro -->
 
                       <!-- Direct help button: opens help modal without opening AI Intro -->
                       <div class="ai-help-link-wrapper text-center">
@@ -463,7 +467,7 @@
               </div>
               <transition-group name="message-pop" tag="div" class="message-list">
                 <div v-for="(msg, idx) in messages" :key="msg.id || idx" class="message-wrapper" :class="[msg.type, { typing: !!msg.typing }]">
-                <div v-if="msg.type === 'bot'" class="bot-avatar-wrapper">
+                <div v-if="msg.type === 'bot' && !useGeminiMode" class="bot-avatar-wrapper">
                   <div class="bot-avatar" role="button" tabindex="0" @click="openAiIntro" title="เปิด AI เต็มจอ">
                     <!-- 🎬 Stacked videos for smooth transitions -->
                     <video v-if="graphicsQuality === 'high' && botVideo" :src="botVideo" class="bot-avatar-img bot-avatar-video bot-avatar-video-main" :class="{ 'video-hidden': isBotSleeping || isBotWakingUp || isPlayingReverse }" autoplay muted playsinline @ended="onMainVideoEnded"></video>
@@ -810,7 +814,7 @@
 
             
             <!-- Bottom-anchored typing indicator (shown when clearing chat) -->
-            <div v-if="tempTyping" class="bottom-typing message-wrapper bot">
+            <div v-if="tempTyping && !useGeminiMode" class="bottom-typing message-wrapper bot">
               <div class="bot-avatar-wrapper">
                 <div class="bot-avatar" role="button" tabindex="0" @click="openAiIntro" title="เปิด AI เต็มจอ">
                   <video v-if="graphicsQuality === 'high' && botVideo" :src="botVideo" class="bot-avatar-img bot-avatar-video" autoplay loop muted playsinline key="awake"></video>
@@ -2254,7 +2258,7 @@ export default {
         return 'กำลังฟัง'
       }
       if (this.useGeminiMode) {
-        return '✨ ถามข้อมูลเกี่ยวกับ PCRU กับ Gemini 2.0'
+        return 'ถามข้อมูลเกี่ยวกับ PCRU กับ Gemini 2.0'
       }
       return this.placeholderText || 'ขอความช่วยเหลือจาก ปลายฟ้า'
     },
@@ -2558,6 +2562,14 @@ export default {
       console.log('displayedCategories:', result, 'showAllCategories:', this.showAllCategories, 'categories.length:', this.categories.length)
       return result
     },
+    // User display name (from localStorage.userInfo) for personalized greeting
+    userDisplayName() {
+      try {
+        const userInfoString = localStorage.getItem('userInfo') || '{}'
+        const u = JSON.parse(userInfoString)
+        return u.Name || u.name || u.Username || u.username || u.displayName || 'ผู้ใช้งาน'
+      } catch (e) { return 'ผู้ใช้งาน' }
+    },
     showTopCategories() {
       // Hide categories while a temporary typing indicator is active (e.g., after clearing chat)
       if (this.tempTyping) return false
@@ -2854,15 +2866,41 @@ export default {
     }
 
     // Ensure welcome title/sub/instruction are present immediately (fallback for first render)
+    // Prefer using logged-in user's name if available in localStorage.userInfo
+    let displayName = ''
+    try {
+      const userInfoString = localStorage.getItem('userInfo')
+      if (userInfoString) {
+        const u = JSON.parse(userInfoString)
+        displayName = u.Name || u.name || u.Username || u.username || u.displayName || ''
+      }
+    } catch (e) { /* ignore parse errors */ }
+
     if (!this.welcomeTitle) {
-      this.welcomeTitle = `สวัสดี <span class="wave-hand" aria-hidden="true">👋</span> ${this.botPronoun}ชื่อ ${this.botName} <br> ผู้ช่วย AI ของ PCRU ค่ะ`
+      if (displayName) {
+        this.welcomeTitle = `สวัสดี คุณ ${displayName}`
+      } else {
+        this.welcomeTitle = `สวัสดี <span class="wave-hand" aria-hidden="true">👋</span> ${this.botPronoun}ชื่อ ${this.botName} <br> ผู้ช่วย AI ของ PCRU ค่ะ`
+      }
     }
     if (!this.welcomeSub) {
-      this.welcomeSub = `ยินดีที่ได้ช่วยคุณ! มาหาคำตอบที่คุณต้องการกันเลยค่ะ ✨`
+      this.welcomeSub = `ฉันคือระบบช่วยเหลือของเรา — พร้อมช่วยคุณค้นหาคำตอบและแนะนำบริการ 💬`
     }
     if (!this.welcomeInstruction) {
-      this.welcomeInstruction = `เลือกหมวดหมู่ด้านล่าง <br> หรือพิมพ์คำถามได้เลยค่ะ 😊`
+      this.welcomeInstruction = `เลือกการทำงานด้านล่าง หรือพิมพ์คำถามของคุณได้เลย`
     }
+
+    // Restore Gemini mode preference across refreshes
+    try {
+      const g = localStorage.getItem('chatbot_use_gemini')
+      if (g === 'true') {
+        this.useGeminiMode = true
+        // Ensure we have a session ID for Gemini mode (don't clear chat history on restore)
+        if (!this.geminiSessionId) {
+          this.geminiSessionId = 'web-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9)
+        }
+      }
+    } catch (e) { /* ignore storage errors */ }
 
     // Prevent intro overlay from showing on first visit so chatbot content is visible immediately
     this.hasShownIntroEver = true;
@@ -3595,6 +3633,8 @@ export default {
 
       // Now toggle the mode
       this.useGeminiMode = !this.useGeminiMode
+      // Persist the user's mode choice so it's remembered across refreshes
+      try { localStorage.setItem('chatbot_use_gemini', this.useGeminiMode ? 'true' : 'false') } catch (e) {}
       console.log('🤖 Toggle Gemini Mode:', this.useGeminiMode ? 'AI Mode ✨' : 'Search Mode 🔍')
 
       // Show toast notification
@@ -7405,6 +7445,13 @@ export default {
           const len = (this.query || '').length
           try { input.setSelectionRange(len, len) } catch (e) { /* ignore */ }
         }
+      })
+    },
+    selectIntent(text) {
+      if (!text) return
+      this.query = text
+      this.$nextTick(() => {
+        try { this.onSend() } catch (e) { /* ignore */ }
       })
     },
     checkAcceptSuggestion(e) {
