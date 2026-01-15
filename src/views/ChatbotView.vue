@@ -9970,7 +9970,6 @@ export default {
   text-align: center;
   padding: 4px 16px;
   border-radius: 20px;
-  margin-bottom: 16px;
 }
 
 /* Light mode page toast */
