@@ -196,4 +196,56 @@ const getIconClass = (type) => {
     max-width: none;
   }
 }
+
+/* Dark Mode Support */
+.dark .apple-toast {
+  background: rgba(28, 28, 30, 0.95) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark .toast-message {
+  color: #f5f5f7 !important;
+}
+
+.dark .toast-close {
+  color: #98989d !important;
+}
+
+.dark .toast-close:hover {
+  color: #f5f5f7 !important;
+}
+
+/* Dark Mode Toast Types */
+.dark .apple-toast-success {
+  border-left-color: #30d158 !important;
+}
+
+.dark .apple-toast-success .toast-icon {
+  color: #30d158 !important;
+}
+
+.dark .apple-toast-error {
+  border-left-color: #ff453a !important;
+}
+
+.dark .apple-toast-error .toast-icon {
+  color: #ff453a !important;
+}
+
+.dark .apple-toast-warning {
+  border-left-color: #ff9f0a !important;
+}
+
+.dark .apple-toast-warning .toast-icon {
+  color: #ff9f0a !important;
+}
+
+.dark .apple-toast-info {
+  border-left-color: #0a84ff !important;
+}
+
+.dark .apple-toast-info .toast-icon {
+  color: #0a84ff !important;
+}
 </style>
+

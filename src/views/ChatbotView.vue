@@ -518,7 +518,7 @@
 
                 </div>
                 <div v-if="! (useGeminiMode && msg.type === 'bot')" class="message-bubble" :class="[msg.type, { 'has-contacts': msg.showContacts || (msg.visibleContacts && msg.visibleContacts.length > 0) }]" :data-message-id="msg.id">
-                  <div v-if="!(msg.multipleResults && msg.text && msg.text.trim().startsWith('พบหลายคำถาม'))" class="message-text" :ref="(el) => messageTextRefs[msg.id] = el" :class="{ 'clamped': !msg._expanded, 'expanded': msg._expanded, 'overflowing': msg._isOverflowing }" v-html="msg.type === 'user' ? msg.text.replace(/</g, '&lt;').replace(/>/g, '&gt;') : linkifyText(msg.text, msg.title, msg.found, false)"></div>
+                  <div v-if="!(msg.multipleResults && msg.text && msg.text.trim().startsWith('พบหลายคำถาม'))" class="message-text" :ref="(el) => messageTextRefs[msg.id] = el" :class="{ 'clamped': !msg._expanded && msg.type !== 'bot', 'expanded': msg._expanded, 'overflowing': msg._isOverflowing }" v-html="msg.type === 'user' ? msg.text.replace(/</g, '&lt;').replace(/>/g, '&gt;') : linkifyText(msg.text, msg.title, msg.found, false)"></div>
 
                   <!-- Copy (user only) + Expand / Collapse buttons -->
                   <button v-if="msg.text && msg.type === 'user'" type="button" class="copy-button" @click.stop.prevent="copyMessage(msg)" :aria-label="'คัดลอกข้อความ'">
