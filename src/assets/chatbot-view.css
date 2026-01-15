@@ -2696,6 +2696,22 @@ html.keyboard-open .panel-footer {
 .mic-toggle-btn.active {
   color: #8B4CB8;
 }
+
+.unlike-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 20px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid rgba(255,255,255,0.98);
+}
+
+.unlike-tooltip {
+  z-index: 100000 !important;
+}
 .panel-footer .btn-send { 
   width:44px; 
   height:44px; 
