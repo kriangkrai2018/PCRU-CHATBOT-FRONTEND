@@ -42,6 +42,23 @@
     </transition>
   </teleport>
 
+  <!-- Inline privacy panel (embedded into chat panel when on chatbot route) - full panel inside chat -->
+  <teleport to=".chat-panel" v-if="showPrivacy && inlineMode">
+    <transition name="slide-fade">
+      <div class="privacy-inline" role="dialog" aria-modal="true" aria-label="Privacy policy (chat)">
+        <div class="privacy-panel">
+          <div class="privacy-panel-header">
+            <h4>นโยบายความเป็นส่วนตัว</h4>
+            <button class="privacy-panel-close" @click="closePrivacy" aria-label="ปิด">✕</button>
+          </div>
+          <div class="privacy-panel-body">
+            <PrivacyPolicy :inModal="true" @close="closePrivacy" />
+          </div>
+        </div>
+      </div>
+    </transition>
+  </teleport>
+
   <!-- Privacy modal (in-app, does not change route) -->
   <transition name="fade">
     <div v-if="showPrivacy" class="privacy-modal-overlay" role="dialog" aria-modal="true" aria-label="Privacy policy">
@@ -177,10 +194,10 @@ function closePrivacy() {
   showPrivacy.value = false
 }
 
-// Prevent page scroll when modal open
+// Prevent page scroll when modal overlay is open (allow scroll when privacy is shown inline in chat)
 watch(showPrivacy, (v) => {
   if (typeof document !== 'undefined') {
-    document.body.style.overflow = v ? 'hidden' : ''
+    document.body.style.overflow = (v && !inlineMode.value) ? 'hidden' : ''
   }
 })
 
@@ -301,4 +318,14 @@ watch(showPrivacy, (v) => {
 .privacy-full-close svg path { stroke: currentColor; stroke-width: 2 }
 .privacy-full-close:hover { background: #fff; box-shadow: 0 8px 20px rgba(0,0,0,0.16) }
 .privacy-full-close:focus { outline: 3px solid rgba(139,76,184,0.12); outline-offset: 2px }
-</style>
+/* Inline privacy panel (embedded inside chat panel) */
+.privacy-inline { position: absolute; inset: 0; z-index: 2150; display:block; background: transparent; }
+.privacy-panel { width: 100%; height: 100%; background: var(--cb-bg-panel); border-radius: 0; padding: 0; box-shadow: none; border: none; display:flex; flex-direction:column }
+.privacy-panel-header { display:flex; align-items:center; justify-content:space-between; padding: 14px 16px; border-bottom:1px solid var(--cb-border-color); background: linear-gradient(0deg, rgba(0,0,0,0.04), rgba(0,0,0,0.02)); }
+.privacy-panel-header h4 { margin:0; font-size:16px }
+.privacy-panel-body { flex:1; overflow:auto; -webkit-overflow-scrolling: touch; padding: 16px }
+.privacy-panel-close { background: transparent; border: none; font-size: 18px; cursor:pointer; color: var(--cb-icon-primary) }
+
+@media (max-width: 640px) {
+  .privacy-panel-body { padding: 12px }
+}</style>
