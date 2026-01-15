@@ -1830,7 +1830,7 @@ export default {
       loadError: '',
       isOffline: false, // 🔴 Backend connection status
       query: '',
-      placeholderText: 'ขอความช่วยเหลืองจาก ปลายฟ้า',
+      placeholderText: 'ขอความช่วยเหลือจาก ปลายฟ้า',
       placeholderExamples: [], // Array of synonym examples from database
       placeholderIndex: 0,
       maxInputRows: 7,
@@ -2254,9 +2254,9 @@ export default {
         return 'กำลังฟัง'
       }
       if (this.useGeminiMode) {
-        return '✨ ถามข้อมูลเกี่ยวกับ PCRU กับ AI'
+        return '✨ ถามข้อมูลเกี่ยวกับ PCRU กับ Gemini 2.0'
       }
-      return this.placeholderText || 'ขอความช่วยเหลืองจาก ปลายฟ้า'
+      return this.placeholderText || 'ขอความช่วยเหลือจาก ปลายฟ้า'
     },
 
     // Typing style for input
@@ -7442,6 +7442,8 @@ export default {
         
         this.query = ''; // เคลียร์ช่องพิมพ์
         this.adjustInputHeight()
+        const input = this.$refs.inputBox
+        if (input) { input.rows = 1; input.style.height = 'auto' }
         this.welcomeTyping = false;
 
         // 2. เตรียมข้อความตอบกลับ (ไม่ต้องแสดงข้อความยาวๆ)
@@ -7523,6 +7525,8 @@ export default {
       
       this.query = ''
       this.adjustInputHeight()
+      const input = this.$refs.inputBox
+      if (input) { input.rows = 1; input.style.height = 'auto' }
       // Stop welcome typing once user interacts
       this.welcomeTyping = false
       
@@ -9630,7 +9634,7 @@ export default {
         
         // ถ้าไม่มีข้อมูลจาก database ใช้ default
         if (this.placeholderExamples.length === 0) {
-          this.placeholderExamples = ['ขอความช่วยเหลืองจาก ปลายฟ้า']
+          this.placeholderExamples = ['ขอความช่วยเหลือจาก ปลายฟ้า']
         }
         
         // เริ่ม carousel
@@ -9638,7 +9642,7 @@ export default {
       } catch (err) {
         console.error('Failed to load synonyms for carousel:', err)
         // Fallback to default
-        this.placeholderExamples = ['ขอความช่วยเหลืองจาก ปลายฟ้า']
+        this.placeholderExamples = ['ขอความช่วยเหลือจาก ปลายฟ้า']
         this.startPlaceholderCarousel()
       }
     },
