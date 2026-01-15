@@ -515,17 +515,17 @@
                 <div v-if="useGeminiMode && msg.type === 'bot'" class="gemini-wrap">
                   <div class="gemini-message" :class="{ 'clamped': !msg._expanded, 'expanded': msg._expanded }" v-html="linkifyText((idx === messages.length - 1 && useGeminiMode && msg.type === 'bot' && isGeminiTyping) ? geminiTypingText : msg.text, msg.title, msg.found, false)"></div>
 
-                  <!-- Expand / Collapse button (show for all messages) -->
-                  <button v-if="msg.text" type="button" class="expand-button" @click.stop.prevent="toggleExpand(msg)" :aria-label="msg._expanded ? 'ย่อข้อความ' : 'ขยายข้อความ'">
-                    <svg v-if="!msg._expanded" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="expand-icon"><path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="collapse-icon"><path d="M7 14l5-5 5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  </button>
+
                 </div>
                 <div v-if="! (useGeminiMode && msg.type === 'bot')" class="message-bubble" :class="[msg.type, { 'has-contacts': msg.showContacts || (msg.visibleContacts && msg.visibleContacts.length > 0) }]" :data-message-id="msg.id">
                   <div v-if="!(msg.multipleResults && msg.text && msg.text.trim().startsWith('พบหลายคำถาม'))" class="message-text" :class="{ 'clamped': !msg._expanded, 'expanded': msg._expanded }" v-html="linkifyText(msg.text, msg.title, msg.found, msg.type === 'user')"></div>
 
-                  <!-- Expand / Collapse button (show for all messages) -->
-                  <button v-if="msg.text" type="button" class="expand-button" @click.stop.prevent="toggleExpand(msg)" :aria-label="msg._expanded ? 'ย่อข้อความ' : 'ขยายข้อความ'">
+                  <!-- Copy (user only) + Expand / Collapse buttons -->
+                  <button v-if="msg.text && msg.type === 'user'" type="button" class="copy-button" @click.stop.prevent="copyMessage(msg)" :aria-label="'คัดลอกข้อความ'">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="copy-icon"><path d="M16 1H5a2 2 0 0 0-2 2v11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="8" y="4" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+
+                  <button v-if="msg._collapsible && msg.type === 'user'" type="button" class="expand-button" @click.stop.prevent="toggleExpand(msg)" :aria-label="msg._expanded ? 'ย่อข้อความ' : 'ขยายข้อความ'">
                     <svg v-if="!msg._expanded" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="expand-icon"><path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="collapse-icon"><path d="M7 14l5-5 5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </button>
@@ -838,7 +838,7 @@
 
             
             <!-- Bottom-anchored typing indicator (shown when clearing chat) -->
-            <div v-if="tempTyping && !useGeminiMode" class="bottom-typing message-wrapper bot">
+            <div v-if="tempTyping" class="bottom-typing message-wrapper bot">
               <div class="bot-avatar-wrapper">
                 <div class="bot-avatar" role="button" tabindex="0" @click="openAiIntro" title="เปิด AI เต็มจอ">
                   <video v-if="graphicsQuality === 'high' && botVideo" :src="botVideo" class="bot-avatar-img bot-avatar-video" autoplay loop muted playsinline key="awake"></video>
@@ -1826,6 +1826,7 @@
 import { getBotAvatar } from '@/config/botConfig'
 import { getCategoryIcon as getIconSvg } from '@/config/categoryIcons'
 import { useBotTooltip } from '@/composables/useBotTooltip'
+import { useAppleToast } from '@/composables/useAppleToast'
 import botVideoSrc from '@/assets/bots/bot2.mp4'
 import botSleepVideoSrc from '@/assets/bots/bot2sleep.mp4'
 import botWakeVideoSrc from '@/assets/bots/bot2wake.mp4'
@@ -2739,6 +2740,8 @@ export default {
     // 📹 Re-observe videos after DOM updates (when new messages are added)
     this.$nextTick(() => {
       this.observeBotVideos();
+      // Re-measure message collapsibility after render
+      this.measureMessageCollapsibles()
     });
   },
   
@@ -2748,6 +2751,8 @@ export default {
 
     // Initialize Bot Tooltip (speech bubble style)
     this.botTooltip = useBotTooltip()
+    // Toast helper
+    this.appleToast = useAppleToast()
     
     // Debug locations data
     console.log('📍 locationQuickLinks:', this.locationQuickLinks)
@@ -3587,8 +3592,12 @@ export default {
             lastMsg._expanded = !!(this.expandedStateMap && this.expandedStateMap[key])
           }
           if (lastMsg && typeof lastMsg._collapsible === 'undefined') {
+            // fallback: mark collapsible by length until we measure DOM
             lastMsg._collapsible = (lastMsg.text && String(lastMsg.text).replace(/\s+/g, ' ').length > 300)
           }
+
+          // measure DOM overflow for all messages after they render
+          this.$nextTick(() => this.measureMessageCollapsibles())
 
           if (lastMsg.type === 'user') {
             // Clear Gemini typing when user sends message
@@ -3627,6 +3636,53 @@ export default {
       this.saveExpandedStateMap()
     },
 
+    // Copy message text to clipboard
+    copyMessage(msg) {
+      const html = msg && msg.text ? String(msg.text) : ''
+      // strip HTML if present
+      const tmp = document.createElement('div')
+      tmp.innerHTML = html
+      const plain = tmp.textContent || tmp.innerText || html
+
+      const doFallbackCopy = (textToCopy) => {
+        try {
+          const ta = document.createElement('textarea')
+          ta.value = textToCopy
+          ta.setAttribute('readonly', '')
+          ta.style.position = 'absolute'
+          ta.style.left = '-9999px'
+          document.body.appendChild(ta)
+          ta.select()
+          document.execCommand('copy')
+          document.body.removeChild(ta)
+          return true
+        } catch (e) {
+          return false
+        }
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(plain).then(() => {
+          if (this.appleToast) this.appleToast.success('คัดลอกแล้ว')
+        }).catch(() => {
+          if (doFallbackCopy(plain)) {
+            if (this.appleToast) this.appleToast.success('คัดลอกแล้ว')
+          } else {
+            if (this.appleToast) this.appleToast.error('ไม่สามารถคัดลอกได้')
+          }
+        })
+      } else {
+        if (doFallbackCopy(plain)) {
+          if (this.appleToast) this.appleToast.success('คัดลอกแล้ว')
+        } else {
+          if (this.appleToast) this.appleToast.error('ไม่สามารถคัดลอกได้')
+        }
+      }
+
+      // Re-measure in case copy triggered UI changes
+      this.$nextTick(() => this.measureMessageCollapsibles())
+    },
+
     // Persistence helpers for expand/collapse state
     loadExpandedStateMap() {
       try {
@@ -3650,11 +3706,13 @@ export default {
         } else if (typeof msg._expanded === 'undefined') {
           msg._expanded = false
         }
-        // set collapsible flag based on length so small messages render fine
+        // set collapsible flag based on length so small messages render fine (fallback)
         if (typeof msg._collapsible === 'undefined') {
           msg._collapsible = (msg.text && String(msg.text).replace(/\s+/g, ' ').length > 300)
         }
       })
+      // Measure actual overflow after render to set accurate collapsible flags
+      this.$nextTick(() => this.measureMessageCollapsibles())
     },
     getMessageStorageKey(msg) {
       if (!msg) return ''
@@ -3669,6 +3727,34 @@ export default {
         h |= 0;
       }
       return Math.abs(h).toString(36)
+    },
+
+    // Measure message elements and set _collapsible when lines > 5
+    measureMessageCollapsibles() {
+      try {
+        if (!this.$el) return
+        const nodes = this.$el.querySelectorAll('[data-message-id]')
+        nodes.forEach(node => {
+          const id = node.getAttribute('data-message-id')
+          const textEl = node.querySelector('.message-text')
+          if (!textEl) return
+          const style = window.getComputedStyle(textEl)
+          const lh = parseFloat(style.lineHeight) || (parseFloat(style.fontSize) * 1.4)
+          const lines = Math.round(textEl.clientHeight / lh)
+          const msg = this.messages.find(m => String(m.id) === id || String(m.id) === String(id))
+          if (msg) {
+            const collapsible = lines > 5
+            msg._collapsible = collapsible
+            // keep persisted expanded state if available
+            if (typeof msg._expanded === 'undefined') {
+              const key = this.getMessageStorageKey(msg)
+              msg._expanded = !!(this.expandedStateMap && this.expandedStateMap[key])
+            }
+          }
+        })
+      } catch (e) {
+        // silent
+      }
     },
     typeNextChar(text) {
       if (this.geminiTypingIndex < text.length) {
