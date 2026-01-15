@@ -1,6 +1,7 @@
 <template>
+  <!-- Overlay variant (used when not in chatbot route) -->
   <transition name="fade">
-    <div v-if="visible" class="cookie-overlay" role="dialog" aria-modal="true" aria-label="Cookie consent">
+    <div v-if="visible && !inlineMode" class="cookie-overlay" role="dialog" aria-modal="true" aria-label="Cookie consent">
       <transition name="pop">
         <div class="cookie-card" v-show="visible" role="document">
           <div class="cookie-header">
@@ -17,32 +18,53 @@
           </div>
         </div>
       </transition>
+    </div>
+  </transition>
 
-      <!-- Privacy modal (in-app, does not change route) -->
-      <transition name="fade">
-        <div v-if="showPrivacy" class="privacy-modal-overlay" role="dialog" aria-modal="true" aria-label="Privacy policy">
-          <div class="privacy-modal">
-            <button class="privacy-full-close" @click="closePrivacy" aria-label="ปิด" title="ปิด">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-            <div class="privacy-modal-header">
-              <h4>นโยบายความเป็นส่วนตัว</h4>
-            </div> 
-            <div class="privacy-modal-body">
-              <PrivacyPolicy :inModal="true" @close="closePrivacy" />
+  <!-- Inline variant: teleport into the chatbot panel when on the chatbot route -->
+  <teleport to=".chat-panel" v-if="visible && inlineMode">
+    <transition name="pop">
+      <div class="cookie-inline" role="region" aria-label="Cookie consent (chat)">
+        <div class="cookie-card cookie-card-inline" role="document">
+          <div class="cookie-header">
+            <h3>เราใช้คุกกี้</h3>
+            <button class="cookie-close" @click="skipToContent" aria-label="ข้ามไปที่เนื้อหา">✕</button>
+          </div>
+          <div class="cookie-body">
+            <p class="cookie-text"><strong>สรุป:</strong> เว็บไซต์นี้เก็บ "ประวัติการสนทนา" เพื่อให้บริการแชตทำงานต่อเนื่อง ใช้เพื่อปรับปรุงระบบและตรวจสอบคุณภาพ</p>
+            <div class="cookie-actions">
+              <button class="btn policy" @click="openPrivacy">ดูนโยบาย</button>
+              <button class="btn acknowledge" @click="skipToContent">ข้าม</button>
             </div>
           </div>
         </div>
-      </transition> 
+      </div>
+    </transition>
+  </teleport>
 
+  <!-- Privacy modal (in-app, does not change route) -->
+  <transition name="fade">
+    <div v-if="showPrivacy" class="privacy-modal-overlay" role="dialog" aria-modal="true" aria-label="Privacy policy">
+      <div class="privacy-modal">
+        <button class="privacy-full-close" @click="closePrivacy" aria-label="ปิด" title="ปิด">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="privacy-modal-header">
+          <h4>นโยบายความเป็นส่วนตัว</h4>
+        </div>
+        <div class="privacy-modal-body">
+          <PrivacyPolicy :inModal="true" @close="closePrivacy" />
+        </div>
+      </div>
     </div>
   </transition> 
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted, watch, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import PrivacyPolicy from '@/views/PrivacyPolicy.vue'
 
 // delay before showing popup (ms)
@@ -134,6 +156,9 @@ function cancelManage() {
   showManage.value = false
 }
 
+const route = useRoute()
+const inlineMode = computed(() => route.name === 'chatbot')
+
 onMounted(() => {
   const existed = loadPrefs()
   if (!existed) {
@@ -186,6 +211,15 @@ watch(showPrivacy, (v) => {
   box-shadow: var(--cb-shadow);
   padding: 18px;
   border: 1px solid var(--cb-border-color);
+}
+
+/* Inline variant placed inside chat panel */
+.cookie-inline { position: absolute; top: 88px; right: 16px; z-index: 2100; pointer-events: auto }
+.cookie-card-inline { width: 320px; padding: 12px; border-radius:10px }
+
+@media (max-width: 640px) {
+  .cookie-inline { right: 12px; left: 12px; top: 70px }
+  .cookie-card-inline { width: auto }
 }
 .cookie-header { display:flex; justify-content: space-between; align-items:center; }
 .cookie-header h3 { margin:0; font-size:18px; color: var(--cb-text-primary) }

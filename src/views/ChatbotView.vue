@@ -901,17 +901,7 @@
                     @touchend="onCarouselTouchEnd"
                     @mousedown="onCarouselMouseDown"
                   >
-                    <!-- Swipe Hint (TOP - shows once) -->
-                    <transition name="swipe-hint-fade">
-                      <div v-if="showCarouselSwipeHint" class="carousel-swipe-hint top-hint">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                          <path d="M17 12H7M10 16l-4-4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                          <path d="M14 8l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
-                        </svg>
-                        <span>ปัดซ้าย-ขวาเพื่อเปลี่ยนหน้า</span>
-                      </div>
-                    </transition>
-                    
+
                     <div 
                       class="line-menu-carousel-track"
                       :style="carouselTrackStyle"
@@ -1194,16 +1184,6 @@
                   @touchend="onCarouselTouchEnd"
                   @mousedown="onCarouselMouseDown"
                 >
-                  <!-- Swipe Hint (TOP - shows once) -->
-                  <transition name="swipe-hint-fade">
-                    <div v-if="showCarouselSwipeHint" class="carousel-swipe-hint top-hint">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                        <path d="M17 12H7M10 16l-4-4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M14 8l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
-                      </svg>
-                      <span>ปัดซ้าย-ขวาเพื่อเปลี่ยนหน้า</span>
-                    </div>
-                  </transition>
                   
                   <div 
                     class="line-menu-carousel-track"
@@ -2079,9 +2059,7 @@ export default {
       carouselIsDragging: false,
       carouselDragOffset: 0,
       carouselSwipeIsHorizontal: null, // null = not determined, true = horizontal, false = vertical
-      showCarouselSwipeHint: false, // Show swipe hint tooltip
-      carouselSwipeHintShown: localStorage.getItem('carouselSwipeHintShown') === 'true', // Track if hint was already shown (persistent)
-      carouselSwipeHintTimer: null,
+
       showPageLabelToast: false, // Show page label toast on page change
       pageLabelToastText: '', // Current page label text
       pageLabelToastTimer: null, // Timer for toast auto-hide
@@ -3708,18 +3686,7 @@ export default {
           this.showPageLabelToastTemporarily()
         })
         
-        // Show swipe hint once (first time opening menu) - persistent via localStorage
-        if (!this.carouselSwipeHintShown) {
-          this.carouselSwipeHintShown = true
-          localStorage.setItem('carouselSwipeHintShown', 'true')
-          this.$nextTick(() => {
-            this.showCarouselSwipeHint = true
-            // Auto-hide after 3 seconds
-            setTimeout(() => {
-              this.showCarouselSwipeHint = false
-            }, 3000)
-          })
-        }
+
         
         // Check if first time using menu - show tutorial
         const tutorialSeen = localStorage.getItem('pcru_menu_tutorial_seen')
@@ -10174,12 +10141,7 @@ html[data-theme="dark"] .page-label-toast {
   transform: scale(1.15);
 }
 
-.carousel-dot.dragging .dot-inner {
-  background: linear-gradient(135deg, #8B4CB8 0%, #6B2C91 100%);
-  box-shadow: 0 2px 8px rgba(139, 76, 184, 0.4);
-  transform: scale(1.6);
-  margin: 0 .2rem;
-}
+
 
 
 
@@ -10189,50 +10151,7 @@ html[data-theme="dark"] .page-label-toast {
   box-shadow: 0 2px 8px rgba(52, 199, 89, 0.4);
 }
 
-/* 💡 Swipe Hint - Top position (shows once) */
-.carousel-swipe-hint {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.9);
-  padding: 10px 16px;
-  background: linear-gradient(135deg, rgba(139, 76, 184, 0.25), rgba(107, 44, 145, 0.25));
-  border-radius: 12px;
-  margin-bottom: 12px;
-  border: 1px solid rgba(139, 76, 184, 0.3);
-}
 
-.carousel-swipe-hint.top-hint {
-  animation: swipe-hint-glow 2s ease-in-out infinite;
-}
-
-@keyframes swipe-hint-glow {
-  0%, 100% {
-    box-shadow: 0 2px 12px rgba(139, 76, 184, 0.2);
-  }
-  50% {
-    box-shadow: 0 4px 20px rgba(139, 76, 184, 0.4);
-  }
-}
-
-.carousel-swipe-hint svg {
-  animation: swipe-arrow-both 1.5s ease-in-out infinite;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-@keyframes swipe-arrow-both {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-4px);
-  }
-  75% {
-    transform: translateX(4px);
-  }
-}
 
 /* Swipe hint fade transition */
 .swipe-hint-fade-enter-active,

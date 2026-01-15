@@ -2632,8 +2632,7 @@ html.keyboard-open .panel-footer {
 }
 .input-pill { 
   flex:1; 
-  min-height:52px; 
-  max-height: 150px;
+  height:23px; 
   width: 100% !important;
   border-radius:26px; 
   padding:14px 20px; 
@@ -6787,7 +6786,6 @@ body.no-effects .apple-help-button::after { display: none !important; }
   }
   
   .input-pill {
-    height: 48px;
     font-size: 15px;
   }
   
