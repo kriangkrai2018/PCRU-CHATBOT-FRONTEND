@@ -227,7 +227,7 @@ watch(showPrivacy, (v) => {
   width: min(720px, calc(100% - 32px));
   background: rgba(0, 0, 0, 0.748);
   color: var(--cb-text-primary);
-  border-radius: 12px;
+  border-radius: 34px;
   box-shadow: var(--cb-shadow);
   padding: 18px;
   border: 1px solid var(--cb-border-color);
@@ -248,7 +248,7 @@ watch(showPrivacy, (v) => {
   justify-content: center;
 }
 .cookie-inline { position: relative; z-index: 2100; pointer-events: auto }
-.cookie-card-inline { width: 320px; padding: 12px; border-radius:10px }
+.cookie-card-inline { width: 320px; padding: 25px; border-radius:34px }
 
 @media (max-width: 640px) {
   .cookie-inline { margin-right: 10px; margin-left: 10px; top: auto; }
