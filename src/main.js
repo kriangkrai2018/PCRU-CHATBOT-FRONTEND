@@ -1,6 +1,6 @@
  //🚀 Fast redirect for specific URL
   if (window.location.href === 'http://project.3bbddns.com:36144/') {
-    window.location.replace('https://kernel-camcorders-each-reply.trycloudflare.com');
+    // window.location.replace('https://kernel-camcorders-each-reply.trycloudflare.com');
   }
 
 import { createApp } from 'vue'

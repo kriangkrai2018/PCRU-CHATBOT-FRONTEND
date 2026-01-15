@@ -129,7 +129,6 @@
                 reload.onclick = function(){ location.reload() };
 
                 const controls = document.createElement('div');
-                // Only show external public link when VITE_PUBLIC_URL is set
                 if (PUBLIC_URL) {
                   const link = document.createElement('a');
                   link.href = PUBLIC_URL;

@@ -273,7 +273,7 @@ html.theme-transitioning div {
 
 /* Ensure copy/expand buttons sit inside the bubble */
 .message-bubble .copy-button { right: 44px; }
-.message-bubble .expand-button { right: 12px; }
+.message-bubble .expand-button { right: 60px; }
 
 .panel-body {
   contain: layout;

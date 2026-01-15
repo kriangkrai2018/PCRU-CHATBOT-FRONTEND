@@ -525,7 +525,7 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="copy-icon"><path d="M16 1H5a2 2 0 0 0-2 2v11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="8" y="4" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </button>
 
-                  <button v-if="msg.text && msg.text.length > 50 && msg.type === 'user'" type="button" class="expand-button" @click.stop.prevent="toggleExpand(msg)" :aria-label="msg._expanded ? 'ย่อข้อความ' : 'ขยายข้อความ'">
+                  <button v-if="msg.type === 'user' && !isGeminiTyping" type="button" class="expand-button" @click.stop.prevent="toggleExpand(msg); $event.stopImmediatePropagation();" :aria-label="msg._expanded ? 'ย่อข้อความ' : 'ขยายข้อความ'">
                     <svg v-if="!msg._expanded" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="expand-icon"><path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="collapse-icon"><path d="M7 14l5-5 5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </button>
