@@ -394,11 +394,13 @@ html.theme-transitioning div {
 
 /* Input Area */
 .panel-footer {
-  position: relative;
+  /* Stick the footer to the bottom of its scroll container / viewport */
+  position: sticky;
+  bottom: env(safe-area-inset-bottom, 12px);
   z-index: 1600; /* Above snowflakes (z-index: 1500) */
   border-top: 1px solid transparent;
   background: inherit; /* Ensure solid background to cover snow */
-  margin: 0rem 1rem 1rem 1rem !important;
+  margin: 0rem .8rem 0.8rem .8rem !important;
   border-radius: 34px;
   padding: 1rem !important;
 }
@@ -2800,9 +2802,10 @@ html.keyboard-open .panel-footer {
 
 /* แก้ไขปุ่มลอยในมือถือ */
 @media (max-width: 600px) {
-  /* 1. บังคับให้ Panel Footer เป็นตัวอ้างอิงตำแหน่ง */
+  /* 1. ให้ Panel Footer ยึดก้นจอ (sticky) บนมือถือด้วย */
   .panel-footer {
-    position: relative !important;
+    position: sticky !important;
+    bottom: env(safe-area-inset-bottom, 12px) !important;
     /* เว้นพื้นที่ขวาเผื่อปุ่มส่ง ไม่ให้ Input ทับ */
     padding-right: 68px !important; 
   }
