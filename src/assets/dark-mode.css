@@ -184,8 +184,8 @@
 
 /* Dark Mode Close Circle Button - Purple (same as light) */
 [data-theme="dark"] .close-circle {
-  background: rgba(255, 255, 255, 0.15) !important;
-  border: 1px solid var(--cb-border-purple) !important;
+  background: transparent !important;
+  border: transparent !important;
   box-shadow: 0 2px 8px var(--cb-shadow-purple);
   color: var(--cb-text-inverse) !important;
 } 
