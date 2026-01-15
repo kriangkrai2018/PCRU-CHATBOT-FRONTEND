@@ -2229,6 +2229,7 @@ export default {
       appleAlertShown: false, // Track if already shown to avoid repeating
       // 🗑️ Clear button visibility state
       clearBtnHidden: false, // Track if clear button was recently clicked
+      isStartingRecognition: false, // Track if voice recognition is starting to prevent duplicate permission requests
     }
   },
   computed: {
@@ -2254,6 +2255,16 @@ export default {
         return '✨ ถามข้อมูลเกี่ยวกับ PCRU กับ AI'
       }
       return this.placeholderText || 'ขอความช่วยเหลืองจาก ปลายฟ้า'
+    },
+
+    // Typing style for input
+    typingStyle() {
+      if (!this.isTyping) return {}
+      return {
+        color: '#1d1d1f',
+        textShadow: 'none',
+        transition: 'text-shadow 0.15s ease-out, color 0.15s ease-out'
+      }
     },
     
     // 🎠 Carousel track transform style
@@ -3573,6 +3584,7 @@ export default {
 
     
     toggleVoiceMode() {
+      if (this.isStartingRecognition) return;
       this.isVoiceMode = !this.isVoiceMode
       console.log('🎤 Toggle Voice Mode:', this.isVoiceMode ? 'Voice Input' : 'Text Input')
       
@@ -3584,6 +3596,7 @@ export default {
     },
     
     startVoiceRecognition() {
+      if (this.isStartingRecognition) return;
       // Check if browser supports speech recognition
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
       
@@ -3603,6 +3616,7 @@ export default {
       this.recognition.onstart = () => {
         console.log('🎤 Voice recognition started')
         this.isListening = true
+        this.isStartingRecognition = false;
         this.$toast.info('กำลังฟัง... พูดคำถามของคุณ', { duration: 2000 })
       }
       
@@ -3645,15 +3659,18 @@ export default {
         
         this.$toast.error(`🎤 ${errorMessage}`, { duration: 3000 })
         this.isVoiceMode = false
+        this.isStartingRecognition = false;
       }
       
       this.recognition.onend = () => {
         console.log('🎤 Voice recognition ended')
         this.isListening = false
         this.isVoiceMode = false
+        this.isStartingRecognition = false;
       }
       
       // Start recognition
+      this.isStartingRecognition = true;
       try {
         this.recognition.start()
       } catch (error) {
@@ -3670,6 +3687,7 @@ export default {
       }
       this.isListening = false
       this.isVoiceMode = false
+      this.isStartingRecognition = false;
     },
     
     toggleLineMenu(showMenu) {

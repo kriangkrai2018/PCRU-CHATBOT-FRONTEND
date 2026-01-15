@@ -2634,11 +2634,11 @@ html.keyboard-open .panel-footer {
   flex:1; 
   height:23px; 
   width: 100% !important;
-  border-radius:26px; 
-  padding:14px 20px; 
+  border-radius: 0px; 
   border: 1px solid rgba(139, 76, 184, 0.3) !important; /* Subtle purple border */
   font-size:16px;
   color: #1d1d1f;
+  background: rgba(255, 255, 255, 1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.3) inset;
   transition: all 0.3s cubic-bezier(.2,.9,.2,1), color 0.15s ease-out, text-shadow 0.15s ease-out;
   position: relative;
@@ -2662,7 +2662,6 @@ html.keyboard-open .panel-footer {
   outline: none;
   border: 1px solid rgba(139, 76, 184, 0.6) !important; /* Stronger border when focused */
   box-shadow: 0 4px 20px rgba(107, 44, 145, 0.18), 0 0 0 3px rgba(107, 44, 145, 0.12);
-  background: rgba(255, 255, 255, 1);
 }
 
 .input-pill::placeholder {
@@ -2682,7 +2681,6 @@ html.keyboard-open .panel-footer {
   flex: 1 1 1;
   min-width: 0;
   width: auto;
-  padding-right: 25px; /* space for button */
 }
 .panel-footer .btn-send { 
   width:44px; 
@@ -2722,10 +2720,6 @@ html.keyboard-open .panel-footer {
 
 
 
-  /* Reduce reserved right padding so input visually reaches the send button */
-  .panel-footer .input-pill {
-    padding-right: 20px; /* small buffer so text doesn't go under the button while input fills to the edge */
-  }
 
   /* Slightly move bottom typing bubble up on very narrow screens to avoid collision */
   .panel-footer .bottom-typing {
@@ -7234,8 +7228,8 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
 
 .input-pill {
   width: 100%;
-  padding: 0 16px;
-  border-radius: 24px;
+  padding: 0px;
+  border-radius: 0px;
   border: 1px solid #e6e6e9;
   font-size: 15px;
   line-height: 1.4;
@@ -7243,6 +7237,7 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
   font-family: inherit;
   transition: all 0.15s;
   box-sizing: border-box;
+  margin:  0px 0px 12px;
 }
 
 

@@ -825,6 +825,10 @@ body.gfx-low[data-theme="dark"] .panel-body {
 
 
 
+[data-theme="dark"] .input-pill {
+  background: #111111;
+}
+
 [data-theme="dark"] textarea.input-pill,
 [data-theme="dark"] textarea.input-pill:focus {
   border: none !important;

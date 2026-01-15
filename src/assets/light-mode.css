@@ -421,3 +421,98 @@ html.theme-transitioning [data-theme="light"] * {
 [data-theme="light"] .line-menu-wrapper {
   background-color: rgba(255, 255, 255, 0.983) !important;
 }
+
+
+[data-theme="light"] textarea.input-pill,
+[data-theme="light"] textarea.input-pill:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  resize: none !important;        /* ไม่ให้ลากขยาย */
+  background: transparent !important; /* ถ้าต้องการพื้นหลังใส */
+}
+
+/* Light Mode Cookie Consent */
+[data-theme="light"] .cookie-card {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1f2937;
+  border-color: #e5e7eb;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .cookie-card-inline {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: #e5e7eb;
+}
+
+[data-theme="light"] .cookie-header h3 {
+  color: #1f2937;
+}
+
+[data-theme="light"] .cookie-close {
+  color: #5f6368;
+}
+
+[data-theme="light"] .cookie-text {
+  color: #6b7280;
+}
+
+[data-theme="light"] .cookie-actions .btn {
+  background: #ffffff;
+  color: #1f2937;
+  border-color: #e5e7eb;
+}
+
+[data-theme="light"] .cookie-actions .policy {
+  border-color: #8B4CB8;
+  color: #8B4CB8;
+  background: transparent;
+}
+
+[data-theme="light"] .cookie-actions .acknowledge {
+  background: #8B4CB8;
+  color: #ffffff;
+  border: none;
+}
+
+[data-theme="light"] .cookie-overlay {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Light Mode Privacy Modal */
+[data-theme="light"] .privacy-modal {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1f2937;
+  border-color: #e5e7eb;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .privacy-modal-overlay {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+[data-theme="light"] .privacy-full-close {
+  color: #5f6368;
+}
+
+[data-theme="light"] .privacy-full-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .privacy-modal-header h4 {
+  color: #1f2937;
+}
+
+/* Light Mode Card (Privacy Policy) */
+[data-theme="light"] .card {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1f2937;
+  border-color: #e5e7eb;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+}
