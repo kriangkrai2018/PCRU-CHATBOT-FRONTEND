@@ -89,7 +89,7 @@
 
           <div class="panel-top" v-show="showHeaderButtons" ref="panelTop">
             <transition name="fade">
-              <button v-show="showHeaderButtons && !showMoreMenu" class="close-circle" @click="visible = false" aria-label="close">
+              <button v-show="showHeaderButtons" class="close-circle" @click="visible = false" aria-label="close">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="close-icon">
                 <!-- Line 1 with gentle animations -->
                 <path class="close-line-1" d="M6 6L18 18" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="20" stroke-dashoffset="20">
@@ -240,7 +240,7 @@
             </div>
             </transition>
 
-            <div v-if="!showMoreMenu" class="overlay-backdrop-2"></div>
+            <div class="overlay-backdrop-2"></div>
           </div>
 
           <!-- Scroll to Bottom Button - outside panel-body so it floats above content -->
@@ -3497,6 +3497,13 @@ export default {
         // Remove any temporary typing state left behind
         this.tempTyping = false
         this.messages = this.messages.filter(m => !m._temp)
+      }
+    },
+    showHeaderButtons(newVal) {
+      // Control overlay-backdrop-2 visibility with JavaScript
+      const backdrop = this.$el?.querySelector('.overlay-backdrop-2')
+      if (backdrop) {
+        backdrop.style.display = newVal ? 'block' : 'none'
       }
     }
   },
