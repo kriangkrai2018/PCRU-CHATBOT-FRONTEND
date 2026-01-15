@@ -7894,6 +7894,7 @@ export default {
                 // Only trigger if found is true and not multiple results
                 if (msg.found === true && !msg.multipleResults) {
                   this.$nextTick(() => {
+                    console.log('🎓 Scheduling feedback tutorial for message:', msg, 'total messages:', this.messages.length)
                     setTimeout(() => this.startFeedbackTutorial(), 500)
                   })
                 }
