@@ -1836,6 +1836,8 @@ export default {
       placeholderIndex: 0,
       maxInputRows: 7,
       placeholderInterval: null,
+      // Flag used to defer an action (like clearing chat) until after a tutorial completes
+      pendingClearAfterTutorial: false,
       // embedding removed — external site not used in this deployment
       messages: [],
       welcomeTyping: false,
@@ -4396,16 +4398,48 @@ export default {
       }
     },
     
-    completeTutorial() {
+    async completeTutorial() {
       this.showFeedbackTutorial = false
       localStorage.setItem('pcru_feedback_tutorial_seen', 'true')
       // Light haptic feedback
       if (navigator.vibrate) navigator.vibrate(50)
+
+      // If a clear action was deferred until after tutorial, now ask for confirmation
+      if (this.pendingClearAfterTutorial) {
+        this.pendingClearAfterTutorial = false
+        try {
+          const { confirmAction } = useConfirm()
+          const confirmed = await confirmAction({
+            title: 'ล้างประวัติการสนทนา',
+            message: 'คุณต้องการล้างประวัติการสนทนาใช่หรือไม่? การกระทำนี้จะลบประวัติการสนทนาทั้งหมด',
+            confirmText: 'ล้าง',
+            cancelText: 'ยกเลิก',
+            variant: 'danger'
+          })
+          if (confirmed) this.clearChatHistory()
+        } catch (e) { console.error('Error confirming clear after tutorial:', e) }
+      }
     },
     
-    skipTutorial() {
+    async skipTutorial() {
       this.showFeedbackTutorial = false
       localStorage.setItem('pcru_feedback_tutorial_seen', 'true')
+
+      // If clear action was pending, ask for confirmation after skipping tutorial
+      if (this.pendingClearAfterTutorial) {
+        this.pendingClearAfterTutorial = false
+        try {
+          const { confirmAction } = useConfirm()
+          const confirmed = await confirmAction({
+            title: 'ล้างประวัติการสนทนา',
+            message: 'คุณต้องการล้างประวัติการสนทนาใช่หรือไม่? การกระทำนี้จะลบประวัติการสนทนาทั้งหมด',
+            confirmText: 'ล้าง',
+            cancelText: 'ยกเลิก',
+            variant: 'danger'
+          })
+          if (confirmed) this.clearChatHistory()
+        } catch (e) { console.error('Error confirming clear after tutorial skip:', e) }
+      }
     },
     
     dismissScrollTutorial() {
@@ -5176,16 +5210,44 @@ export default {
       this.closeMoreMenu();
     },
     
-    clearChatFromMenu() {
+    async clearChatFromMenu() {
       this.closeMoreMenu();
       this.clearBtnHidden = true;
-      setTimeout(() => {
-        this.clearChatHistory();
-        // Re-show clear button after clearing
-        setTimeout(() => {
-          this.clearBtnHidden = false;
-        }, 500);
-      }, 150);
+
+      // If feedback tutorial hasn't been seen, show it first and defer the clear
+      const hasSeenFeedbackTutorial = !!localStorage.getItem('pcru_feedback_tutorial_seen')
+      const botMessagesWithAnswer = this.messages.filter(m => m.type === 'bot' && m.found === true && !m.multipleResults && !m._temp && m.keywordMatch !== false)
+
+      if (!hasSeenFeedbackTutorial && botMessagesWithAnswer.length > 0) {
+        // Defer the clear until after tutorial completes
+        this.pendingClearAfterTutorial = true
+        // Start tutorial (it will set localStorage when completed)
+        this.startFeedbackTutorial()
+        // Re-show clear button after a short delay so UI doesn't stay hidden
+        setTimeout(() => { this.clearBtnHidden = false }, 500)
+        return
+      }
+
+      // Otherwise, ask for confirmation then clear if confirmed
+      try {
+        const { confirmAction } = useConfirm()
+        const confirmed = await confirmAction({
+          title: 'ล้างประวัติการสนทนา',
+          message: 'คุณต้องการล้างประวัติการสนทนาใช่หรือไม่? การกระทำนี้จะลบประวัติการสนทนาทั้งหมด',
+          confirmText: 'ล้าง',
+          cancelText: 'ยกเลิก',
+          variant: 'danger'
+        })
+        if (confirmed) {
+          // Small delay for UX and to show button reappearance
+          setTimeout(() => this.clearChatHistory(), 150)
+        }
+      } catch (e) {
+        console.error('Error showing confirm for clear:', e)
+      } finally {
+        // Ensure button reappears even if user cancels
+        setTimeout(() => { this.clearBtnHidden = false }, 500)
+      }
     },
     
     setGraphicsQuality(quality) {
