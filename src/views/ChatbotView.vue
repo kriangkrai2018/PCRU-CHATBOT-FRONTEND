@@ -10767,6 +10767,7 @@ html[data-theme="light"] .contacts-grid .line-menu-item:hover {
 }
 
 html[data-theme="light"] .contact-name {
+  text-align: left;
   color: rgba(107, 44, 145, 0.95);
 }
 
@@ -11259,7 +11260,7 @@ html[data-theme="light"] .line-menu-fullscreen-wrapper .input-row.fullscreen-inp
 
 /* 📞 Contacts Grid Styles */
 .contacts-grid {
-  grid-template-columns: repeat(1, 1fr) !important;
+  grid-template-columns: repeat(2, 1fr) !important;
   display: grid !important;
   gap: 10px !important;
 }
@@ -11296,6 +11297,7 @@ html[data-theme="light"] .line-menu-fullscreen-wrapper .input-row.fullscreen-inp
   font-weight: 600;
   font-size: 12px;
   line-height: 1.2;
+  text-align: left;
   color: rgba(255, 255, 255, 0.95);
   overflow: hidden;
   text-overflow: ellipsis;

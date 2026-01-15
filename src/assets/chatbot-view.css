@@ -6330,7 +6330,7 @@ body.no-effects .apple-help-button::after { display: none !important; }
   font-weight:600; 
   text-decoration: none;
   transition: color 0.15s ease;
-  font-size: 15px;
+  font-size: 20px; /* increased from 18px */
 }
 
 .contact-phone:hover {
