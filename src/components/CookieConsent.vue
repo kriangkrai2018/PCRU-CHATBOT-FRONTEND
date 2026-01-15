@@ -23,23 +23,26 @@
 
   <!-- Inline variant: teleport into the chatbot panel when on the chatbot route -->
   <teleport to=".chat-panel" v-if="visible && inlineMode">
-    <transition name="pop">
-      <div class="cookie-inline" role="region" aria-label="Cookie consent (chat)">
-        <div class="cookie-card cookie-card-inline" role="document">
-          <div class="cookie-header">
-            <h3>เราใช้คุกกี้</h3>
-            <button class="cookie-close" @click="skipToContent" aria-label="ข้ามไปที่เนื้อหา">✕</button>
-          </div>
-          <div class="cookie-body">
-            <p class="cookie-text"><strong>สรุป:</strong> เว็บไซต์นี้เก็บ "ประวัติการสนทนา" เพื่อให้บริการแชตทำงานต่อเนื่อง ใช้เพื่อปรับปรุงระบบและตรวจสอบคุณภาพ</p>
-            <div class="cookie-actions">
-              <button class="btn policy" @click="openPrivacy">ดูนโยบาย</button>
-              <button class="btn acknowledge" @click="skipToContent">ข้าม</button>
+    <!-- Backdrop overlay with blur -->
+    <div class="cookie-backdrop">
+      <transition name="pop">
+        <div class="cookie-inline" role="region" aria-label="Cookie consent (chat)">
+          <div class="cookie-card cookie-card-inline" role="document">
+            <div class="cookie-header">
+              <h3>เราใช้คุกกี้</h3>
+              <button class="cookie-close" @click="skipToContent" aria-label="ข้ามไปที่เนื้อหา">✕</button>
+            </div>
+            <div class="cookie-body">
+              <p class="cookie-text"><strong>สรุป:</strong> เว็บไซต์นี้เก็บ "ประวัติการสนทนา" เพื่อให้บริการแชตทำงานต่อเนื่อง ใช้เพื่อปรับปรุงระบบและตรวจสอบคุณภาพ</p>
+              <div class="cookie-actions">
+                <button class="btn policy" @click="openPrivacy">ดูนโยบาย</button>
+                <button class="btn acknowledge" @click="skipToContent">ข้าม</button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </transition>
+      </transition>
+    </div>
   </teleport>
 
   <!-- Inline privacy panel (embedded into chat panel when on chatbot route) - full panel inside chat -->
@@ -231,11 +234,24 @@ watch(showPrivacy, (v) => {
 }
 
 /* Inline variant placed inside chat panel */
-.cookie-inline { position: absolute; top: 88px; right: 16px; z-index: 2100; pointer-events: auto }
+.cookie-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cookie-inline { position: relative; z-index: 2100; pointer-events: auto }
 .cookie-card-inline { width: 320px; padding: 12px; border-radius:10px }
 
 @media (max-width: 640px) {
-  .cookie-inline { right: 12px; left: 12px; top: 70px }
+  .cookie-inline { margin-right: 10px; margin-left: 10px; top: auto; }
   .cookie-card-inline { width: auto }
 }
 .cookie-header { display:flex; justify-content: space-between; align-items:center; }

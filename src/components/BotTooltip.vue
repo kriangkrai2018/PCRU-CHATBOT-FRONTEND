@@ -82,8 +82,8 @@ const tooltips = getBotTooltips();
   left: 0;
   right: 0;
   /* Add padding to push tooltip above input row */
-  padding: 0 10px 160px 10px;
-  z-index: 1000;
+  padding: 0 10px 10px 10px;
+  z-index: 10000000;
   pointer-events: none;
 }
 
