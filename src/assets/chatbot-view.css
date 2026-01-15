@@ -400,7 +400,7 @@ html.theme-transitioning div {
 /* Input Area */
 .panel-footer {
   /* Stick the footer to the bottom of its scroll container / viewport */
-  position: block !important;
+  position: sticky !important;
   bottom: env(safe-area-inset-bottom, 12px) !important;
   z-index: 1600; /* Above snowflakes (z-index: 1500) */
   border-top: 1px solid transparent;
