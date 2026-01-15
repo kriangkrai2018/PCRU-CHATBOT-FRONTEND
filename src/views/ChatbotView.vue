@@ -5228,26 +5228,11 @@ export default {
         return
       }
 
-      // Otherwise, ask for confirmation then clear if confirmed
-      try {
-        const { confirmAction } = useConfirm()
-        const confirmed = await confirmAction({
-          title: 'ล้างประวัติการสนทนา',
-          message: 'คุณต้องการล้างประวัติการสนทนาใช่หรือไม่? การกระทำนี้จะลบประวัติการสนทนาทั้งหมด',
-          confirmText: 'ล้าง',
-          cancelText: 'ยกเลิก',
-          variant: 'danger'
-        })
-        if (confirmed) {
-          // Small delay for UX and to show button reappearance
-          setTimeout(() => this.clearChatHistory(), 150)
-        }
-      } catch (e) {
-        console.error('Error showing confirm for clear:', e)
-      } finally {
-        // Ensure button reappears even if user cancels
-        setTimeout(() => { this.clearBtnHidden = false }, 500)
-      }
+      // Clear immediately without confirmation for now
+      this.clearChatHistory()
+      
+      // Ensure button reappears
+      setTimeout(() => { this.clearBtnHidden = false }, 500)
     },
     
     setGraphicsQuality(quality) {
@@ -9372,11 +9357,13 @@ export default {
           }
         }
         
-        // Hide panel-top when scrolling down, show when scrolling up
+        // Show panel-top when scrolling down, hide when scrolling up
         if (this.$refs.panelTop) {
-          if (isScrollingDown && currentScrollTop > 50) {
+          if (isAtBottom) {
+            this.$refs.panelTop.style.top = "0";
+          } else if (isScrollingUp) {
             this.$refs.panelTop.style.top = "-60px";
-          } else if (isScrollingUp || currentScrollTop <= 10 || isAtBottom) {
+          } else {
             this.$refs.panelTop.style.top = "0";
           }
         }
