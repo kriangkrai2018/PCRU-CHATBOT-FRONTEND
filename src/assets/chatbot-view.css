@@ -389,6 +389,38 @@ html.theme-transitioning div {
   max-width: 75%;
 }
 
+.gemini-message {
+  font-size: 14px;
+  line-height: 1.5;
+  color: inherit;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  margin: 0;
+  padding: 0;
+}
+
+.gemini-message p {
+  margin: 0 0 1em 0;
+}
+
+.gemini-message p:last-child {
+  margin-bottom: 0;
+}
+
+.gemini-message b,
+.gemini-message strong {
+  font-weight: bold;
+}
+
+.gemini-message a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.gemini-message a:hover {
+  text-decoration: underline;
+}
+
 .message-text {
   word-break: break-word;
   overflow-wrap: anywhere;
@@ -3450,7 +3482,7 @@ html.keyboard-open .bot-avatar-wrapper .typing-tooltip {
 .welcome-message.gemini-center {
   justify-content: center !important;
   align-items: center;
-  margin-top: 12rem !important;
+  margin-top: 10rem !important;
 }
 
 .welcome-gemini-text {

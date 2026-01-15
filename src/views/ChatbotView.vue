@@ -465,7 +465,7 @@
                   </div>
                 </div>
               </div>
-              <transition-group name="message-pop" tag="div" class="message-list" :style="{ paddingTop: useGeminiMode ? '80px' : '0px' }">
+              <transition-group name="message-pop" tag="div" class="message-list" :style="{ paddingTop: useGeminiMode ? '20px' : '0px' }">
                 <div v-for="(msg, idx) in messages" :key="msg.id || idx" class="message-wrapper" :class="[msg.type, { typing: !!msg.typing }]">
                 <div v-if="msg.type === 'bot' && !useGeminiMode" class="bot-avatar-wrapper">
                   <div class="bot-avatar" role="button" tabindex="0" @click="openAiIntro" title="เปิด AI เต็มจอ">
@@ -504,7 +504,9 @@
                   <!-- ⌨️ User Typing Tooltip (hint to type "เมนู") -->
 
                 </div>
-                <div class="message-bubble" :class="[msg.type, { 'has-contacts': msg.showContacts || (msg.visibleContacts && msg.visibleContacts.length > 0) }]">
+                <!-- Gemini bot message without bubble -->
+                <div v-if="useGeminiMode && msg.type === 'bot'" class="gemini-message" v-html="linkifyText(msg.text, msg.title, msg.found, false)"></div>
+                <div v-if="! (useGeminiMode && msg.type === 'bot')" class="message-bubble" :class="[msg.type, { 'has-contacts': msg.showContacts || (msg.visibleContacts && msg.visibleContacts.length > 0) }]">
                   <div v-if="!(msg.multipleResults && msg.text && msg.text.trim().startsWith('พบหลายคำถาม'))" class="message-text" v-html="linkifyText(msg.text, msg.title, msg.found, msg.type === 'user')"></div>
                   <div v-if="msg.showCategories" class="category-section" style="margin-top: 15px;">
                     <div class="category-title no-underline">หมวดหมู่</div>

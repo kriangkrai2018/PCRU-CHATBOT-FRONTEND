@@ -537,3 +537,10 @@ html.theme-transitioning [data-theme="light"] * {
 }
 
 
+[data-theme="light"] .welcome-gemini-text {
+  color: #000000;
+}
+
+[data-theme="light"] .pcru-watermark img {
+  opacity: 0.04 !important;
+}
