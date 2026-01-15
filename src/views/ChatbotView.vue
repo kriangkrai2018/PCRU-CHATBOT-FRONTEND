@@ -996,7 +996,7 @@
                     
                     <!-- Dots Only -->
                     <transition name="dots-fade">
-                      <div v-if="showCarouselDots" class="carousel-dots">
+                      <div v-if="showCarouselDots && !selectedContact" class="carousel-dots">
                         <button 
                         v-for="(page, index) in carouselPages" 
                         :key="index"
@@ -6493,7 +6493,6 @@ export default {
         const canNudgeByChance = Math.random() <= 0.5
         if (this.inputFocusTimestamps.length >= 4 && canNudgeByTime && canNudgeByChance) {
           const playful = [
-            'เอ๊ะ... กำลังคิดคำถามอยู่หรอคะ ☁️',
             `${this.botPronoun}รอฟังอยู่นะคะ ลองพิมพ์มาได้เลย ✨`,
             `ลองพิมพ์ดูสิคะ เดี๋ยว${this.botPronoun}ช่วยหาให้เอง 💜`
           ]
