@@ -518,14 +518,14 @@
 
                 </div>
                 <div v-if="! (useGeminiMode && msg.type === 'bot')" class="message-bubble" :class="[msg.type, { 'has-contacts': msg.showContacts || (msg.visibleContacts && msg.visibleContacts.length > 0) }]" :data-message-id="msg.id">
-                  <div v-if="!(msg.multipleResults && msg.text && msg.text.trim().startsWith('พบหลายคำถาม'))" class="message-text" :class="{ 'clamped': !msg._expanded, 'expanded': msg._expanded }" v-html="linkifyText(msg.text, msg.title, msg.found, msg.type === 'user')"></div>
+                  <div v-if="!(msg.multipleResults && msg.text && msg.text.trim().startsWith('พบหลายคำถาม'))" class="message-text" :class="{ 'clamped': !msg._expanded, 'expanded': msg._expanded }" v-html="msg.type === 'user' ? msg.text.replace(/</g, '&lt;').replace(/>/g, '&gt;') : linkifyText(msg.text, msg.title, msg.found, false)"></div>
 
                   <!-- Copy (user only) + Expand / Collapse buttons -->
                   <button v-if="msg.text && msg.type === 'user'" type="button" class="copy-button" @click.stop.prevent="copyMessage(msg)" :aria-label="'คัดลอกข้อความ'">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="copy-icon"><path d="M16 1H5a2 2 0 0 0-2 2v11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="8" y="4" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </button>
 
-                  <button v-if="msg._collapsible && msg.type === 'user'" type="button" class="expand-button" @click.stop.prevent="toggleExpand(msg)" :aria-label="msg._expanded ? 'ย่อข้อความ' : 'ขยายข้อความ'">
+                  <button v-if="msg.text && msg.text.length > 50 && msg.type === 'user'" type="button" class="expand-button" @click.stop.prevent="toggleExpand(msg)" :aria-label="msg._expanded ? 'ย่อข้อความ' : 'ขยายข้อความ'">
                     <svg v-if="!msg._expanded" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="expand-icon"><path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="collapse-icon"><path d="M7 14l5-5 5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </button>
@@ -3748,7 +3748,7 @@ export default {
             // keep persisted expanded state if available
             if (typeof msg._expanded === 'undefined') {
               const key = this.getMessageStorageKey(msg)
-              msg._expanded = !!(this.expandedStateMap && this.expandedStateMap[key])
+              msg._expanded = this.expandedStateMap && this.expandedStateMap[key] !== undefined ? !!this.expandedStateMap[key] : false // Default to collapsed
             }
           }
         })
@@ -7689,15 +7689,20 @@ export default {
       this.suggestionText = ''
       // --- แก้ไข Logic ปุ่มเมนู ---
       if (this.query && (this.query.trim() === 'เมนู' || this.query.trim() === 'menu')) {
-        const originalUserMessage = this.query.trim();
+        const originalUserMessage = this.query.trim().replace(/<[^>]*>/g, ''); // Sanitize: remove HTML tags
         
         // 1. เพิ่มข้อความฝั่ง User ว่า "เมนู"
-        this.messages.push({
+        const userMessage = {
           id: ++this.messageIdCounter,
           type: 'user',
           text: originalUserMessage,
           timestamp: new Date().toISOString()
-        });
+        }
+        // Set collapsible flag for long messages
+        const txt = (userMessage.text || '').replace(/\s+/g, ' ')
+        userMessage._collapsible = txt.length > 300
+        userMessage._expanded = false
+        this.messages.push(userMessage);
         // Mark that the user has interacted with the bot
         try { localStorage.setItem('chatbot_has_asked', '1'); } catch(e) {}
         this.hasAskedBot = true
@@ -7742,7 +7747,7 @@ export default {
 
       if (!this.query || !this.query.trim()) return
       
-      const originalUserMessage = this.query.trim()
+      const originalUserMessage = this.query.trim().replace(/<[^>]*>/g, '') // Sanitize: remove HTML tags
       let processedUserMessage = originalUserMessage;
 
       // 🛡️ Check if message contains negation patterns - if so, skip stopword filtering entirely
@@ -7793,12 +7798,17 @@ export default {
       this.welcomeTyping = false
       
       // Add user message
-      this.messages.push({
+      const userMessage = {
         id: ++this.messageIdCounter,
         type: 'user',
         text: originalUserMessage,
         timestamp: new Date().toISOString()
-      })
+      }
+      // Set collapsible flag for long messages
+      const txt = (userMessage.text || '').replace(/\s+/g, ' ')
+      userMessage._collapsible = txt.length > 300
+      userMessage._expanded = false
+      this.messages.push(userMessage)
       // Mark that the user has interacted with the bot
       try { localStorage.setItem('chatbot_has_asked', '1'); } catch(e) {}
       this.hasAskedBot = true
@@ -8843,6 +8853,7 @@ export default {
       
       // Clear messages and persisted history
       this.messages = []
+      this.query = '' // Clear user input field
       localStorage.removeItem('chatbot_messages')
       // Reset mini help dismissed state when chat is cleared
       try {

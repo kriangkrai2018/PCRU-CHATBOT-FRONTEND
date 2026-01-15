@@ -450,7 +450,8 @@ html.theme-transitioning div {
   line-clamp: unset;
   -webkit-box-orient: unset;
   overflow: visible;
-  margin-right: 0;
+  margin-right: 2rem;
+
 }
 
 /* Also ensure Gemini expanded messages (non-bubble) do not keep the right margin */
@@ -3781,7 +3782,6 @@ html.keyboard-open .chat-messages {
   align-items: flex-end;
   margin-bottom: 0px;
   gap: 10px;
-  padding: 0 min(0px, max(8px, env(safe-area-inset-right, 8px))) 0 12px;
   /* 🍎 GPU acceleration */
   transform: translateZ(0);
   will-change: transform, opacity;
