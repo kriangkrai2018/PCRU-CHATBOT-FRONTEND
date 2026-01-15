@@ -87,7 +87,7 @@
             <div class="orb orb-3"></div>
           </div>
 
-          <div class="panel-top" v-show="showHeaderButtons">
+          <div class="panel-top" v-show="showHeaderButtons" ref="panelTop">
             <transition name="fade">
               <button v-show="showHeaderButtons" class="close-circle" @click="visible = false" aria-label="close">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="close-icon">
@@ -9297,6 +9297,9 @@ export default {
         if (cannotScroll && this.showHeaderButtons !== true) {
           this.showHeaderButtons = true
         }
+        if (cannotScroll && this.$refs.panelTop) {
+          this.$refs.panelTop.style.top = "0";
+        }
         
         // Only process if scrolled more than threshold (prevent jitter)
         if (scrollDelta < this.scrollThreshold && !isAtBottom && currentScrollTop > 10) {
@@ -9366,6 +9369,15 @@ export default {
             setTimeout(() => {
               this.dismissScrollTutorial()
             }, 8000)
+          }
+        }
+        
+        // Hide panel-top when scrolling down, show when scrolling up
+        if (this.$refs.panelTop) {
+          if (isScrollingDown && currentScrollTop > 50) {
+            this.$refs.panelTop.style.top = "-60px";
+          } else if (isScrollingUp || currentScrollTop <= 10 || isAtBottom) {
+            this.$refs.panelTop.style.top = "0";
           }
         }
         
