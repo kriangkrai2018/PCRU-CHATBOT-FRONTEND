@@ -2838,6 +2838,21 @@ html.keyboard-open .panel-footer {
     height: auto;
     transition: height 0.12s ease;
   }
+  /* Make placeholder text white when input is in the footer (desktop & mobile) */
+  .panel-footer .input-pill::placeholder,
+  .panel-footer .input-pill::-webkit-input-placeholder,
+  .panel-footer .input-pill::-moz-placeholder,
+  .panel-footer .input-pill:-ms-input-placeholder {
+    color: #ffffff !important;
+    opacity: 1 !important;
+  }
+  .panel-footer .input-pill:focus::placeholder,
+  .panel-footer .input-pill:focus::-webkit-input-placeholder,
+  .panel-footer .input-pill:focus::-moz-placeholder,
+  .panel-footer .input-pill:focus:-ms-input-placeholder {
+    color: #ffffff !important;
+    opacity: 0.9 !important;
+  }
 }
   z-index: 1601;
   animation: unlikeTooltipBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -7258,7 +7273,7 @@ body.no-effects .apple-help-mini::before, body.no-effects .apple-help-mini::afte
   font-family: inherit;
   transition: all 0.15s;
   box-sizing: border-box;
-  margin:  0px 0px 12px;
+  margin: 0;
 }
 
 
