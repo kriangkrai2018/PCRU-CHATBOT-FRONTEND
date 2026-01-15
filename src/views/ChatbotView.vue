@@ -518,14 +518,14 @@
 
                 </div>
                 <div v-if="! (useGeminiMode && msg.type === 'bot')" class="message-bubble" :class="[msg.type, { 'has-contacts': msg.showContacts || (msg.visibleContacts && msg.visibleContacts.length > 0) }]" :data-message-id="msg.id">
-                  <div v-if="!(msg.multipleResults && msg.text && msg.text.trim().startsWith('พบหลายคำถาม'))" class="message-text" :class="{ 'clamped': !msg._expanded, 'expanded': msg._expanded }" v-html="msg.type === 'user' ? msg.text.replace(/</g, '&lt;').replace(/>/g, '&gt;') : linkifyText(msg.text, msg.title, msg.found, false)"></div>
+                  <div v-if="!(msg.multipleResults && msg.text && msg.text.trim().startsWith('พบหลายคำถาม'))" class="message-text" :ref="(el) => messageTextRefs[msg.id] = el" :class="{ 'clamped': !msg._expanded, 'expanded': msg._expanded, 'overflowing': msg._isOverflowing }" v-html="msg.type === 'user' ? msg.text.replace(/</g, '&lt;').replace(/>/g, '&gt;') : linkifyText(msg.text, msg.title, msg.found, false)"></div>
 
                   <!-- Copy (user only) + Expand / Collapse buttons -->
                   <button v-if="msg.text && msg.type === 'user'" type="button" class="copy-button" @click.stop.prevent="copyMessage(msg)" :aria-label="'คัดลอกข้อความ'">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="copy-icon"><path d="M16 1H5a2 2 0 0 0-2 2v11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="8" y="4" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </button>
 
-                  <button v-if="msg.type === 'user' && !isGeminiTyping" type="button" class="expand-button" @click.stop.prevent="toggleExpand(msg); $event.stopImmediatePropagation();" :aria-label="msg._expanded ? 'ย่อข้อความ' : 'ขยายข้อความ'">
+                  <button v-if="msg.type === 'user' && !isGeminiTyping && msg._isOverflowing" type="button" class="expand-button" @click.stop.prevent="toggleExpand(msg); $event.stopImmediatePropagation();" :aria-label="msg._expanded ? 'ย่อข้อความ' : 'ขยายข้อความ'">
                     <svg v-if="!msg._expanded" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="expand-icon"><path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="collapse-icon"><path d="M7 14l5-5 5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </button>
@@ -2264,6 +2264,7 @@ export default {
       // 🗑️ Clear button visibility state
       clearBtnHidden: false, // Track if clear button was recently clicked
       isStartingRecognition: false, // Track if voice recognition is starting to prevent duplicate permission requests
+      messageTextRefs: {}, // Refs for message text elements to check overflow
     }
   },
   computed: {
@@ -2369,7 +2370,6 @@ export default {
       }
     },
     
-    // 🤖 Gemini Tutorial computed properties
     currentGeminiTutorialData() {
       return this.geminiTutorialSteps[this.geminiTutorialStep] || this.geminiTutorialSteps[0]
     },
@@ -2742,6 +2742,7 @@ export default {
       this.observeBotVideos();
       // Re-measure message collapsibility after render
       this.measureMessageCollapsibles()
+      this.checkOverflows()
     });
   },
   
@@ -3305,6 +3306,7 @@ export default {
     // Ensure scroll to bottom on page load/refresh
     this.$nextTick(() => {
       this.scrollToBottomInstant()
+      this.checkOverflows()
     })
   },
 
@@ -3603,8 +3605,9 @@ export default {
             // Clear Gemini typing when user sends message
             this.geminiTypingText = ''
             this.isGeminiTyping = false
-          } else if (lastMsg && lastMsg.type === 'bot' && this.useGeminiMode && !lastMsg.typing) {
+          } else if (lastMsg && lastMsg.type === 'bot' && this.useGeminiMode && !lastMsg.typing && !lastMsg._typed) {
             this.startGeminiTyping(lastMsg.text)
+            lastMsg._typed = true
           }
         }
       },
@@ -3634,6 +3637,17 @@ export default {
       const key = this.getMessageStorageKey(msg)
       this.expandedStateMap[key] = !!msg._expanded
       this.saveExpandedStateMap()
+    },
+
+    checkOverflows() {
+      this.messages.forEach(msg => {
+        const el = this.messageTextRefs[msg.id];
+        if (el && !msg._expanded) {
+          msg._isOverflowing = el.scrollHeight > el.clientHeight;
+        } else {
+          msg._isOverflowing = false;
+        }
+      });
     },
 
     // Copy message text to clipboard
@@ -3760,7 +3774,7 @@ export default {
       if (this.geminiTypingIndex < text.length) {
         this.geminiTypingText += text[this.geminiTypingIndex]
         this.geminiTypingIndex++
-        setTimeout(() => this.typeNextChar(text), 30)
+        setTimeout(() => this.typeNextChar(text), 0)
       } else {
         this.geminiTypingText = text
         this.isGeminiTyping = false
@@ -7717,7 +7731,7 @@ export default {
         const replyText = '';
 
         // 3. แสดง Typing Indicator เล็กน้อยเพื่อความสมจริง
-        this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: '', typing: true });
+        this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: '', typing: true, _typed: false });
         this.$nextTick(() => this.scrollToBottom());
 
         setTimeout(() => {
@@ -7854,7 +7868,7 @@ export default {
             
             // Add bot typing indicator
             const geminiIndex = this.messages.length
-            this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: '', typing: true })
+            this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: '', typing: true, _typed: false })
             this.saveChatHistory()
             this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
             
@@ -7919,7 +7933,7 @@ export default {
           let botIndex = null
           if (typingDelayForSend > 0 || indicatorMsForSend > 0) {
             botIndex = this.messages.length
-            this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: '', typing: true })
+            this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: '', typing: true, _typed: false })
             this.saveChatHistory()
             this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
           } else {
@@ -8458,7 +8472,7 @@ export default {
             } else {
               // Instant mode: render the message immediately without a placeholder
               const idxNew = this.messages.length
-              this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: botText || '', typing: false, timestamp: new Date().toISOString() })
+              this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: botText || '', typing: false, timestamp: new Date().toISOString(), _typed: false })
               const msg = this.messages[idxNew]
               // Set non-text properties
               if (pdf) msg.pdf = pdf;
@@ -8507,7 +8521,7 @@ export default {
               this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
             } else {
               // If we were in instant mode (no placeholder), add an error message directly
-              this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: 'อุ๊ะ 😭 ฉันเหนื่อยไปหน่อย ลองอีกครั้งได้ไหมคะ?', typing: false, timestamp: new Date().toISOString() })
+              this.messages.push({ id: ++this.messageIdCounter, type: 'bot', text: 'อุ๊ะ 😭 ฉันเหนื่อยไปหน่อย ลองอีกครั้งได้ไหมคะ?', typing: false, timestamp: new Date().toISOString(), _typed: false })
               this.saveChatHistory()
               this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
             }
@@ -8521,11 +8535,11 @@ export default {
 
           if (typingDelayFallback === 0) {
             // Instant mode: push the message immediately
-            this.messages.push({ type: 'bot', text: 'ค่ะ 💔 ฉันไม่สามารถติดต่อเซิร์ฟเวอร์ได้ขณะนี้ ลองใหม่ทีหลัง!', typing: false, timestamp: new Date().toISOString() })
+            this.messages.push({ type: 'bot', text: 'ค่ะ 💔 ฉันไม่สามารถติดต่อเซิร์ฟเวอร์ได้ขณะนี้ ลองใหม่ทีหลัง!', typing: false, timestamp: new Date().toISOString(), _typed: false })
             this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
           } else {
             const botIndex = this.messages.length
-            this.messages.push({ type: 'bot', text: '', typing: true })
+            this.messages.push({ type: 'bot', text: '', typing: true, _typed: false })
             this.$nextTick(() => { this.scrollToBottom(); this.updateAnchoring() })
             setTimeout(() => {
               if (this.messages[botIndex]) {
