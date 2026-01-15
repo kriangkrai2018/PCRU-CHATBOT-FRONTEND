@@ -697,11 +697,10 @@
                   <!-- 💬 Apple-style Inline Feedback (subtle icons at bottom-right) -->
                   <!-- Show on ALL bot messages with answers (not just latest) -->
                   <!-- If feedback is locked (user asked new question), show only the selected one -->
-                  <!-- 🆕 Only show if keywordMatch is true (matched by keyword, not just text/title) -->
                   <div 
                     class="apple-feedback" 
                     :class="{ 'has-feedback': msg.feedback }"
-                    v-if="msg.type === 'bot' && !msg.typing && (msg.text || msg.results) && msg.found === true && !msg.multipleResults && msg.keywordMatch !== false"
+                    v-if="msg.type === 'bot' && !msg.typing && (msg.text || msg.results) && msg.found === true && !msg.multipleResults"
                   >
                     <!-- Like button: always show -->
                     <button
@@ -1836,8 +1835,8 @@ export default {
       placeholderIndex: 0,
       maxInputRows: 7,
       placeholderInterval: null,
-      // Flag used to defer an action (like clearing chat) until after a tutorial completes
-      pendingClearAfterTutorial: false,
+      // Flag to avoid retriggering tutorial multiple times per session
+      feedbackTutorialTriggered: false,
       // embedding removed — external site not used in this deployment
       messages: [],
       welcomeTyping: false,
@@ -4246,36 +4245,55 @@ export default {
     
     // 🎓 Tutorial Methods
     startFeedbackTutorial() {
-      // Check if user has seen tutorial before
+      // If already completed in localStorage or already triggered this session, skip
       const hasSeenTutorial = localStorage.getItem('pcru_feedback_tutorial_seen')
       if (hasSeenTutorial) {
         console.log('🎓 Tutorial: Already seen, skipping')
         return
       }
-      
-      // Only show tutorial if this is the first bot answer with feedback buttons (and matched by keyword)
-      const botMessagesWithAnswer = this.messages.filter(m => m.type === 'bot' && m.found === true && !m.multipleResults && !m._temp && m.keywordMatch !== false)
-      console.log('🎓 Tutorial: Bot messages with answer count:', botMessagesWithAnswer.length)
-      if (botMessagesWithAnswer.length !== 1) {
-        console.log('🎓 Tutorial: Not first answer or not keywordMatch, skipping')
+      if (this.feedbackTutorialTriggered) {
+        console.log('🎓 Tutorial: Already triggered this session, skipping')
         return
       }
-      
-      // Ensure feedback buttons are visible in DOM
-      this.$nextTick(() => {
+
+      // Only show tutorial if this is the first bot answer with feedback buttons
+      const botMessagesWithAnswer = this.messages.filter(m => m.type === 'bot' && m.found === true && !m.multipleResults && !m._temp)
+      console.log('🎓 Tutorial: Bot messages with answer count:', botMessagesWithAnswer.length)
+      if (botMessagesWithAnswer.length !== 1) {
+        console.log('🎓 Tutorial: Not first answer, skipping')
+        return
+      }
+
+      // Guard: ensure the last message is the expected bot message
+      const last = this.messages.length ? this.messages[this.messages.length - 1] : null
+      if (!last || last.type !== 'bot' || last.found !== true) {
+        console.log('🎓 Tutorial: Last message not a suitable bot answer, skipping')
+        return
+      }
+
+      // mark as triggered for this session to avoid duplicate attempts
+      this.feedbackTutorialTriggered = true
+
+      // Poll for the feedback button in DOM (in case of transitions / delayed render)
+      const tryFindButton = (attempt = 0, maxAttempts = 10, delay = 150) => {
         const feedbackBtn = document.querySelector('.apple-feedback .apple-feedback-btn')
-        console.log('🎓 Tutorial: Feedback button found:', feedbackBtn)
-        if (!feedbackBtn) {
-          console.log('🎓 Tutorial: No feedback button in DOM')
+        if (feedbackBtn) {
+          console.log('🎓 Tutorial: Feedback button found on attempt', attempt)
+          this.tutorialStep = 0
+          this.tutorialTargetRect = null
+          this.showFeedbackTutorial = true
+          this.updateTutorialTarget()
           return
         }
-        
-        console.log('🎓 Tutorial: Starting tutorial!')
-        this.tutorialStep = 0
-        this.tutorialTargetRect = null
-        this.showFeedbackTutorial = true
-        this.updateTutorialTarget()
-      })
+        if (attempt < maxAttempts) {
+          setTimeout(() => tryFindButton(attempt + 1, maxAttempts, delay), delay)
+          return
+        }
+        console.log('🎓 Tutorial: Feedback button not found after polling, skipping')
+      }
+
+      // Start polling on next tick
+      this.$nextTick(() => tryFindButton(0))
     },
     
     updateTutorialTarget() {
@@ -4403,43 +4421,11 @@ export default {
       localStorage.setItem('pcru_feedback_tutorial_seen', 'true')
       // Light haptic feedback
       if (navigator.vibrate) navigator.vibrate(50)
-
-      // If a clear action was deferred until after tutorial, now ask for confirmation
-      if (this.pendingClearAfterTutorial) {
-        this.pendingClearAfterTutorial = false
-        try {
-          const { confirmAction } = useConfirm()
-          const confirmed = await confirmAction({
-            title: 'ล้างประวัติการสนทนา',
-            message: 'คุณต้องการล้างประวัติการสนทนาใช่หรือไม่? การกระทำนี้จะลบประวัติการสนทนาทั้งหมด',
-            confirmText: 'ล้าง',
-            cancelText: 'ยกเลิก',
-            variant: 'danger'
-          })
-          if (confirmed) this.clearChatHistory()
-        } catch (e) { console.error('Error confirming clear after tutorial:', e) }
-      }
     },
     
     async skipTutorial() {
       this.showFeedbackTutorial = false
       localStorage.setItem('pcru_feedback_tutorial_seen', 'true')
-
-      // If clear action was pending, ask for confirmation after skipping tutorial
-      if (this.pendingClearAfterTutorial) {
-        this.pendingClearAfterTutorial = false
-        try {
-          const { confirmAction } = useConfirm()
-          const confirmed = await confirmAction({
-            title: 'ล้างประวัติการสนทนา',
-            message: 'คุณต้องการล้างประวัติการสนทนาใช่หรือไม่? การกระทำนี้จะลบประวัติการสนทนาทั้งหมด',
-            confirmText: 'ล้าง',
-            cancelText: 'ยกเลิก',
-            variant: 'danger'
-          })
-          if (confirmed) this.clearChatHistory()
-        } catch (e) { console.error('Error confirming clear after tutorial skip:', e) }
-      }
     },
     
     dismissScrollTutorial() {
@@ -5214,21 +5200,7 @@ export default {
       this.closeMoreMenu();
       this.clearBtnHidden = true;
 
-      // If feedback tutorial hasn't been seen, show it first and defer the clear
-      const hasSeenFeedbackTutorial = !!localStorage.getItem('pcru_feedback_tutorial_seen')
-      const botMessagesWithAnswer = this.messages.filter(m => m.type === 'bot' && m.found === true && !m.multipleResults && !m._temp && m.keywordMatch !== false)
-
-      if (!hasSeenFeedbackTutorial && botMessagesWithAnswer.length > 0) {
-        // Defer the clear until after tutorial completes
-        this.pendingClearAfterTutorial = true
-        // Start tutorial (it will set localStorage when completed)
-        this.startFeedbackTutorial()
-        // Re-show clear button after a short delay so UI doesn't stay hidden
-        setTimeout(() => { this.clearBtnHidden = false }, 500)
-        return
-      }
-
-      // Clear immediately without confirmation for now
+      // Clear immediately without confirmation
       this.clearChatHistory()
       
       // Ensure button reappears
@@ -7919,8 +7891,8 @@ export default {
                 msg.typing = false;
                 
                 // 🎓 Trigger feedback tutorial when feedback buttons appear for the first time
-                // Only trigger if keywordMatch is true (not just text/title match)
-                if (msg.found === true && !msg.multipleResults && msg.keywordMatch !== false) {
+                // Only trigger if found is true and not multiple results
+                if (msg.found === true && !msg.multipleResults) {
                   this.$nextTick(() => {
                     setTimeout(() => this.startFeedbackTutorial(), 500)
                   })
