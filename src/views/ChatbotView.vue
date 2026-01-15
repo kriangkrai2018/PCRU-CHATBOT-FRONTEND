@@ -6143,9 +6143,11 @@ export default {
           urlList.push(m[0]);
         }
         if (urlList.length === 0) return match; // nothing to do
-        const anchors = urlList.map(u => {
+        const anchors = urlList.map((u, idx) => {
           const href = u.toLowerCase().startsWith('www.') ? 'http://' + u : u;
-          return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="message-link">${u}</a>`;
+          // If the message has a title and there's only one URL, show the title instead of the raw URL
+          const display = (title && urlList.length === 1) ? title : u;
+          return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="message-link">${display}</a>`;
         });
         return prefix + anchors.join(' หรือ ');
       });
@@ -6159,7 +6161,8 @@ export default {
                   if (url.toLowerCase().startsWith('www.')) {
                       href = 'http://' + url;
                   }
-                  return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="message-link">${url}</a>`;
+                  let linkText = title || url;
+                  return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="message-link">${linkText}</a>`;
               });
           }
       }

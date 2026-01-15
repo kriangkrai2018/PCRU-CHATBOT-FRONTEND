@@ -688,8 +688,8 @@ html.theme-transitioning div {
   height: 100vh;
   /* make it look like a floating chat on desktop */
   max-height: calc(100vh - 48px);
-  border-top-left-radius: 24px;
-  border-bottom-left-radius: 24px;
+  border-top-left-radius: 34px;
+  border-bottom-left-radius: 34px;
   /* iOS safe area support */
   height: -webkit-fill-available;
   min-height: 100vh;
