@@ -3793,7 +3793,7 @@ html.keyboard-open .message-wrapper {
 .bot-sleeping-zzz {
   position: absolute;
   top: -10px;
-  left: 50%;
+  right: 0;
   transform: translateX(-50%);
   display: flex;
   flex-direction: row;
