@@ -87,10 +87,10 @@
             <div class="orb orb-3"></div>
           </div>
 
-          <div class="panel-top" v-show="showHeaderButtons" ref="panelTop">
+          <div class="panel-top" style="top: 0;">
             <transition name="fade">
               <div>
-                <button v-show="showHeaderButtons" class="close-circle" @click="visible = false" aria-label="close">
+                <button class="close-circle" @click="visible = false" aria-label="close">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="close-icon">
                   <!-- Line 1 with gentle animations -->
                   <path class="close-line-1" d="M6 6L18 18" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="20" stroke-dashoffset="20">
@@ -120,7 +120,7 @@
             
             <!-- 🎯 More Options Menu (3-dot button) -->
             <transition name="fade">
-              <div v-show="showHeaderButtons" class="more-options-wrapper">
+              <div class="more-options-wrapper">
               <button 
                 v-show="!showMoreMenu"
                 class="more-options-btn" 
@@ -243,7 +243,7 @@
             </div>
             </transition>
 
-            <div class="overlay-backdrop-2"></div>
+            <div class="overlay-backdrop-2" style="display: block;"></div>
           </div>
 
           <!-- Scroll to Bottom Button - outside panel-body so it floats above content -->
@@ -1883,7 +1883,7 @@ export default {
       lastScrollTop: 0,
       scrollThreshold: 30, // Minimum scroll distance before state changes
       scrollTicking: false, // Throttle flag for scroll events
-      showHeaderButtons: true, // Show/hide header buttons on scroll
+      // Show/hide header buttons on scroll
       showFooter: true, // Show/hide footer (input row) on scroll
       showFooterTimer: null, // Timer for footer delay
       isScrollingUp: false, // Track if user is scrolling up
@@ -3575,13 +3575,6 @@ export default {
         // Remove any temporary typing state left behind
         this.tempTyping = false
         this.messages = this.messages.filter(m => !m._temp)
-      }
-    },
-    showHeaderButtons(newVal) {
-      // Control overlay-backdrop-2 visibility with JavaScript
-      const backdrop = this.$el?.querySelector('.overlay-backdrop-2')
-      if (backdrop) {
-        backdrop.style.opacity = newVal ? '1' : '0'
       }
     },
     messages: {
@@ -9576,24 +9569,13 @@ export default {
         const isScrollingUp = currentScrollTop < this.lastScrollTop
         const isScrollingDown = currentScrollTop > this.lastScrollTop
         
-        // Force show header buttons if content doesn't require scrolling
-        const cannotScroll = scrollHeight <= clientHeight
-        if (cannotScroll && this.showHeaderButtons !== true) {
-          this.showHeaderButtons = true
-        }
-        if (cannotScroll && this.$refs.panelTop) {
-          this.$refs.panelTop.style.top = "0";
-        }
-        
         // Only process if scrolled more than threshold (prevent jitter)
         if (scrollDelta < this.scrollThreshold && !isAtBottom && currentScrollTop > 10) {
           return
         }
         
-        // Hide everything when at the very top
+        // At the very top
         if (currentScrollTop <= 10) {
-          // Header buttons always visible - removed hiding on scroll
-          // if (this.showHeaderButtons !== false && !cannotScroll) this.showHeaderButtons = false
           // if (this.showFooter !== false) this.showFooter = false  // Keep footer visible
           if (this.showScrollTop !== false) this.showScrollTop = false
           if (this.showScrollTutorial !== false) this.showScrollTutorial = false
@@ -9601,9 +9583,8 @@ export default {
           return
         }
         
-        // Show footer and header buttons when at the very bottom (hide only scroll button)
+        // At the very bottom (hide only scroll button)
         if (isAtBottom) {
-          if (this.showHeaderButtons !== true) this.showHeaderButtons = true
           if (this.showFooter !== true) this.showFooter = true
           if (this.showScrollTop !== false) this.showScrollTop = false
           if (this.showScrollTutorial !== false) this.showScrollTutorial = false
@@ -9615,9 +9596,8 @@ export default {
           return
         }
         
-        // Hide everything when scrolling UP
+        // Scrolling UP
         if (isScrollingUp) {
-          // if (this.showHeaderButtons !== false && !cannotScroll) this.showHeaderButtons = false  // Keep header buttons always visible
           // if (this.showFooter !== false) this.showFooter = false  // Keep footer visible
           if (this.showScrollTop !== false) this.showScrollTop = false
           if (this.showScrollTutorial !== false) this.showScrollTutorial = false
@@ -9627,9 +9607,8 @@ export default {
           }
         }
         
-        // Show everything when scrolling DOWN (and not at bottom or top)
-        if (isScrollingDown && currentScrollTop > 50) {
-          if (this.showHeaderButtons !== true) this.showHeaderButtons = true
+        // Scrolling DOWN
+        if (isScrollingDown) {
           if (this.showFooter !== true) this.showFooter = true
           if (this.showFooterTimer) {
             clearTimeout(this.showFooterTimer)
