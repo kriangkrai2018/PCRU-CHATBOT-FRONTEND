@@ -89,22 +89,25 @@
 
           <div class="panel-top" v-show="showHeaderButtons" ref="panelTop">
             <transition name="fade">
-              <button v-show="showHeaderButtons" class="close-circle" @click="visible = false" aria-label="close">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="close-icon">
-                <!-- Line 1 with gentle animations -->
-                <path class="close-line-1" d="M6 6L18 18" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="20" stroke-dashoffset="20">
-                  <animate attributeName="stroke-dashoffset" to="0" dur="0.3s" fill="freeze"/>
-                  <animate attributeName="stroke-width" values="3;3.5;3" dur="3s" repeatCount="indefinite" begin="0.3s"/>
-                  <animate attributeName="opacity" values="0.9;1;0.9" dur="4s" repeatCount="indefinite"/>
-                </path>
-                <!-- Line 2 with gentle animations -->
-                <path class="close-line-2" d="M6 18L18 6" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="20" stroke-dashoffset="20">
-                  <animate attributeName="stroke-dashoffset" to="0" dur="0.3s" begin="0.15s" fill="freeze"/>
-                  <animate attributeName="stroke-width" values="3;3.5;3" dur="3s" repeatCount="indefinite" begin="0.3s"/>
-                  <animate attributeName="opacity" values="0.9;1;0.9" dur="4s" repeatCount="indefinite"/>
-                </path>
-              </svg>
-            </button>
+              <div>
+                <button v-show="showHeaderButtons" class="close-circle" @click="visible = false" aria-label="close">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="close-icon">
+                  <!-- Line 1 with gentle animations -->
+                  <path class="close-line-1" d="M6 6L18 18" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="20" stroke-dashoffset="20">
+                    <animate attributeName="stroke-dashoffset" to="0" dur="0.3s" fill="freeze"/>
+                    <animate attributeName="stroke-width" values="3;3.5;3" dur="3s" repeatCount="indefinite" begin="0.3s"/>
+                    <animate attributeName="opacity" values="0.9;1;0.9" dur="4s" repeatCount="indefinite"/>
+                  </path>
+                  <!-- Line 2 with gentle animations -->
+                  <path class="close-line-2" d="M6 18L18 6" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="20" stroke-dashoffset="20">
+                    <animate attributeName="stroke-dashoffset" to="0" dur="0.3s" begin="0.15s" fill="freeze"/>
+                    <animate attributeName="stroke-width" values="3;3.5;3" dur="3s" repeatCount="indefinite" begin="0.3s"/>
+                    <animate attributeName="opacity" values="0.9;1;0.9" dur="4s" repeatCount="indefinite"/>
+                  </path>
+                </svg>
+              </button>
+              <span class="pcru-label">{{ useGeminiMode ? 'PCRU (Gemini)' : 'PCRU' }}</span>
+              </div>
             </transition>
             
             <!-- 🔴 Offline Status Indicator -->
@@ -465,7 +468,7 @@
                   </div>
                 </div>
               </div>
-              <transition-group name="message-pop" tag="div" class="message-list" :style="{ paddingTop: useGeminiMode ? '20px' : '0px' }">
+              <transition-group name="message-pop" tag="div" class="message-list" :style="{ paddingTop: useGeminiMode ? '70px' : '0px' }">
                 <div v-for="(msg, idx) in messages" :key="msg.id || idx" class="message-wrapper" :class="[msg.type, { typing: !!msg.typing }]">
                 <div v-if="msg.type === 'bot' && !useGeminiMode" class="bot-avatar-wrapper">
                   <div class="bot-avatar" role="button" tabindex="0" @click="openAiIntro" title="เปิด AI เต็มจอ">

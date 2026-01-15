@@ -134,6 +134,15 @@
   color: var(--cb-text-inverse) !important; /* purple acccent from palette */
 } 
 
+/* Gemini message in Dark Mode */
+[data-theme="dark"] .gemini-message {
+  color: var(--cb-text-inverse) !important;
+}
+
+[data-theme="dark"] .gemini-message a {
+  color: var(--cb-text-inverse) !important;
+}
+
 /* Contact Phone in Dark Mode - keep high contrast */
 [data-theme="dark"] .contact-phone {
   color: var(--cb-link) !important;

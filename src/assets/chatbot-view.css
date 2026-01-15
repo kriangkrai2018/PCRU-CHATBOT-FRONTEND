@@ -318,7 +318,7 @@ html.theme-transitioning div {
   border-radius: 50%; /* Ensure round */
 }
 .close-circle:hover, .clear-chat-btn:hover, .theme-toggle-btn:hover {
-
+  transform: scale(1.5) !important;
 }
 .close-circle svg path, .clear-chat-btn svg path, .theme-toggle-btn svg {
   stroke: currentColor; /* Use text color */
@@ -725,6 +725,27 @@ html.keyboard-open .close-circle {
   stroke-width: 2.5;
 }
 
+.pcru-label {
+  position: absolute;
+  left: 50%;
+  top: 35%;
+  transform: translateX(-50%);
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: bold;
+  z-index: 160;
+  pointer-events: none;
+}
+
+/* When keyboard is open, adjust PCRU label position */
+html.keyboard-open .pcru-label {
+  left: 70px;
+}
+
+[data-theme="light"] .pcru-label {
+  color: #000000;
+}
+
 /* � PCRU Watermark Logo */
 .pcru-watermark {
   position: absolute;
@@ -1031,8 +1052,7 @@ html.keyboard-open .close-circle {
 }
 
 .more-options-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transform: scale(1.5);
 }
 
 .more-options-btn.active {
